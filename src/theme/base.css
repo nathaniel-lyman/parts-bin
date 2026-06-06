@@ -1,0 +1,32 @@
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    /* optional terminal-paper dot grid */
+    background-image: radial-gradient(var(--line) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Square, proud focus ring for keyboard users (THEME-SPEC §4) */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .micro {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--muted);
+  }
+
+  .display { font-family: 'Space Grotesk', sans-serif; }
+
+  .shadow-modal { box-shadow: 0 16px 48px rgb(0 0 0 / .18); }
+  .shadow-dropdown { box-shadow: 0 4px 16px rgb(0 0 0 / .10); }
+}

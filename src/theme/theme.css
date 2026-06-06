@@ -1,0 +1,40 @@
+/* All @import statements must precede other rules (CSS spec). */
+@import './fonts.css';
+@import 'tailwindcss';
+@import './tokens.css';
+@import './base.css';
+
+/* class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Map tokens -> Tailwind color/radius utilities.
+   These reference the CSS vars so dark mode + reskin flow automatically. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --radius: 2px;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Space Grotesk', sans-serif;
+}
+
+/* default radius on the common interactive/surface elements per THEME-SPEC §4 */
+@layer base {
+  button, input, select, textarea { border-radius: var(--radius); }
+}
