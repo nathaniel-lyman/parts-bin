@@ -13,10 +13,11 @@ interface Props {
   onToggleSegment: (s: string) => void
   visibility: ColumnVisibility
   onToggleColumn?: (c: 'name' | 'arr' | 'since') => void
+  onResetColumns?: () => void
   onNew?: () => void
 }
 
-export function Toolbar({ search, onSearch, segments, onToggleSegment, visibility, onToggleColumn, onNew }: Props) {
+export function Toolbar({ search, onSearch, segments, onToggleSegment, visibility, onToggleColumn, onResetColumns, onNew }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
       <div className="w-64"><Input placeholder="Search accounts or owners…" value={search} onChange={(e) => onSearch(e.target.value)} /></div>
@@ -30,7 +31,7 @@ export function Toolbar({ search, onSearch, segments, onToggleSegment, visibilit
         </button>
       ))}
       <div className="ml-auto flex items-center gap-2">
-        {onToggleColumn && <ColumnsMenu visibility={visibility} onToggle={onToggleColumn} />}
+        {onToggleColumn && <ColumnsMenu visibility={visibility} onToggle={onToggleColumn} onReset={onResetColumns} />}
         {onNew && <Button variant="primary" onClick={onNew}>+ New account</Button>}
       </div>
     </div>

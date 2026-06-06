@@ -15,3 +15,12 @@ test('fmtDelta pairs glyph with magnitude', () => {
   expect(fmtDelta(4.6)).toBe('▲ 4.6%')
   expect(fmtDelta(-2.1)).toBe('▼ 2.1%')
 })
+test('fmtDelta treats zero as up (non-negative glyph)', () => {
+  expect(fmtDelta(0)).toBe('▲ 0.0%')
+})
+test('fmtCurrency rounds to whole dollars', () => {
+  expect(fmtCurrency(1234.6)).toBe('$1,235')
+})
+test('fmtCurrency renders negatives', () => {
+  expect(fmtCurrency(-5000)).toBe('$-5,000')
+})

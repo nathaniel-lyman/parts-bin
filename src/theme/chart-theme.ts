@@ -1,6 +1,9 @@
 // Chart styling derived from tokens. Recharts reads CSS vars via var(--…) at render,
 // so dark mode + re-skin apply automatically.
-export const SERIES = ['#2545ff', '#00a6c2', '#7c4dff', '#f59e0b', '#d6336c', '#0d9488', '#64748b', '#84cc16']
+// SERIES[0] tracks the --accent token so the first chart series re-skins with the rest of the
+// UI (RETHEME.md). Categorical items 2-8 stay literal hex (Recharts cannot cleanly resolve 8
+// separate CSS vars for categorical fills — see plan).
+export const SERIES = ['var(--accent)', '#00a6c2', '#7c4dff', '#f59e0b', '#d6336c', '#0d9488', '#64748b', '#84cc16']
 
 export const axisProps = {
   tick: { fill: 'var(--muted)', fontSize: 11, fontFamily: '"JetBrains Mono", monospace' },

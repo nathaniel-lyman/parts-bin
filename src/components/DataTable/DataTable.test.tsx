@@ -24,6 +24,14 @@ test('search filters by owner name', async () => {
   expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
   expect(screen.getByText('Meridian Corp')).toBeInTheDocument()
   expect(screen.queryByText('Quill Analytics')).not.toBeInTheDocument()
+  expect(screen.getAllByRole('row')).toHaveLength(3) // header + 2 owner matches
+})
+
+test('search filters by account name only', async () => {
+  render(<DataTable {...props} />)
+  await userEvent.type(screen.getByPlaceholderText(/Search/), 'meridian')
+  expect(screen.getByText('Meridian Corp')).toBeInTheDocument()
+  expect(screen.getAllByRole('row')).toHaveLength(2) // header + 1
 })
 
 test('no-match shows empty state', async () => {
@@ -32,9 +40,32 @@ test('no-match shows empty state', async () => {
   expect(screen.getByText(/No results/i)).toBeInTheDocument()
 })
 
+test('clear filters from empty state restores all rows', async () => {
+  render(<DataTable {...props} />)
+  await userEvent.type(screen.getByPlaceholderText(/Search/), 'zzzqqq')
+  await userEvent.click(screen.getByRole('button', { name: /clear filters/i }))
+  expect(screen.getAllByRole('row')).toHaveLength(9) // header + 8
+})
+
 test('edit button invokes onEdit with the account', async () => {
   const onEdit = vi.fn()
   render(<DataTable {...props} onEdit={onEdit} />)
   await userEvent.click(screen.getByRole('button', { name: /Edit Cobalt Freight/i }))
   expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Cobalt Freight' }))
+})
+
+test('delete button invokes onDelete with the account', async () => {
+  const onDelete = vi.fn()
+  render(<DataTable {...props} onDelete={onDelete} />)
+  await userEvent.click(screen.getByRole('button', { name: /Delete Cobalt Freight/i }))
+  expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ name: 'Cobalt Freight' }))
+})
+
+test('ARR/Since columns hidden by default, shown when visibility flips', () => {
+  const { rerender } = render(<DataTable {...props} />)
+  expect(screen.queryByRole('columnheader', { name: /ARR/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('columnheader', { name: /Since/i })).not.toBeInTheDocument()
+  rerender(<DataTable {...props} visibility={{ name: true, arr: true, since: true }} />)
+  expect(screen.getByRole('columnheader', { name: /ARR/i })).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: /Since/i })).toBeInTheDocument()
 })

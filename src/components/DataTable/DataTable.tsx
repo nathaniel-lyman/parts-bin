@@ -15,9 +15,10 @@ interface Props {
   onDelete: (a: Account) => void
   onNew?: () => void
   onToggleColumn?: (c: 'name' | 'arr' | 'since') => void
+  onResetColumns?: () => void
 }
 
-export function DataTable({ accounts, visibility, onEdit, onDelete, onNew, onToggleColumn }: Props) {
+export function DataTable({ accounts, visibility, onEdit, onDelete, onNew, onToggleColumn, onResetColumns }: Props) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'mrr', desc: true }])
   const [globalFilter, setGlobalFilter] = useState('')
   const [segments, setSegments] = useState<string[]>([])
@@ -57,6 +58,7 @@ export function DataTable({ accounts, visibility, onEdit, onDelete, onNew, onTog
         onToggleSegment={(s) => setSegments((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])}
         visibility={visibility}
         onToggleColumn={onToggleColumn}
+        onResetColumns={onResetColumns}
         onNew={onNew}
       />
       <table className="w-full border-collapse">
@@ -69,7 +71,7 @@ export function DataTable({ accounts, visibility, onEdit, onDelete, onNew, onTog
                 return (
                   <th
                     key={h.id}
-                    aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none'}
+                    aria-sort={h.column.getCanSort() ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined}
                     onClick={h.column.getCanSort() ? h.column.getToggleSortingHandler() : undefined}
                     className={`micro select-none px-3 py-2 ${align === 'right' ? 'text-right' : 'text-left'} ${h.column.getCanSort() ? 'cursor-pointer' : ''}`}
                   >
@@ -98,7 +100,7 @@ export function DataTable({ accounts, visibility, onEdit, onDelete, onNew, onTog
       </table>
       {table.getRowModel().rows.length === 0 && (
         <div className="px-3 py-8 text-center text-muted">
-          ∅ No results for “{globalFilter}” —{' '}
+          ∅ No results{globalFilter && <> for “{globalFilter}”</>} —{' '}
           <button
             className="text-accent underline"
             onClick={() => { setGlobalFilter(''); setSegments([]) }}

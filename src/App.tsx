@@ -27,7 +27,7 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 export default function App() {
   const { accounts, create, update, remove } = useAccounts()
   const { mode, toggle } = useTheme()
-  const { visibility, toggle: toggleColumn } = useColumnVisibility()
+  const { visibility, toggle: toggleColumn, reset: resetColumns } = useColumnVisibility()
   const toast = useToast()
 
   const [editing, setEditing] = useState<Account | null>(null)
@@ -78,12 +78,14 @@ export default function App() {
           onDelete={setDeleting}
           onNew={() => setCreating(true)}
           onToggleColumn={toggleColumn}
+          onResetColumns={resetColumns}
         />
       </main>
 
       {creating && (
         <AccountFormModal
           onClose={() => setCreating(false)}
+          onInvalid={(msg) => toast(msg, 'warn')}
           onSubmit={(data: NewAccount) => { create(data); setCreating(false); toast(`Created ${data.name}`, 'pos') }}
         />
       )}
@@ -91,6 +93,7 @@ export default function App() {
         <AccountFormModal
           account={editing}
           onClose={() => setEditing(null)}
+          onInvalid={(msg) => toast(msg, 'warn')}
           onSubmit={(data) => { update(editing.id, data); setEditing(null); toast(`Saved ${data.name}`, 'accent') }}
         />
       )}

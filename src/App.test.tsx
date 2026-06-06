@@ -22,6 +22,7 @@ test('Dark toggle switches to dark mode', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('button', { name: /Dark/ }))
   expect(document.documentElement.classList.contains('dark')).toBe(true)
+  expect(localStorage.getItem('ledger.theme')).toBe('dark')
   // app still renders its content in dark mode
   expect(screen.getByText('Account book')).toBeInTheDocument()
 })

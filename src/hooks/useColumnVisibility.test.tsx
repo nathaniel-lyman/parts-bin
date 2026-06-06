@@ -24,3 +24,15 @@ test('reads persisted value on init', () => {
   const { result } = renderHook(() => useColumnVisibility())
   expect(result.current.visibility.since).toBe(true)
 })
+
+test('merges partial persisted value over defaults', () => {
+  localStorage.setItem('ledger.cols', JSON.stringify({ since: true }))
+  const { result } = renderHook(() => useColumnVisibility())
+  expect(result.current.visibility).toEqual({ name: true, arr: false, since: true })
+})
+
+test('falls back to defaults on malformed JSON', () => {
+  localStorage.setItem('ledger.cols', '{not json')
+  const { result } = renderHook(() => useColumnVisibility())
+  expect(result.current.visibility).toEqual(DEFAULT_COLUMNS)
+})

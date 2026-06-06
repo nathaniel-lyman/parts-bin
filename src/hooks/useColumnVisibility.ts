@@ -30,5 +30,7 @@ export function useColumnVisibility() {
     setVisibility((v) => ({ ...v, [col]: !v[col] }))
   }, [])
 
-  return { visibility, toggle }
+  const reset = useCallback(() => setVisibility(DEFAULT_COLUMNS), [])
+
+  return { visibility, toggle, reset }
 }

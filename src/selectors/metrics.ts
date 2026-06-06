@@ -6,10 +6,11 @@ export const totalMrr = (a: Account[]) => liveAccounts(a).reduce((s, x) => s + x
 export const activeCount = (a: Account[]) => a.filter((x) => x.status === 'Active').length
 export const atRiskCount = (a: Account[]) => a.filter((x) => x.status !== 'Active').length
 
+// Average growth over ALL accounts (including Churned), matching the prototype (demo.html:380).
+// Spec §10 is silent on avgGrowth, so the demo governs the behavior here.
 export const avgGrowth = (a: Account[]) => {
-  const live = liveAccounts(a)
-  if (!live.length) return 0
-  return live.reduce((s, x) => s + x.growth, 0) / live.length
+  if (!a.length) return 0
+  return a.reduce((s, x) => s + x.growth, 0) / a.length
 }
 
 export interface SegmentShare { segment: Segment; value: number }
