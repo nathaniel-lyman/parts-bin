@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ledger — Theme Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        bg: 'var(--bg)', surface: 'var(--surface)', 'surface-2': 'var(--surface-2)',
+        line: 'var(--line)', ink: 'var(--ink)', muted: 'var(--muted)', faint: 'var(--faint)',
+        accent: { DEFAULT: 'var(--accent)', soft: 'var(--accent-soft)', fg: 'var(--accent-fg)' },
+        pos: { DEFAULT: 'var(--pos)', soft: 'var(--pos-soft)' },
+        neg: { DEFAULT: 'var(--neg)', soft: 'var(--neg-soft)' },
+        warn: { DEFAULT: 'var(--warn)', soft: 'var(--warn-soft)' },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+        display: ['"Space Grotesk"', 'sans-serif'],
+      },
+      borderRadius: { DEFAULT: '2px', md: '2px', lg: '4px' },
+    },
+  },
+}
+</script>
+<style>
+:root {
+  --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f6; --line:#e3e6eb;
+  --ink:#15181e; --muted:#5c6470; --faint:#8b93a1;
+  --accent:#2545ff; --accent-soft:#eceffe; --accent-fg:#ffffff;
+  --pos:#0a8754; --pos-soft:#e3f5ec; --neg:#d92d20; --neg-soft:#fdecea;
+  --warn:#b54708; --warn-soft:#fdf1e3;
+}
+.dark {
+  --bg:#0b0d11; --surface:#13161c; --surface-2:#1a1e26; --line:#262b35;
+  --ink:#e8eaee; --muted:#9aa3b2; --faint:#646d7d;
+  --accent:#5b76ff; --accent-soft:#1c2342;
+  --pos:#34c98e; --pos-soft:#11281e; --neg:#f97066; --neg-soft:#2d1715;
+  --warn:#f5a524; --warn-soft:#2b2010;
+}
+body {
+  background: var(--bg);
+  background-image: radial-gradient(color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+.num { font-family:'JetBrains Mono',monospace; font-variant-numeric: tabular-nums; }
+.micro { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+*:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+::placeholder { color: var(--faint); }
+.fadein { animation: fadein .16s ease-out; }
+@keyframes fadein { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:none;} }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.min.js"></script>
+<script src="https://unpkg.com/@tanstack/react-table@8.20.5/build/umd/index.production.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+</head>
+<body class="font-sans text-[13px] text-ink">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useRef, useLayoutEffect } = React;
+const { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, flexRender } = ReactTable;
+
+/* ---------- seed data ---------- */
+const SEED = [
+  { id: 1, name: 'Meridian Corp',    owner: 'K. Osei',    segment: 'Enterprise', mrr: 18400, growth:  6.2, status: 'Active',  since: '2023-02-14' },
+  { id: 2, name: 'Bluestem Health',  owner: 'J. Park',    segment: 'Mid-market', mrr:  9200, growth: 12.8, status: 'Active',  since: '2023-08-02' },
+  { id: 3, name: 'Foxglove Labs',    owner: 'A. Rivera',  segment: 'Startup',    mrr:  2150, growth: 31.4, status: 'Active',  since: '2025-01-20' },
+  { id: 4, name: 'Cobalt Freight',   owner: 'K. Osei',    segment: 'Enterprise', mrr: 24600, growth: -2.1, status: 'At risk', since: '2022-06-30' },
+  { id: 5, name: 'Harbor & Pine',    owner: 'M. Chen',    segment: 'Mid-market', mrr:  6800, growth:  0.4, status: 'Active',  since: '2024-04-11' },
+  { id: 6, name: 'Quill Analytics',  owner: 'A. Rivera',  segment: 'Startup',    mrr:  1400, growth: -8.6, status: 'At risk', since: '2024-11-05' },
+  { id: 7, name: 'Northwind Paper',  owner: 'J. Park',    segment: 'Enterprise', mrr: 15750, growth:  3.9, status: 'Active',  since: '2022-12-08' },
+  { id: 8, name: 'Solstice Media',   owner: 'M. Chen',    segment: 'Mid-market', mrr:  4300, growth: -14.2,status: 'Churned', since: '2023-05-19' },
+];
+const DEFAULT_VIS = { since: false, arr: false };
+const SEGMENTS = ['Enterprise', 'Mid-market', 'Startup'];
+const STATUSES = ['Active', 'At risk', 'Churned'];
+const SPARKS = {
+  mrr:    [62,64,63,67,70,69,74,78,77,82,85,88],
+  accts:  [30,32,33,33,35,36,36,38,39,39,40,41],
+  growth: [4,6,5,8,7,9,8,11,10,9,12,11],
+  churn:  [9,8,8,7,8,6,7,6,5,6,5,4],
+};
+const fmt$ = n => '$' + n.toLocaleString();
+
+/* ---------- primitives ---------- */
+const Btn = ({ kind='secondary', size='md', className='', ...p }) => {
+  const k = {
+    primary:    'bg-accent text-accent-fg hover:opacity-90 border border-accent',
+    secondary:  'bg-surface border border-line hover:bg-surface-2 text-ink',
+    ghost:      'text-muted hover:text-ink hover:bg-surface-2 border border-transparent',
+    destructive:'border border-neg text-neg hover:bg-neg-soft bg-surface',
+  }[kind];
+  const s = size==='sm' ? 'h-7 px-2.5 text-[12px]' : 'h-8 px-3';
+  return <button className={`rounded font-medium transition-colors duration-150 inline-flex items-center gap-1.5 ${k} ${s} ${className}`} {...p} />;
+};
+
+const Badge = ({ status }) => {
+  const map = {
+    'Active':  'bg-pos-soft text-pos',
+    'At risk': 'bg-warn-soft text-warn',
+    'Churned': 'bg-neg-soft text-neg',
+  };
+  return (
+    <span className={`micro rounded px-1.5 py-0.5 inline-flex items-center gap-1.5 ${map[status]}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />{status}
+    </span>
+  );
+};
+
+const Delta = ({ v }) => (
+  <span className={`num text-[12px] font-medium ${v >= 0 ? 'text-pos' : 'text-neg'}`}>
+    {v >= 0 ? '▲' : '▼'} {Math.abs(v).toFixed(1)}%
+  </span>
+);
+
+const Spark = ({ data, neg=false }) => {
+  const w = 96, h = 28, max = Math.max(...data), min = Math.min(...data);
+  const pts = data.map((v,i) => `${(i/(data.length-1))*w},${h - ((v-min)/(max-min||1))*(h-4) - 2}`).join(' ');
+  return (
+    <svg width={w} height={h} className="block">
+      <polyline points={pts} fill="none" stroke={neg ? 'var(--neg)' : 'var(--accent)'} strokeWidth="1.5" opacity="0.65" />
+    </svg>
+  );
+};
+
+const Field = ({ label, children }) => (
+  <label className="block">
+    <span className="micro text-muted block mb-1.5">{label}</span>
+    {children}
+  </label>
+);
+const inputCls = 'w-full h-8 px-2.5 rounded bg-surface border border-line text-ink text-[13px] focus:border-accent transition-colors duration-150';
+
+/* ---------- KPI card ---------- */
+const Kpi = ({ label, value, delta, spark, negSpark }) => (
+  <div className="bg-surface border border-line rounded p-4 flex flex-col gap-2">
+    <div className="micro text-muted">{label}</div>
+    <div className="flex items-end justify-between gap-2">
+      <div>
+        <div className="font-display font-semibold text-2xl num leading-none">{value}</div>
+        <div className="mt-1.5"><Delta v={delta} /> <span className="text-faint text-[11px]">vs last mo</span></div>
+      </div>
+      <Spark data={spark} neg={negSpark} />
+    </div>
+  </div>
+);
+
+/* ---------- chart theme ---------- */
+const { LineChart, Line, XAxis, YAxis, CartesianGrid,
+        Tooltip: RTooltip, BarChart, Bar, PieChart, Pie, Cell, ReferenceLine } = Recharts;
+
+/* Measure container width once + on window resize (debounced).
+   NOTE: deliberately NOT Recharts ResponsiveContainer — its ResizeObserver and the
+   Tailwind CDN's MutationObserver form an infinite layout feedback loop. */
+const useWidth = () => {
+  const ref = useRef(null);
+  const [w, setW] = useState(0);
+  useLayoutEffect(() => {
+    const measure = () => ref.current && setW(ref.current.clientWidth);
+    measure();
+    let t;
+    const onResize = () => { clearTimeout(t); t = setTimeout(measure, 150); };
+    window.addEventListener('resize', onResize);
+    return () => { window.removeEventListener('resize', onResize); clearTimeout(t); };
+  }, []);
+  return [ref, w];
+};
+
+const PALETTE = ['#2545ff','#00a6c2','#7c4dff','#f59e0b','#d6336c','#0d9488','#64748b','#84cc16'];
+const axisTick = { fill: 'var(--muted)', fontSize: 11, fontFamily: '"JetBrains Mono", monospace' };
+const axisProps = { tick: axisTick, axisLine: { stroke: 'var(--line)' }, tickLine: false };
+const gridProps = { stroke: 'var(--line)', strokeDasharray: '3 3', vertical: false };
+
+const ChartTip = ({ active, payload, label, unit = '' }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-surface border border-line rounded px-3 py-2" style={{ boxShadow: '0 4px 16px rgba(0,0,0,.10)' }}>
+      <div className="micro text-muted mb-1.5">{label}</div>
+      {payload.map(p => (
+        <div key={p.name} className="flex items-center gap-2 text-[12px] py-px">
+          <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: p.color || p.fill }} />
+          <span className="text-muted">{p.name}</span>
+          <span className="num ml-auto pl-5 font-medium">{p.value < 0 ? '-' : ''}${Math.abs(p.value).toLocaleString()}{unit}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const ChartLegend = ({ items }) => (
+  <div className="flex items-center gap-4 flex-wrap">
+    {items.map(([name, color]) => (
+      <span key={name} className="micro text-muted inline-flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-sm" style={{ background: color }} />{name}
+      </span>
+    ))}
+  </div>
+);
+
+const ChartCard = ({ title, legend, children, className='' }) => (
+  <div className={`bg-surface border border-line rounded p-4 ${className}`}>
+    <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+      <div className="micro text-muted">{title}</div>
+      {legend && <ChartLegend items={legend} />}
+    </div>
+    {children}
+  </div>
+);
+
+/* ---------- chart data (static series) ---------- */
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const TREND = MONTHS.map((m, i) => ({
+  m,
+  Enterprise: Math.round(38 + i * 1.8 + Math.sin(i * 1.1) * 3),
+  'Mid-market': Math.round(16 + i * 0.9 + Math.cos(i * 0.8) * 2),
+  Startup: Math.round(2 + i * 0.45 + Math.sin(i * 1.4)),
+}));
+const MOVEMENT = MONTHS.map((m, i) => ({
+  m,
+  New: +(4 + Math.sin(i * 0.9) * 1.6 + i * 0.18).toFixed(1),
+  Expansion: +(2.2 + Math.cos(i * 0.7) * 0.9 + i * 0.1).toFixed(1),
+  Churn: +(-(1.6 + Math.sin(i * 1.2 + 1) * 0.8)).toFixed(1),
+}));
+
+/* ---------- columns menu ---------- */
+const ColumnsMenu = ({ table }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <Btn onClick={() => setOpen(o => !o)} aria-expanded={open}>⚏ Columns</Btn>
+      {open && <React.Fragment>
+        <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+        <div className="absolute right-0 top-9 z-40 w-48 bg-surface border border-line rounded py-1 fadein"
+             style={{ boxShadow: '0 4px 16px rgba(0,0,0,.10)' }}>
+          <div className="micro text-faint px-3 py-1.5">Toggle columns</div>
+          {table.getAllLeafColumns().filter(c => c.getCanHide()).map(c => (
+            <label key={c.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-surface-2 cursor-pointer text-[12.5px]">
+              <input type="checkbox" checked={c.getIsVisible()} onChange={c.getToggleVisibilityHandler()}
+                     style={{ accentColor: 'var(--accent)' }} />
+              {typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id}
+            </label>
+          ))}
+          <div className="border-t border-line mt-1 pt-1 px-3 py-1">
+            <button className="text-accent text-[12px] hover:underline" onClick={() => table.resetColumnVisibility()}>
+              Reset to default
+            </button>
+          </div>
+        </div>
+      </React.Fragment>}
+    </div>
+  );
+};
+
+/* ---------- analytics section ---------- */
+/* React.memo: chart re-renders only when `rows` changes, not on table UI state */
+const Analytics = React.memo(({ rows }) => {
+  const [lineRef, lineW] = useWidth();
+  const [donutRef, donutW] = useWidth();
+  const [moveRef, moveW] = useWidth();
+
+  const bySeg = SEGMENTS.map((s, i) => ({
+    name: s,
+    value: rows.filter(r => r.segment === s && r.status !== 'Churned').reduce((a, r) => a + r.mrr, 0),
+    color: PALETTE[i],
+  })).filter(d => d.value > 0);
+  const segTotal = bySeg.reduce((a, d) => a + d.value, 0);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      {/* line: MRR trend */}
+      <ChartCard title="MRR trend ($k)" className="lg:col-span-2"
+                 legend={SEGMENTS.map((s, i) => [s, PALETTE[i]])}>
+        <div ref={lineRef} className="h-56">
+          {lineW > 0 && (
+            <LineChart width={lineW} height={224} data={TREND} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid {...gridProps} />
+              <XAxis dataKey="m" {...axisProps} />
+              <YAxis {...axisProps} />
+              <RTooltip content={<ChartTip unit="k" />} cursor={{ stroke: 'var(--line)' }} />
+              {SEGMENTS.map((s, i) => (
+                <Line key={s} type="monotone" dataKey={s} stroke={PALETTE[i]}
+                      strokeWidth={1.75} dot={false}
+                      activeDot={{ r: 3, strokeWidth: 0, fill: PALETTE[i] }} />
+              ))}
+            </LineChart>
+          )}
+        </div>
+      </ChartCard>
+
+      {/* donut: live share by segment (reflects CRUD edits) */}
+      <ChartCard title="MRR share — live" legend={bySeg.map(d => [d.name, d.color])}>
+        <div ref={donutRef} className="h-56 relative">
+          {donutW > 0 && (
+            <PieChart width={donutW} height={224}>
+              <Pie data={bySeg} dataKey="value" nameKey="name" innerRadius={62} outerRadius={86}
+                   paddingAngle={2} strokeWidth={0}>
+                {bySeg.map(d => <Cell key={d.name} fill={d.color} />)}
+              </Pie>
+              <RTooltip content={<ChartTip />} />
+            </PieChart>
+          )}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="num font-semibold text-lg leading-none">{fmt$(segTotal)}</div>
+            <div className="micro text-faint mt-1">active mrr</div>
+          </div>
+        </div>
+      </ChartCard>
+
+      {/* diverging stacked bar: revenue movement */}
+      <ChartCard title="Revenue movement ($k)" className="lg:col-span-3"
+                 legend={[['New', 'var(--accent)'], ['Expansion', '#00a6c2'], ['Churn', 'var(--neg)']]}>
+        <div ref={moveRef} className="h-48">
+          {moveW > 0 && (
+            <BarChart width={moveW} height={192} data={MOVEMENT} stackOffset="sign" margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid {...gridProps} />
+              <XAxis dataKey="m" {...axisProps} />
+              <YAxis {...axisProps} />
+              <RTooltip content={<ChartTip unit="k" />} cursor={{ fill: 'var(--surface-2)' }} />
+              <ReferenceLine y={0} stroke="var(--muted)" strokeWidth={1} />
+              <Bar dataKey="New" stackId="a" fill="var(--accent)" maxBarSize={22} />
+              <Bar dataKey="Expansion" stackId="a" fill="#00a6c2" maxBarSize={22} />
+              <Bar dataKey="Churn" stackId="a" fill="var(--neg)" maxBarSize={22} />
+            </BarChart>
+          )}
+        </div>
+      </ChartCard>
+    </div>
+  );
+});
+
+/* ---------- modal ---------- */
+const Modal = ({ title, onClose, children }) => (
+  <div className="fixed inset-0 z-40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+    <div className="relative bg-surface border border-line rounded-lg w-full max-w-[480px] fadein" style={{ boxShadow: '0 16px 48px rgba(0,0,0,.18)' }}>
+      <div className="flex items-center justify-between px-5 h-12 border-b border-line">
+        <span className="font-semibold text-[14px]">{title}</span>
+        <Btn kind="ghost" size="sm" onClick={onClose} aria-label="Close">✕</Btn>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  </div>
+);
+
+/* ---------- app ---------- */
+function App() {
+  const [rows, setRows] = useState(SEED);
+  const [dark, setDark] = useState(false);
+  const [query, setQuery] = useState('');
+  const [segFilter, setSegFilter] = useState(null);
+  const [sorting, setSorting] = useState([{ id: 'mrr', desc: true }]);
+  const [colVis, setColVis] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ledger.cols')) ?? DEFAULT_VIS; } catch { return DEFAULT_VIS; }
+  });
+  const onColVis = updater => setColVis(old => {
+    const v = typeof updater === 'function' ? updater(old) : updater;
+    try { localStorage.setItem('ledger.cols', JSON.stringify(v)); } catch {}
+    return v;
+  });
+  const [editing, setEditing] = useState(null);   // null | 'new' | row
+  const [confirming, setConfirming] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [form, setForm] = useState({});
+
+  const ping = msg => { setToast(msg); setTimeout(() => setToast(null), 3500); };
+  const toggleDark = () => { document.documentElement.classList.toggle('dark', !dark); setDark(!dark); };
+
+  const totalMrr = rows.filter(r => r.status !== 'Churned').reduce((a,r) => a + r.mrr, 0);
+  const active = rows.filter(r => r.status === 'Active').length;
+  const avgGrowth = rows.length ? rows.reduce((a,r) => a + r.growth, 0) / rows.length : 0;
+  const atRisk = rows.filter(r => r.status !== 'Active').length;
+
+  const openNew  = () => { setForm({ name:'', owner:'', segment:'Enterprise', mrr:'', growth:'', status:'Active' }); setEditing('new'); };
+  const openEdit = r  => { setForm({ ...r }); setEditing(r); };
+  const save = () => {
+    if (!form.name.trim()) return ping('Name is required');
+    const rec = { ...form, mrr: +form.mrr || 0, growth: +form.growth || 0 };
+    if (editing === 'new') {
+      setRows([...rows, { ...rec, id: Math.max(0, ...rows.map(r => r.id)) + 1, since: new Date().toISOString().slice(0,10) }]);
+      ping(`Added ${rec.name}`);
+    } else {
+      setRows(rows.map(r => r.id === editing.id ? { ...rec, id: r.id } : r));
+      ping(`Saved ${rec.name}`);
+    }
+    setEditing(null);
+  };
+  const del = r => { setRows(rows.filter(x => x.id !== r.id)); setConfirming(null); ping(`Deleted ${r.name}`); };
+
+  const columns = useMemo(() => [
+    { accessorKey: 'name', header: 'Account',
+      cell: i => <span className="font-medium">{i.getValue()}</span> },
+    { accessorKey: 'owner', header: 'Owner',
+      cell: i => <span className="text-muted">{i.getValue()}</span> },
+    { accessorKey: 'segment', header: 'Segment', filterFn: 'equals',
+      cell: i => <span className="text-muted">{i.getValue()}</span> },
+    { accessorKey: 'since', header: 'Since',
+      cell: i => <span className="num text-[12px] text-muted">{i.getValue()}</span> },
+    { accessorKey: 'mrr', header: 'MRR', meta: { right: true },
+      cell: i => <span className="num">{fmt$(i.getValue())}</span> },
+    { id: 'arr', accessorFn: r => r.mrr * 12, header: 'ARR', meta: { right: true },
+      cell: i => <span className="num text-muted">{fmt$(i.getValue())}</span> },
+    { accessorKey: 'growth', header: 'Growth', meta: { right: true },
+      cell: i => <Delta v={i.getValue()} /> },
+    { accessorKey: 'status', header: 'Status',
+      cell: i => <Badge status={i.getValue()} /> },
+    { id: 'actions', header: '', enableHiding: false, enableSorting: false,
+      cell: i => (
+        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Btn kind="ghost" size="sm" onClick={() => openEdit(i.row.original)} aria-label={`Edit ${i.row.original.name}`}>✎</Btn>
+          <Btn kind="ghost" size="sm" className="hover:!text-neg" onClick={() => setConfirming(i.row.original)} aria-label={`Delete ${i.row.original.name}`}>🗑</Btn>
+        </div>
+      ) },
+  ], []);
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: {
+      sorting,
+      globalFilter: query,
+      columnFilters: segFilter ? [{ id: 'segment', value: segFilter }] : [],
+      columnVisibility: colVis,
+    },
+    initialState: { columnVisibility: DEFAULT_VIS },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: onColVis,
+    globalFilterFn: (row, _id, value) => {
+      const q = String(value).toLowerCase();
+      return row.original.name.toLowerCase().includes(q) || row.original.owner.toLowerCase().includes(q);
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  return (
+    <div className="min-h-screen">
+      {/* top bar */}
+      <header className="bg-surface border-b border-line sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-5 h-12 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <span className="font-display font-700 font-bold text-[15px] tracking-tight">⌗ Ledger</span>
+            <nav className="flex items-center gap-1">
+              {['Overview','Accounts','Reports'].map((t,i) => (
+                <a key={t} href="#" className={`px-2.5 py-1 rounded text-[12.5px] font-medium transition-colors ${i===1 ? 'bg-accent-soft text-accent' : 'text-muted hover:text-ink hover:bg-surface-2'}`}>{t}</a>
+              ))}
+            </nav>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="num text-[11px] text-faint hidden sm:block">demo · v1.0</span>
+            <Btn kind="ghost" size="sm" onClick={toggleDark}>{dark ? '☀ Light' : '◑ Dark'}</Btn>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-5 py-6 space-y-5">
+        {/* title */}
+        <div className="flex items-end justify-between flex-wrap gap-3">
+          <div>
+            <div className="micro text-muted mb-1">Revenue / Accounts</div>
+            <h1 className="font-display font-semibold text-[26px] leading-tight tracking-tight">Account book</h1>
+          </div>
+          <div className="text-muted text-[12px] num">{rows.length} accounts · {fmt$(totalMrr)} MRR</div>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <Kpi label="Total MRR"       value={fmt$(totalMrr)}              delta={4.6}  spark={SPARKS.mrr} />
+          <Kpi label="Active accounts" value={active}                      delta={2.4}  spark={SPARKS.accts} />
+          <Kpi label="Avg growth"      value={avgGrowth.toFixed(1) + '%'}  delta={1.1}  spark={SPARKS.growth} />
+          <Kpi label="At risk / churned" value={atRisk}                    delta={-12.5} spark={SPARKS.churn} negSpark />
+        </div>
+
+        <Analytics rows={rows} />
+
+        {/* table card */}
+        <div className="bg-surface border border-line rounded">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-line flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <input className={inputCls + ' !w-56'} placeholder="Search accounts or owners…" value={query} onChange={e => setQuery(e.target.value)} />
+              {SEGMENTS.map(s => (
+                <button key={s}
+                  className={`micro px-2 py-1 rounded border transition-colors ${segFilter===s ? 'bg-accent-soft text-accent border-accent' : 'border-line text-muted hover:text-ink'}`}
+                  onClick={() => setSegFilter(segFilter === s ? null : s)}>{s}</button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <ColumnsMenu table={table} />
+              <Btn kind="primary" onClick={openNew}>+ New account</Btn>
+            </div>
+          </div>
+          <table className="w-full border-collapse">
+            <thead>
+              {table.getHeaderGroups().map(hg => (
+                <tr key={hg.id} className="bg-surface-2 border-b border-line">
+                  {hg.headers.map(h => {
+                    const right = h.column.columnDef.meta?.right;
+                    const sorted = h.column.getIsSorted();
+                    return (
+                      <th key={h.id}
+                          className={`micro text-muted px-3 py-2 whitespace-nowrap ${right ? 'text-right' : 'text-left'} ${h.column.getCanSort() ? 'cursor-pointer select-none' : 'w-20'}`}
+                          onClick={h.column.getToggleSortingHandler()}
+                          aria-sort={sorted ? (sorted === 'asc' ? 'ascending' : 'descending') : undefined}>
+                        {flexRender(h.column.columnDef.header, h.getContext())}
+                        {sorted && <span className="text-accent ml-1">{sorted === 'asc' ? '▲' : '▼'}</span>}
+                      </th>
+                    );
+                  })}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map(row => (
+                <tr key={row.id} className="border-b border-line last:border-0 hover:bg-surface-2 group transition-colors">
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className={`px-3 h-10 ${cell.column.columnDef.meta?.right ? 'text-right' : ''}`}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {table.getRowModel().rows.length === 0 && (
+                <tr><td colSpan={table.getVisibleLeafColumns().length} className="px-3 py-10 text-center text-muted">
+                  <span className="num">∅</span> &nbsp;No results{query && <> for “{query}”</>} — <button className="text-accent hover:underline" onClick={() => { setQuery(''); setSegFilter(null); }}>clear filters</button>
+                </td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
+
+      {/* create / edit modal */}
+      {editing && (
+        <Modal title={editing === 'new' ? 'New account' : `Edit ${editing.name}`} onClose={() => setEditing(null)}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2"><Field label="Account name"><input autoFocus className={inputCls} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></Field></div>
+            <Field label="Owner"><input className={inputCls} value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} /></Field>
+            <Field label="Segment">
+              <select className={inputCls} value={form.segment} onChange={e => setForm({ ...form, segment: e.target.value })}>
+                {SEGMENTS.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </Field>
+            <Field label="MRR ($)"><input type="number" className={inputCls + ' num'} value={form.mrr} onChange={e => setForm({ ...form, mrr: e.target.value })} /></Field>
+            <Field label="Growth (%)"><input type="number" step="0.1" className={inputCls + ' num'} value={form.growth} onChange={e => setForm({ ...form, growth: e.target.value })} /></Field>
+            <div className="col-span-2"><Field label="Status">
+              <select className={inputCls} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                {STATUSES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </Field></div>
+          </div>
+          <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-line">
+            <Btn onClick={() => setEditing(null)}>Cancel</Btn>
+            <Btn kind="primary" onClick={save}>{editing === 'new' ? 'Create account' : 'Save changes'}</Btn>
+          </div>
+        </Modal>
+      )}
+
+      {/* delete confirm */}
+      {confirming && (
+        <Modal title="Delete account" onClose={() => setConfirming(null)}>
+          <p className="text-muted leading-relaxed">
+            Delete <span className="font-medium text-ink">{confirming.name}</span>? This removes <span className="num">{fmt$(confirming.mrr)}</span> of tracked MRR and its full history.
+          </p>
+          <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-line">
+            <Btn onClick={() => setConfirming(null)}>Cancel</Btn>
+            <Btn kind="destructive" onClick={() => del(confirming)}>Delete</Btn>
+          </div>
+        </Modal>
+      )}
+
+      {/* toast */}
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-50 bg-surface border border-line rounded px-4 py-3 fadein flex items-center gap-2"
+             style={{ boxShadow: '0 4px 16px rgba(0,0,0,.10)', borderLeft: '4px solid var(--accent)' }}>
+          <span className="font-medium">{toast}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
