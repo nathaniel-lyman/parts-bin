@@ -133,6 +133,32 @@ export function columnPinningReducer(slice: ColumnPinning, action: GridAction): 
   }
 }
 
+export function rowSelectionReducer(
+  slice: LedgerGridState['rowSelection'],
+  action: GridAction,
+): LedgerGridState['rowSelection'] {
+  switch (action.type) {
+    case 'TOGGLE_ROW': {
+      const next = { ...slice }
+      if (next[action.id]) delete next[action.id]
+      else next[action.id] = true
+      return next
+    }
+    case 'SELECT_ALL_VISIBLE': {
+      const next = { ...slice }
+      for (const id of action.ids) {
+        if (action.select) next[id] = true
+        else delete next[id]
+      }
+      return next
+    }
+    case 'CLEAR_SELECTION':
+      return {}
+    default:
+      return slice
+  }
+}
+
 function sortActionReducer(slice: SortingState, action: GridAction): SortingState {
   switch (action.type) {
     case 'SET_SORT': {
@@ -213,6 +239,10 @@ export function gridReducer<TData>(
       return { ...state, sorting: normalizeSorting(sortActionReducer(state.sorting, action)) }
     case 'TOGGLE_SORT':
       return { ...state, sorting: normalizeSorting(toggleSortingReducer(state.sorting, action)) }
+    case 'TOGGLE_ROW':
+    case 'SELECT_ALL_VISIBLE':
+    case 'CLEAR_SELECTION':
+      return { ...state, rowSelection: rowSelectionReducer(state.rowSelection, action) }
     default:
       return state
   }

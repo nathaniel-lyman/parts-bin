@@ -104,10 +104,10 @@ export function buildAccountGridColumns(
       pinnable: true,
       cell: (ctx) => (
         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100">
-          <button aria-label={`Edit ${ctx.row.name}`} className="text-muted hover:text-accent" onClick={() => onEdit(ctx.row)}>
+          <button aria-label={`Edit ${ctx.row.name}`} className="text-muted hover:text-accent" onClick={(event) => { event.stopPropagation(); onEdit(ctx.row) }}>
             ✎
           </button>
-          <button aria-label={`Delete ${ctx.row.name}`} className="text-muted hover:text-neg" onClick={() => onDelete(ctx.row)}>
+          <button aria-label={`Delete ${ctx.row.name}`} className="text-muted hover:text-neg" onClick={(event) => { event.stopPropagation(); onDelete(ctx.row) }}>
             🗑
           </button>
         </div>

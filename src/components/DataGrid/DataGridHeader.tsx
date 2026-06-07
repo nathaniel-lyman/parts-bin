@@ -7,6 +7,7 @@ import { type CSSProperties } from 'react'
 import { isLockedColumn, isMovableColumnId } from './normalize'
 import { DataGridColumnMenu } from './DataGridColumnMenu'
 import { DataGridResizeHandle } from './DataGridResizeHandle'
+import { DataGridSelectAllCheckbox } from './DataGridSelectionCell'
 import type { FilterValue } from './filtering'
 import type { ColumnPinning, GridAction, LedgerGridColumn } from './types'
 
@@ -130,6 +131,8 @@ export function DataGridHeader<TData>({
   enableHeaderFilters = false,
   enableRowSelection = false,
   isServerMode = false,
+  selectAll = 'none',
+  onSelectAll,
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
@@ -140,6 +143,8 @@ export function DataGridHeader<TData>({
   enableHeaderFilters?: boolean
   enableRowSelection?: boolean
   isServerMode?: boolean
+  selectAll?: 'none' | 'some' | 'all'
+  onSelectAll?: (select: boolean) => void
 }) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -165,7 +170,11 @@ export function DataGridHeader<TData>({
             <tr key={headerGroup.id} className="bg-surface-2">
               {enableRowSelection && (
                 <th className="w-10 px-2">
-                  <input type="checkbox" aria-label={isServerMode ? 'Select all loaded' : 'Select all'} readOnly />
+                  <DataGridSelectAllCheckbox
+                    state={selectAll}
+                    label={isServerMode ? 'Select all loaded' : 'Select all'}
+                    onChange={(select) => onSelectAll?.(select)}
+                  />
                 </th>
               )}
               {headerGroup.headers.map((header) => (

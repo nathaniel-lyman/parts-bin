@@ -20,9 +20,10 @@ export function DataGridToolbar<TData>({ columns, columnVisibility, globalFilter
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
       <Input
+        type="search"
         className="max-w-sm"
         placeholder="Search accounts or owners..."
-        aria-label="Search accounts or owners"
+        aria-label="Quick filter"
         value={globalFilter}
         onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}
       />

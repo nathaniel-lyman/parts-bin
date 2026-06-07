@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './columnMeta'
 import {
   getCoreRowModel,
@@ -13,11 +13,15 @@ import {
 import { useGridViewState } from '../../hooks/useGridViewState'
 import { canHideColumn, canSortColumn } from './normalize'
 import { gridReducer } from './reducers'
-import { densityClass, pinnedLeafGroups } from './selectors'
+import { densityClass, pinnedLeafGroups, selectAllState, selectionCount } from './selectors'
 import { hydrate } from './state'
 import { ledgerFilterFn } from './filtering'
 import { serializeGridQuery, toGridQuery, type GridQuery } from './query'
+import { copyToClipboard, serializeCell, serializeTSV } from './export'
+import { resolveCopyIntent } from './keyboard'
+import { DataGridBulkActions } from './DataGridBulkActions'
 import { DataGridBody } from './DataGridBody'
+import { DataGridContextMenu } from './DataGridContextMenu'
 import { DataGridEmptyState } from './DataGridEmptyState'
 import { DataGridErrorState } from './DataGridErrorState'
 import { DataGridHeader } from './DataGridHeader'
@@ -88,6 +92,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const isControlled = props.state !== undefined && props.onStateChange !== undefined
   const isServerMode = Boolean(manualSorting || manualFiltering || manualPagination)
   const [seed] = useState(() => hydrate({ initialState: props.initialState }))
+  const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const view = useGridViewState(seed, columns)
   const state = isControlled ? props.state! : view.state
 
@@ -166,7 +171,79 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   })
 
   const rowCount = table.getRowModel().rows.length
+  const visibleRows = table.getRowModel().rows
+  const visibleIds = visibleRows.map((row) => row.id)
+  const visibleData = visibleRows.map((row) => row.original)
+  const selCount = selectionCount(state.rowSelection)
+  const allState = selectAllState(state.rowSelection, visibleIds)
   const pinnedGroups = pinnedLeafGroups(table.getVisibleLeafColumns().map((column) => column.id), state.columnPinning)
+  const selCountRef = useRef(selCount)
+  const menuRef = useRef(menu)
+
+  selCountRef.current = selCount
+  menuRef.current = menu
+
+  const resolveCellValue = useCallback(
+    (row: TData, columnId: string): unknown => {
+      const column = columns.find((item) => item.id === columnId)
+      if (!column) return ''
+      if (column.accessorFn) return column.accessorFn(row)
+      if (column.accessorKey) return (row as Record<string, unknown>)[column.accessorKey as string]
+      return ''
+    },
+    [columns],
+  )
+
+  const copyCell = useCallback(
+    (rowId: string, colId: string) => {
+      const row = visibleData.find((item) => getRowId(item) === rowId) ?? rows.find((item) => getRowId(item) === rowId)
+      if (!row) return
+      void copyToClipboard(serializeCell(resolveCellValue(row, colId)))
+    },
+    [getRowId, resolveCellValue, rows, visibleData],
+  )
+
+  const copyRow = useCallback(
+    (rowId: string) => {
+      const row = visibleData.find((item) => getRowId(item) === rowId) ?? rows.find((item) => getRowId(item) === rowId)
+      if (!row) return
+      void copyToClipboard(serializeTSV([row], columns, {
+        getRowId,
+        columnOrder: state.columnOrder,
+        columnVisibility: state.columnVisibility,
+        includeHeader: false,
+      }))
+    },
+    [columns, getRowId, rows, state.columnOrder, state.columnVisibility, visibleData],
+  )
+
+  const copySelection = useCallback(() => {
+    void copyToClipboard(serializeTSV(visibleData, columns, {
+      getRowId,
+      columnOrder: state.columnOrder,
+      columnVisibility: state.columnVisibility,
+      rowSelection: state.rowSelection,
+    }))
+  }, [columns, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection, visibleData])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const active = document.activeElement
+      const editableInput =
+        active instanceof HTMLInputElement &&
+        ['email', 'number', 'password', 'search', 'tel', 'text', 'url'].includes(active.type)
+      const inEditableTarget =
+        editableInput ||
+        active instanceof HTMLTextAreaElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      const intent = resolveCopyIntent(event, { hasSelection: selCountRef.current > 0, inEditableTarget })
+      if (!intent) return
+      if (intent === 'selection') copySelection()
+      else if (menuRef.current) copyCell(menuRef.current.rowId, menuRef.current.colId)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [copyCell, copySelection])
 
   return (
     <div
@@ -182,6 +259,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         density={state.density}
         dispatch={dispatch}
       />
+      {enableRowSelection && selCount > 0 && (
+        <div className="flex items-center justify-between border-b border-line px-3 py-2">
+          <DataGridBulkActions count={selCount} onClear={() => dispatch({ type: 'CLEAR_SELECTION' })} />
+        </div>
+      )}
       <table className="w-full border-collapse">
         <DataGridHeader
           table={table}
@@ -193,12 +275,33 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           enableHeaderFilters={enableHeaderFilters}
           enableRowSelection={enableRowSelection}
           isServerMode={isServerMode}
+          selectAll={allState}
+          onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
         />
-        {!loading && error === undefined && rowCount > 0 && <DataGridBody table={table} />}
+        {!loading && error === undefined && rowCount > 0 && (
+          <DataGridBody
+            table={table}
+            enableRowSelection={enableRowSelection}
+            rowSelection={state.rowSelection}
+            onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
+            onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
+          />
+        )}
       </table>
       {loading && <DataGridLoadingState />}
       {!loading && error !== undefined && <DataGridErrorState error={error} />}
       {!loading && error === undefined && rowCount === 0 && <DataGridEmptyState query={state.globalFilter || undefined} />}
+      {menu && (
+        <DataGridContextMenu
+          x={menu.x}
+          y={menu.y}
+          selectionCount={selCount}
+          onCopyCell={() => copyCell(menu.rowId, menu.colId)}
+          onCopyRow={() => copyRow(menu.rowId)}
+          onCopySelection={copySelection}
+          onClose={() => setMenu(null)}
+        />
+      )}
     </div>
   )
 }

@@ -48,3 +48,19 @@ export function pinnedLeafGroups(orderedVisibleIds: string[], pinning: ColumnPin
   const center = orderedVisibleIds.filter((id) => !pinned.has(id))
   return { left, center, right }
 }
+
+export function selectionCount(rowSelection: LedgerGridState['rowSelection']): number {
+  return Object.keys(rowSelection).length
+}
+
+export function selectAllState(
+  rowSelection: LedgerGridState['rowSelection'],
+  visibleIds: string[],
+): 'none' | 'some' | 'all' {
+  if (visibleIds.length === 0) return 'none'
+  let selected = 0
+  for (const id of visibleIds) if (rowSelection[id]) selected++
+  if (selected === 0) return 'none'
+  if (selected === visibleIds.length) return 'all'
+  return 'some'
+}

@@ -93,3 +93,6 @@ export type GridAction =
   | { type: 'CLEAR_COLUMN_FILTER'; columnId: string }
   | { type: 'SET_COLUMN_FILTERS'; columnFilters: ColumnFiltersState }
   | { type: 'SET_GLOBAL_FILTER'; value: string }
+  | { type: 'TOGGLE_ROW'; id: string }
+  | { type: 'SELECT_ALL_VISIBLE'; ids: string[]; select: boolean }
+  | { type: 'CLEAR_SELECTION' }
