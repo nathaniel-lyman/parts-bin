@@ -33,13 +33,16 @@ export function project(state: LedgerGridState): PersistedGridView {
 }
 
 export function hydrateView(view: Partial<PersistedGridView>): LedgerGridState {
-  const { version: _version, pagination, ...rest } = view
-  return hydrate({
-    persisted: {
-      ...rest,
-      ...(pagination ? { pagination: { pageIndex: 0, pageSize: pagination.pageSize } } : {}),
-    },
-  })
+  const persisted: Partial<LedgerGridState> = {}
+  if (view.columnVisibility) persisted.columnVisibility = view.columnVisibility
+  if (view.columnOrder) persisted.columnOrder = view.columnOrder
+  if (view.columnSizing) persisted.columnSizing = view.columnSizing
+  if (view.columnPinning) persisted.columnPinning = view.columnPinning
+  if (view.density) persisted.density = view.density
+  if (view.columnFilters) persisted.columnFilters = view.columnFilters
+  if (view.sorting) persisted.sorting = view.sorting
+  if (view.pagination) persisted.pagination = { pageIndex: 0, pageSize: view.pagination.pageSize }
+  return hydrate({ persisted })
 }
 
 const LEGACY_COLS_KEY = 'ledger.cols'
@@ -70,4 +73,3 @@ export function migrateLegacy(): PersistedGridView {
 
   return { ...base, columnVisibility, columnOrder }
 }
-

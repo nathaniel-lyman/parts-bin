@@ -18,7 +18,7 @@ describe('project (LedgerGridState -> PersistedGridView)', () => {
   })
 
   it('drops globalFilter, rowSelection, rowPinning entirely', () => {
-    const view = project(live) as Record<string, unknown>
+    const view = project(live) as unknown as Record<string, unknown>
     expect('globalFilter' in view).toBe(false)
     expect('rowSelection' in view).toBe(false)
     expect('rowPinning' in view).toBe(false)
@@ -105,4 +105,3 @@ describe('migrateLegacy (non-destructive, builds a v1 view from legacy keys)', (
     expect(localStorage.getItem('ledger.colOrder')).toBe(JSON.stringify(['owner', 'account']))
   })
 })
-

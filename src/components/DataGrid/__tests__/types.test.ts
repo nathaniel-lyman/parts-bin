@@ -21,7 +21,7 @@ describe('grid types', () => {
   })
 
   it('LedgerGridColumn<Account> accepts a parity column shape (compile check)', () => {
-    const column: LedgerGridColumn<Account> = {
+    const column: LedgerGridColumn<Account, number> = {
       id: 'mrr',
       accessorKey: 'mrr',
       header: 'MRR',
@@ -64,4 +64,3 @@ describe('grid types', () => {
     expect(status.status).toBe('error')
   })
 })
-
