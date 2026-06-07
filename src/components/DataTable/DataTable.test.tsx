@@ -118,3 +118,57 @@ test('clicking a sortable header toggles aria-sort', async () => {
   await userEvent.click(accountHeader)
   expect(accountHeader).toHaveAttribute('aria-sort', 'descending')
 })
+
+test('reset restores default column order and default visibility', async () => {
+  localStorage.setItem('ledger.colOrder', JSON.stringify([
+    'owner',
+    'account',
+    'segment',
+    'mrr',
+    'growth',
+    'status',
+    'arr',
+    'since',
+    'actions',
+  ]))
+
+  function Harness() {
+    const [vis, setVis] = useState({ name: true, arr: true, since: false })
+    return (
+      <DataTable
+        {...props}
+        visibility={vis}
+        onToggleColumn={(c) => setVis((v) => ({ ...v, [c]: !v[c] }))}
+        onResetColumns={() => setVis({ name: true, arr: false, since: false })}
+      />
+    )
+  }
+
+  render(<Harness />)
+
+  const before = screen.getAllByRole('columnheader').map((header) =>
+    header.textContent?.replaceAll(':', '').replace(/[▲▼]/g, '').trim(),
+  )
+  expect(before.slice(0, 2)).toEqual(['Owner', 'Account'])
+  expect(screen.getByRole('columnheader', { name: /ARR/i })).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: /Columns/i }))
+  await userEvent.click(screen.getByRole('button', { name: /Reset to default/i }))
+
+  const after = screen.getAllByRole('columnheader').map((header) =>
+    header.textContent?.replaceAll(':', '').replace(/[▲▼]/g, '').trim(),
+  )
+  expect(after.slice(0, 3)).toEqual(['Account', 'Owner', 'Segment'])
+  expect(screen.queryByRole('columnheader', { name: /ARR/i })).not.toBeInTheDocument()
+  expect(JSON.parse(localStorage.getItem('ledger.colOrder')!)).toEqual([
+    'account',
+    'owner',
+    'segment',
+    'mrr',
+    'growth',
+    'status',
+    'arr',
+    'since',
+    'actions',
+  ])
+})
