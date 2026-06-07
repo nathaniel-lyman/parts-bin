@@ -26,3 +26,11 @@ test('Dark toggle switches to dark mode', async () => {
   // app still renders its content in dark mode
   expect(screen.getByText('Account book')).toBeInTheDocument()
 })
+
+test('server mode toggle exercises the DataGrid mock server path', async () => {
+  render(<ToastProvider><App /></ToastProvider>)
+  await userEvent.click(screen.getByRole('switch', { name: /server mode/i }))
+  expect(screen.getByText(/loading server rows/i)).toBeInTheDocument()
+  expect(await screen.findByText(/server rows/i)).toBeInTheDocument()
+  expect(screen.getByRole('checkbox', { name: /select all loaded/i })).toBeInTheDocument()
+})

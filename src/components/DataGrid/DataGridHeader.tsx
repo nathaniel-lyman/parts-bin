@@ -2,11 +2,12 @@ import './columnMeta'
 import { closestCenter, DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { flexRender, type Header, type Table } from '@tanstack/react-table'
+import { flexRender, type ColumnFiltersState, type Header, type Table } from '@tanstack/react-table'
 import { type CSSProperties } from 'react'
-import { isMovableColumnId } from './normalize'
+import { isLockedColumn, isMovableColumnId } from './normalize'
 import { DataGridColumnMenu } from './DataGridColumnMenu'
 import { DataGridResizeHandle } from './DataGridResizeHandle'
+import type { FilterValue } from './filtering'
 import type { ColumnPinning, GridAction, LedgerGridColumn } from './types'
 
 const noopDispatch = () => {}
@@ -29,12 +30,14 @@ function SortableHeader<TData>({
   columnSizing,
   columns,
   columnPinning,
+  columnFilters,
 }: {
   header: Header<TData, unknown>
-  dispatch: (action: GridAction) => void
+  dispatch?: (action: GridAction) => void
   columnSizing: Record<string, number>
   columns: LedgerGridColumn<TData>[]
   columnPinning: ColumnPinning
+  columnFilters: ColumnFiltersState
 }) {
   const sorted = header.column.getIsSorted()
   const align = header.column.columnDef.meta?.align ?? 'left'
@@ -43,6 +46,7 @@ function SortableHeader<TData>({
   const source = columns.find((column) => column.id === header.column.id)
   const canResize = header.column.columnDef.meta?.resizable !== false && canMove
   const label = headerLabel(header, source)
+  const currentFilter = columnFilters.find((filter) => filter.id === header.column.id)?.value as FilterValue | undefined
   const {
     attributes,
     listeners,
@@ -64,7 +68,13 @@ function SortableHeader<TData>({
       ref={setNodeRef}
       style={style}
       aria-sort={canSort ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined}
-      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+      onClick={
+        canSort
+          ? dispatch
+            ? (event) => dispatch({ type: 'TOGGLE_SORT', columnId: header.column.id, multi: event.shiftKey })
+            : header.column.getToggleSortingHandler()
+          : undefined
+      }
       className={`micro select-none px-3 py-2 ${align === 'right' ? 'text-right' : 'text-left'} ${canSort ? 'cursor-pointer' : ''}`}
     >
       <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
@@ -88,11 +98,13 @@ function SortableHeader<TData>({
           columnId={header.column.id}
           header={label}
           type={source?.type ?? 'text'}
+          filterMeta={header.column.columnDef.meta}
+          currentFilter={currentFilter}
           sortDirection={sorted}
           hideable={(source?.hideable ?? true) && header.column.id !== 'actions'}
           canPin={(source?.pinnable ?? true) && header.column.id !== 'actions'}
           pinSide={pinSide(header.column.id, columnPinning)}
-          dispatch={dispatch}
+          dispatch={dispatch ?? noopDispatch}
         />
       </div>
       {canResize && (
@@ -100,8 +112,8 @@ function SortableHeader<TData>({
           columnId={header.column.id}
           header={label}
           currentWidth={columnSizing[header.column.id] ?? header.column.getSize()}
-          onResize={(id, width) => dispatch({ type: 'RESIZE_COLUMN', id, width })}
-          onReset={(id) => dispatch({ type: 'RESET_COLUMN_WIDTH', id })}
+          onResize={(id, width) => (dispatch ?? noopDispatch)({ type: 'RESIZE_COLUMN', id, width })}
+          onReset={(id) => (dispatch ?? noopDispatch)({ type: 'RESET_COLUMN_WIDTH', id })}
         />
       )}
     </th>
@@ -110,16 +122,24 @@ function SortableHeader<TData>({
 
 export function DataGridHeader<TData>({
   table,
-  dispatch = noopDispatch,
+  dispatch,
   columnSizing = {},
   columns = [],
   columnPinning = { left: [], right: ['actions'] },
+  columnFilters = [],
+  enableHeaderFilters = false,
+  enableRowSelection = false,
+  isServerMode = false,
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
   columnSizing?: Record<string, number>
   columns?: LedgerGridColumn<TData>[]
   columnPinning?: ColumnPinning
+  columnFilters?: ColumnFiltersState
+  enableHeaderFilters?: boolean
+  enableRowSelection?: boolean
+  isServerMode?: boolean
 }) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -130,7 +150,11 @@ export function DataGridHeader<TData>({
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over) return
-    dispatch({ type: 'REORDER_COLUMN', activeId: String(active.id), overId: String(over.id) })
+    ;(dispatch ?? noopDispatch)({ type: 'REORDER_COLUMN', activeId: String(active.id), overId: String(over.id) })
+  }
+  const setColumnFilter = (columnId: string, operator: FilterValue['operator'], value: unknown) => {
+    if (value === '' || value === null || value === undefined) (dispatch ?? noopDispatch)({ type: 'CLEAR_COLUMN_FILTER', columnId })
+    else (dispatch ?? noopDispatch)({ type: 'SET_COLUMN_FILTER', columnId, value: { operator, value } })
   }
 
   return (
@@ -139,6 +163,11 @@ export function DataGridHeader<TData>({
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-surface-2">
+              {enableRowSelection && (
+                <th className="w-10 px-2">
+                  <input type="checkbox" aria-label={isServerMode ? 'Select all loaded' : 'Select all'} readOnly />
+                </th>
+              )}
               {headerGroup.headers.map((header) => (
                 <SortableHeader
                   key={header.id}
@@ -147,10 +176,53 @@ export function DataGridHeader<TData>({
                   columnSizing={columnSizing}
                   columns={columns}
                   columnPinning={columnPinning}
+                  columnFilters={columnFilters}
                 />
               ))}
             </tr>
           ))}
+          {enableHeaderFilters && (
+            <tr className="border-t border-line bg-surface" onClick={(event) => event.stopPropagation()}>
+              {enableRowSelection && <th className="px-2" />}
+              {table.getVisibleLeafColumns().map((column) => {
+                const source = columns.find((item) => item.id === column.id)
+                const label = typeof source?.header === 'string' && source.header ? source.header : column.id
+                const meta = column.columnDef.meta
+                const filterType = meta?.type
+                const current = columnFilters.find((filter) => filter.id === column.id)?.value as FilterValue | undefined
+                const currentValue = current?.value
+                if (isLockedColumn(column.id) || !filterType) return <th key={column.id} className="px-3 py-2" />
+                if (filterType === 'enum' || filterType === 'status') {
+                  return (
+                    <th key={column.id} className="px-3 py-2">
+                      <select
+                        className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink"
+                        aria-label={`Filter ${label}`}
+                        value={typeof currentValue === 'string' ? currentValue : ''}
+                        onChange={(event) => setColumnFilter(column.id, 'is', event.target.value)}
+                      >
+                        <option value="">All</option>
+                        {(meta.options ?? []).map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )
+                }
+                return (
+                  <th key={column.id} className="px-3 py-2">
+                    <input
+                      className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink placeholder:text-faint"
+                      aria-label={`Filter ${label}`}
+                      type={filterType === 'number' || filterType === 'currency' || filterType === 'percent' ? 'number' : filterType === 'date' ? 'date' : 'text'}
+                      value={typeof currentValue === 'string' || typeof currentValue === 'number' ? currentValue : ''}
+                      onChange={(event) => setColumnFilter(column.id, filterType === 'text' ? 'contains' : 'equals', event.target.value)}
+                    />
+                  </th>
+                )
+              })}
+            </tr>
+          )}
         </thead>
       </SortableContext>
     </DndContext>

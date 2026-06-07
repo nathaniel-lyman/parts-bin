@@ -52,10 +52,12 @@ describe('DataGridColumnMenu shell', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'RESET_COLUMN_WIDTH', id: 'mrr' })
   })
 
-  it('renders a disabled per-column filter affordance placeholder', () => {
-    open()
-    expect(screen.getByPlaceholderText(/filter value/i)).toBeDisabled()
-    expect(screen.getByText(/filter wired in phase 3/i)).toBeInTheDocument()
+  it('dispatches per-column filter changes', () => {
+    const dispatch = open()
+    fireEvent.change(screen.getByLabelText(/mrr filter value/i), { target: { value: '1000' } })
+    expect(screen.getByPlaceholderText(/filter value/i)).toBeEnabled()
+    expect(screen.queryByText(/filter wired in phase 3/i)).toBeNull()
+    expect(dispatch).toHaveBeenCalledWith({ type: 'SET_COLUMN_FILTER', columnId: 'mrr', value: { operator: 'equals', value: '1000' } })
   })
 
   it('omits Hide column for a non-hideable column', () => {
@@ -80,4 +82,3 @@ describe('DataGridColumnMenu shell', () => {
     expect(screen.getByRole('button', { name: 'actions column menu' })).toBeInTheDocument()
   })
 })
-

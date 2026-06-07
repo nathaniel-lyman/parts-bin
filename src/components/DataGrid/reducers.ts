@@ -1,4 +1,4 @@
-import type { SortingState } from '@tanstack/react-table'
+import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import { arrayMove } from '@dnd-kit/sortable'
 import {
   ACTIONS_COLUMN_ID,
@@ -6,13 +6,25 @@ import {
   isMovableColumnId,
   normalizeColumnOrder,
   normalizePinning,
+  normalizeSorting,
   normalizeState,
 } from './normalize'
 import { DEFAULT_COLUMN_VISIBILITY } from './state'
+import type { FilterValue } from './filtering'
 import type { ColumnPinning, Density, GridAction, LedgerGridColumn, LedgerGridState } from './types'
 
 export const sortingReducer = (_slice: SortingState, sorting: SortingState): SortingState => sorting
 export const globalFilterReducer = (_slice: string, globalFilter: string): string => globalFilter
+
+export function columnFiltersReducer(
+  slice: ColumnFiltersState,
+  action: { columnId: string; value?: FilterValue },
+  mode: 'set' | 'clear',
+): ColumnFiltersState {
+  const without = slice.filter((filter) => filter.id !== action.columnId)
+  if (mode === 'clear') return without
+  return [...without, { id: action.columnId, value: action.value }]
+}
 
 export function columnSizingReducer<TData>(
   slice: Record<string, number>,
@@ -134,6 +146,22 @@ function sortActionReducer(slice: SortingState, action: GridAction): SortingStat
   }
 }
 
+export function toggleSortingReducer(slice: SortingState, action: { columnId: string; multi: boolean }): SortingState {
+  const existing = slice.find((item) => item.id === action.columnId)
+
+  if (!action.multi) {
+    if (!existing) return [{ id: action.columnId, desc: false }]
+    if (existing.desc === false) return [{ id: action.columnId, desc: true }]
+    return [{ id: action.columnId, desc: false }]
+  }
+
+  if (!existing) return [...slice, { id: action.columnId, desc: false }]
+  if (existing.desc === false) {
+    return slice.map((item) => (item.id === action.columnId ? { id: item.id, desc: true } : item))
+  }
+  return slice.map((item) => (item.id === action.columnId ? { id: item.id, desc: false } : item))
+}
+
 export function gridReducer<TData>(
   state: LedgerGridState,
   action: GridAction,
@@ -144,6 +172,14 @@ export function gridReducer<TData>(
       return { ...state, sorting: sortingReducer(state.sorting, action.sorting) }
     case 'setGlobalFilter':
       return { ...state, globalFilter: globalFilterReducer(state.globalFilter, action.globalFilter) }
+    case 'SET_GLOBAL_FILTER':
+      return { ...state, globalFilter: globalFilterReducer(state.globalFilter, action.value) }
+    case 'SET_COLUMN_FILTER':
+      return { ...state, columnFilters: columnFiltersReducer(state.columnFilters, action, 'set') }
+    case 'CLEAR_COLUMN_FILTER':
+      return { ...state, columnFilters: columnFiltersReducer(state.columnFilters, action, 'clear') }
+    case 'SET_COLUMN_FILTERS':
+      return { ...state, columnFilters: action.columnFilters }
     case 'setColumnVisibility':
       return normalizeState({
         ...state,
@@ -174,8 +210,12 @@ export function gridReducer<TData>(
       })
     case 'SET_SORT':
     case 'CLEAR_SORT':
-      return { ...state, sorting: sortActionReducer(state.sorting, action) }
+      return { ...state, sorting: normalizeSorting(sortActionReducer(state.sorting, action)) }
+    case 'TOGGLE_SORT':
+      return { ...state, sorting: normalizeSorting(toggleSortingReducer(state.sorting, action)) }
     default:
       return state
   }
 }
+
+export const rootReducer = gridReducer

@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
+import { FILTER_OPERATORS, type FilterColumnType, type FilterValue } from './filtering'
 import type { GridAction, LedgerGridColumn } from './types'
 
 interface Props {
   columnId: string
   header: string
   type: NonNullable<LedgerGridColumn<unknown>['type']>
+  filterMeta?: { type?: FilterColumnType; options?: string[] }
+  currentFilter?: FilterValue
   sortDirection: 'asc' | 'desc' | false
   hideable: boolean
   canPin: boolean
@@ -19,6 +22,8 @@ export function DataGridColumnMenu({
   columnId,
   header,
   type,
+  filterMeta,
+  currentFilter,
   sortDirection,
   hideable,
   canPin,
@@ -26,9 +31,30 @@ export function DataGridColumnMenu({
   dispatch,
 }: Props) {
   const [open, setOpen] = useState(false)
+  const [draftOperator, setDraftOperator] = useState<string>('')
   const close = () => setOpen(false)
   const item = 'flex w-full items-center gap-2 px-3 py-1 text-left text-[13px] text-ink hover:bg-surface-2 disabled:text-faint'
   const label = header || columnId
+  const filterType = filterMeta?.type ?? (type === 'actions' ? undefined : type)
+  const operators = filterType ? FILTER_OPERATORS[filterType] : []
+  const fallbackOperator = draftOperator || operators[0] || 'contains'
+  const operator = String(currentFilter?.operator ?? fallbackOperator)
+  const value = currentFilter?.value
+
+  const setFilter = (nextOperator: string, nextValue: unknown) => {
+    if (nextOperator !== 'isEmpty' && (nextValue === '' || nextValue === null || nextValue === undefined)) {
+      dispatch({ type: 'CLEAR_COLUMN_FILTER', columnId })
+      return
+    }
+    dispatch({ type: 'SET_COLUMN_FILTER', columnId, value: { operator: nextOperator as FilterValue['operator'], value: nextValue } })
+  }
+
+  const toggleEnum = (option: string, checked: boolean) => {
+    const current = Array.isArray(value) ? value.map(String) : []
+    const next = checked ? [...current, option] : current.filter((item) => item !== option)
+    if (next.length === 0) dispatch({ type: 'CLEAR_COLUMN_FILTER', columnId })
+    else setFilter('isAnyOf', next)
+  }
 
   return (
     <div className="relative inline-block">
@@ -47,7 +73,12 @@ export function DataGridColumnMenu({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={close} />
-          <div role="menu" className="shadow-dropdown absolute right-0 z-20 mt-1 w-52 rounded-[2px] border border-line bg-surface py-1">
+          <div
+            role="menu"
+            aria-label={`${label} column menu`}
+            className="shadow-dropdown absolute right-0 z-20 mt-1 w-52 rounded-[2px] border border-line bg-surface py-1"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button role="menuitem" className={item} onClick={() => { dispatch({ type: 'SET_SORT', id: columnId, desc: false, additive: false }); close() }}>Sort ascending</button>
             <button role="menuitem" className={item} onClick={() => { dispatch({ type: 'SET_SORT', id: columnId, desc: true, additive: false }); close() }}>Sort descending</button>
             <button role="menuitem" className={item} disabled={sortDirection === false} onClick={() => { dispatch({ type: 'CLEAR_SORT', id: columnId }); close() }}>Clear sort</button>
@@ -71,12 +102,49 @@ export function DataGridColumnMenu({
             )}
             <div className="my-1 border-t border-line" />
             <div className="px-3 py-1">
-              <div className="micro mb-1 text-faint">Filter ({type})</div>
-              <Select className="mb-1 w-full" disabled aria-label={`${label} filter operator`}>
-                <option>contains</option>
-              </Select>
-              <Input className="w-full" disabled placeholder="Filter value..." aria-label={`${label} filter value`} />
-              <div className="micro mt-1 text-faint">Filter wired in Phase 3</div>
+              <div className="micro mb-1 text-faint">Filter ({filterType ?? type})</div>
+              {filterType === 'enum' || filterType === 'status' ? (
+                <div className="space-y-1" aria-label={`${label} filter options`}>
+                  {(filterMeta?.options ?? []).map((option) => (
+                    <label key={option} className="flex items-center gap-2 text-[13px] text-ink">
+                      <input
+                        type="checkbox"
+                        checked={Array.isArray(value) && value.map(String).includes(option)}
+                        onChange={(event) => toggleEnum(option, event.target.checked)}
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+              ) : filterType ? (
+                <>
+                  <Select
+                    className="mb-1 w-full"
+                    aria-label={`${label} filter operator`}
+                    value={operator}
+                    onChange={(event) => {
+                      setDraftOperator(event.target.value)
+                      if (event.target.value === 'isEmpty') setFilter(event.target.value, true)
+                      else if (value !== '' && value !== null && value !== undefined) setFilter(event.target.value, value)
+                    }}
+                  >
+                    {operators.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </Select>
+                  <Input
+                    className="w-full"
+                    type={filterType === 'number' || filterType === 'currency' || filterType === 'percent' ? 'number' : filterType === 'date' ? 'date' : 'text'}
+                    placeholder="Filter value..."
+                    aria-label={`${label} filter value`}
+                    value={typeof value === 'string' || typeof value === 'number' ? value : ''}
+                    disabled={operator === 'isEmpty'}
+                    onChange={(event) => setFilter(operator, event.target.value)}
+                  />
+                </>
+              ) : (
+                <div className="text-[13px] text-faint">No filter</div>
+              )}
             </div>
           </div>
         </>
@@ -84,4 +152,3 @@ export function DataGridColumnMenu({
     </div>
   )
 }
-

@@ -10,11 +10,25 @@ const COLS = [
 
 function setup() {
   const dispatch = vi.fn()
-  render(<DataGridToolbar columns={COLS} columnVisibility={{ account: true, arr: false }} density="compact" dispatch={dispatch} />)
+  render(
+    <DataGridToolbar
+      columns={COLS}
+      columnVisibility={{ account: true, arr: false }}
+      globalFilter=""
+      density="compact"
+      dispatch={dispatch}
+    />,
+  )
   return dispatch
 }
 
 describe('DataGridToolbar', () => {
+  it('quick filter dispatches SET_GLOBAL_FILTER', () => {
+    const dispatch = setup()
+    fireEvent.change(screen.getByPlaceholderText(/search accounts or owners/i), { target: { value: 'acme' } })
+    expect(dispatch).toHaveBeenCalledWith({ type: 'SET_GLOBAL_FILTER', value: 'acme' })
+  })
+
   it('density control dispatches SET_DENSITY', () => {
     const dispatch = setup()
     fireEvent.change(screen.getByLabelText(/density/i), { target: { value: 'comfortable' } })
@@ -43,4 +57,3 @@ describe('DataGridToolbar', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'RESET_COLUMNS' })
   })
 })
-

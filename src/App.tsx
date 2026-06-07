@@ -1,11 +1,16 @@
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useColumnVisibility } from './hooks/useColumnVisibility'
+import { useServerData } from './hooks/useServerData'
 import { totalMrr, activeCount, atRiskCount, avgGrowth } from './selectors/metrics'
 import { fmtCurrency, fmtPercent } from './lib/format'
 import { KpiCard } from './components/KpiCard'
 import { DataTable } from './components/DataTable/DataTable'
+import { DataGrid } from './components/DataGrid/DataGrid'
+import { createMockServerAdapter } from './components/DataGrid/mockServerAdapter'
+import { toGridQuery, type GridQuery } from './components/DataGrid/query'
+import { DEFAULT_STATE } from './components/DataGrid/state'
 import { AccountFormModal } from './components/AccountFormModal'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { MrrTrendChart } from './components/charts/MrrTrendChart'
@@ -15,6 +20,7 @@ import { Button } from './components/ui/Button'
 import { useToast } from './components/ui/ToastContext'
 import { sparks } from './data/accounts'
 import type { Account } from './data/types'
+import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -34,6 +40,11 @@ export default function App() {
   const [editing, setEditing] = useState<Account | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<Account | null>(null)
+  const [serverMode, setServerMode] = useState(false)
+  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(DEFAULT_STATE))
+  const serverAdapter = useMemo(() => createMockServerAdapter(accounts, { latencyMs: 80 }), [accounts])
+  const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
+  const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [])
 
   return (
     <div className="min-h-screen">
@@ -81,6 +92,42 @@ export default function App() {
           onToggleColumn={toggleColumn}
           onResetColumns={resetColumns}
         />
+        <div className="mt-4 flex items-center justify-between border border-line bg-surface px-3 py-2">
+          <label className="micro flex items-center gap-2 text-muted">
+            <input
+              type="checkbox"
+              role="switch"
+              aria-label="Server mode"
+              checked={serverMode}
+              onChange={(event) => setServerMode(event.target.checked)}
+            />
+            Server mode
+          </label>
+          {serverMode && (
+            <span className="num text-[12px] text-muted">
+              {server.status === 'loading' ? 'Loading server rows...' : `${server.totalRowCount} server rows`}
+            </span>
+          )}
+        </div>
+        {serverMode && (
+          <div className="mt-4">
+            <DataGrid
+              rows={server.rows}
+              columns={gridColumns}
+              getRowId={(row) => row.id}
+              globalFilterFn={accountGlobalFilter}
+              manualSorting
+              manualFiltering
+              manualPagination
+              enableHeaderFilters
+              enableRowSelection
+              totalRowCount={server.totalRowCount}
+              onQueryChange={setServerQuery}
+              loading={server.status === 'loading'}
+              error={server.status === 'error' ? server.error : undefined}
+            />
+          </div>
+        )}
       </main>
 
       {creating && (

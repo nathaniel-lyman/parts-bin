@@ -6,11 +6,15 @@ import { StatusBadge } from './ui/Badge'
 
 function withMeta(column: LedgerGridColumn<Account>): LedgerGridColumn<Account> {
   const align = column.align ?? 'left'
+  const filterType = column.id === 'segment' ? 'enum' : column.type === 'actions' ? undefined : column.type
   return {
     ...column,
     meta: {
       align,
       resizable: column.id === ACTIONS_COLUMN_ID ? false : column.resizable !== false,
+      ...(filterType ? { type: filterType } : {}),
+      ...(column.id === 'segment' ? { options: ['Enterprise', 'Mid-market', 'Startup'] } : {}),
+      ...(column.id === 'status' ? { options: ['Active', 'At risk', 'Churned'] } : {}),
     },
   }
 }
@@ -116,4 +120,14 @@ export function buildAccountGridColumns(
 export function accountGlobalFilter(row: Account, value: string): boolean {
   const q = value.toLowerCase()
   return row.name.toLowerCase().includes(q) || row.owner.toLowerCase().includes(q)
+}
+
+export function accountGridColumns({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: (account: Account) => void
+  onDelete: (account: Account) => void
+}): LedgerGridColumn<Account>[] {
+  return buildAccountGridColumns(onEdit, onDelete)
 }

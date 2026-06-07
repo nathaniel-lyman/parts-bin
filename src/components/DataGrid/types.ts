@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
+import type { FilterColumnType, FilterValue } from './filtering'
 
 export const DENSITIES = ['compact', 'standard', 'comfortable'] as const
 export type Density = (typeof DENSITIES)[number]
@@ -32,6 +33,8 @@ export interface LedgerGridColumn<TData, TValue = unknown> {
   meta?: {
     align?: 'left' | 'right' | 'center'
     resizable?: boolean
+    type?: FilterColumnType
+    options?: string[]
   }
   type?: GridColumnType
   sortable?: boolean
@@ -85,3 +88,8 @@ export type GridAction =
   | { type: 'UNPIN_COLUMN'; id: string }
   | { type: 'SET_SORT'; id: string; desc: boolean; additive: boolean }
   | { type: 'CLEAR_SORT'; id: string }
+  | { type: 'TOGGLE_SORT'; columnId: string; multi: boolean }
+  | { type: 'SET_COLUMN_FILTER'; columnId: string; value: FilterValue }
+  | { type: 'CLEAR_COLUMN_FILTER'; columnId: string }
+  | { type: 'SET_COLUMN_FILTERS'; columnFilters: ColumnFiltersState }
+  | { type: 'SET_GLOBAL_FILTER'; value: string }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { DENSITIES } from './types'
 import type { Density, GridAction, LedgerGridColumn } from './types'
@@ -7,16 +8,24 @@ import type { Density, GridAction, LedgerGridColumn } from './types'
 interface Props<TData> {
   columns: Pick<LedgerGridColumn<TData>, 'id' | 'header' | 'hideable'>[]
   columnVisibility: Record<string, boolean>
+  globalFilter: string
   density: Density
   dispatch: (action: GridAction) => void
 }
 
-export function DataGridToolbar<TData>({ columns, columnVisibility, density, dispatch }: Props<TData>) {
+export function DataGridToolbar<TData>({ columns, columnVisibility, globalFilter, density, dispatch }: Props<TData>) {
   const [open, setOpen] = useState(false)
   const hideable = columns.filter((column) => column.hideable !== false && column.id !== 'actions')
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
+      <Input
+        className="max-w-sm"
+        placeholder="Search accounts or owners..."
+        aria-label="Search accounts or owners"
+        value={globalFilter}
+        onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}
+      />
       <div className="ml-auto flex items-center gap-2">
         <label className="micro flex items-center gap-1 text-faint">
           <span>Density</span>
@@ -65,4 +74,3 @@ export function DataGridToolbar<TData>({ columns, columnVisibility, density, dis
     </div>
   )
 }
-

@@ -1,3 +1,4 @@
+import type { SortingState } from '@tanstack/react-table'
 import type { ColumnPinning, LedgerGridState } from './types'
 
 export const ACTIONS_COLUMN_ID = 'actions'
@@ -50,6 +51,14 @@ export const canHideColumn = (id: string) => id !== ACTIONS_COLUMN_ID
 export const canSortColumn = (id: string) => id !== ACTIONS_COLUMN_ID
 export const canReorderColumn = (id: string) => isMovableColumnId(id)
 export const canExportColumn = (id: string) => id !== ACTIONS_COLUMN_ID
+
+export function isLockedColumn(id: string): boolean {
+  return id === ACTIONS_COLUMN_ID
+}
+
+export function normalizeSorting(sorting: SortingState): SortingState {
+  return sorting.filter((item) => !isLockedColumn(item.id))
+}
 
 export function normalizeState(state: LedgerGridState): LedgerGridState {
   const columnOrder = normalizeColumnOrder(state.columnOrder)
