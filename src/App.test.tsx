@@ -15,7 +15,15 @@ test('renders dashboard with KPIs and table (light)', () => {
   expect(screen.getByText('Total MRR')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
   expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
+  expect(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' })).toBeInTheDocument()
+  expect(screen.getByRole('textbox', { name: /filter account/i })).toBeInTheDocument()
   expect(document.documentElement.classList.contains('dark')).toBe(false)
+})
+
+test('dashboard DataGrid selection is visible without server mode', async () => {
+  render(<ToastProvider><App /></ToastProvider>)
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
+  expect(screen.getByText('1 selected')).toBeInTheDocument()
 })
 
 test('Dark toggle switches to dark mode', async () => {

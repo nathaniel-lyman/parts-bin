@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './columnMeta'
+import { closestCenter, DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -137,7 +139,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       rowSelection: state.rowSelection,
     },
     defaultColumn: {
-      filterFn: ledgerFilterFn as FilterFn<TData>,
+      filterFn: ledgerFilterFn as unknown as FilterFn<TData>,
     },
     onSortingChange: (updater) => {
       const next = typeof updater === 'function' ? updater(state.sorting) : updater
@@ -177,6 +179,17 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const selCount = selectionCount(state.rowSelection)
   const allState = selectAllState(state.rowSelection, visibleIds)
   const pinnedGroups = pinnedLeafGroups(table.getVisibleLeafColumns().map((column) => column.id), state.columnPinning)
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over) return
+    dispatch({ type: 'REORDER_COLUMN', activeId: String(active.id), overId: String(over.id) })
+  }
   const selCountRef = useRef(selCount)
   const menuRef = useRef(menu)
 
@@ -264,30 +277,33 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           <DataGridBulkActions count={selCount} onClear={() => dispatch({ type: 'CLEAR_SELECTION' })} />
         </div>
       )}
-      <table className="w-full border-collapse">
-        <DataGridHeader
-          table={table}
-          dispatch={dispatch}
-          columnSizing={state.columnSizing}
-          columns={columns}
-          columnPinning={state.columnPinning}
-          columnFilters={state.columnFilters}
-          enableHeaderFilters={enableHeaderFilters}
-          enableRowSelection={enableRowSelection}
-          isServerMode={isServerMode}
-          selectAll={allState}
-          onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
-        />
-        {!loading && error === undefined && rowCount > 0 && (
-          <DataGridBody
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <table className="w-full border-collapse">
+          <DataGridHeader
             table={table}
+            dispatch={dispatch}
+            columnSizing={state.columnSizing}
+            columns={columns}
+            columnPinning={state.columnPinning}
+            columnFilters={state.columnFilters}
+            enableHeaderFilters={enableHeaderFilters}
             enableRowSelection={enableRowSelection}
-            rowSelection={state.rowSelection}
-            onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
-            onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
+            isServerMode={isServerMode}
+            selectAll={allState}
+            onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
+            dndProvider={false}
           />
-        )}
-      </table>
+          {!loading && error === undefined && rowCount > 0 && (
+            <DataGridBody
+              table={table}
+              enableRowSelection={enableRowSelection}
+              rowSelection={state.rowSelection}
+              onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
+              onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
+            />
+          )}
+        </table>
+      </DndContext>
       {loading && <DataGridLoadingState />}
       {!loading && error !== undefined && <DataGridErrorState error={error} />}
       {!loading && error === undefined && rowCount === 0 && <DataGridEmptyState query={state.globalFilter || undefined} />}

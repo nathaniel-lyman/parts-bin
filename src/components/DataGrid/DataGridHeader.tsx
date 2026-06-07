@@ -133,6 +133,7 @@ export function DataGridHeader<TData>({
   isServerMode = false,
   selectAll = 'none',
   onSelectAll,
+  dndProvider = true,
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
@@ -145,6 +146,7 @@ export function DataGridHeader<TData>({
   isServerMode?: boolean
   selectAll?: 'none' | 'some' | 'all'
   onSelectAll?: (select: boolean) => void
+  dndProvider?: boolean
 }) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -162,10 +164,9 @@ export function DataGridHeader<TData>({
     else (dispatch ?? noopDispatch)({ type: 'SET_COLUMN_FILTER', columnId, value: { operator, value } })
   }
 
-  return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-      <SortableContext items={visibleMovable} strategy={horizontalListSortingStrategy}>
-        <thead>
+  const content = (
+    <SortableContext items={visibleMovable} strategy={horizontalListSortingStrategy}>
+      <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-surface-2">
               {enableRowSelection && (
@@ -232,8 +233,15 @@ export function DataGridHeader<TData>({
               })}
             </tr>
           )}
-        </thead>
-      </SortableContext>
+      </thead>
+    </SortableContext>
+  )
+
+  if (!dndProvider) return content
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      {content}
     </DndContext>
   )
 }

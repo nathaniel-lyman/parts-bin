@@ -1,12 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
-import { useColumnVisibility } from './hooks/useColumnVisibility'
 import { useServerData } from './hooks/useServerData'
 import { totalMrr, activeCount, atRiskCount, avgGrowth } from './selectors/metrics'
 import { fmtCurrency, fmtPercent } from './lib/format'
 import { KpiCard } from './components/KpiCard'
-import { DataTable } from './components/DataTable/DataTable'
 import { DataGrid } from './components/DataGrid/DataGrid'
 import { createMockServerAdapter } from './components/DataGrid/mockServerAdapter'
 import { toGridQuery, type GridQuery } from './components/DataGrid/query'
@@ -34,7 +32,6 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 export default function App() {
   const { accounts, create, update, remove } = useAccounts()
   const { mode, toggle } = useTheme()
-  const { visibility, toggle: toggleColumn, reset: resetColumns } = useColumnVisibility()
   const toast = useToast()
 
   const [editing, setEditing] = useState<Account | null>(null)
@@ -83,16 +80,7 @@ export default function App() {
           <Card title="Revenue movement ($k)"><RevenueMovementChart /></Card>
         </div>
 
-        <DataTable
-          accounts={accounts}
-          visibility={visibility}
-          onEdit={setEditing}
-          onDelete={setDeleting}
-          onNew={() => setCreating(true)}
-          onToggleColumn={toggleColumn}
-          onResetColumns={resetColumns}
-        />
-        <div className="mt-4 flex items-center justify-between border border-line bg-surface px-3 py-2">
+        <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">
           <label className="micro flex items-center gap-2 text-muted">
             <input
               type="checkbox"
@@ -103,31 +91,30 @@ export default function App() {
             />
             Server mode
           </label>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="primary" onClick={() => setCreating(true)}>+ New account</Button>
+          </div>
           {serverMode && (
             <span className="num text-[12px] text-muted">
               {server.status === 'loading' ? 'Loading server rows...' : `${server.totalRowCount} server rows`}
             </span>
           )}
         </div>
-        {serverMode && (
-          <div className="mt-4">
-            <DataGrid
-              rows={server.rows}
-              columns={gridColumns}
-              getRowId={(row) => row.id}
-              globalFilterFn={accountGlobalFilter}
-              manualSorting
-              manualFiltering
-              manualPagination
-              enableHeaderFilters
-              enableRowSelection
-              totalRowCount={server.totalRowCount}
-              onQueryChange={setServerQuery}
-              loading={server.status === 'loading'}
-              error={server.status === 'error' ? server.error : undefined}
-            />
-          </div>
-        )}
+        <DataGrid
+          rows={serverMode ? server.rows : accounts}
+          columns={gridColumns}
+          getRowId={(row) => row.id}
+          globalFilterFn={accountGlobalFilter}
+          manualSorting={serverMode}
+          manualFiltering={serverMode}
+          manualPagination={serverMode}
+          enableHeaderFilters
+          enableRowSelection
+          totalRowCount={serverMode ? server.totalRowCount : undefined}
+          onQueryChange={serverMode ? setServerQuery : undefined}
+          loading={serverMode && server.status === 'loading'}
+          error={serverMode && server.status === 'error' ? server.error : undefined}
+        />
       </main>
 
       {creating && (
