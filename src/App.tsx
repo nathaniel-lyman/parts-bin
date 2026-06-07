@@ -13,6 +13,7 @@ import { MrrShareDonut } from './components/charts/MrrShareDonut'
 import { RevenueMovementChart } from './components/charts/RevenueMovementChart'
 import { Button } from './components/ui/Button'
 import { useToast } from './components/ui/ToastProvider'
+import { sparks } from './data/accounts'
 import type { Account } from './data/types'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
@@ -57,10 +58,10 @@ export default function App() {
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(accounts))} delta={4.6} />
-          <KpiCard label="Active accounts" value={String(activeCount(accounts))} delta={2.4} />
-          <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(accounts))} delta={1.1} />
-          <KpiCard label="At risk / churned" value={String(atRiskCount(accounts))} delta={-12.5} />
+          <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(accounts))} delta={4.6} spark={sparks.mrr} />
+          <KpiCard label="Active accounts" value={String(activeCount(accounts))} delta={2.4} spark={sparks.accts} />
+          <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(accounts))} delta={1.1} spark={sparks.growth} />
+          <KpiCard label="At risk / churned" value={String(atRiskCount(accounts))} delta={-12.5} spark={sparks.churn} negSpark />
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">

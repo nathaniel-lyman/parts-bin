@@ -1,5 +1,13 @@
 import type { Account, MonthlyPoint, MovementPoint } from './types'
 
+// 12-month trend series feeding the KPI-card sparklines (matches demo.html).
+export const sparks = {
+  mrr: [62, 64, 63, 67, 70, 69, 74, 78, 77, 82, 85, 88],
+  accts: [30, 32, 33, 33, 35, 36, 36, 38, 39, 39, 40, 41],
+  growth: [4, 6, 5, 8, 7, 9, 8, 11, 10, 9, 12, 11],
+  churn: [9, 8, 8, 7, 8, 6, 7, 6, 5, 6, 5, 4],
+}
+
 export const seedAccounts: Account[] = [
   { id: 'a1', name: 'Cobalt Freight',  owner: 'K. Osei',   segment: 'Enterprise', mrr: 24600, growth: -2.1, status: 'At risk',  arr: 295200, since: '2023-02-01' },
   { id: 'a2', name: 'Meridian Corp',   owner: 'K. Osei',   segment: 'Enterprise', mrr: 18400, growth:  6.2, status: 'Active',   arr: 220800, since: '2022-09-01' },
