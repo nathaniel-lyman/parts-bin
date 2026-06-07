@@ -109,6 +109,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState) : hydrate({ initialState: props.initialState }))
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
+  const [headerFiltersOpen, setHeaderFiltersOpen] = useState(false)
   const view = useGridViewState(seed, columns)
   const savedViews = useSavedViews()
   const state = isControlled ? props.state! : view.state
@@ -313,6 +314,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         density={state.density}
         dispatch={dispatch}
         enableExport={enableExport}
+        enableHeaderFilters={enableHeaderFilters}
+        headerFiltersOpen={headerFiltersOpen}
+        onToggleHeaderFilters={() => setHeaderFiltersOpen((value) => !value)}
         onExportCsv={exportCsv}
         savedViews={savedViewsEnabled ? savedViews.views.map((item) => ({ id: item.id, name: item.name })) : undefined}
         onSaveView={(name) => savedViews.create(name, projectView(state))}
@@ -340,7 +344,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
               columns={columns}
               columnPinning={state.columnPinning}
               columnFilters={state.columnFilters}
-              enableHeaderFilters={enableHeaderFilters}
+              enableHeaderFilters={Boolean(enableHeaderFilters && headerFiltersOpen)}
               enableRowSelection={enableRowSelection}
               isServerMode={isServerMode}
               selectAll={allState}

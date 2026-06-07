@@ -12,6 +12,9 @@ interface Props<TData> {
   density: Density
   dispatch: (action: GridAction) => void
   enableExport?: boolean
+  enableHeaderFilters?: boolean
+  headerFiltersOpen?: boolean
+  onToggleHeaderFilters?: () => void
   onExportCsv?: () => void
   savedViews?: { id: string; name: string }[]
   onApplyView?: (id: string) => void
@@ -27,6 +30,9 @@ export function DataGridToolbar<TData>({
   density,
   dispatch,
   enableExport,
+  enableHeaderFilters,
+  headerFiltersOpen,
+  onToggleHeaderFilters,
   onExportCsv,
   savedViews,
   onApplyView,
@@ -53,6 +59,16 @@ export function DataGridToolbar<TData>({
         {enableExport && (
           <Button size="compact" onClick={onExportCsv} aria-label="Export CSV">
             Export CSV
+          </Button>
+        )}
+        {enableHeaderFilters && (
+          <Button
+            size="compact"
+            variant={headerFiltersOpen ? 'primary' : 'secondary'}
+            aria-pressed={headerFiltersOpen}
+            onClick={onToggleHeaderFilters}
+          >
+            Filters
           </Button>
         )}
         {savedViews && (

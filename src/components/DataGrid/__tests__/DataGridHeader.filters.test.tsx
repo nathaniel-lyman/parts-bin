@@ -9,11 +9,15 @@ const noop = vi.fn()
 const cols = () => accountGridColumns({ onEdit: noop, onDelete: noop })
 
 describe('inline header filters', () => {
-  it('renders header filter controls only when enabled', () => {
+  it('renders header filter controls only when enabled and toggled open', async () => {
+    const user = userEvent.setup()
     const { rerender } = render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
     expect(screen.queryByRole('textbox', { name: /filter account/i })).toBeNull()
 
     rerender(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} enableHeaderFilters />)
+    expect(screen.queryByRole('textbox', { name: /filter account/i })).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
     expect(screen.getByRole('textbox', { name: /filter account/i })).toBeInTheDocument()
   })
 
@@ -21,6 +25,7 @@ describe('inline header filters', () => {
     const user = userEvent.setup()
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} enableHeaderFilters />)
 
+    await user.click(screen.getByRole('button', { name: /filters/i }))
     await user.type(screen.getByRole('textbox', { name: /filter account/i }), 'cobalt')
 
     expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()

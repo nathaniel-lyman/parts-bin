@@ -49,7 +49,6 @@ function SortableHeader<TData>({
   const label = headerLabel(header, source)
   const currentFilter = columnFilters.find((filter) => filter.id === header.column.id)?.value as FilterValue | undefined
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform,
@@ -77,46 +76,43 @@ function SortableHeader<TData>({
             : header.column.getToggleSortingHandler()
           : undefined
       }
-      className={`micro select-none px-3 py-2 ${align === 'right' ? 'text-right' : 'text-left'} ${canSort ? 'cursor-pointer' : ''}`}
+      className={`group border-r border-line px-3 py-2 ${align === 'right' ? 'text-right' : 'text-left'} ${canSort || canMove ? 'cursor-pointer' : ''}`}
+      {...(canMove ? listeners : {})}
     >
       <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
-        {canMove && (
-          <button
-            type="button"
-            className="num inline-flex h-5 w-5 cursor-grab items-center justify-center rounded-[2px] text-[11px] text-faint hover:bg-surface hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:cursor-grabbing"
-            aria-label={`Move ${label} column`}
-            {...attributes}
-            {...listeners}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <span aria-hidden="true">::</span>
-          </button>
-        )}
-        <span>
+        <span className="micro">
           {flexRender(header.column.columnDef.header, header.getContext())}
-          {sorted && <span className="text-accent"> {sorted === 'asc' ? '▲' : '▼'}</span>}
+          {sorted && (
+            <span className="text-accent opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              {' '}{sorted === 'asc' ? '▲' : '▼'}
+            </span>
+          )}
         </span>
-        <DataGridColumnMenu
-          columnId={header.column.id}
-          header={label}
-          type={source?.type ?? 'text'}
-          filterMeta={header.column.columnDef.meta}
-          currentFilter={currentFilter}
-          sortDirection={sorted}
-          hideable={(source?.hideable ?? true) && header.column.id !== 'actions'}
-          canPin={(source?.pinnable ?? true) && header.column.id !== 'actions'}
-          pinSide={pinSide(header.column.id, columnPinning)}
-          dispatch={dispatch ?? noopDispatch}
-        />
+        <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <DataGridColumnMenu
+            columnId={header.column.id}
+            header={label}
+            type={source?.type ?? 'text'}
+            filterMeta={header.column.columnDef.meta}
+            currentFilter={currentFilter}
+            sortDirection={sorted}
+            hideable={(source?.hideable ?? true) && header.column.id !== 'actions'}
+            canPin={(source?.pinnable ?? true) && header.column.id !== 'actions'}
+            pinSide={pinSide(header.column.id, columnPinning)}
+            dispatch={dispatch ?? noopDispatch}
+          />
+        </span>
       </div>
       {canResize && (
-        <DataGridResizeHandle
-          columnId={header.column.id}
-          header={label}
-          currentWidth={columnSizing[header.column.id] ?? header.column.getSize()}
-          onResize={(id, width) => (dispatch ?? noopDispatch)({ type: 'RESIZE_COLUMN', id, width })}
-          onReset={(id) => (dispatch ?? noopDispatch)({ type: 'RESET_COLUMN_WIDTH', id })}
-        />
+        <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <DataGridResizeHandle
+            columnId={header.column.id}
+            header={label}
+            currentWidth={columnSizing[header.column.id] ?? header.column.getSize()}
+            onResize={(id, width) => (dispatch ?? noopDispatch)({ type: 'RESIZE_COLUMN', id, width })}
+            onReset={(id) => (dispatch ?? noopDispatch)({ type: 'RESET_COLUMN_WIDTH', id })}
+          />
+        </span>
       )}
     </th>
   )
@@ -171,7 +167,7 @@ export function DataGridHeader<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-surface-2" data-testid="grid-header-row">
               {enableRowSelection && (
-                <th className="w-10 px-2">
+                <th className="w-10 border-r border-line px-2">
                   <DataGridSelectAllCheckbox
                     state={selectAll}
                     label={isServerMode ? 'Select all loaded' : 'Select all'}
@@ -194,7 +190,7 @@ export function DataGridHeader<TData>({
           ))}
           {enableHeaderFilters && (
             <tr className="border-t border-line bg-surface" onClick={(event) => event.stopPropagation()}>
-              {enableRowSelection && <th className="px-2" />}
+              {enableRowSelection && <th className="border-r border-line px-2" />}
               {table.getVisibleLeafColumns().map((column) => {
                 const source = columns.find((item) => item.id === column.id)
                 const label = typeof source?.header === 'string' && source.header ? source.header : column.id
@@ -202,10 +198,10 @@ export function DataGridHeader<TData>({
                 const filterType = meta?.type
                 const current = columnFilters.find((filter) => filter.id === column.id)?.value as FilterValue | undefined
                 const currentValue = current?.value
-                if (isLockedColumn(column.id) || !filterType) return <th key={column.id} className="px-3 py-2" />
+                if (isLockedColumn(column.id) || !filterType) return <th key={column.id} className="border-r border-line px-3 py-2" />
                 if (filterType === 'enum' || filterType === 'status') {
                   return (
-                    <th key={column.id} className="px-3 py-2">
+                    <th key={column.id} className="border-r border-line px-3 py-2">
                       <select
                         className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink"
                         aria-label={`Filter ${label}`}
@@ -221,7 +217,7 @@ export function DataGridHeader<TData>({
                   )
                 }
                 return (
-                  <th key={column.id} className="px-3 py-2">
+                  <th key={column.id} className="border-r border-line px-3 py-2">
                     <input
                       className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink placeholder:text-faint"
                       aria-label={`Filter ${label}`}
