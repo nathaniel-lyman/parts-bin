@@ -1,20 +1,24 @@
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
-import { useColumnVisibility } from './hooks/useColumnVisibility'
+import { useServerData } from './hooks/useServerData'
 import { totalMrr, activeCount, atRiskCount, avgGrowth } from './selectors/metrics'
 import { fmtCurrency, fmtPercent } from './lib/format'
 import { KpiCard } from './components/KpiCard'
-import { DataTable } from './components/DataTable/DataTable'
+import { DataGrid } from './components/DataGrid/DataGrid'
+import { createMockServerAdapter, generateAccounts } from './components/DataGrid/mockServerAdapter'
+import { toGridQuery, type GridQuery } from './components/DataGrid/query'
+import { DEFAULT_STATE } from './components/DataGrid/state'
 import { AccountFormModal } from './components/AccountFormModal'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { MrrTrendChart } from './components/charts/MrrTrendChart'
 import { MrrShareDonut } from './components/charts/MrrShareDonut'
 import { RevenueMovementChart } from './components/charts/RevenueMovementChart'
 import { Button } from './components/ui/Button'
-import { useToast } from './components/ui/ToastProvider'
+import { useToast } from './components/ui/ToastContext'
 import { sparks } from './data/accounts'
 import type { Account } from './data/types'
+import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -28,12 +32,27 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 export default function App() {
   const { accounts, create, update, remove } = useAccounts()
   const { mode, toggle } = useTheme()
-  const { visibility, toggle: toggleColumn, reset: resetColumns } = useColumnVisibility()
   const toast = useToast()
+  const params = new URLSearchParams(window.location.search)
+  const requestedRows = Number(params.get('rows') ?? 0)
+  const generatedAccounts = useMemo(
+    () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
+    [requestedRows],
+  )
+  const visibleAccounts = generatedAccounts ?? accounts
+  const gridInitialState = useMemo(
+    () => (generatedAccounts ? { ...DEFAULT_STATE, sorting: [] } : DEFAULT_STATE),
+    [generatedAccounts],
+  )
 
   const [editing, setEditing] = useState<Account | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<Account | null>(null)
+  const [serverMode, setServerMode] = useState(params.get('server') === '1')
+  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(DEFAULT_STATE))
+  const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
+  const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
+  const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [setDeleting, setEditing])
 
   return (
     <div className="min-h-screen">
@@ -54,32 +73,62 @@ export default function App() {
         <div className="micro">Revenue / Accounts</div>
         <div className="mb-6 flex items-end justify-between">
           <h1 className="display text-[28px] font-semibold text-ink">Account book</h1>
-          <span className="num text-[13px] text-muted">{activeCount(accounts) + atRiskCount(accounts)} accounts · {fmtCurrency(totalMrr(accounts))} MRR</span>
+          <span className="num text-[13px] text-muted">{activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} accounts · {fmtCurrency(totalMrr(visibleAccounts))} MRR</span>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(accounts))} delta={4.6} spark={sparks.mrr} />
-          <KpiCard label="Active accounts" value={String(activeCount(accounts))} delta={2.4} spark={sparks.accts} />
-          <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(accounts))} delta={1.1} spark={sparks.growth} />
-          <KpiCard label="At risk / churned" value={String(atRiskCount(accounts))} delta={-12.5} spark={sparks.churn} negSpark />
+          <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(visibleAccounts))} delta={4.6} spark={sparks.mrr} />
+          <KpiCard label="Active accounts" value={String(activeCount(visibleAccounts))} delta={2.4} spark={sparks.accts} />
+          <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(visibleAccounts))} delta={1.1} spark={sparks.growth} />
+          <KpiCard label="At risk / churned" value={String(atRiskCount(visibleAccounts))} delta={-12.5} spark={sparks.churn} negSpark />
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card title="MRR trend ($k)"><MrrTrendChart /></Card>
-          <Card title="MRR share — live"><MrrShareDonut accounts={accounts} /></Card>
+          <Card title="MRR share — live"><MrrShareDonut accounts={visibleAccounts} /></Card>
         </div>
         <div className="mb-6">
           <Card title="Revenue movement ($k)"><RevenueMovementChart /></Card>
         </div>
 
-        <DataTable
-          accounts={accounts}
-          visibility={visibility}
-          onEdit={setEditing}
-          onDelete={setDeleting}
-          onNew={() => setCreating(true)}
-          onToggleColumn={toggleColumn}
-          onResetColumns={resetColumns}
+        <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">
+          <label className="micro flex items-center gap-2 text-muted">
+            <input
+              type="checkbox"
+              role="switch"
+              aria-label="Server mode"
+              checked={serverMode}
+              onChange={(event) => setServerMode(event.target.checked)}
+            />
+            Server mode
+          </label>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="primary" onClick={() => setCreating(true)}>+ New account</Button>
+          </div>
+          {serverMode && (
+            <span className="num text-[12px] text-muted">
+              {server.status === 'loading' ? 'Loading server rows...' : `${server.totalRowCount} server rows`}
+            </span>
+          )}
+        </div>
+        <DataGrid
+          rows={serverMode ? server.rows : visibleAccounts}
+          columns={gridColumns}
+          getRowId={(row) => row.id}
+          initialState={gridInitialState}
+          enablePagination={!generatedAccounts}
+          enableExport
+          persistenceKey={generatedAccounts ? undefined : 'ledger.accounts.grid'}
+          globalFilterFn={accountGlobalFilter}
+          manualSorting={serverMode}
+          manualFiltering={serverMode}
+          manualPagination={serverMode}
+          enableHeaderFilters
+          enableRowSelection
+          totalRowCount={serverMode ? server.totalRowCount : undefined}
+          onQueryChange={serverMode ? setServerQuery : undefined}
+          loading={serverMode && server.status === 'loading'}
+          error={serverMode && server.status === 'error' ? server.error : undefined}
         />
       </main>
 
