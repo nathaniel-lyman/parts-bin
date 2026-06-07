@@ -68,6 +68,7 @@ function SortableHeader<TData>({
     <th
       ref={setNodeRef}
       style={style}
+      data-testid={`col-header-${header.column.id}`}
       aria-sort={canSort ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined}
       onClick={
         canSort
@@ -166,9 +167,9 @@ export function DataGridHeader<TData>({
 
   const content = (
     <SortableContext items={visibleMovable} strategy={horizontalListSortingStrategy}>
-      <thead>
+      <thead className="sticky top-0 z-20 bg-surface-2">
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="bg-surface-2">
+            <tr key={headerGroup.id} className="bg-surface-2" data-testid="grid-header-row">
               {enableRowSelection && (
                 <th className="w-10 px-2">
                   <DataGridSelectAllCheckbox

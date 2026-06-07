@@ -159,6 +159,31 @@ export function rowSelectionReducer(
   }
 }
 
+export function rowPinningReducer(
+  slice: LedgerGridState['rowPinning'],
+  action: GridAction,
+): LedgerGridState['rowPinning'] {
+  switch (action.type) {
+    case 'PIN_ROW_TOP':
+      return {
+        top: slice.top.includes(action.rowId) ? slice.top : [...slice.top, action.rowId],
+        bottom: slice.bottom.filter((id) => id !== action.rowId),
+      }
+    case 'PIN_ROW_BOTTOM':
+      return {
+        top: slice.top.filter((id) => id !== action.rowId),
+        bottom: slice.bottom.includes(action.rowId) ? slice.bottom : [...slice.bottom, action.rowId],
+      }
+    case 'UNPIN_ROW':
+      return {
+        top: slice.top.filter((id) => id !== action.rowId),
+        bottom: slice.bottom.filter((id) => id !== action.rowId),
+      }
+    default:
+      return slice
+  }
+}
+
 function sortActionReducer(slice: SortingState, action: GridAction): SortingState {
   switch (action.type) {
     case 'SET_SORT': {
@@ -243,6 +268,10 @@ export function gridReducer<TData>(
     case 'SELECT_ALL_VISIBLE':
     case 'CLEAR_SELECTION':
       return { ...state, rowSelection: rowSelectionReducer(state.rowSelection, action) }
+    case 'PIN_ROW_TOP':
+    case 'PIN_ROW_BOTTOM':
+    case 'UNPIN_ROW':
+      return { ...state, rowPinning: rowPinningReducer(state.rowPinning, action) }
     default:
       return state
   }

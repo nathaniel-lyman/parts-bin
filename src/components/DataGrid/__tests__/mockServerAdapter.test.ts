@@ -12,7 +12,7 @@ describe('mockServerAdapter', () => {
   it('generates account-shaped rows', () => {
     const rows = generateAccounts(3)
     expect(rows).toHaveLength(3)
-    expect(rows[0]).toMatchObject({ id: 'gen-0', segment: 'Enterprise', status: 'Active' })
+    expect(rows[0]).toMatchObject({ id: 'row-0', segment: 'Enterprise', status: 'Active' })
   })
 
   it('applies global filter, column filters, sorting, and pagination', async () => {

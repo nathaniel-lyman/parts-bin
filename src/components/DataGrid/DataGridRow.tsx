@@ -6,6 +6,7 @@ interface Props<TData> {
   row: Row<TData>
   enableRowSelection?: boolean
   selected?: boolean
+  pinned?: 'top' | 'bottom'
   rowLabel?: string
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
@@ -15,6 +16,7 @@ export function DataGridRow<TData>({
   row,
   enableRowSelection,
   selected = false,
+  pinned,
   rowLabel = row.id,
   onToggleRow,
   onCellContextMenu,
@@ -22,7 +24,9 @@ export function DataGridRow<TData>({
   const toggle = () => onToggleRow?.(row.id)
   return (
     <tr
-      className="group border-t border-line hover:bg-surface-2"
+      className={`group border-t border-line hover:bg-surface-2 ${pinned ? 'bg-surface shadow-pinned' : ''}`}
+      data-testid={`grid-row-${row.id}`}
+      data-row-pinned={pinned}
       style={{ height: 'var(--row-h)' }}
       tabIndex={enableRowSelection ? 0 : undefined}
       aria-selected={enableRowSelection ? selected : undefined}

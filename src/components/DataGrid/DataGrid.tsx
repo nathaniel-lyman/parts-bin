@@ -5,7 +5,6 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
@@ -95,6 +94,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const isServerMode = Boolean(manualSorting || manualFiltering || manualPagination)
   const [seed] = useState(() => hydrate({ initialState: props.initialState }))
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const view = useGridViewState(seed, columns)
   const state = isControlled ? props.state! : view.state
 
@@ -137,6 +137,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       columnPinning: state.columnPinning,
       pagination: state.pagination,
       rowSelection: state.rowSelection,
+      rowPinning: state.rowPinning,
     },
     defaultColumn: {
       filterFn: ledgerFilterFn as unknown as FilterFn<TData>,
@@ -165,11 +166,12 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     manualSorting,
     manualFiltering,
     manualPagination,
+    enableRowPinning: true,
+    keepPinnedRows: true,
     pageCount: manualPagination && totalRowCount != null ? Math.ceil(totalRowCount / state.pagination.pageSize) : undefined,
     getCoreRowModel: getCoreRowModel(),
     ...(manualSorting ? {} : { getSortedRowModel: getSortedRowModel() }),
     ...(manualFiltering ? {} : { getFilteredRowModel: getFilteredRowModel() }),
-    ...(manualPagination ? {} : { getPaginationRowModel: getPaginationRowModel() }),
   })
 
   const rowCount = table.getRowModel().rows.length
@@ -278,31 +280,35 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         </div>
       )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <table className="w-full border-collapse">
-          <DataGridHeader
-            table={table}
-            dispatch={dispatch}
-            columnSizing={state.columnSizing}
-            columns={columns}
-            columnPinning={state.columnPinning}
-            columnFilters={state.columnFilters}
-            enableHeaderFilters={enableHeaderFilters}
-            enableRowSelection={enableRowSelection}
-            isServerMode={isServerMode}
-            selectAll={allState}
-            onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
-            dndProvider={false}
-          />
-          {!loading && error === undefined && rowCount > 0 && (
-            <DataGridBody
+        <div ref={setScrollElement} className="max-h-[640px] overflow-auto" data-testid="datagrid-scroll">
+          <table className="w-full border-collapse">
+            <DataGridHeader
               table={table}
+              dispatch={dispatch}
+              columnSizing={state.columnSizing}
+              columns={columns}
+              columnPinning={state.columnPinning}
+              columnFilters={state.columnFilters}
+              enableHeaderFilters={enableHeaderFilters}
               enableRowSelection={enableRowSelection}
-              rowSelection={state.rowSelection}
-              onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
-              onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
+              isServerMode={isServerMode}
+              selectAll={allState}
+              onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
+              dndProvider={false}
             />
-          )}
-        </table>
+            {!loading && error === undefined && rowCount > 0 && (
+              <DataGridBody
+                table={table}
+                enableRowSelection={enableRowSelection}
+                rowSelection={state.rowSelection}
+                scrollElement={scrollElement}
+                enableVirtualization={rowCount > 100}
+                onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
+                onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
+              />
+            )}
+          </table>
+        </div>
       </DndContext>
       {loading && <DataGridLoadingState />}
       {!loading && error !== undefined && <DataGridErrorState error={error} />}

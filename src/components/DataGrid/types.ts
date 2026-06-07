@@ -96,3 +96,6 @@ export type GridAction =
   | { type: 'TOGGLE_ROW'; id: string }
   | { type: 'SELECT_ALL_VISIBLE'; ids: string[]; select: boolean }
   | { type: 'CLEAR_SELECTION' }
+  | { type: 'PIN_ROW_TOP'; rowId: string }
+  | { type: 'PIN_ROW_BOTTOM'; rowId: string }
+  | { type: 'UNPIN_ROW'; rowId: string }

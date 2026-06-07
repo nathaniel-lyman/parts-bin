@@ -41,7 +41,7 @@ export function generateAccounts(count: number): Account[] {
     const r = seeded(index)
     const mrr = Math.round(500 + r * 30000)
     rows.push({
-      id: `gen-${index}`,
+      id: `row-${index}`,
       name: `${NAME_A[index % NAME_A.length]} ${NAME_B[(index * 7) % NAME_B.length]} ${index}`,
       owner: OWNERS[index % OWNERS.length],
       segment: SEGMENTS[index % SEGMENTS.length],

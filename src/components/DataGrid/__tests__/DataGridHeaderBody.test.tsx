@@ -61,4 +61,26 @@ describe('DataGridHeader / DataGridBody', () => {
     expect(screen.getByText('Acme')).toBeInTheDocument()
     expect(screen.getByText('Beta')).toBeInTheDocument()
   })
+
+  it('marks the body virtualized when row windowing is enabled', () => {
+    function VirtualHarness() {
+      // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
+      // eslint-disable-next-line react-hooks/incompatible-library
+      const table = useReactTable({
+        data: Array.from({ length: 1000 }, (_, index) => ({ id: String(index), name: `Row ${index}`, mrr: index })),
+        columns,
+        getRowId: (row) => row.id,
+        getCoreRowModel: getCoreRowModel(),
+      })
+      return (
+        <table>
+          <DataGridBody table={table} enableVirtualization />
+        </table>
+      )
+    }
+
+    const { container } = render(<VirtualHarness />)
+    expect(container.querySelector('tbody')).toHaveAttribute('data-virtualized', 'true')
+    expect(Number(container.querySelector('tbody')?.getAttribute('data-total-size'))).toBeGreaterThan(1000)
+  })
 })

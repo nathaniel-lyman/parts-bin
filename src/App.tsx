@@ -6,7 +6,7 @@ import { totalMrr, activeCount, atRiskCount, avgGrowth } from './selectors/metri
 import { fmtCurrency, fmtPercent } from './lib/format'
 import { KpiCard } from './components/KpiCard'
 import { DataGrid } from './components/DataGrid/DataGrid'
-import { createMockServerAdapter } from './components/DataGrid/mockServerAdapter'
+import { createMockServerAdapter, generateAccounts } from './components/DataGrid/mockServerAdapter'
 import { toGridQuery, type GridQuery } from './components/DataGrid/query'
 import { DEFAULT_STATE } from './components/DataGrid/state'
 import { AccountFormModal } from './components/AccountFormModal'
@@ -33,15 +33,26 @@ export default function App() {
   const { accounts, create, update, remove } = useAccounts()
   const { mode, toggle } = useTheme()
   const toast = useToast()
+  const params = new URLSearchParams(window.location.search)
+  const requestedRows = Number(params.get('rows') ?? 0)
+  const generatedAccounts = useMemo(
+    () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
+    [requestedRows],
+  )
+  const visibleAccounts = generatedAccounts ?? accounts
+  const gridInitialState = useMemo(
+    () => (generatedAccounts ? { ...DEFAULT_STATE, sorting: [] } : DEFAULT_STATE),
+    [generatedAccounts],
+  )
 
   const [editing, setEditing] = useState<Account | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<Account | null>(null)
-  const [serverMode, setServerMode] = useState(false)
+  const [serverMode, setServerMode] = useState(params.get('server') === '1')
   const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(DEFAULT_STATE))
-  const serverAdapter = useMemo(() => createMockServerAdapter(accounts, { latencyMs: 80 }), [accounts])
+  const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
   const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
-  const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [])
+  const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [setDeleting, setEditing])
 
   return (
     <div className="min-h-screen">
@@ -62,19 +73,19 @@ export default function App() {
         <div className="micro">Revenue / Accounts</div>
         <div className="mb-6 flex items-end justify-between">
           <h1 className="display text-[28px] font-semibold text-ink">Account book</h1>
-          <span className="num text-[13px] text-muted">{activeCount(accounts) + atRiskCount(accounts)} accounts · {fmtCurrency(totalMrr(accounts))} MRR</span>
+          <span className="num text-[13px] text-muted">{activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} accounts · {fmtCurrency(totalMrr(visibleAccounts))} MRR</span>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(accounts))} delta={4.6} spark={sparks.mrr} />
-          <KpiCard label="Active accounts" value={String(activeCount(accounts))} delta={2.4} spark={sparks.accts} />
-          <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(accounts))} delta={1.1} spark={sparks.growth} />
-          <KpiCard label="At risk / churned" value={String(atRiskCount(accounts))} delta={-12.5} spark={sparks.churn} negSpark />
+          <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(visibleAccounts))} delta={4.6} spark={sparks.mrr} />
+          <KpiCard label="Active accounts" value={String(activeCount(visibleAccounts))} delta={2.4} spark={sparks.accts} />
+          <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(visibleAccounts))} delta={1.1} spark={sparks.growth} />
+          <KpiCard label="At risk / churned" value={String(atRiskCount(visibleAccounts))} delta={-12.5} spark={sparks.churn} negSpark />
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card title="MRR trend ($k)"><MrrTrendChart /></Card>
-          <Card title="MRR share — live"><MrrShareDonut accounts={accounts} /></Card>
+          <Card title="MRR share — live"><MrrShareDonut accounts={visibleAccounts} /></Card>
         </div>
         <div className="mb-6">
           <Card title="Revenue movement ($k)"><RevenueMovementChart /></Card>
@@ -101,9 +112,10 @@ export default function App() {
           )}
         </div>
         <DataGrid
-          rows={serverMode ? server.rows : accounts}
+          rows={serverMode ? server.rows : visibleAccounts}
           columns={gridColumns}
           getRowId={(row) => row.id}
+          initialState={gridInitialState}
           globalFilterFn={accountGlobalFilter}
           manualSorting={serverMode}
           manualFiltering={serverMode}
