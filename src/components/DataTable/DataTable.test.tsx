@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -96,4 +97,24 @@ test('reads persisted column order', () => {
     header.textContent?.replaceAll(':', '').replace(/[▲▼]/g, '').trim(),
   )
   expect(headers.slice(0, 3)).toEqual(['Owner', 'Account', 'Segment'])
+})
+
+test('defaults to mrr descending sort', () => {
+  render(<DataTable {...props} />)
+  const mrrHeader = screen.getByRole('columnheader', { name: /MRR/i })
+  expect(mrrHeader).toHaveAttribute('aria-sort', 'descending')
+})
+
+test('clicking a sortable header toggles aria-sort', async () => {
+  render(<DataTable {...props} />)
+
+  const accountHeader = screen.getByRole('columnheader', { name: /Account/i })
+  expect(accountHeader).toHaveAttribute('aria-sort', 'none')
+
+  await userEvent.click(accountHeader)
+  expect(accountHeader).toHaveAttribute('aria-sort', 'ascending')
+  expect(screen.getByRole('columnheader', { name: /MRR/i })).toHaveAttribute('aria-sort', 'none')
+
+  await userEvent.click(accountHeader)
+  expect(accountHeader).toHaveAttribute('aria-sort', 'descending')
 })
