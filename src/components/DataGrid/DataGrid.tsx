@@ -13,6 +13,7 @@ import {
   type Row,
 } from '@tanstack/react-table'
 import { useGridViewState } from '../../hooks/useGridViewState'
+import { bootGridSeed, useGridPersistence } from '../../hooks/useGridPersistence'
 import { useSavedViews } from '../../hooks/useSavedViews'
 import { canHideColumn, canSortColumn } from './normalize'
 import { gridReducer } from './reducers'
@@ -104,7 +105,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   } = props
   const isControlled = props.state !== undefined && props.onStateChange !== undefined
   const isServerMode = Boolean(manualSorting || manualFiltering || manualPagination)
-  const [seed] = useState(() => hydrate({ initialState: props.initialState }))
+  const persistenceEnabled = !isControlled && persistenceKey !== undefined
+  const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState) : hydrate({ initialState: props.initialState }))
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const view = useGridViewState(seed, columns)
@@ -117,6 +119,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     if (isControlled) props.onStateChange!(gridReducer(state, action, columns))
     else view.dispatch(action)
   }
+
+  useGridPersistence(state, persistenceEnabled)
 
   const columnDefs = useMemo(() => columns.map(toColumnDef), [columns])
   const serializedQuery = serializeGridQuery(toGridQuery(state))
@@ -323,7 +327,12 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <div ref={setScrollElement} className="max-h-[640px] overflow-auto" data-testid="datagrid-scroll">
-          <table className="w-full border-collapse">
+          <table
+            className="w-full border-collapse"
+            role="grid"
+            aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : table.getFilteredRowModel().rows.length}
+            aria-colcount={table.getVisibleLeafColumns().length}
+          >
             <DataGridHeader
               table={table}
               dispatch={dispatch}

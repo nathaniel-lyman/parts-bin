@@ -118,7 +118,7 @@ export default function App() {
           initialState={gridInitialState}
           enablePagination={!generatedAccounts}
           enableExport
-          persistenceKey="ledger.accounts.grid"
+          persistenceKey={generatedAccounts ? undefined : 'ledger.accounts.grid'}
           globalFilterFn={accountGlobalFilter}
           manualSorting={serverMode}
           manualFiltering={serverMode}

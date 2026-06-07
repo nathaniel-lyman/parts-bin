@@ -25,6 +25,18 @@ describe('DataGridResizeHandle', () => {
     expect(onReset).toHaveBeenCalledWith('mrr')
   })
 
+  it('Ctrl+Arrow keys resize from the keyboard', () => {
+    const onResize = vi.fn()
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onReset={() => {}} />)
+    const handle = screen.getByRole('separator', { name: /resize mrr column/i })
+
+    fireEvent.keyDown(handle, { key: 'ArrowRight', ctrlKey: true })
+    expect(onResize).toHaveBeenLastCalledWith('mrr', 136)
+
+    fireEvent.keyDown(handle, { key: 'ArrowLeft', ctrlKey: true })
+    expect(onResize).toHaveBeenLastCalledWith('mrr', 104)
+  })
+
   it('does not call onResize after mouseup ends the drag', () => {
     const onResize = vi.fn()
     render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onReset={() => {}} />)
@@ -36,4 +48,3 @@ describe('DataGridResizeHandle', () => {
     expect(onResize).not.toHaveBeenCalled()
   })
 })
-

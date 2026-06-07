@@ -15,6 +15,14 @@ describe('mockServerAdapter', () => {
     expect(rows[0]).toMatchObject({ id: 'row-0', segment: 'Enterprise', status: 'Active' })
   })
 
+  it('generates 10k stable unique rows for the virtualization smoke path', () => {
+    const rows = generateAccounts(10_000)
+    expect(rows).toHaveLength(10_000)
+    expect(rows[0].id).toBe('row-0')
+    expect(rows[9_999].id).toBe('row-9999')
+    expect(new Set(rows.map((row) => row.id))).toHaveLength(10_000)
+  })
+
   it('applies global filter, column filters, sorting, and pagination', async () => {
     const rows = generateAccounts(30)
     const adapter = createMockServerAdapter(rows, { latencyMs: 0 })

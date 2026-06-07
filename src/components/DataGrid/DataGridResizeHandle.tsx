@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { keyToIntent } from './keyboard'
 
 interface Props {
   columnId: string
@@ -40,8 +41,16 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
   return (
     <span
       role="separator"
+      tabIndex={0}
       aria-orientation="vertical"
       aria-label={`Resize ${header} column`}
+      onKeyDown={(event) => {
+        const intent = keyToIntent(event)
+        if (intent !== 'resize-shrink' && intent !== 'resize-grow') return
+        event.preventDefault()
+        event.stopPropagation()
+        onResize(columnId, currentWidth + (intent === 'resize-grow' ? 16 : -16))
+      }}
       onMouseDown={onMouseDown}
       onDoubleClick={(event) => {
         event.stopPropagation()
@@ -52,4 +61,3 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
     />
   )
 }
-

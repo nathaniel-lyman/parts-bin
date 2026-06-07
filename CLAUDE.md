@@ -47,13 +47,13 @@ Note: `lint:theme` only catches `#hex`/`rgb()`/`hsl()` text. Named Tailwind colo
 
 ```
 data/accounts.ts ──> useAccounts ──> selectors/metrics ──> KpiCard ×4 + MrrShareDonut
-                          │                                  DataTable (sort/filter/columns)
+                          │                                  DataGrid (sort/filter/columns/views)
                           └── create/edit/delete from AccountFormModal + ConfirmDialog
 ```
 
 - `selectors/metrics.ts` — pure derive functions. **Churned-handling is deliberate and pinned** (see spec §10): `totalMrr`/`avgGrowth`/`segmentShares` exclude `Churned`; `activeCount` counts only `Active`; `atRiskCount` counts non-`Active`. One intentional demo-parity quirk: `avgGrowth` matches the demo — verify against `demo.html` before "fixing" any metric.
-- Persistence: each hook is the sole writer of its `localStorage` key — `useTheme` → `ledger.theme`, `useColumnVisibility` → `ledger.cols`. Don't read/write these keys elsewhere.
-- `DataTable/` uses TanStack Table (headless). Global filter matches account name **and** owner. The Account column has id `account` and maps from `visibility.name` (visible by default); `arr`/`since` are hidden by default.
+- Persistence: each hook is the sole writer of its `localStorage` key — `useTheme` → `ledger.theme`, `useGridPersistence` → `ledger.accounts.grid`, `useSavedViews` → `ledger.accounts.grid.views`. Legacy keys `ledger.cols` and `ledger.colOrder` are read only by DataGrid migration code.
+- `DataGrid/` uses TanStack Table (headless). Global filter matches account name **and** owner. The Account column has id `account` and maps from legacy `visibility.name` during migration; `arr`/`since` are hidden by default.
 
 ## Gotchas
 

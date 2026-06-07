@@ -36,7 +36,7 @@ export function project(state: LedgerGridState): PersistedGridView {
 
 export const projectView = project
 
-export function hydrateView(view: Partial<PersistedGridView>): LedgerGridState {
+export function hydrateView(view: Partial<PersistedGridView>, initialState?: Partial<LedgerGridState>): LedgerGridState {
   const persisted: Partial<LedgerGridState> = {}
   if (view.columnVisibility) persisted.columnVisibility = view.columnVisibility
   if (view.columnOrder) persisted.columnOrder = view.columnOrder
@@ -46,7 +46,7 @@ export function hydrateView(view: Partial<PersistedGridView>): LedgerGridState {
   if (view.columnFilters) persisted.columnFilters = view.columnFilters
   if (view.sorting) persisted.sorting = view.sorting
   if (view.pagination) persisted.pagination = { pageIndex: 0, pageSize: view.pagination.pageSize }
-  return hydrate({ persisted })
+  return hydrate({ initialState, persisted })
 }
 
 const LEGACY_COLS_KEY = 'ledger.cols'

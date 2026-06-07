@@ -24,8 +24,10 @@ export function DataGridRow<TData>({
   const toggle = () => onToggleRow?.(row.id)
   return (
     <tr
+      role="row"
       className={`group border-t border-line hover:bg-surface-2 ${pinned ? 'bg-surface shadow-pinned' : ''}`}
       data-testid={`grid-row-${row.id}`}
+      data-row-id={row.id}
       data-row-pinned={pinned}
       style={{ height: 'var(--row-h)' }}
       tabIndex={enableRowSelection ? 0 : undefined}

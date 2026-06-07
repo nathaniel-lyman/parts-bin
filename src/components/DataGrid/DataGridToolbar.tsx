@@ -61,7 +61,7 @@ export function DataGridToolbar<TData>({
             {viewsOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setViewsOpen(false)} />
-                <div className="shadow-dropdown absolute right-0 z-20 mt-1 w-56 rounded-[2px] border border-line bg-surface p-2">
+                <div className="shadow-dropdown absolute right-0 z-30 mt-1 w-56 rounded-[2px] border border-line bg-surface p-2">
                   <div className="micro mb-1 text-faint">Saved views</div>
                   <div className="flex flex-col gap-1">
                     {savedViews.length === 0 && <div className="px-1 py-1 text-[12px] text-muted">No saved views</div>}
@@ -139,7 +139,7 @@ export function DataGridToolbar<TData>({
           {open && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-              <div className="shadow-dropdown absolute right-0 z-20 mt-1 w-44 rounded-[2px] border border-line bg-surface py-1">
+              <div className="shadow-dropdown absolute right-0 z-30 mt-1 w-44 rounded-[2px] border border-line bg-surface py-1">
                 <div className="micro px-3 py-1 text-faint">Toggle columns</div>
                 {hideable.map((column) => {
                   const label = typeof column.header === 'string' && column.header ? column.header : column.id

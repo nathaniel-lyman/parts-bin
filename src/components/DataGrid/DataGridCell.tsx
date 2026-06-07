@@ -12,6 +12,7 @@ export function DataGridCell<TData>({
   const align = cell.column.columnDef.meta?.align
   return (
     <td
+      role="gridcell"
       className={`${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
       style={{ padding: 'var(--cell-pad)' }}
       onContextMenu={onContextMenu}
