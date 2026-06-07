@@ -11,10 +11,32 @@ interface Props<TData> {
   globalFilter: string
   density: Density
   dispatch: (action: GridAction) => void
+  enableExport?: boolean
+  onExportCsv?: () => void
+  savedViews?: { id: string; name: string }[]
+  onApplyView?: (id: string) => void
+  onSaveView?: (name: string) => void
+  onDeleteView?: (id: string) => void
+  onResetView?: () => void
 }
 
-export function DataGridToolbar<TData>({ columns, columnVisibility, globalFilter, density, dispatch }: Props<TData>) {
+export function DataGridToolbar<TData>({
+  columns,
+  columnVisibility,
+  globalFilter,
+  density,
+  dispatch,
+  enableExport,
+  onExportCsv,
+  savedViews,
+  onApplyView,
+  onSaveView,
+  onDeleteView,
+  onResetView,
+}: Props<TData>) {
   const [open, setOpen] = useState(false)
+  const [viewsOpen, setViewsOpen] = useState(false)
+  const [draftName, setDraftName] = useState('')
   const hideable = columns.filter((column) => column.hideable !== false && column.id !== 'actions')
 
   return (
@@ -28,6 +50,77 @@ export function DataGridToolbar<TData>({ columns, columnVisibility, globalFilter
         onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}
       />
       <div className="ml-auto flex items-center gap-2">
+        {enableExport && (
+          <Button size="compact" onClick={onExportCsv} aria-label="Export CSV">
+            Export CSV
+          </Button>
+        )}
+        {savedViews && (
+          <div className="relative">
+            <Button size="compact" onClick={() => setViewsOpen((value) => !value)} aria-expanded={viewsOpen}>Views</Button>
+            {viewsOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setViewsOpen(false)} />
+                <div className="shadow-dropdown absolute right-0 z-20 mt-1 w-56 rounded-[2px] border border-line bg-surface p-2">
+                  <div className="micro mb-1 text-faint">Saved views</div>
+                  <div className="flex flex-col gap-1">
+                    {savedViews.length === 0 && <div className="px-1 py-1 text-[12px] text-muted">No saved views</div>}
+                    {savedViews.map((view) => (
+                      <div key={view.id} className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          className="micro flex-1 px-1 py-1 text-left text-ink hover:bg-surface-2"
+                          aria-label={`Apply ${view.name}`}
+                          onClick={() => {
+                            onApplyView?.(view.id)
+                            setViewsOpen(false)
+                          }}
+                        >
+                          {view.name}
+                        </button>
+                        <button
+                          type="button"
+                          className="micro px-1 py-1 text-muted hover:text-neg"
+                          aria-label={`Delete ${view.name}`}
+                          onClick={() => onDeleteView?.(view.id)}
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex flex-col gap-1 border-t border-line pt-2">
+                    <Input
+                      placeholder="View name"
+                      value={draftName}
+                      onChange={(event) => setDraftName(event.target.value)}
+                    />
+                    <Button
+                      size="compact"
+                      disabled={!draftName.trim()}
+                      onClick={() => {
+                        onSaveView?.(draftName.trim())
+                        setDraftName('')
+                      }}
+                    >
+                      Save current
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="compact"
+                      onClick={() => {
+                        onResetView?.()
+                        setViewsOpen(false)
+                      }}
+                    >
+                      Reset to default
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
         <label className="micro flex items-center gap-1 text-faint">
           <span>Density</span>
           <Select

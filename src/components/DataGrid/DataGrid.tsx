@@ -5,6 +5,7 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
@@ -12,19 +13,22 @@ import {
   type Row,
 } from '@tanstack/react-table'
 import { useGridViewState } from '../../hooks/useGridViewState'
+import { useSavedViews } from '../../hooks/useSavedViews'
 import { canHideColumn, canSortColumn } from './normalize'
 import { gridReducer } from './reducers'
 import { densityClass, pinnedLeafGroups, selectAllState, selectionCount } from './selectors'
 import { hydrate } from './state'
 import { ledgerFilterFn } from './filtering'
 import { serializeGridQuery, toGridQuery, type GridQuery } from './query'
-import { copyToClipboard, serializeCell, serializeTSV } from './export'
+import { copyToClipboard, downloadCSV, serializeCSV, serializeCell, serializeTSV } from './export'
+import { projectView } from './persistence'
 import { resolveCopyIntent } from './keyboard'
 import { DataGridBulkActions } from './DataGridBulkActions'
 import { DataGridBody } from './DataGridBody'
 import { DataGridContextMenu } from './DataGridContextMenu'
 import { DataGridEmptyState } from './DataGridEmptyState'
 import { DataGridErrorState } from './DataGridErrorState'
+import { DataGridFooter } from './DataGridFooter'
 import { DataGridHeader } from './DataGridHeader'
 import { DataGridLoadingState } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
@@ -45,6 +49,10 @@ export interface DataGridProps<TData> {
   manualSorting?: boolean
   manualFiltering?: boolean
   manualPagination?: boolean
+  enablePagination?: boolean
+  enableExport?: boolean
+  enableSavedViews?: boolean
+  persistenceKey?: string
   totalRowCount?: number
   onQueryChange?: (query: GridQuery) => void
 }
@@ -87,6 +95,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     manualSorting,
     manualFiltering,
     manualPagination,
+    enablePagination = true,
+    enableExport,
+    enableSavedViews,
+    persistenceKey,
     totalRowCount,
     onQueryChange,
   } = props
@@ -96,7 +108,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const view = useGridViewState(seed, columns)
+  const savedViews = useSavedViews()
   const state = isControlled ? props.state! : view.state
+  const paginationEnabled = enablePagination || manualPagination
+  const savedViewsEnabled = !isControlled && (enableSavedViews || persistenceKey !== undefined)
 
   const dispatch = (action: GridAction) => {
     if (isControlled) props.onStateChange!(gridReducer(state, action, columns))
@@ -162,6 +177,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       const next = typeof updater === 'function' ? updater(state.columnOrder) : updater
       dispatch({ type: 'setColumnOrder', columnOrder: next })
     },
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(state.pagination) : updater
+      if (next.pageIndex !== state.pagination.pageIndex) dispatch({ type: 'setPageIndex', pageIndex: next.pageIndex })
+      if (next.pageSize !== state.pagination.pageSize) dispatch({ type: 'setPageSize', pageSize: next.pageSize })
+    },
     globalFilterFn: effectiveGlobalFilterFn,
     manualSorting,
     manualFiltering,
@@ -172,12 +192,18 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     getCoreRowModel: getCoreRowModel(),
     ...(manualSorting ? {} : { getSortedRowModel: getSortedRowModel() }),
     ...(manualFiltering ? {} : { getFilteredRowModel: getFilteredRowModel() }),
+    ...(paginationEnabled && !manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
   })
 
   const rowCount = table.getRowModel().rows.length
   const visibleRows = table.getRowModel().rows
   const visibleIds = visibleRows.map((row) => row.id)
   const visibleData = visibleRows.map((row) => row.original)
+  const exportData = (manualFiltering ? table.getRowModel().rows : table.getFilteredRowModel().rows).map((row) => row.original)
+  const footerTotalRows = manualPagination ? (totalRowCount ?? rowCount) : table.getFilteredRowModel().rows.length
+  const footerPageCount = manualPagination
+    ? Math.max(1, Math.ceil(footerTotalRows / state.pagination.pageSize))
+    : Math.max(1, table.getPageCount())
   const selCount = selectionCount(state.rowSelection)
   const allState = selectAllState(state.rowSelection, visibleIds)
   const pinnedGroups = pinnedLeafGroups(table.getVisibleLeafColumns().map((column) => column.id), state.columnPinning)
@@ -241,6 +267,15 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     }))
   }, [columns, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection, visibleData])
 
+  const exportCsv = useCallback(() => {
+    downloadCSV('ledger-accounts.csv', serializeCSV(exportData, columns, {
+      getRowId,
+      columnOrder: state.columnOrder,
+      columnVisibility: state.columnVisibility,
+      rowSelection: state.rowSelection,
+    }))
+  }, [columns, exportData, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const active = document.activeElement
@@ -273,6 +308,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         globalFilter={state.globalFilter}
         density={state.density}
         dispatch={dispatch}
+        enableExport={enableExport}
+        onExportCsv={exportCsv}
+        savedViews={savedViewsEnabled ? savedViews.views.map((item) => ({ id: item.id, name: item.name })) : undefined}
+        onSaveView={(name) => savedViews.create(name, projectView(state))}
+        onApplyView={(id) => savedViews.apply(id, view.applyView)}
+        onDeleteView={(id) => savedViews.remove(id)}
+        onResetView={() => savedViews.reset(view.applyView)}
       />
       {enableRowSelection && selCount > 0 && (
         <div className="flex items-center justify-between border-b border-line px-3 py-2">
@@ -310,6 +352,16 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           </table>
         </div>
       </DndContext>
+      {paginationEnabled && (
+        <DataGridFooter
+          pageIndex={state.pagination.pageIndex}
+          pageSize={state.pagination.pageSize}
+          pageCount={footerPageCount}
+          totalRowCount={footerTotalRows}
+          onPageIndexChange={(pageIndex) => dispatch({ type: 'setPageIndex', pageIndex })}
+          onPageSizeChange={(pageSize) => dispatch({ type: 'setPageSize', pageSize })}
+        />
+      )}
       {loading && <DataGridLoadingState />}
       {!loading && error !== undefined && <DataGridErrorState error={error} />}
       {!loading && error === undefined && rowCount === 0 && <DataGridEmptyState query={state.globalFilter || undefined} />}

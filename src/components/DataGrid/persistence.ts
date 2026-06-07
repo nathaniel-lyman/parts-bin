@@ -18,6 +18,8 @@ export interface PersistedGridView {
   pagination: { pageSize: number }
 }
 
+export const DEFAULT_PERSISTED_VIEW: PersistedGridView = project(DEFAULT_STATE)
+
 export function project(state: LedgerGridState): PersistedGridView {
   return {
     version: GRID_VIEW_VERSION,
@@ -31,6 +33,8 @@ export function project(state: LedgerGridState): PersistedGridView {
     pagination: { pageSize: state.pagination.pageSize },
   }
 }
+
+export const projectView = project
 
 export function hydrateView(view: Partial<PersistedGridView>): LedgerGridState {
   const persisted: Partial<LedgerGridState> = {}

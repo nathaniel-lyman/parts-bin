@@ -92,6 +92,7 @@ export type GridAction =
   | { type: 'SET_COLUMN_FILTER'; columnId: string; value: FilterValue }
   | { type: 'CLEAR_COLUMN_FILTER'; columnId: string }
   | { type: 'SET_COLUMN_FILTERS'; columnFilters: ColumnFiltersState }
+  | { type: 'setColumnFilters'; value: ColumnFiltersState }
   | { type: 'SET_GLOBAL_FILTER'; value: string }
   | { type: 'TOGGLE_ROW'; id: string }
   | { type: 'SELECT_ALL_VISIBLE'; ids: string[]; select: boolean }
@@ -99,3 +100,6 @@ export type GridAction =
   | { type: 'PIN_ROW_TOP'; rowId: string }
   | { type: 'PIN_ROW_BOTTOM'; rowId: string }
   | { type: 'UNPIN_ROW'; rowId: string }
+  | { type: 'setPageIndex'; pageIndex: number }
+  | { type: 'setPageSize'; pageSize: number }
+  | { type: 'APPLY_VIEW'; state: LedgerGridState }
