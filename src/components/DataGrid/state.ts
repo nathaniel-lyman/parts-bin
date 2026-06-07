@@ -1,6 +1,17 @@
 import { DEFAULT_COLUMN_ORDER, normalizeState } from './normalize'
 import type { LedgerGridState } from './types'
 
+export const DEFAULT_COLUMN_VISIBILITY: Record<string, boolean> = {
+  account: true,
+  owner: true,
+  segment: true,
+  mrr: true,
+  growth: true,
+  status: true,
+  arr: false,
+  since: false,
+}
+
 export const DEFAULT_STATE: LedgerGridState = {
   sorting: [{ id: 'mrr', desc: true }],
   columnFilters: [],
@@ -56,4 +67,3 @@ export function hydrate(opts: HydrateOptions): LedgerGridState {
   if (opts.controlledState) return normalizeState(opts.controlledState)
   return normalizeState(mergeLayers(opts.initialState ?? {}, opts.persisted ?? {}))
 }
-

@@ -1,13 +1,25 @@
 import type { Account, Status } from '../data/types'
 import { fmtCurrency, fmtDelta } from '../lib/format'
+import { ACTIONS_COLUMN_ID } from './DataGrid/normalize'
 import type { LedgerGridColumn } from './DataGrid/types'
 import { StatusBadge } from './ui/Badge'
+
+function withMeta(column: LedgerGridColumn<Account>): LedgerGridColumn<Account> {
+  const align = column.align ?? 'left'
+  return {
+    ...column,
+    meta: {
+      align,
+      resizable: column.id === ACTIONS_COLUMN_ID ? false : column.resizable !== false,
+    },
+  }
+}
 
 export function buildAccountGridColumns(
   onEdit: (account: Account) => void,
   onDelete: (account: Account) => void,
 ): LedgerGridColumn<Account>[] {
-  return [
+  const columns: LedgerGridColumn<Account>[] = [
     {
       id: 'account',
       accessorKey: 'name',
@@ -98,10 +110,10 @@ export function buildAccountGridColumns(
       ),
     },
   ]
+  return columns.map(withMeta)
 }
 
 export function accountGlobalFilter(row: Account, value: string): boolean {
   const q = value.toLowerCase()
   return row.name.toLowerCase().includes(q) || row.owner.toLowerCase().includes(q)
 }
-

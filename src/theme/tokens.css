@@ -10,6 +10,10 @@
 
   --radius: 2px;
   --radius-lg: 4px;
+  --row-h-compact: 40px;       --cell-pad-compact: 0 12px;
+  --row-h-standard: 48px;      --cell-pad-standard: 4px 12px;
+  --row-h-comfortable: 56px;   --cell-pad-comfortable: 8px 12px;
+  --shadow-pinned: 6px 0 8px -6px rgb(0 0 0 / .18);
 
   /* shadcn-compatible aliases (so shadcn can be added later without renaming) */
   --background: var(--bg);        --foreground: var(--ink);
@@ -29,4 +33,5 @@
   --pos: #34c98e;  --pos-soft: #11281e;
   --neg: #f97066;  --neg-soft: #2d1715;
   --warn: #f5a524; --warn-soft: #2b2010;
+  --shadow-pinned: 6px 0 8px -6px rgb(0 0 0 / .45);
 }

@@ -1,4 +1,4 @@
-import type { LedgerGridColumn, LedgerGridState } from './types'
+import type { ColumnPinning, Density, LedgerGridColumn, LedgerGridState } from './types'
 
 export function orderedColumns<TData>(
   columns: LedgerGridColumn<TData>[],
@@ -30,3 +30,21 @@ export function visibleColumns<TData>(
   return orderedColumns(columns, state).filter((column) => state.columnVisibility[column.id] !== false)
 }
 
+export function densityClass(density: Density): string {
+  return `density-${density}`
+}
+
+export interface PinnedLeafGroups {
+  left: string[]
+  center: string[]
+  right: string[]
+}
+
+export function pinnedLeafGroups(orderedVisibleIds: string[], pinning: ColumnPinning): PinnedLeafGroups {
+  const visible = new Set(orderedVisibleIds)
+  const left = pinning.left.filter((id) => visible.has(id))
+  const right = pinning.right.filter((id) => visible.has(id))
+  const pinned = new Set([...left, ...right])
+  const center = orderedVisibleIds.filter((id) => !pinned.has(id))
+  return { left, center, right }
+}

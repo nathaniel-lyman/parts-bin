@@ -44,8 +44,8 @@ describe('DataGrid (uncontrolled, account table)', () => {
         initialState={{ ...DEFAULT_STATE, columnVisibility: { account: true, arr: true, since: true } }}
       />,
     )
-    expect(screen.getByRole('columnheader', { name: 'ARR' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Since' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /ARR/ })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /Since/ })).toBeInTheDocument()
   })
 
   it('shows the empty state when no rows match the quick filter', () => {
@@ -84,10 +84,9 @@ describe('DataGrid (controlled override)', () => {
     }
 
     render(<Controlled />)
-    expect(screen.getByRole('columnheader', { name: 'ARR' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /ARR/ })).toBeInTheDocument()
     await user.click(screen.getByRole('columnheader', { name: /MRR/ }))
     const mrr = screen.getByRole('columnheader', { name: /MRR/ })
     expect(['ascending', 'descending']).toContain(mrr.getAttribute('aria-sort'))
   })
 })
-

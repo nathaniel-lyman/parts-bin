@@ -29,6 +29,10 @@ export interface LedgerGridColumn<TData, TValue = unknown> {
   minWidth?: number
   maxWidth?: number
   align?: 'left' | 'right' | 'center'
+  meta?: {
+    align?: 'left' | 'right' | 'center'
+    resizable?: boolean
+  }
   type?: GridColumnType
   sortable?: boolean
   filterable?: boolean
@@ -46,11 +50,16 @@ export interface LedgerGridState {
   columnVisibility: Record<string, boolean>
   columnOrder: string[]
   columnSizing: Record<string, number>
-  columnPinning: { left: string[]; right: string[] }
+  columnPinning: ColumnPinning
   rowSelection: Record<string, boolean>
   rowPinning: { top: string[]; bottom: string[] }
   pagination: { pageIndex: number; pageSize: number }
   density: Density
+}
+
+export interface ColumnPinning {
+  left: string[]
+  right: string[]
 }
 
 export type GridStatus = 'idle' | 'loading' | 'error'
@@ -65,4 +74,14 @@ export type GridAction =
   | { type: 'setGlobalFilter'; globalFilter: string }
   | { type: 'setColumnVisibility'; columnVisibility: Record<string, boolean> }
   | { type: 'setColumnOrder'; columnOrder: string[] }
-
+  | { type: 'RESIZE_COLUMN'; id: string; width: number }
+  | { type: 'RESET_COLUMN_WIDTH'; id: string }
+  | { type: 'REORDER_COLUMN'; activeId: string; overId: string }
+  | { type: 'TOGGLE_COLUMN_VISIBILITY'; id: string }
+  | { type: 'SET_COLUMN_VISIBILITY'; visibility: Record<string, boolean> }
+  | { type: 'RESET_COLUMNS' }
+  | { type: 'SET_DENSITY'; density: Density }
+  | { type: 'PIN_COLUMN'; id: string; side: 'left' | 'right' }
+  | { type: 'UNPIN_COLUMN'; id: string }
+  | { type: 'SET_SORT'; id: string; desc: boolean; additive: boolean }
+  | { type: 'CLEAR_SORT'; id: string }

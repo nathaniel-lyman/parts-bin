@@ -1,8 +1,8 @@
-import type { LedgerGridState } from './types'
+import type { ColumnPinning, LedgerGridState } from './types'
 
 export const ACTIONS_COLUMN_ID = 'actions'
 
-export const DEFAULT_COLUMN_ORDER = [
+export const DEFAULT_COLUMN_ORDER: string[] = [
   'account',
   'owner',
   'segment',
@@ -12,7 +12,7 @@ export const DEFAULT_COLUMN_ORDER = [
   'arr',
   'since',
   ACTIONS_COLUMN_ID,
-] as const
+]
 
 export const MOVABLE_COLUMN_IDS = DEFAULT_COLUMN_ORDER.filter((id) => id !== ACTIONS_COLUMN_ID)
 
@@ -38,14 +38,13 @@ export function normalizeColumnOrder(value: unknown): string[] {
   return [...ordered, ACTIONS_COLUMN_ID]
 }
 
-export function normalizeColumnPinning(pinning: { left: string[]; right: string[] }): {
-  left: string[]
-  right: string[]
-} {
+export function normalizeColumnPinning(pinning: ColumnPinning): ColumnPinning {
   const left = pinning.left.filter((id) => id !== ACTIONS_COLUMN_ID)
   const rightWithoutActions = pinning.right.filter((id) => id !== ACTIONS_COLUMN_ID)
   return { left, right: [...rightWithoutActions, ACTIONS_COLUMN_ID] }
 }
+
+export const normalizePinning = normalizeColumnPinning
 
 export const canHideColumn = (id: string) => id !== ACTIONS_COLUMN_ID
 export const canSortColumn = (id: string) => id !== ACTIONS_COLUMN_ID
@@ -61,4 +60,3 @@ export function normalizeState(state: LedgerGridState): LedgerGridState {
       : state.columnVisibility
   return { ...state, columnOrder, columnPinning, columnVisibility }
 }
-
