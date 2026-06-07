@@ -12,7 +12,7 @@ import { MrrTrendChart } from './components/charts/MrrTrendChart'
 import { MrrShareDonut } from './components/charts/MrrShareDonut'
 import { RevenueMovementChart } from './components/charts/RevenueMovementChart'
 import { Button } from './components/ui/Button'
-import { useToast } from './components/ui/ToastProvider'
+import { useToast } from './components/ui/ToastContext'
 import { sparks } from './data/accounts'
 import type { Account } from './data/types'
 

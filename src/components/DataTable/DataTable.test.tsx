@@ -69,3 +69,31 @@ test('ARR/Since columns hidden by default, shown when visibility flips', () => {
   expect(screen.getByRole('columnheader', { name: /ARR/i })).toBeInTheDocument()
   expect(screen.getByRole('columnheader', { name: /Since/i })).toBeInTheDocument()
 })
+
+test('renders drag handles for movable columns but keeps actions locked', () => {
+  render(<DataTable {...props} />)
+  expect(screen.getByRole('button', { name: /Move Account column/i })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /Move Owner column/i })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Move actions column/i })).not.toBeInTheDocument()
+})
+
+test('reads persisted column order', () => {
+  localStorage.setItem('ledger.colOrder', JSON.stringify([
+    'owner',
+    'account',
+    'segment',
+    'mrr',
+    'growth',
+    'status',
+    'arr',
+    'since',
+    'actions',
+  ]))
+
+  render(<DataTable {...props} />)
+
+  const headers = screen.getAllByRole('columnheader').map((header) =>
+    header.textContent?.replaceAll(':', '').replace(/[▲▼]/g, '').trim(),
+  )
+  expect(headers.slice(0, 3)).toEqual(['Owner', 'Account', 'Segment'])
+})
