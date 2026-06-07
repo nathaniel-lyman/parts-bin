@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DataGridColumnMenu } from '../DataGridColumnMenu'
+
+const initialInnerWidth = window.innerWidth
 
 function open(props: Partial<React.ComponentProps<typeof DataGridColumnMenu>> = {}) {
   const dispatch = vi.fn()
@@ -22,6 +24,11 @@ function open(props: Partial<React.ComponentProps<typeof DataGridColumnMenu>> = 
 }
 
 describe('DataGridColumnMenu shell', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: initialInnerWidth })
+  })
+
   it('Sort ascending dispatches SET_SORT asc', () => {
     const dispatch = open()
     fireEvent.click(screen.getByRole('menuitem', { name: /sort ascending/i }))
@@ -80,5 +87,29 @@ describe('DataGridColumnMenu shell', () => {
       />,
     )
     expect(screen.getByRole('button', { name: 'actions column menu' })).toBeInTheDocument()
+  })
+
+  it('positions the menu fixed and clamps it inside the viewport', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 817 })
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      x: -12,
+      y: 100,
+      width: 32,
+      height: 28,
+      top: 100,
+      right: 20,
+      bottom: 128,
+      left: -12,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    open()
+
+    const menu = screen.getByRole('menu', { name: /mrr column menu/i })
+    expect(menu).toHaveClass('fixed')
+    expect(menu).toHaveStyle({
+      left: '8px',
+      top: '132px',
+    })
   })
 })

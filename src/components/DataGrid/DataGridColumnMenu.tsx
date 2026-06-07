@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { FILTER_OPERATORS, type FilterColumnType, type FilterValue } from './filtering'
 import type { GridAction, LedgerGridColumn } from './types'
+
+const MENU_WIDTH = 208
+const VIEWPORT_GAP = 8
 
 interface Props {
   columnId: string
@@ -32,6 +35,9 @@ export function DataGridColumnMenu({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [draftOperator, setDraftOperator] = useState<string>('')
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: VIEWPORT_GAP })
+  const triggerRef = useRef<HTMLDivElement | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
   const close = () => setOpen(false)
   const item = 'flex w-full items-center gap-2 px-3 py-1 text-left text-[13px] text-ink hover:bg-surface-2 disabled:text-faint'
   const label = header || columnId
@@ -65,8 +71,29 @@ export function DataGridColumnMenu({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open])
 
+  useLayoutEffect(() => {
+    if (!open) return
+    const updatePosition = () => {
+      const rect = triggerRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const maxLeft = Math.max(VIEWPORT_GAP, window.innerWidth - MENU_WIDTH - VIEWPORT_GAP)
+      const left = Math.min(Math.max(VIEWPORT_GAP, rect.right - MENU_WIDTH), maxLeft)
+      const menuHeight = menuRef.current?.offsetHeight ?? 0
+      const maxTop = Math.max(VIEWPORT_GAP, window.innerHeight - menuHeight - VIEWPORT_GAP)
+      const top = Math.min(rect.bottom + 4, maxTop)
+      setMenuPosition({ top, left })
+    }
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open])
+
   return (
-    <div className="relative inline-block">
+    <div ref={triggerRef} className="relative inline-block">
       <Button
         variant="ghost"
         size="compact"
@@ -77,15 +104,17 @@ export function DataGridColumnMenu({
           setOpen((value) => !value)
         }}
       >
-        <span aria-hidden="true">...</span>
+        <span aria-hidden="true">⋮</span>
       </Button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={close} />
           <div
+            ref={menuRef}
             role="menu"
             aria-label={`${label} column menu`}
-            className="shadow-dropdown absolute right-0 z-20 mt-1 w-52 rounded-[2px] border border-line bg-surface py-1"
+            className="shadow-dropdown fixed z-30 w-52 rounded-[2px] border border-line bg-surface py-1"
+            style={{ top: menuPosition.top, left: menuPosition.left }}
             onClick={(event) => event.stopPropagation()}
           >
             <button role="menuitem" className={item} onClick={() => { dispatch({ type: 'SET_SORT', id: columnId, desc: false, additive: false }); close() }}>Sort ascending</button>
