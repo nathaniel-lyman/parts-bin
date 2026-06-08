@@ -36,6 +36,26 @@ test('Dark toggle switches to dark mode', async () => {
   expect(screen.getByText('Account book')).toBeInTheDocument()
 })
 
+test('manual date ranges update the dashboard period label dynamically', async () => {
+  const user = userEvent.setup()
+  render(<ToastProvider><App /></ToastProvider>)
+
+  await user.click(screen.getByRole('button', { name: /dates/i }))
+  await user.clear(screen.getByLabelText('Start'))
+  await user.type(screen.getByLabelText('Start'), '2025-06-09')
+  await user.clear(screen.getByLabelText('End'))
+  await user.type(screen.getByLabelText('End'), '2026-01-06')
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+  expect(screen.getByLabelText('Time period')).toHaveValue('custom')
+  expect(screen.getByText('Custom range · Jun 9, 2025 - Jan 6, 2026')).toBeInTheDocument()
+  expect(screen.queryByText('Last 90 days · Jun 9, 2025 - Jan 6, 2026')).not.toBeInTheDocument()
+
+  await user.selectOptions(screen.getByLabelText('Time period'), '30d')
+  expect(screen.getByLabelText('Time period')).toHaveValue('30d')
+  expect(screen.getByText(/Last 30 days · /)).toBeInTheDocument()
+})
+
 test('server mode toggle exercises the DataGrid mock server path', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('switch', { name: /server mode/i }))

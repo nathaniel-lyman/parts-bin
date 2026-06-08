@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react'
+import { CalendarGlyph } from '../shell/icons'
 import { Button } from './Button'
 import { formatDateRangeLabel, type DateRange, type DateRangePreset } from './dateUtils'
 import { cx, hasWidthUtility } from './utils'
@@ -26,24 +27,49 @@ export interface DateRangePickerProps {
   emptyLabel?: ReactNode
 }
 
-export function DatePicker({ label, value = '', onValueChange, id, className, ...rest }: DatePickerProps) {
+export function DatePicker({ label, value = '', onValueChange, id, className, disabled, ...rest }: DatePickerProps) {
   const generatedId = useId()
   const inputId = id ?? generatedId
+  const inputRef = useRef<HTMLInputElement>(null)
+  const calendarLabel = typeof label === 'string' ? `Open ${label} calendar` : 'Open date calendar'
+
+  const openNativePicker = () => {
+    const input = inputRef.current
+    if (!input) return
+    input.focus()
+    input.showPicker?.()
+  }
 
   return (
     <label className={cx('grid gap-1.5', !hasWidthUtility(className) && 'w-full')}>
       <span className="micro">{label}</span>
-      <input
-        id={inputId}
-        type="date"
-        value={value}
-        onChange={(event) => onValueChange?.(event.target.value)}
-        className={cx(
-          'h-8 rounded-[2px] border border-line bg-surface px-2 text-[13px] text-ink focus:border-accent disabled:bg-surface-2 disabled:text-faint',
-          className,
-        )}
-        {...rest}
-      />
+      <span className="relative block">
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="date"
+          value={value}
+          disabled={disabled}
+          onInput={(event) => onValueChange?.(event.currentTarget.value)}
+          onChange={(event) => onValueChange?.(event.target.value)}
+          className={cx(
+            'h-8 rounded-[2px] border border-line bg-surface px-2 pr-9 text-[13px] text-ink focus:border-accent disabled:bg-surface-2 disabled:text-faint',
+            !hasWidthUtility(className) && 'w-full',
+            className,
+          )}
+          {...rest}
+        />
+        <button
+          type="button"
+          aria-label={calendarLabel}
+          title={calendarLabel}
+          disabled={disabled}
+          onClick={openNativePicker}
+          className="absolute right-1 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-[2px] text-muted hover:bg-surface-2 hover:text-ink focus:outline-none focus:ring-2 focus:ring-accent disabled:text-faint"
+        >
+          <CalendarGlyph className="h-3.5 w-3.5" />
+        </button>
+      </span>
     </label>
   )
 }

@@ -52,10 +52,12 @@ import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 
 const timePeriodOptions = [
+  { value: '7d', label: 'Last 7 days' },
   { value: '30d', label: 'Last 30 days' },
   { value: '90d', label: 'Last 90 days' },
   { value: '12m', label: 'Last 12 months' },
 ]
+const customTimePeriodOption = { value: 'custom', label: 'Custom range' }
 
 function todayInputValue() {
   return new Date().toISOString().slice(0, 10)
@@ -64,6 +66,10 @@ function todayInputValue() {
 function makeTrailingRange(days: number): DateRange {
   const end = todayInputValue()
   return { start: addDays(end, -days + 1), end }
+}
+
+function dateRangesEqual(a: DateRange, b: DateRange) {
+  return a.start === b.start && a.end === b.end
 }
 
 function formatCompactKValue(value: number) {
@@ -259,17 +265,30 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
-  const [timePeriod, setTimePeriod] = useState(timePeriodOptions[1].value)
+  const [timePeriod, setTimePeriod] = useState('90d')
   const [dateRange, setDateRange] = useState<DateRange>(() => makeTrailingRange(90))
-  const timePeriodLabel = timePeriodOptions.find((option) => option.value === timePeriod)?.label ?? timePeriodOptions[1].label
-  const dateRangeLabel = formatDateRangeLabel(dateRange)
-  const dashboardPeriodLabel = dateRange.start || dateRange.end ? `${timePeriodLabel} · ${dateRangeLabel}` : timePeriodLabel
   const dateRangePresets = useMemo(() => [
     { id: '7d', label: 'Last 7 days', range: makeTrailingRange(7) },
     { id: '30d', label: 'Last 30 days', range: makeTrailingRange(30) },
     { id: '90d', label: 'Last 90 days', range: makeTrailingRange(90) },
     { id: '12m', label: 'Last 12 months', range: makeTrailingRange(365) },
   ], [])
+  const selectableTimePeriodOptions = timePeriod === customTimePeriodOption.value
+    ? [...timePeriodOptions, customTimePeriodOption]
+    : timePeriodOptions
+  const timePeriodLabel = [...timePeriodOptions, customTimePeriodOption].find((option) => option.value === timePeriod)?.label ?? customTimePeriodOption.label
+  const dateRangeLabel = formatDateRangeLabel(dateRange)
+  const dashboardPeriodLabel = dateRange.start || dateRange.end ? `${timePeriodLabel} · ${dateRangeLabel}` : timePeriodLabel
+  const handleTimePeriodChange = (nextPeriod: string) => {
+    setTimePeriod(nextPeriod)
+    const preset = dateRangePresets.find((option) => option.id === nextPeriod)
+    if (preset) setDateRange(preset.range)
+  }
+  const handleDateRangeChange = (nextRange: DateRange) => {
+    setDateRange(nextRange)
+    const matchingPreset = dateRangePresets.find((option) => dateRangesEqual(option.range, nextRange))
+    setTimePeriod(matchingPreset?.id ?? customTimePeriodOption.value)
+  }
   const commandGroups = useMemo<CommandPaletteGroup[]>(() => [
     {
       id: 'navigation',
@@ -356,13 +375,13 @@ export default function App() {
           />
           <TimePeriodSelector
             value={timePeriod}
-            options={timePeriodOptions}
-            onChange={setTimePeriod}
+            options={selectableTimePeriodOptions}
+            onChange={handleTimePeriodChange}
           />
           <DateRangePicker
             label="Dates"
             value={dateRange}
-            onValueChange={setDateRange}
+            onValueChange={handleDateRangeChange}
             presets={dateRangePresets}
           />
           <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />

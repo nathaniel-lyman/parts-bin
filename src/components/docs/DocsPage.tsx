@@ -676,10 +676,10 @@ export function DocsPage() {
                 metric="$84.2k"
               >
                 <div className="grid gap-3">
-                  <div className="grid h-36 content-end gap-1 border border-line bg-surface-2 p-3" aria-label="Example chart bars">
-                    <span className="h-16 bg-accent" />
-                    <span className="h-24 bg-intel" />
-                    <span className="h-10 bg-review" />
+                  <div className="flex h-36 items-end gap-2 border border-line bg-surface-2 p-3" aria-label="Example chart bars">
+                    <span className="h-16 flex-1 bg-accent" />
+                    <span className="h-24 flex-1 bg-intel" />
+                    <span className="h-10 flex-1 bg-review" />
                   </div>
                   <ChartLegend items={chartLegendItems} />
                 </div>

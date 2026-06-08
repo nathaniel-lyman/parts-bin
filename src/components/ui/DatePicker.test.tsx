@@ -13,6 +13,30 @@ test('DatePicker reports native date changes', async () => {
   expect(onValueChange).toHaveBeenLastCalledWith('2026-06-08')
 })
 
+test('DatePicker exposes a calendar trigger for manual entry', async () => {
+  const user = userEvent.setup()
+  const showPicker = vi.fn()
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'showPicker')
+  Object.defineProperty(HTMLInputElement.prototype, 'showPicker', {
+    configurable: true,
+    value: showPicker,
+  })
+
+  try {
+    render(<DatePicker label="Start" value="2026-06-08" />)
+
+    await user.click(screen.getByRole('button', { name: 'Open Start calendar' }))
+    expect(showPicker).toHaveBeenCalledTimes(1)
+    expect(screen.getByLabelText('Start')).toHaveFocus()
+  } finally {
+    if (descriptor) {
+      Object.defineProperty(HTMLInputElement.prototype, 'showPicker', descriptor)
+    } else {
+      delete (HTMLInputElement.prototype as Partial<HTMLInputElement>).showPicker
+    }
+  }
+})
+
 test('DateRangePicker applies presets and edited dates', async () => {
   const user = userEvent.setup()
   const onValueChange = vi.fn()
