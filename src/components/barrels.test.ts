@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import * as charts from './charts'
 import * as dataGrid from './DataGrid'
+import * as maps from './maps'
 import * as components from './index'
 
 test('charts barrel exposes the public chart surface', () => {
@@ -26,6 +27,16 @@ test('DataGrid barrel exposes the component, state, query, and helpers', () => {
   expect(dataGrid.DEFAULT_STATE).toBeDefined()
 })
 
+test('maps barrel exposes spatial analytics components and demo data', () => {
+  expect(typeof maps.RegionChoropleth).toBe('function')
+  expect(typeof maps.BubbleMap).toBe('function')
+  expect(typeof maps.FlowMap).toBe('function')
+  expect(typeof maps.GeoDrilldown).toBe('function')
+  expect(maps.ledgerRegions.length).toBeGreaterThan(0)
+  expect(maps.ledgerPoints.length).toBeGreaterThan(0)
+  expect(maps.ledgerFlows.length).toBeGreaterThan(0)
+})
+
 test('root barrel aggregates ui, shell, charts, DataGrid, and dashboard components', () => {
   expect(typeof components.Button).toBe('function') // ui
   expect(typeof components.IconButton).toBe('function') // new ui primitive
@@ -36,6 +47,7 @@ test('root barrel aggregates ui, shell, charts, DataGrid, and dashboard componen
   expect(typeof components.Dropzone).toBe('function')
   expect(typeof components.Avatar).toBe('function')
   expect(typeof components.ChartCard).toBe('function')
+  expect(typeof components.GeoDrilldown).toBe('function') // maps
   expect(typeof components.DataGrid).toBe('function') // DataGrid
   expect(typeof components.WaterfallChart).toBe('function') // charts
   expect(typeof components.KpiCard).toBe('function') // dashboard

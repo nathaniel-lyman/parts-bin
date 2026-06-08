@@ -47,6 +47,7 @@ import {
   UserAvatarMenu,
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
+import { CustomerSuccessTemplate } from './components/templates'
 import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
@@ -261,7 +262,8 @@ export default function App() {
   const { mode, toggle } = useTheme()
   const toast = useToast()
   const pathname = window.location.pathname
-  const docsActive = pathname === '/docs' || pathname === '/examples'
+  const docsActive = pathname === '/docs'
+  const templateActive = pathname === '/templates/customer-success' || pathname === '/examples'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
@@ -308,6 +310,13 @@ export default function App() {
           shortcut: 'G C',
           onSelect: () => { window.location.href = '/docs' },
         },
+        {
+          id: 'template',
+          label: 'Open app template',
+          description: 'Customer operations workspace',
+          shortcut: 'G T',
+          onSelect: () => { window.location.href = '/templates/customer-success' },
+        },
       ],
     },
     {
@@ -345,7 +354,8 @@ export default function App() {
       collapsed={sidebarCollapsed}
       onCollapsedChange={setSidebarCollapsed}
       items={[
-        { label: 'Overview', href: '/', active: !docsActive },
+        { label: 'Overview', href: '/', active: !docsActive && !templateActive },
+        { label: 'Template', href: '/templates/customer-success', active: templateActive, meta: 'app' },
         { label: 'Components', href: '/docs', active: docsActive, meta: 'kit' },
         { label: 'Reports', href: '/', active: false },
       ]}
@@ -361,9 +371,9 @@ export default function App() {
     <TopNav
       breadcrumbs={[
         { label: 'Ledger', href: '/' },
-        { label: docsActive ? 'Components' : 'Accounts' },
+        { label: docsActive ? 'Components' : templateActive ? 'Template' : 'Accounts' },
       ]}
-      title={docsActive ? 'Component catalog' : 'Accounts'}
+      title={docsActive ? 'Component catalog' : templateActive ? 'Customer success' : 'Accounts'}
       actions={
         <>
           <GlobalSearchInput
@@ -407,6 +417,12 @@ export default function App() {
     <AppShell sidebar={sidebar} topNav={topNav}>
       {docsActive ? (
         <DocsPage />
+      ) : templateActive ? (
+        <CustomerSuccessTemplate
+          globalSearch={globalSearch}
+          atRiskOnly={atRiskOnly}
+          timePeriodLabel={dashboardPeriodLabel}
+        />
       ) : (
         <DashboardPage globalSearch={globalSearch} atRiskOnly={atRiskOnly} timePeriodLabel={dashboardPeriodLabel} />
       )}

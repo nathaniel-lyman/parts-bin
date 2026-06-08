@@ -60,6 +60,16 @@ import {
   ChartLegend,
   ChartTooltipContent,
 } from '../charts'
+import {
+  BubbleMap,
+  FlowMap,
+  GeoDrilldown,
+  ledgerFlows,
+  ledgerPoints,
+  ledgerRegions,
+  type MapFlow,
+  type MapPoint,
+} from '../maps'
 import { FilterBar, SectionHeader, SettingsPanel } from '../shell'
 import {
   THEME_RECIPES,
@@ -100,6 +110,17 @@ export function Movement() {
   return <WaterfallChart data={steps} ariaLabel="MRR movement" />
 }`
 
+const mapsUsageSnippet = `import { GeoDrilldown, ledgerRegions } from './components/maps'
+
+export function RegionalAccounts() {
+  return (
+    <GeoDrilldown
+      regions={ledgerRegions}
+      onRegionChange={(region) => filterGrid({ region: region.id })}
+    />
+  )
+}`
+
 const dataGridUsageSnippet = `import { DataGrid, toGridQuery, type GridQuery } from './components/DataGrid'
 
 <DataGrid
@@ -114,10 +135,11 @@ const dataGridUsageSnippet = `import { DataGrid, toGridQuery, type GridQuery } f
 />`
 
 const copyChecklist: Array<[string, string]> = [
+  ['Template', 'Start from /templates/customer-success when you want a complete internal app screen instead of isolated primitives.'],
   ['Theme', 'Copy src/theme/ and import theme/theme.css at your root. Re-skin via tokens.css only.'],
   ['Primitives', 'Copy src/components/ui/ and import from the ./ui barrel (Button, Field, Drawer, IconButton, InlineAlert, SegmentedControl, …).'],
   ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
-  ['Charts & DataGrid', 'Copy src/components/charts/ and src/components/DataGrid/; import from the ./charts and ./DataGrid barrels.'],
+  ['Charts, maps & DataGrid', 'Copy src/components/charts/, src/components/maps/, and src/components/DataGrid/; import from the ./charts, ./maps, and ./DataGrid barrels.'],
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
 ]
 
@@ -468,6 +490,33 @@ const chartPropRows: PropReferenceRow[] = [
   },
 ]
 
+const mapPropRows: PropReferenceRow[] = [
+  {
+    component: 'RegionChoropleth',
+    props: 'regions, viewport, selectedRegionId, valueLabel, onRegionSelect',
+    variants: 'abstract region map, selected region, keyboard-selectable paths and legend rows',
+    accessibility: 'SVG has an explicit image label; interactive regions expose button semantics, aria-pressed, and Enter/Space selection.',
+  },
+  {
+    component: 'BubbleMap',
+    props: 'points, regions, selectedPointId, valueLabel, onPointSelect',
+    variants: 'account concentration, office/store locations, incident clusters, selected point',
+    accessibility: 'Bubbles expose point labels and values; click, Enter, and Space call the same selection handler.',
+  },
+  {
+    component: 'FlowMap',
+    props: 'flows, regions, selectedFlowId, valueLabel, onFlowSelect',
+    variants: 'regional handoffs, referrals, pipeline movement, logistics, selected flow',
+    accessibility: 'Flow paths expose labels and values; legend buttons mirror map selection for pointer and keyboard users.',
+  },
+  {
+    component: 'GeoDrilldown',
+    props: 'regions, initialRegionId, title, description, onRegionChange',
+    variants: 'map + KPI side panel; use selected region to filter charts and DataGrid rows',
+    accessibility: 'Composes RegionChoropleth with semantic metric dl rows so the selected region is readable without the visual map.',
+  },
+]
+
 const dataGridPropRows: PropReferenceRow[] = [
   {
     component: 'DataGrid',
@@ -559,6 +608,8 @@ export function DocsPage() {
   const [commandResult, setCommandResult] = useState('No command run')
   const [docsDateRange, setDocsDateRange] = useState<DateRange>({ start: '2026-06-01', end: '2026-06-08' })
   const [recipeId, setRecipeId] = useState<ThemeRecipeId>(() => readStoredThemeRecipe())
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint>(ledgerPoints[1])
+  const [selectedFlow, setSelectedFlow] = useState<MapFlow>(ledgerFlows[0])
   const docsCommandGroups = useMemo<CommandPaletteGroup[]>(() => [
     {
       id: 'navigation',
@@ -605,6 +656,13 @@ export function DocsPage() {
       <div className="grid gap-6">
         <Card title="Copy Ledger into your app" description="Ledger is a clone-and-customize kit, not an npm package. Copy the theme, primitives, shell, charts, and DataGrid — plus the lint rule — into the app you are building.">
           <div className="grid gap-4">
+            <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
+              <div className="grid gap-1">
+                <h2 className="m-0 text-[15px] font-semibold text-ink">Start with the real app template</h2>
+                <p className="m-0 text-[13px] text-muted">Use the customer operations workspace when you need a complete screen: KPIs, queue, grid, detail panel, activity, and a drawer form.</p>
+              </div>
+              <Button variant="primary" onClick={() => { window.location.href = '/templates/customer-success' }}>Open template</Button>
+            </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
               <Snippet code={usageSnippet} />
               <div className="grid content-start gap-3 text-[13px] text-muted">
@@ -662,6 +720,11 @@ export function DocsPage() {
                   </div>
                 ),
               },
+              {
+                id: 'maps',
+                label: 'Maps',
+                content: <PropReferenceTable rows={mapPropRows} />,
+              },
             ]}
           />
         </Card>
@@ -701,6 +764,55 @@ export function DocsPage() {
               <div className="grid content-start gap-3 text-[13px] text-muted">
                 <p className="m-0"><code className="num text-ink">SERIES[0]</code> is <code className="num text-ink">var(--accent)</code>, so the primary series re-skins with the accent token. Categorical <code className="num text-ink">SERIES[1..]</code> are fixed and documented in chart-theme.ts.</p>
                 <p className="m-0">Keep chart math in helpers like <code className="num text-ink">buildWaterfallData()</code> so the chart components stay declarative and the logic stays unit-tested.</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Maps API" description="SVG-first spatial analytics components for region filters, point concentration, directional movement, and map-driven drilldowns. Import from src/components/maps.">
+          <div className="grid gap-4">
+            <PropReferenceTable rows={mapPropRows} />
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <GeoDrilldown
+                regions={ledgerRegions}
+                initialRegionId="west"
+                title="Revenue by region"
+                description="Selecting a region can drive KPIs, charts, and the account grid."
+              />
+              <div className="grid gap-4">
+                <ChartCard
+                  title="Account concentration"
+                  description="Bubble size encodes account count."
+                  metric={selectedPoint.value}
+                >
+                  <BubbleMap
+                    points={ledgerPoints}
+                    regions={ledgerRegions}
+                    selectedPointId={selectedPoint.id}
+                    onPointSelect={setSelectedPoint}
+                    valueLabel="accounts"
+                  />
+                </ChartCard>
+                <ChartCard
+                  title="Pipeline movement"
+                  description="Stroke width encodes movement value."
+                  metric={selectedFlow.value}
+                >
+                  <FlowMap
+                    flows={ledgerFlows}
+                    regions={ledgerRegions}
+                    selectedFlowId={selectedFlow.id}
+                    onFlowSelect={setSelectedFlow}
+                    valueLabel="pipeline"
+                  />
+                </ChartCard>
+              </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+              <Snippet code={mapsUsageSnippet} />
+              <div className="grid content-start gap-3 text-[13px] text-muted">
+                <p className="m-0">The first map pack is intentionally SVG-only: no network tiles, no API keys, no geocoder, and no raw component colors.</p>
+                <p className="m-0">Use <code className="num text-ink">onRegionChange</code>, <code className="num text-ink">onPointSelect</code>, or <code className="num text-ink">onFlowSelect</code> as the bridge into chart queries, saved views, or DataGrid filters.</p>
               </div>
             </div>
           </div>

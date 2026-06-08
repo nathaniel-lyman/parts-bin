@@ -5,6 +5,7 @@ import App from './App'
 import { ToastProvider } from './components/ui/ToastProvider'
 
 afterEach(() => {
+  window.history.pushState({}, '', '/')
   document.documentElement.classList.remove('dark')
   localStorage.clear()
 })
@@ -62,6 +63,22 @@ test('server mode toggle exercises the DataGrid mock server path', async () => {
   expect(screen.getByText(/loading server rows/i)).toBeInTheDocument()
   expect(await screen.findByText(/server rows/i)).toBeInTheDocument()
   expect(screen.getByRole('checkbox', { name: /select all loaded/i })).toBeInTheDocument()
+})
+
+test('customer success template route renders a full app workflow', async () => {
+  const user = userEvent.setup()
+  window.history.pushState({}, '', '/templates/customer-success')
+  render(<ToastProvider><App /></ToastProvider>)
+
+  expect(screen.getByText('Customer operations workspace')).toBeInTheDocument()
+  expect(screen.getByText('Priority work queue')).toBeInTheDocument()
+  expect(screen.getByText('Account portfolio')).toBeInTheDocument()
+  expect(screen.getByText('Selected account')).toBeInTheDocument()
+
+  await user.click(screen.getAllByRole('button', { name: 'Log touchpoint' })[0])
+  expect(screen.getByRole('dialog', { name: 'Log touchpoint' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Save note' }))
+  expect(await screen.findByText('Executive sponsor follow-up')).toBeInTheDocument()
 })
 
 test('revenue movement chart exposes bar width and label controls', async () => {

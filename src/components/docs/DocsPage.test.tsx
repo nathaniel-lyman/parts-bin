@@ -6,16 +6,20 @@ import { DocsPage } from './DocsPage'
 test('DocsPage renders the new API sections and copy checklist', () => {
   render(<DocsPage />)
   expect(screen.getByRole('heading', { name: 'Charts API' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Maps API' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'DataGrid API' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Copy Ledger into your app' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Start with the real app template' })).toBeInTheDocument()
   // Documented public surfaces appear in the prop tables.
   expect(screen.getByText('WaterfallChart')).toBeInTheDocument()
+  expect(screen.getAllByText('GeoDrilldown').length).toBeGreaterThan(0)
   expect(screen.getByText('LedgerGridColumn')).toBeInTheDocument()
   expect(screen.getByText('SegmentedControl')).toBeInTheDocument()
   // New form-primitive live examples render.
   expect(screen.getByText('Combobox & radio group')).toBeInTheDocument()
   expect(screen.getByText('Loading states & spinner')).toBeInTheDocument()
   expect(screen.getByRole('radiogroup', { name: 'Plan' })).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'Revenue by region' })).toBeInTheDocument()
 })
 
 test('DocsPage live examples drive the new primitives', async () => {
@@ -36,4 +40,9 @@ test('DocsPage live examples drive the new primitives', async () => {
   expect(screen.getByRole('dialog')).toHaveTextContent('Saved views')
   await user.keyboard('{Escape}')
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+  // Map examples use the same selected-state callbacks as app filters.
+  await user.click(screen.getByRole('button', { name: /austin: 28 accounts/i }))
+  const concentrationCard = screen.getByRole('heading', { name: 'Account concentration' }).closest('section') as HTMLElement
+  expect(concentrationCard).toHaveTextContent('28')
 })
