@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Combobox,
   Drawer,
   DropdownMenu,
   EmptyState,
@@ -14,9 +15,11 @@ import {
   PageHeader,
   Pagination,
   Popover,
+  RadioGroup,
   SegmentedControl,
   Select,
   Skeleton,
+  Spinner,
   StatusBadge,
   Switch,
   Tabs,
@@ -83,6 +86,20 @@ const copyChecklist: Array<[string, string]> = [
   ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
   ['Charts & DataGrid', 'Copy src/components/charts/ and src/components/DataGrid/; import from the ./charts and ./DataGrid barrels.'],
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
+]
+
+const ownerOptions = [
+  { value: 'avery', label: 'Avery Cohen' },
+  { value: 'blair', label: 'Blair Nakamura' },
+  { value: 'devin', label: 'Devin Okafor' },
+  { value: 'rowan', label: 'Rowan Mitchell' },
+  { value: 'sasha', label: 'Sasha Delgado' },
+]
+
+const planOptions = [
+  { value: 'starter', label: 'Starter', description: 'Up to 3 seats and the core dashboards.' },
+  { value: 'pro', label: 'Pro', description: 'Saved views, export, and server-mode data.' },
+  { value: 'enterprise', label: 'Enterprise', description: 'SSO, audit log, and priority support.' },
 ]
 
 interface PropReferenceRow {
@@ -171,6 +188,30 @@ const uiPropRows: PropReferenceRow[] = [
     variants: 'right or left side panel; optional footer',
     accessibility: 'role=dialog, aria-modal, labelled by title; Escape closes, Tab cycles, focus restores to opener.',
   },
+  {
+    component: 'Combobox',
+    props: 'options, value, defaultValue, onValueChange, placeholder, emptyMessage, disabled',
+    variants: 'single-select, type-to-filter; strict select-from-list; integrates with Field',
+    accessibility: 'role=combobox + listbox/option, aria-expanded, aria-activedescendant; focus stays on the input.',
+  },
+  {
+    component: 'RadioGroup',
+    props: 'options, value, defaultValue, onValueChange, name, label, hint, error, orientation',
+    variants: 'vertical or horizontal; per-option description; disabled options; controlled or uncontrolled',
+    accessibility: 'Native radios in a role=radiogroup; own label/hint/error wire aria-labelledby/describedby/invalid.',
+  },
+  {
+    component: 'Spinner',
+    props: 'size, label, className',
+    variants: 'sm, default, lg; decorative when label is empty',
+    accessibility: 'role=status with a label by default; inherits text color via currentColor (theme-safe).',
+  },
+  {
+    component: 'Button / IconButton (loading)',
+    props: 'loading',
+    variants: 'pending state shows a spinner',
+    accessibility: 'loading sets aria-busy and disables the control so it cannot be activated.',
+  },
 ]
 
 const shellPropRows: PropReferenceRow[] = [
@@ -252,7 +293,9 @@ const interactionRows = [
   ['Modal', 'Escape closes; Tab and Shift+Tab stay inside; close restores opener focus.'],
   ['Drawer', 'Same as Modal: Escape closes; Tab cycles inside the panel; focus restores to the opener.'],
   ['DropdownMenu', 'Arrow keys skip disabled items; Home/End jump; Enter/Space selects; Escape restores trigger focus.'],
+  ['Combobox', 'Type to filter; Arrow keys move the active option; Enter selects; Escape closes and reverts.'],
   ['Tabs / SegmentedControl', 'Arrow keys, Home, and End move the active item and focus together.'],
+  ['RadioGroup', 'Native radios: Tab reaches the group, Arrow keys move the selection within it.'],
   ['Popover', 'Escape closes and returns focus to the trigger.'],
   ['Tooltip', 'Hover and keyboard focus reveal the same content; trigger is described by the tooltip.'],
   ['Field', 'Label, hint, error, required, disabled, and invalid states are wired for single wrapped controls.'],
@@ -374,7 +417,15 @@ export function DocsPage() {
   const [density, setDensity] = useState('standard')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [warnAlertOpen, setWarnAlertOpen] = useState(true)
+  const [owner, setOwner] = useState('')
+  const [plan, setPlan] = useState('pro')
+  const [saving, setSaving] = useState(false)
   const [recipeId, setRecipeId] = useState<ThemeRecipeId>(() => readStoredThemeRecipe())
+
+  const simulateSave = () => {
+    setSaving(true)
+    window.setTimeout(() => setSaving(false), 1200)
+  }
 
   const selectRecipe = (nextRecipeId: ThemeRecipeId) => {
     setRecipeId(nextRecipeId)
@@ -629,6 +680,32 @@ export function DocsPage() {
                 </div>
               </Drawer>
             )}
+          </ExampleBlock>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <ExampleBlock title="Combobox & radio group">
+            <Field label="Account owner" hint="Type to filter, then pick from the list.">
+              <Combobox options={ownerOptions} value={owner} onValueChange={setOwner} placeholder="Search owners…" />
+            </Field>
+            <RadioGroup label="Plan" options={planOptions} value={plan} onValueChange={setPlan} />
+            <p className="m-0 text-[13px] text-muted">
+              Owner: <code className="num text-ink">{owner || '—'}</code> · Plan: <code className="num text-ink">{plan}</code>
+            </p>
+          </ExampleBlock>
+
+          <ExampleBlock title="Loading states & spinner">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="primary" loading={saving} onClick={simulateSave}>Save changes</Button>
+              <Button loading={saving}>Secondary</Button>
+              <IconButton aria-label="Refresh" loading={saving}>↻</IconButton>
+            </div>
+            <div className="flex items-center gap-3 text-[13px] text-muted">
+              <Spinner size="sm" label="" />
+              <Spinner label="" />
+              <Spinner size="lg" label="" />
+              <span>Inline spinners inherit the current text color, so they re-skin for free.</span>
+            </div>
           </ExampleBlock>
         </section>
 

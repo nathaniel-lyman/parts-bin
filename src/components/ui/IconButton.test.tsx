@@ -15,3 +15,10 @@ test('IconButton honors disabled state', () => {
   render(<IconButton aria-label="Refresh" disabled>↻</IconButton>)
   expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled()
 })
+
+test('IconButton loading is busy and disabled, keeping its label', () => {
+  render(<IconButton aria-label="Refresh" loading>↻</IconButton>)
+  const button = screen.getByRole('button', { name: 'Refresh' })
+  expect(button).toHaveAttribute('aria-busy', 'true')
+  expect(button).toBeDisabled()
+})

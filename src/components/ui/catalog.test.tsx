@@ -5,6 +5,7 @@ import { useState } from 'react'
 import {
   Button,
   Checkbox,
+  Combobox,
   Drawer,
   DropdownMenu,
   Field,
@@ -12,8 +13,10 @@ import {
   InlineAlert,
   Input,
   Pagination,
+  RadioGroup,
   SegmentedControl,
   Select,
+  Spinner,
   Switch,
   Tabs,
 } from './index'
@@ -130,4 +133,41 @@ test('barrel exports the new primitives with their accessible surfaces', async (
 
   await user.click(screen.getByRole('button', { name: 'Open drawer' }))
   expect(screen.getByRole('dialog')).toHaveTextContent('Saved views')
+})
+
+test('barrel exports the form primitives (RadioGroup, Combobox, Spinner)', async () => {
+  const user = userEvent.setup()
+  const onRadio = vi.fn()
+  const onCombo = vi.fn()
+
+  render(
+    <div>
+      <Spinner label="Loading data" />
+      <RadioGroup
+        label="Plan"
+        defaultValue="pro"
+        onValueChange={onRadio}
+        options={[
+          { value: 'pro', label: 'Pro' },
+          { value: 'team', label: 'Team' },
+        ]}
+      />
+      <Combobox
+        options={[
+          { value: 'a', label: 'Avery' },
+          { value: 'b', label: 'Bced' },
+        ]}
+        onValueChange={onCombo}
+      />
+    </div>,
+  )
+
+  expect(screen.getByRole('status', { name: 'Loading data' })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('radio', { name: 'Team' }))
+  expect(onRadio).toHaveBeenCalledWith('team')
+
+  await user.click(screen.getByRole('combobox'))
+  await user.click(screen.getByRole('option', { name: 'Avery' }))
+  expect(onCombo).toHaveBeenCalledWith('a')
 })

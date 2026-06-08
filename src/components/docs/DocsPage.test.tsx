@@ -12,6 +12,10 @@ test('DocsPage renders the new API sections and copy checklist', () => {
   expect(screen.getByText('WaterfallChart')).toBeInTheDocument()
   expect(screen.getByText('LedgerGridColumn')).toBeInTheDocument()
   expect(screen.getByText('SegmentedControl')).toBeInTheDocument()
+  // New form-primitive live examples render.
+  expect(screen.getByText('Combobox & radio group')).toBeInTheDocument()
+  expect(screen.getByText('Loading states & spinner')).toBeInTheDocument()
+  expect(screen.getByRole('radiogroup', { name: 'Plan' })).toBeInTheDocument()
 })
 
 test('DocsPage live examples drive the new primitives', async () => {

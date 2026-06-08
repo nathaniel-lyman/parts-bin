@@ -14,8 +14,9 @@ npm run dev
   chart styling, and optional theme recipes). This is the swappable, portable layer.
   See `src/theme/RETHEME.md`.
 - **`src/components/ui/`** — hand-rolled, token-only primitives exported from
-  `src/components/ui`: buttons, icon buttons, forms, tabs, segmented controls, overlays (modal +
-  drawer), inline alerts, cards, metrics, empty/loading states, pagination, and toasts.
+  `src/components/ui`: buttons (with loading state), icon buttons, forms, comboboxes, radio groups,
+  tabs, segmented controls, overlays (modal + drawer), inline alerts, cards, metrics,
+  empty/loading states, spinners, pagination, and toasts.
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
 - **`src/components/`** — dashboard components (KPI cards, data table with sort/filter/columns,
