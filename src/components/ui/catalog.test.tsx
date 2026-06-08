@@ -12,6 +12,7 @@ import {
   IconButton,
   InlineAlert,
   Input,
+  LoadingProgress,
   Pagination,
   RadioGroup,
   SegmentedControl,
@@ -170,4 +171,10 @@ test('barrel exports the form primitives (RadioGroup, Combobox, Spinner)', async
   await user.click(screen.getByRole('combobox'))
   await user.click(screen.getByRole('option', { name: 'Avery' }))
   expect(onCombo).toHaveBeenCalledWith('a')
+})
+
+test('barrel exports loading animation primitives', () => {
+  render(<LoadingProgress label="Loading account rows" detail="Syncing accounts" />)
+  expect(screen.getByRole('status', { name: 'Loading account rows' })).toBeInTheDocument()
+  expect(screen.getByText('Syncing accounts')).toBeInTheDocument()
 })

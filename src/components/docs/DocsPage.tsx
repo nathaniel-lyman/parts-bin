@@ -11,6 +11,15 @@ import {
   IconButton,
   InlineAlert,
   Input,
+  LoadingBars,
+  LoadingChartDrawIn,
+  LoadingConcentricArcs,
+  LoadingCountingMetric,
+  LoadingDonut,
+  LoadingDots,
+  LoadingKpiSkeleton,
+  LoadingProgress,
+  LoadingSparkline,
   Metric,
   PageHeader,
   Pagination,
@@ -211,6 +220,12 @@ const uiPropRows: PropReferenceRow[] = [
     props: 'loading',
     variants: 'pending state shows a spinner',
     accessibility: 'loading sets aria-busy and disables the control so it cannot be activated.',
+  },
+  {
+    component: 'LoadingKpiSkeleton / LoadingProgress / LoadingDots',
+    props: 'label, className, detail, tone',
+    variants: 'KPI skeleton, chart draw-in, donut, bars, sparkline, dots, progress, counting metric, concentric arcs',
+    accessibility: 'Each animation exposes role=status by default and becomes decorative when label is empty.',
   },
 ]
 
@@ -705,6 +720,40 @@ export function DocsPage() {
               <Spinner label="" />
               <Spinner size="lg" label="" />
               <span>Inline spinners inherit the current text color, so they re-skin for free.</span>
+            </div>
+          </ExampleBlock>
+        </section>
+
+        <section className="grid gap-4">
+          <ExampleBlock title="Loading animations">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingKpiSkeleton />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingChartDrawIn />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingDonut />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingBars />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingSparkline />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingDots />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingProgress />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingCountingMetric />
+              </div>
+              <div className="grid min-h-36 place-items-center border border-line bg-surface p-4">
+                <LoadingConcentricArcs />
+              </div>
             </div>
           </ExampleBlock>
         </section>
