@@ -2,6 +2,7 @@
 @import './fonts.css';
 @import 'tailwindcss';
 @import './tokens.css';
+@import './recipes.css';
 @import './base.css';
 
 /* class-based dark mode */
@@ -20,12 +21,18 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-fg: var(--accent-fg);
+  --color-intel: var(--intel);
+  --color-intel-soft: var(--intel-soft);
   --color-pos: var(--pos);
   --color-pos-soft: var(--pos-soft);
   --color-neg: var(--neg);
   --color-neg-soft: var(--neg-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+  --color-review: var(--review);
+  --color-review-soft: var(--review-soft);
+  --color-reject: var(--reject);
+  --color-reject-soft: var(--reject-soft);
 
   --radius: 2px;
 

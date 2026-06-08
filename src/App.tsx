@@ -1,10 +1,10 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useServerData } from './hooks/useServerData'
 import { totalMrr, activeCount, atRiskCount, avgGrowth } from './selectors/metrics'
 import { fmtCurrency, fmtPercent } from './lib/format'
-import { KpiCard } from './components/KpiCard'
+import { KpiCard, KpiSummaryRow } from './components/KpiCard'
 import { DataGrid } from './components/DataGrid/DataGrid'
 import { createMockServerAdapter, generateAccounts } from './components/DataGrid/mockServerAdapter'
 import { toGridQuery, type GridQuery } from './components/DataGrid/query'
@@ -14,24 +14,37 @@ import { ConfirmDialog } from './components/ConfirmDialog'
 import { MrrTrendChart } from './components/charts/MrrTrendChart'
 import { MrrShareDonut } from './components/charts/MrrShareDonut'
 import { RevenueMovementChart } from './components/charts/RevenueMovementChart'
-import { Button } from './components/ui/Button'
-import { useToast } from './components/ui/ToastContext'
+import { Button, Card, PageHeader, Switch, useToast } from './components/ui'
+import {
+  AppShell,
+  CalendarIconButton,
+  FilterButton,
+  GlobalSearchInput,
+  LeftNavigationDrawer,
+  NotificationButton,
+  TimePeriodSelector,
+  TopNav,
+  UserAvatarMenu,
+} from './components/shell'
+import { DocsPage } from './components/docs/DocsPage'
 import { sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 
-function Card({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="rounded-[2px] border border-line bg-surface p-4">
-      <div className="micro mb-3">{title}</div>
-      {children}
-    </div>
-  )
+const timePeriodOptions = [
+  { value: '30d', label: 'Last 30 days' },
+  { value: '90d', label: 'Last 90 days' },
+  { value: '12m', label: 'Last 12 months' },
+]
+
+interface DashboardPageProps {
+  globalSearch: string
+  atRiskOnly: boolean
+  timePeriodLabel: string
 }
 
-export default function App() {
+function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardPageProps) {
   const { accounts, create, update, remove } = useAccounts()
-  const { mode, toggle } = useTheme()
   const toast = useToast()
   const params = new URLSearchParams(window.location.search)
   const requestedRows = Number(params.get('rows') ?? 0)
@@ -39,7 +52,13 @@ export default function App() {
     () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
     [requestedRows],
   )
-  const visibleAccounts = generatedAccounts ?? accounts
+  const visibleAccounts = useMemo(() => {
+    let next = generatedAccounts ?? accounts
+    const query = globalSearch.trim()
+    if (query) next = next.filter((account) => accountGlobalFilter(account, query))
+    if (atRiskOnly) next = next.filter((account) => account.status !== 'Active')
+    return next
+  }, [accounts, atRiskOnly, generatedAccounts, globalSearch])
   const gridInitialState = useMemo(
     () => (generatedAccounts ? { ...DEFAULT_STATE, sorting: [] } : DEFAULT_STATE),
     [generatedAccounts],
@@ -55,33 +74,25 @@ export default function App() {
   const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [setDeleting, setEditing])
 
   return (
-    <div className="min-h-screen">
-      <header className="flex items-center gap-6 border-b border-line bg-surface px-6 py-3">
-        <span className="display text-[15px] font-bold text-ink"># Ledger</span>
-        <nav className="flex gap-4 text-[13px]">
-          <a className="text-muted hover:text-ink" href="#">Overview</a>
-          <a className="text-accent" href="#">Accounts</a>
-          <a className="text-muted hover:text-ink" href="#">Reports</a>
-        </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="num text-[12px] text-muted">demo · v1.0</span>
-          <Button onClick={toggle}>{mode === 'dark' ? '☀ Light' : '◑ Dark'}</Button>
-        </div>
-      </header>
-
+    <>
       <main className="mx-auto max-w-[1400px] px-6 py-6">
-        <div className="micro">Revenue / Accounts</div>
-        <div className="mb-6 flex items-end justify-between">
-          <h1 className="display text-[28px] font-semibold text-ink">Account book</h1>
-          <span className="num text-[13px] text-muted">{activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} accounts · {fmtCurrency(totalMrr(visibleAccounts))} MRR</span>
-        </div>
+        <PageHeader
+          eyebrow="Revenue / Accounts"
+          title="Account book"
+          description={`${timePeriodLabel}${atRiskOnly ? ' · At-risk focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
+          actions={
+            <span className="num text-[13px] text-muted">
+              {activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} accounts · {fmtCurrency(totalMrr(visibleAccounts))} MRR
+            </span>
+          }
+        />
 
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiSummaryRow>
           <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(visibleAccounts))} delta={4.6} spark={sparks.mrr} />
           <KpiCard label="Active accounts" value={String(activeCount(visibleAccounts))} delta={2.4} spark={sparks.accts} />
           <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(visibleAccounts))} delta={1.1} spark={sparks.growth} />
           <KpiCard label="At risk / churned" value={String(atRiskCount(visibleAccounts))} delta={-12.5} spark={sparks.churn} negSpark />
-        </div>
+        </KpiSummaryRow>
 
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card title="MRR trend ($k)"><MrrTrendChart /></Card>
@@ -92,16 +103,11 @@ export default function App() {
         </div>
 
         <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">
-          <label className="micro flex items-center gap-2 text-muted">
-            <input
-              type="checkbox"
-              role="switch"
-              aria-label="Server mode"
-              checked={serverMode}
-              onChange={(event) => setServerMode(event.target.checked)}
-            />
-            Server mode
-          </label>
+          <Switch
+            label={<span className="micro text-muted">Server mode</span>}
+            checked={serverMode}
+            onChange={(event) => setServerMode(event.target.checked)}
+          />
           <div className="ml-auto flex items-center gap-2">
             <Button variant="primary" onClick={() => setCreating(true)}>+ New account</Button>
           </div>
@@ -155,6 +161,87 @@ export default function App() {
           onConfirm={() => { remove(deleting.id); toast(`Deleted ${deleting.name}`, 'neg'); setDeleting(null) }}
         />
       )}
-    </div>
+    </>
+  )
+}
+
+export default function App() {
+  const { mode, toggle } = useTheme()
+  const toast = useToast()
+  const pathname = window.location.pathname
+  const docsActive = pathname === '/docs' || pathname === '/examples'
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [globalSearch, setGlobalSearch] = useState('')
+  const [atRiskOnly, setAtRiskOnly] = useState(false)
+  const [timePeriod, setTimePeriod] = useState(timePeriodOptions[1].value)
+  const timePeriodLabel = timePeriodOptions.find((option) => option.value === timePeriod)?.label ?? timePeriodOptions[1].label
+
+  const sidebar = (
+    <LeftNavigationDrawer
+      brand="Ledger"
+      brandMark="#"
+      collapsed={sidebarCollapsed}
+      onCollapsedChange={setSidebarCollapsed}
+      items={[
+        { label: 'Overview', href: '/', active: !docsActive },
+        { label: 'Components', href: '/docs', active: docsActive, meta: 'kit' },
+        { label: 'Reports', href: '/', active: false },
+      ]}
+      adminItems={[
+        { label: 'Users', href: '/', active: false },
+        { label: 'Settings', href: '/', active: false },
+      ]}
+      footer={<span className="num text-[12px] text-muted">demo · v1.0</span>}
+    />
+  )
+
+  const topNav = (
+    <TopNav
+      breadcrumbs={[
+        { label: 'Ledger', href: '/' },
+        { label: docsActive ? 'Components' : 'Accounts' },
+      ]}
+      title={docsActive ? 'Component catalog' : 'Accounts'}
+      actions={
+        <>
+          <GlobalSearchInput
+            className="w-[190px]"
+            placeholder="Search workspace"
+            aria-label="Global search"
+            value={globalSearch}
+            onChange={(event) => setGlobalSearch(event.target.value)}
+          />
+          <TimePeriodSelector
+            value={timePeriod}
+            options={timePeriodOptions}
+            onChange={setTimePeriod}
+          />
+          <CalendarIconButton label="Open calendar" onClick={() => toast('Calendar controls are ready', 'accent')} />
+          <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
+          <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
+          <Button onClick={toggle}>{mode === 'dark' ? 'Light' : 'Dark'}</Button>
+          <UserAvatarMenu
+            name="Morgan"
+            initials="MO"
+            meta="Demo workspace"
+            items={[
+              { id: 'profile', label: 'Profile', description: 'Morgan Operator', onSelect: () => toast('Profile opened', 'accent') },
+              { id: 'workspace', label: 'Workspace', description: 'Demo workspace', onSelect: () => toast('Workspace opened', 'accent') },
+              { id: 'sign-out', label: 'Sign out', onSelect: () => toast('Signed out of demo', 'warn') },
+            ]}
+          />
+        </>
+      }
+    />
+  )
+
+  return (
+    <AppShell sidebar={sidebar} topNav={topNav}>
+      {docsActive ? (
+        <DocsPage />
+      ) : (
+        <DashboardPage globalSearch={globalSearch} atRiskOnly={atRiskOnly} timePeriodLabel={timePeriodLabel} />
+      )}
+    </AppShell>
   )
 }

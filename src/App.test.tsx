@@ -16,7 +16,7 @@ test('renders dashboard with KPIs and table (light)', () => {
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
   expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
   expect(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' })).toBeInTheDocument()
-  expect(screen.getByRole('textbox', { name: /filter account/i })).toBeInTheDocument()
+  expect(screen.getByRole('searchbox', { name: /quick filter/i })).toBeInTheDocument()
   expect(document.documentElement.classList.contains('dark')).toBe(false)
 })
 

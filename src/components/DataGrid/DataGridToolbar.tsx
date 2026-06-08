@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
-import { DENSITIES } from './types'
+import { DENSITIES, DENSITY_LABELS } from './types'
 import type { Density, GridAction, LedgerGridColumn } from './types'
 
 interface Props<TData> {
@@ -55,7 +55,7 @@ export function DataGridToolbar<TData>({
         value={globalFilter}
         onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}
       />
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
         {enableExport && (
           <Button size="compact" onClick={onExportCsv} aria-label="Export CSV">
             Export CSV
@@ -146,7 +146,7 @@ export function DataGridToolbar<TData>({
             onChange={(event) => dispatch({ type: 'SET_DENSITY', density: event.target.value as Density })}
           >
             {DENSITIES.map((item) => (
-              <option key={item} value={item}>{item}</option>
+              <option key={item} value={item}>{DENSITY_LABELS[item]}</option>
             ))}
           </Select>
         </label>

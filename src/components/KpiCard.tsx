@@ -1,5 +1,20 @@
+import type { ReactNode } from 'react'
 import { fmtDelta } from '../lib/format'
 import { Sparkline } from './Sparkline'
+import { cx } from './ui/utils'
+
+interface KpiSummaryRowProps {
+  children: ReactNode
+  className?: string
+}
+
+export function KpiSummaryRow({ children, className }: KpiSummaryRowProps) {
+  return (
+    <div className={cx('mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4', className)}>
+      {children}
+    </div>
+  )
+}
 
 interface Props {
   label: string

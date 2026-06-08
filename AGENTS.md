@@ -40,6 +40,7 @@ data/accounts.ts -> useAccounts -> selectors/metrics -> KpiCard x4 + MrrShareDon
 - `avgGrowth` intentionally matches `demo.html`; verify against the demo before changing it.
 - Persistence ownership:
   - `useTheme` writes `ledger.theme`.
+  - `theme/recipes.ts` writes `ledger.theme.recipe`.
   - `useGridPersistence` writes `ledger.accounts.grid`.
   - `useSavedViews` writes `ledger.accounts.grid.views`.
   - Legacy `ledger.cols` and `ledger.colOrder` are read only by DataGrid migration code.

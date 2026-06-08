@@ -4,6 +4,11 @@ import type { FilterColumnType, FilterValue } from './filtering'
 
 export const DENSITIES = ['compact', 'standard', 'comfortable'] as const
 export type Density = (typeof DENSITIES)[number]
+export const DENSITY_LABELS: Record<Density, string> = {
+  compact: 'Compact',
+  standard: 'Standard',
+  comfortable: 'Comfortable',
+}
 
 export type GridColumnType =
   | 'text'

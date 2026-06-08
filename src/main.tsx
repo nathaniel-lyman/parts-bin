@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './theme/theme.css'
 import App from './App.tsx'
 import { ToastProvider } from './components/ui/ToastProvider'
+import { installStoredThemeRecipe } from './theme/recipes'
+
+installStoredThemeRecipe()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

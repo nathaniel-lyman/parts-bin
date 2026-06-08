@@ -1,9 +1,8 @@
 // Chart styling derived from tokens. Recharts reads CSS vars via var(--…) at render,
 // so dark mode + re-skin apply automatically.
-// SERIES[0] tracks the --accent token so the first chart series re-skins with the rest of the
-// UI (RETHEME.md). Categorical items 2-8 stay literal hex (Recharts cannot cleanly resolve 8
-// separate CSS vars for categorical fills — see plan).
-export const SERIES = ['var(--accent)', '#00a6c2', '#7c4dff', '#f59e0b', '#d6336c', '#0d9488', '#64748b', '#84cc16']
+// Series tokens track the default palette: primary action, recommendation intelligence,
+// success, review, and reject/blocker.
+export const SERIES = ['var(--accent)', 'var(--intel)', 'var(--pos)', 'var(--warn)', 'var(--neg)', '#0d9488', '#64748b', '#84cc16']
 
 export const axisProps = {
   tick: { fill: 'var(--muted)', fontSize: 11, fontFamily: '"JetBrains Mono", monospace' },
@@ -11,7 +10,7 @@ export const axisProps = {
   tickLine: false as const,
 }
 export const gridProps = { stroke: 'var(--line)', strokeDasharray: '3 3', vertical: false }
-export const semantic = { accent: 'var(--accent)', cyan: '#00a6c2', pos: 'var(--pos)', neg: 'var(--neg)', muted: 'var(--muted)' }
+export const semantic = { accent: 'var(--accent)', intel: 'var(--intel)', cyan: '#00a6c2', pos: 'var(--pos)', neg: 'var(--neg)', muted: 'var(--muted)' }
 
 // Themed tooltip (surface + hairline + dropdown shadow, mono values) — THEME-SPEC §6.
 export const tooltipProps = {

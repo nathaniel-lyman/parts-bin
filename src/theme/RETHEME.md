@@ -21,17 +21,41 @@ The entire look lives in `src/theme/`. To change it, you edit this folder — no
 | `--line` | all hairline borders |
 | `--ink` / `--muted` / `--faint` | primary / secondary / disabled text |
 | `--accent` / `--accent-soft` / `--accent-fg` | interactive color / tints / text-on-accent |
-| `--pos` / `--neg` / `--warn` (+ `-soft`) | semantic data colors and badge tints |
+| `--intel` / `--intel-soft` | recommendation intelligence and AI-priority cues |
+| `--pos` / `--warn` / `--neg` (+ `-soft`) | success / review / reject-blocker colors and tints |
+| `--review` / `--reject` (+ `-soft`) | semantic aliases for `--warn` / `--neg` |
 
 ## Worked example: emerald, softer corners
 
 In `tokens.css` `:root`:
 ```css
---accent: #059669;        /* cobalt -> emerald */
+--accent: #059669;        /* primary action -> emerald */
 --accent-soft: #d1fae5;
 --radius: 8px;            /* sharper 2px -> rounded 8px */
 ```
 Also set `--radius: 8px` under `@theme inline` in `theme.css`. Reload — every control re-skins.
+
+## Theme recipes
+
+Ledger ships optional recipes in `recipes.css`:
+
+- `finance-cobalt` keeps the default cobalt feel with cooler finance surfaces.
+- `ops-green` shifts interaction and success language toward operational green.
+- `enterprise-neutral` removes most brand color from chrome and reserves color for data meaning.
+
+Use the helper from `recipes.ts` when you want a clone to offer theme switching:
+
+```ts
+import { applyThemeRecipe } from './theme/recipes'
+
+applyThemeRecipe('ops-green')
+```
+
+This writes `data-theme-recipe="ops-green"` on `<html>` and stores the choice in
+`ledger.theme.recipe`. Light/dark mode remains separate and still uses `ledger.theme`.
+
+To add a recipe, add variable overrides in `recipes.css` and a metadata entry in `recipes.ts`.
+Do not edit component files for re-theming.
 
 ## The boundary is enforced
 

@@ -39,6 +39,13 @@ describe('DataGridToolbar', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'SET_DENSITY', density: 'comfortable' })
   })
 
+  it('density options use title-case labels', () => {
+    setup()
+    expect(screen.getByRole('option', { name: 'Compact' })).toHaveValue('compact')
+    expect(screen.getByRole('option', { name: 'Standard' })).toHaveValue('standard')
+    expect(screen.getByRole('option', { name: 'Comfortable' })).toHaveValue('comfortable')
+  })
+
   it('columns menu lists hideable columns and toggling dispatches TOGGLE_COLUMN_VISIBILITY', () => {
     const { dispatch } = setup()
     fireEvent.click(screen.getByRole('button', { name: /columns/i }))

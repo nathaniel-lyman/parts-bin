@@ -1,12 +1,52 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { getFocusableElements } from './utils'
 
 interface Props { title: string; onClose: () => void; children: ReactNode; footer?: ReactNode }
 
+function getActiveElement() {
+  if (typeof document === 'undefined') return null
+  return document.activeElement instanceof HTMLElement ? document.activeElement : null
+}
+
 export function Modal({ title, onClose, children, footer }: Props) {
+  const titleId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousActiveElementRef = useRef<HTMLElement | null>(getActiveElement())
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const previousActiveElement = previousActiveElementRef.current
+    const focusables = getFocusableElements(dialogRef.current)
+    ;(focusables[0] ?? dialogRef.current)?.focus()
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+        return
+      }
+
+      if (e.key !== 'Tab') return
+      const currentFocusables = getFocusableElements(dialogRef.current)
+      if (currentFocusables.length === 0) {
+        e.preventDefault()
+        dialogRef.current?.focus()
+        return
+      }
+      const first = currentFocusables[0]
+      const last = currentFocusables[currentFocusables.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      if (previousActiveElement?.isConnected) previousActiveElement.focus()
+    }
   }, [onClose])
 
   return (
@@ -15,14 +55,16 @@ export function Modal({ title, onClose, children, footer }: Props) {
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className="w-[480px] max-w-[92vw] rounded-[4px] bg-surface border border-line shadow-modal"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h2 className="text-[16px] font-semibold text-ink display">{title}</h2>
+          <h2 id={titleId} className="text-[16px] font-semibold text-ink display">{title}</h2>
           <button aria-label="Close" className="text-muted hover:text-ink" onClick={onClose}>✕</button>
         </div>
         <div className="px-4 py-4">{children}</div>

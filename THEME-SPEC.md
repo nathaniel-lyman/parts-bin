@@ -2,7 +2,7 @@
 
 **Sharp & technical. Corporate polish with personality.** Built for data-heavy dashboards with simple CRUD. Targets Tailwind CSS + shadcn/ui.
 
-The personality comes from four moves: monospace numerals everywhere data lives, uppercase micro-labels with wide tracking, a near-zero border radius that makes everything feel machined, and one unapologetic cobalt accent against disciplined neutrals. Everything else stays quiet so the data is the loudest thing on screen.
+The personality comes from four moves: monospace numerals everywhere data lives, uppercase micro-labels with wide tracking, a near-zero border radius that makes everything feel machined, and a disciplined slate palette with blue actions, purple recommendation intelligence, and explicit review/reject semantics. Everything else stays quiet so the data is the loudest thing on screen.
 
 ---
 
@@ -51,24 +51,26 @@ Light is the default (corporate context); dark is first-class. Tokens are raw va
 
 | Token | Light | Dark | Role |
 |---|---|---|---|
-| `--bg` | `#f7f8fa` | `#0b0d11` | App background |
-| `--surface` | `#ffffff` | `#13161c` | Cards, tables, modals |
-| `--surface-2` | `#f1f3f6` | `#1a1e26` | Table header rows, wells, hover |
-| `--line` | `#e3e6eb` | `#262b35` | Hairline borders, dividers |
-| `--ink` | `#15181e` | `#e8eaee` | Primary text |
-| `--muted` | `#5c6470` | `#9aa3b2` | Secondary text, labels |
-| `--faint` | `#8b93a1` | `#646d7d` | Placeholders, disabled |
-| `--accent` | `#2545ff` | `#5b76ff` | Cobalt. Buttons, links, focus, active nav |
-| `--accent-soft` | `#eceffe` | `#1c2342` | Accent tint backgrounds (selected rows, chips) |
+| `--bg` | `#F8FAFC` | `#020617` | App background |
+| `--surface` | `#FFFFFF` | `#0F172A` | Cards, tables, modals |
+| `--surface-2` | `#F1F5F9` | `#1E293B` | Table header rows, wells, hover |
+| `--line` | `#E2E8F0` | `#334155` | Hairline borders, dividers |
+| `--ink` | `#0F172A` | `#F8FAFC` | Primary text |
+| `--muted` | `#475569` | `#CBD5E1` | Secondary text, labels |
+| `--faint` | `#94A3B8` | `#64748B` | Placeholders, disabled |
+| `--accent` | `#2563EB` | `#60A5FA` | Primary action. Buttons, links, focus, active nav |
+| `--accent-soft` | `#DBEAFE` | `#172554` | Accent tint backgrounds (selected rows, chips) |
 | `--accent-fg` | `#ffffff` | `#ffffff` | Text on accent |
+| `--intel` | `#7C3AED` | `#A78BFA` | Recommendation intelligence, AI priority cues |
+| `--intel-soft` | `#EDE9FE` | `#2E1065` | Recommendation intelligence tint |
 
 ### Semantic (data meaning — never decorative)
 
 | Token | Light | Dark | Role |
 |---|---|---|---|
-| `--pos` | `#0a8754` | `#34c98e` | Positive deltas, success, "up" |
-| `--neg` | `#d92d20` | `#f97066` | Negative deltas, errors, destructive |
-| `--warn` | `#b54708` | `#f5a524` | Warnings, at-risk states |
+| `--pos` | `#16A34A` | `#22C55E` | Positive deltas, success, "up" |
+| `--neg` | `#DC2626` | `#F87171` | Reject / blocker, errors, destructive |
+| `--warn` | `#D97706` | `#F59E0B` | Review, warnings, at-risk states |
 | `--pos-soft` / `--neg-soft` / `--warn-soft` | tints | tints | Badge backgrounds |
 
 Deltas always pair color with a directional glyph (`▲` / `▼`) so meaning survives color-blindness and grayscale printing.
@@ -76,13 +78,13 @@ Deltas always pair color with a directional glyph (`▲` / `▼`) so meaning sur
 ### Data-viz palette (categorical, in order)
 
 ```
-1 cobalt   #2545ff     5 magenta  #d6336c
-2 cyan     #00a6c2     6 teal     #0d9488
-3 violet   #7c4dff     7 slate    #64748b
-4 amber    #f59e0b     8 lime     #84cc16
+1 primary action  var(--accent)   5 reject/blocker  var(--neg)
+2 intelligence    var(--intel)    6 teal            #0d9488
+3 success         var(--pos)      7 slate           #64748b
+4 review          var(--warn)     8 lime            #84cc16
 ```
 
-Sequential: cobalt ramp `#eceffe → #2545ff → #101c66`. Diverging: `--neg → neutral gray → --pos`. Gridlines use `--line`; axis text uses `--muted` at 11px mono.
+Sequential: primary ramp `--accent-soft → --accent`. Diverging: `--neg → neutral gray → --pos`. Gridlines use `--line`; axis text uses `--muted` at 11px mono.
 
 ---
 
@@ -103,13 +105,16 @@ Sequential: cobalt ramp `#eceffe → #2545ff → #101c66`. Diverging: `--neg →
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
-  --bg: #f7f8fa;          --surface: #ffffff;     --surface-2: #f1f3f6;
-  --line: #e3e6eb;        --ink: #15181e;         --muted: #5c6470;
-  --faint: #8b93a1;       --accent: #2545ff;      --accent-soft: #eceffe;
+  --bg: #f8fafc;          --surface: #ffffff;     --surface-2: #f1f5f9;
+  --line: #e2e8f0;        --ink: #0f172a;         --muted: #475569;
+  --faint: #94a3b8;       --accent: #2563eb;      --accent-soft: #dbeafe;
   --accent-fg: #ffffff;
-  --pos: #0a8754;  --pos-soft: #e3f5ec;
-  --neg: #d92d20;  --neg-soft: #fdecea;
-  --warn: #b54708; --warn-soft: #fdf1e3;
+  --intel: #7c3aed; --intel-soft: #ede9fe;
+  --pos: #16a34a;   --pos-soft: #dcfce7;
+  --neg: #dc2626;   --neg-soft: #fee2e2;
+  --warn: #d97706;  --warn-soft: #fef3c7;
+  --review: var(--warn); --review-soft: var(--warn-soft);
+  --reject: var(--neg);  --reject-soft: var(--neg-soft);
 
   /* shadcn/ui mappings */
   --background: var(--bg);        --foreground: var(--ink);
@@ -124,12 +129,15 @@ Sequential: cobalt ramp `#eceffe → #2545ff → #101c66`. Diverging: `--neg →
 }
 
 .dark {
-  --bg: #0b0d11;          --surface: #13161c;     --surface-2: #1a1e26;
-  --line: #262b35;        --ink: #e8eaee;         --muted: #9aa3b2;
-  --faint: #646d7d;       --accent: #5b76ff;      --accent-soft: #1c2342;
-  --pos: #34c98e;  --pos-soft: #11281e;
-  --neg: #f97066;  --neg-soft: #2d1715;
-  --warn: #f5a524; --warn-soft: #2b2010;
+  --bg: #020617;          --surface: #0f172a;     --surface-2: #1e293b;
+  --line: #334155;        --ink: #f8fafc;         --muted: #cbd5e1;
+  --faint: #64748b;       --accent: #60a5fa;      --accent-soft: #172554;
+  --intel: #a78bfa; --intel-soft: #2e1065;
+  --pos: #22c55e;   --pos-soft: #052e16;
+  --neg: #f87171;   --neg-soft: #450a0a;
+  --warn: #f59e0b;  --warn-soft: #451a03;
+  --review: var(--warn); --review-soft: var(--warn-soft);
+  --reject: var(--neg);  --reject-soft: var(--neg-soft);
 }
 
 body {
@@ -158,9 +166,12 @@ export default {
         bg: 'var(--bg)', surface: 'var(--surface)', 'surface-2': 'var(--surface-2)',
         line: 'var(--line)', ink: 'var(--ink)', muted: 'var(--muted)', faint: 'var(--faint)',
         accent: { DEFAULT: 'var(--accent)', soft: 'var(--accent-soft)', fg: 'var(--accent-fg)' },
+        intel: { DEFAULT: 'var(--intel)', soft: 'var(--intel-soft)' },
         pos: { DEFAULT: 'var(--pos)', soft: 'var(--pos-soft)' },
         neg: { DEFAULT: 'var(--neg)', soft: 'var(--neg-soft)' },
         warn: { DEFAULT: 'var(--warn)', soft: 'var(--warn-soft)' },
+        review: { DEFAULT: 'var(--review)', soft: 'var(--review-soft)' },
+        reject: { DEFAULT: 'var(--reject)', soft: 'var(--reject-soft)' },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
