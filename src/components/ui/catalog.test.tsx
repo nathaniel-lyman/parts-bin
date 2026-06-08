@@ -1,13 +1,18 @@
 import { expect, test, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
 import {
   Button,
   Checkbox,
+  Drawer,
   DropdownMenu,
   Field,
+  IconButton,
+  InlineAlert,
   Input,
   Pagination,
+  SegmentedControl,
   Select,
   Switch,
   Tabs,
@@ -81,4 +86,48 @@ test('tabs, dropdown menu, and pagination expose expected controls', async () =>
   expect(onSelect).toHaveBeenCalled()
   await user.click(screen.getByRole('button', { name: 'Next' }))
   expect(onPageChange).toHaveBeenCalledWith(3)
+})
+
+test('barrel exports the new primitives with their accessible surfaces', async () => {
+  const user = userEvent.setup()
+  const onValueChange = vi.fn()
+  const onIcon = vi.fn()
+
+  function Harness() {
+    const [open, setOpen] = useState(false)
+    return (
+      <div>
+        <IconButton aria-label="Open settings" onClick={onIcon}>⚙</IconButton>
+        <SegmentedControl
+          label="Range"
+          options={[
+            { value: '30d', label: '30d' },
+            { value: '90d', label: '90d' },
+          ]}
+          onValueChange={onValueChange}
+        />
+        <InlineAlert tone="warn" title="Heads up">Two columns are hidden.</InlineAlert>
+        <Button onClick={() => setOpen(true)}>Open drawer</Button>
+        {open && (
+          <Drawer title="Saved views" onClose={() => setOpen(false)}>
+            <p>Drawer body</p>
+          </Drawer>
+        )}
+      </div>
+    )
+  }
+
+  render(<Harness />)
+
+  await user.click(screen.getByRole('button', { name: 'Open settings' }))
+  expect(onIcon).toHaveBeenCalled()
+
+  expect(screen.getByRole('radiogroup', { name: 'Range' })).toBeInTheDocument()
+  await user.click(screen.getByRole('radio', { name: '90d' }))
+  expect(onValueChange).toHaveBeenCalledWith('90d')
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Two columns are hidden.')
+
+  await user.click(screen.getByRole('button', { name: 'Open drawer' }))
+  expect(screen.getByRole('dialog')).toHaveTextContent('Saved views')
 })

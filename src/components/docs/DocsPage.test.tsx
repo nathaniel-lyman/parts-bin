@@ -1,0 +1,35 @@
+import { expect, test } from 'vitest'
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { DocsPage } from './DocsPage'
+
+test('DocsPage renders the new API sections and copy checklist', () => {
+  render(<DocsPage />)
+  expect(screen.getByRole('heading', { name: 'Charts API' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'DataGrid API' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Copy Ledger into your app' })).toBeInTheDocument()
+  // Documented public surfaces appear in the prop tables.
+  expect(screen.getByText('WaterfallChart')).toBeInTheDocument()
+  expect(screen.getByText('LedgerGridColumn')).toBeInTheDocument()
+  expect(screen.getByText('SegmentedControl')).toBeInTheDocument()
+})
+
+test('DocsPage live examples drive the new primitives', async () => {
+  const user = userEvent.setup()
+  render(<DocsPage />)
+
+  // SegmentedControl updates the live density readout.
+  await user.click(screen.getByRole('radio', { name: 'Comfortable' }))
+  expect(screen.getByText('comfortable')).toBeInTheDocument()
+
+  // InlineAlert dismiss removes the warning banner.
+  const warning = screen.getByText('Two columns are hidden').closest('[role="alert"]') as HTMLElement
+  await user.click(within(warning).getByRole('button', { name: 'Dismiss' }))
+  expect(screen.queryByText('Two columns are hidden')).not.toBeInTheDocument()
+
+  // Drawer opens, traps into a dialog, and closes on Escape.
+  await user.click(screen.getByRole('button', { name: 'Open drawer' }))
+  expect(screen.getByRole('dialog')).toHaveTextContent('Saved views')
+  await user.keyboard('{Escape}')
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+})

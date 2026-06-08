@@ -14,8 +14,8 @@ npm run dev
   chart styling, and optional theme recipes). This is the swappable, portable layer.
   See `src/theme/RETHEME.md`.
 - **`src/components/ui/`** — hand-rolled, token-only primitives exported from
-  `src/components/ui`: buttons, forms, tabs, overlays, cards, metrics, empty/loading states,
-  pagination, and toasts.
+  `src/components/ui`: buttons, icon buttons, forms, tabs, segmented controls, overlays (modal +
+  drawer), inline alerts, cards, metrics, empty/loading states, pagination, and toasts.
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
 - **`src/components/`** — dashboard components (KPI cards, data table with sort/filter/columns,
@@ -33,9 +33,22 @@ npm run dev
 | `npm run lint:theme` | fail if raw colors leak outside `src/theme/` |
 
 ## Use Ledger in an existing app
-1. Copy `src/theme/` into your project; import `theme/theme.css` at your root.
-2. Copy `src/components/ui/` and `src/components/shell/`, then import from their barrel files.
-3. Run `npm run lint:theme` (copy `scripts/lint-theme.mjs`) to keep the boundary honest.
+Copy-paste checklist (clone what you need, in order):
+- [ ] **Theme** — copy `src/theme/` and import `theme/theme.css` at your root. Re-skin via `tokens.css` only.
+- [ ] **Primitives** — copy `src/components/ui/`; import from the `ui` barrel (`Button`, `Field`, `Drawer`,
+  `IconButton`, `InlineAlert`, `SegmentedControl`, modals, tabs, toasts, …).
+- [ ] **Shell** — copy `src/components/shell/` for the app shell, sidebar, top nav, and filter bars.
+- [ ] **Charts & DataGrid** *(optional)* — copy `src/components/charts/` and `src/components/DataGrid/`;
+  import from the `charts` and `DataGrid` barrels.
+- [ ] **Boundary** — copy `scripts/lint-theme.mjs` and wire `npm run lint:theme` so raw colors never leak
+  outside `src/theme/`.
+- [ ] **Reference** — see `src/theme/RETHEME.md` to re-skin and `THEME-SPEC.md` for the canonical design spec.
+
+Every subsystem now has a barrel (`ui`, `shell`, `charts`, `DataGrid`), and `src/components` re-exports all
+of them as one aggregate import root. Import from a barrel, not a deep file path:
+```ts
+import { Button, DataGrid, WaterfallChart, KpiCard } from './components'
+```
 
 Ledger is intentionally a copy-paste kit first, not an npm package. Let the public API harden
 across real cloned apps before packaging it.

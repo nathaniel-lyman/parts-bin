@@ -139,6 +139,17 @@ function WaterfallTooltip({ active, payload, valueFormatter }: WaterfallTooltipP
   )
 }
 
+function describeWaterfallDatum(datum: WaterfallDatum, valueFormatter: (value: number) => string) {
+  if (datum.kind === 'start') {
+    return `${datum.label}: starting total ${valueFormatter(datum.end)}.`
+  }
+  if (datum.kind === 'total') {
+    const adjustment = datum.delta === 0 ? '' : `, adjusted ${formatSignedValue(datum.delta, valueFormatter)} from the prior bridge total`
+    return `${datum.label}: total ${valueFormatter(datum.end)}${adjustment}.`
+  }
+  return `${datum.label}: changes by ${formatSignedValue(datum.delta, valueFormatter)}, moving from ${valueFormatter(datum.start)} to ${valueFormatter(datum.end)}.`
+}
+
 const legendItems = [
   { label: 'Start', className: 'bg-muted' },
   { label: 'Increase', className: 'bg-pos' },
@@ -187,7 +198,7 @@ export function WaterfallChart({
 
       <div className="overflow-x-auto">
         <div style={{ height, minWidth }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: minWidth, height }}>
             <BarChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: -16 }}>
               <CartesianGrid {...gridProps} />
               <XAxis dataKey="label" {...axisProps} interval={0} tickMargin={8} />
@@ -212,9 +223,7 @@ export function WaterfallChart({
       </div>
 
       <figcaption className="sr-only">
-        {chartData.map((datum) => (
-          `${datum.label}: starts at ${valueFormatter(datum.start)}, changes by ${formatSignedValue(datum.delta, valueFormatter)}, ends at ${valueFormatter(datum.end)}. `
-        ))}
+        {chartData.map((datum) => `${describeWaterfallDatum(datum, valueFormatter)} `)}
       </figcaption>
     </figure>
   )

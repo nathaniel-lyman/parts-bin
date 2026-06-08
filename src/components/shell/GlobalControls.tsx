@@ -38,14 +38,14 @@ export function TimePeriodSelector({ value, options, onChange, label = 'Time per
   )
 }
 
-export interface IconButtonProps {
+export interface GlobalControlButtonProps {
   label: string
   onClick?: () => void
   pressed?: boolean
   className?: string
 }
 
-export function CalendarIconButton({ label, onClick, className }: IconButtonProps) {
+export function CalendarIconButton({ label, onClick, className }: GlobalControlButtonProps) {
   return (
     <button
       type="button"
@@ -62,7 +62,7 @@ export function CalendarIconButton({ label, onClick, className }: IconButtonProp
   )
 }
 
-export function FilterButton({ label, pressed = false, onClick, className }: IconButtonProps) {
+export function FilterButton({ label, pressed = false, onClick, className }: GlobalControlButtonProps) {
   return (
     <Button
       size="compact"

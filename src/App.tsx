@@ -5,17 +5,24 @@ import { useServerData } from './hooks/useServerData'
 import { totalMrr, activeCount, atRiskCount, avgGrowth } from './selectors/metrics'
 import { fmtCurrency, fmtPercent } from './lib/format'
 import { KpiCard, KpiSummaryRow } from './components/KpiCard'
-import { DataGrid } from './components/DataGrid/DataGrid'
-import { createMockServerAdapter, generateAccounts } from './components/DataGrid/mockServerAdapter'
-import { toGridQuery, type GridQuery } from './components/DataGrid/query'
-import { DEFAULT_STATE } from './components/DataGrid/state'
+import {
+  DataGrid,
+  createMockServerAdapter,
+  generateAccounts,
+  toGridQuery,
+  DEFAULT_STATE,
+  type GridQuery,
+} from './components/DataGrid'
 import { AccountFormModal } from './components/AccountFormModal'
 import { ConfirmDialog } from './components/ConfirmDialog'
-import { MrrTrendChart } from './components/charts/MrrTrendChart'
-import { MrrShareDonut } from './components/charts/MrrShareDonut'
-import { RevenueMovementChart } from './components/charts/RevenueMovementChart'
-import { WaterfallChart } from './components/charts/WaterfallChart'
-import { DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH, REVENUE_MOVEMENT_BAR_WIDTH_RANGE } from './components/charts/revenueMovementChartConfig'
+import {
+  MrrTrendChart,
+  MrrShareDonut,
+  RevenueMovementChart,
+  WaterfallChart,
+  DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH,
+  REVENUE_MOVEMENT_BAR_WIDTH_RANGE,
+} from './components/charts'
 import { Button, Card, PageHeader, Switch, useToast } from './components/ui'
 import {
   AppShell,

@@ -17,8 +17,9 @@ const ev = (event: Partial<KeyEventLike> & Pick<KeyEventLike, 'key'>): KeyEventL
 })
 
 describe('DataGrid definition of done', () => {
-  it('dashboard imports DataGrid and the retired table/hooks are absent', () => {
-    expect(appSource).toContain("from './components/DataGrid/DataGrid'")
+  it('dashboard imports DataGrid from the public barrel and the retired table/hooks are absent', () => {
+    expect(appSource).toContain("from './components/DataGrid'")
+    expect(appSource).not.toContain("from './components/DataGrid/DataGrid'")
     expect(appSource).not.toContain('DataTable')
     expect(Object.keys(legacyModules)).toEqual([])
   })

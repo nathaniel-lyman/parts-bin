@@ -23,6 +23,6 @@ describe('WaterfallChart', () => {
     expect(screen.getByText('$100.0k')).toBeInTheDocument()
     expect(screen.getByText('+$7.0k')).toBeInTheDocument()
     expect(screen.getByText('$107.0k')).toBeInTheDocument()
-    expect(screen.getByText(/Opening MRR: starts at \$0.0k/)).toBeInTheDocument()
+    expect(screen.getByText(/Opening MRR: starting total \$100.0k/)).toBeInTheDocument()
   })
 })

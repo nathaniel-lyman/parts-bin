@@ -1,53 +1,12 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
-import { getFocusableElements } from './utils'
+import { useId, useRef, type ReactNode } from 'react'
+import { useDialogFocusTrap } from './useDialogFocusTrap'
 
 interface Props { title: string; onClose: () => void; children: ReactNode; footer?: ReactNode }
-
-function getActiveElement() {
-  if (typeof document === 'undefined') return null
-  return document.activeElement instanceof HTMLElement ? document.activeElement : null
-}
 
 export function Modal({ title, onClose, children, footer }: Props) {
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
-  const previousActiveElementRef = useRef<HTMLElement | null>(getActiveElement())
-
-  useEffect(() => {
-    const previousActiveElement = previousActiveElementRef.current
-    const focusables = getFocusableElements(dialogRef.current)
-    ;(focusables[0] ?? dialogRef.current)?.focus()
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        onClose()
-        return
-      }
-
-      if (e.key !== 'Tab') return
-      const currentFocusables = getFocusableElements(dialogRef.current)
-      if (currentFocusables.length === 0) {
-        e.preventDefault()
-        dialogRef.current?.focus()
-        return
-      }
-      const first = currentFocusables[0]
-      const last = currentFocusables[currentFocusables.length - 1]
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      if (previousActiveElement?.isConnected) previousActiveElement.focus()
-    }
-  }, [onClose])
+  useDialogFocusTrap(dialogRef, onClose)
 
   return (
     <div

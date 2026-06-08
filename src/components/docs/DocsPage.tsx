@@ -3,14 +3,18 @@ import {
   Button,
   Card,
   Checkbox,
+  Drawer,
   DropdownMenu,
   EmptyState,
   Field,
+  IconButton,
+  InlineAlert,
   Input,
   Metric,
   PageHeader,
   Pagination,
   Popover,
+  SegmentedControl,
   Select,
   Skeleton,
   StatusBadge,
@@ -45,6 +49,41 @@ export function AccountsScreen() {
 const stylingSnippet = `<div className="border border-line bg-surface text-ink">
   <span className="micro">Theme safe</span>
 </div>`
+
+const chartsUsageSnippet = `import { WaterfallChart, buildWaterfallData } from './components/charts'
+
+// Charts derive color and axes from src/theme/chart-theme.ts only.
+const steps = [
+  { kind: 'start', label: 'Open MRR', value: 60000 },
+  { kind: 'increase', label: 'New', value: 12000 },
+  { kind: 'decrease', label: 'Churn', value: -4000 },
+  { kind: 'total', label: 'Close MRR' },
+]
+
+export function Movement() {
+  return <WaterfallChart data={steps} ariaLabel="MRR movement" />
+}`
+
+const dataGridUsageSnippet = `import { DataGrid, toGridQuery, type GridQuery } from './components/DataGrid'
+
+<DataGrid
+  rows={accounts}
+  columns={columns}
+  getRowId={(a) => a.id}
+  enableRowSelection
+  enableHeaderFilters
+  enablePagination
+  enableExport
+  onQueryChange={(q: GridQuery) => fetchAccounts(q)}
+/>`
+
+const copyChecklist: Array<[string, string]> = [
+  ['Theme', 'Copy src/theme/ and import theme/theme.css at your root. Re-skin via tokens.css only.'],
+  ['Primitives', 'Copy src/components/ui/ and import from the ./ui barrel (Button, Field, Drawer, IconButton, InlineAlert, SegmentedControl, …).'],
+  ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
+  ['Charts & DataGrid', 'Copy src/components/charts/ and src/components/DataGrid/; import from the ./charts and ./DataGrid barrels.'],
+  ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
+]
 
 interface PropReferenceRow {
   component: string
@@ -107,6 +146,30 @@ const uiPropRows: PropReferenceRow[] = [
     props: 'title, description, actions, value, status, action, className',
     variants: 'neutral, positive, negative, warning, intelligence, review, reject',
     accessibility: 'Use semantic headings/actions; Skeleton is aria-hidden; EmptyState action remains an explicit command.',
+  },
+  {
+    component: 'IconButton',
+    props: 'variant, size, aria-label (required), disabled, onClick',
+    variants: 'primary, secondary, ghost, destructive / default, compact; square',
+    accessibility: 'Wraps Button; requires aria-label because the control is icon-only.',
+  },
+  {
+    component: 'SegmentedControl',
+    props: 'options, value, defaultValue, onValueChange, size, label',
+    variants: 'controlled or uncontrolled; disabled options; default, compact',
+    accessibility: 'role=radiogroup/radio, aria-checked, roving focus, Arrow/Home/End navigation.',
+  },
+  {
+    component: 'InlineAlert',
+    props: 'tone, title, action, onDismiss, children',
+    variants: 'accent, pos, neg, warn; optional title, action, dismiss',
+    accessibility: 'role=alert for neg/warn, role=status otherwise; dismiss is a labeled IconButton.',
+  },
+  {
+    component: 'Drawer',
+    props: 'title, onClose, footer, side, children',
+    variants: 'right or left side panel; optional footer',
+    accessibility: 'role=dialog, aria-modal, labelled by title; Escape closes, Tab cycles, focus restores to opener.',
   },
 ]
 
@@ -187,11 +250,78 @@ const shellPropRows: PropReferenceRow[] = [
 
 const interactionRows = [
   ['Modal', 'Escape closes; Tab and Shift+Tab stay inside; close restores opener focus.'],
+  ['Drawer', 'Same as Modal: Escape closes; Tab cycles inside the panel; focus restores to the opener.'],
   ['DropdownMenu', 'Arrow keys skip disabled items; Home/End jump; Enter/Space selects; Escape restores trigger focus.'],
-  ['Tabs', 'Arrow keys, Home, and End move the active tab and focus together.'],
+  ['Tabs / SegmentedControl', 'Arrow keys, Home, and End move the active item and focus together.'],
   ['Popover', 'Escape closes and returns focus to the trigger.'],
   ['Tooltip', 'Hover and keyboard focus reveal the same content; trigger is described by the tooltip.'],
   ['Field', 'Label, hint, error, required, disabled, and invalid states are wired for single wrapped controls.'],
+]
+
+const chartPropRows: PropReferenceRow[] = [
+  {
+    component: 'WaterfallChart',
+    props: 'data (WaterfallStepInput[]), ariaLabel, height, minWidth, barWidth, valueFormatter',
+    variants: 'start / increase / decrease / total steps; start–net–end summary header',
+    accessibility: 'Renders a figure with ariaLabel; bars and axes are themed only via src/theme/chart-theme.ts.',
+  },
+  {
+    component: 'RevenueMovementChart',
+    props: 'barWidth, showLabels',
+    variants: 'token-backed bar width (REVENUE_MOVEMENT_BAR_WIDTH_RANGE); optional smart value labels',
+    accessibility: 'Bars use SERIES[0] = var(--accent); width is configurable, never a raw color.',
+  },
+  {
+    component: 'MrrShareDonut',
+    props: 'accounts',
+    variants: 'segment ring with a centered metric',
+    accessibility: 'Ring + center metric; segment colors come from the chart palette only.',
+  },
+  {
+    component: 'MrrTrendChart',
+    props: '— (reads the seeded demo series)',
+    variants: 'single trend line, no dots',
+    accessibility: 'Line style (1.75px, no dots) and axes come from chart-theme.ts.',
+  },
+  {
+    component: 'buildWaterfallData()',
+    props: 'steps: WaterfallStepInput[] → WaterfallBuildResult',
+    variants: 'pure helper returning { data, summary } for WaterfallChart',
+    accessibility: 'Pure function, no DOM — keeps chart math out of components and unit-testable.',
+  },
+]
+
+const dataGridPropRows: PropReferenceRow[] = [
+  {
+    component: 'DataGrid',
+    props: 'rows, columns, getRowId, initialState, state, onStateChange',
+    variants: 'controlled or uncontrolled state; loading and error surfaces',
+    accessibility: 'Headless TanStack Table with native table semantics, sortable headers, and selection.',
+  },
+  {
+    component: 'DataGrid (features)',
+    props: 'enableRowSelection, enableHeaderFilters, enablePagination, enableExport, enableSavedViews',
+    variants: 'opt-in selection, header filters, pagination, CSV/TSV export, saved views',
+    accessibility: 'Every feature is off by default; each control exposes labels and keyboard interaction.',
+  },
+  {
+    component: 'DataGrid (server mode)',
+    props: 'manualSorting, manualFiltering, manualPagination, totalRowCount, onQueryChange, persistenceKey',
+    variants: 'client-side, or server-driven via toGridQuery + a server adapter',
+    accessibility: 'onQueryChange emits a serializable GridQuery; createMockServerAdapter demonstrates fetching.',
+  },
+  {
+    component: 'LedgerGridColumn',
+    props: 'id, header, accessor/cell, align, width, sortable, hideable, meta.type',
+    variants: 'text / number / status column types; pinned, hidden, resizable',
+    accessibility: 'Column meta drives alignment and filter UI; numerals right-align on the mono num scale.',
+  },
+  {
+    component: 'GridQuery',
+    props: 'sorting, columnFilters, globalFilter, pagination',
+    variants: 'toGridQuery(state) builds it; serializeGridQuery() makes it URL-safe',
+    accessibility: 'Plain serializable object — the boundary between grid state and your data layer.',
+  },
 ]
 
 function Snippet({ code }: { code: string }) {
@@ -241,6 +371,9 @@ export function DocsPage() {
   const [switchOn, setSwitchOn] = useState(true)
   const [checked, setChecked] = useState(true)
   const [page, setPage] = useState(1)
+  const [density, setDensity] = useState('standard')
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [warnAlertOpen, setWarnAlertOpen] = useState(true)
   const [recipeId, setRecipeId] = useState<ThemeRecipeId>(() => readStoredThemeRecipe())
 
   const selectRecipe = (nextRecipeId: ThemeRecipeId) => {
@@ -258,14 +391,24 @@ export function DocsPage() {
       />
 
       <div className="grid gap-6">
-        <Card title="Copy this into your app" description="Ledger is currently a clone-and-customize kit, not an npm package. Copy the theme, UI primitives, shell primitives, and the lint rule into the app you are building.">
-          <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-            <Snippet code={usageSnippet} />
-            <div className="grid content-start gap-3 text-[13px] text-muted">
-              <p className="m-0">Public API: import from <code className="num text-ink">src/components/ui</code> and <code className="num text-ink">src/components/shell</code>.</p>
-              <p className="m-0">Theme boundary: style with token utilities like <code className="num text-ink">bg-surface</code>, <code className="num text-ink">text-ink</code>, and <code className="num text-ink">border-line</code>.</p>
-              <p className="m-0">Packaging story: keep Ledger copy-paste first until the API hardens across two or three real cloned apps.</p>
+        <Card title="Copy Ledger into your app" description="Ledger is a clone-and-customize kit, not an npm package. Copy the theme, primitives, shell, charts, and DataGrid — plus the lint rule — into the app you are building.">
+          <div className="grid gap-4">
+            <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+              <Snippet code={usageSnippet} />
+              <div className="grid content-start gap-3 text-[13px] text-muted">
+                <p className="m-0">Public API: import from the barrels <code className="num text-ink">src/components/ui</code>, <code className="num text-ink">shell</code>, <code className="num text-ink">charts</code>, and <code className="num text-ink">DataGrid</code> — or the aggregate <code className="num text-ink">src/components</code>.</p>
+                <p className="m-0">Theme boundary: style with token utilities like <code className="num text-ink">bg-surface</code>, <code className="num text-ink">text-ink</code>, and <code className="num text-ink">border-line</code>.</p>
+                <p className="m-0">Packaging story: keep Ledger copy-paste first until the API hardens across two or three real cloned apps.</p>
+              </div>
             </div>
+            <ol className="m-0 grid list-none gap-2 p-0">
+              {copyChecklist.map(([step, detail], index) => (
+                <li key={step} className="flex items-start gap-3 border border-line bg-surface-2 p-3 text-[13px]">
+                  <span className="num shrink-0 text-muted">{index + 1}</span>
+                  <span><span className="font-semibold text-ink">{step}.</span> <span className="text-muted">{detail}</span></span>
+                </li>
+              ))}
+            </ol>
           </div>
         </Card>
 
@@ -309,6 +452,32 @@ export function DocsPage() {
               },
             ]}
           />
+        </Card>
+
+        <Card title="Charts API" description="Recharts-based charts that take data in and derive every color, axis, and gridline from src/theme/chart-theme.ts. Import from src/components/charts.">
+          <div className="grid gap-4">
+            <PropReferenceTable rows={chartPropRows} />
+            <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+              <Snippet code={chartsUsageSnippet} />
+              <div className="grid content-start gap-3 text-[13px] text-muted">
+                <p className="m-0"><code className="num text-ink">SERIES[0]</code> is <code className="num text-ink">var(--accent)</code>, so the primary series re-skins with the accent token. Categorical <code className="num text-ink">SERIES[1..]</code> are fixed and documented in chart-theme.ts.</p>
+                <p className="m-0">Keep chart math in helpers like <code className="num text-ink">buildWaterfallData()</code> so the chart components stay declarative and the logic stays unit-tested.</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card title="DataGrid API" description="A headless TanStack Table grid with sort, filter, column visibility/reorder, selection, export, and saved views. Import from src/components/DataGrid.">
+          <div className="grid gap-4">
+            <PropReferenceTable rows={dataGridPropRows} />
+            <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+              <Snippet code={dataGridUsageSnippet} />
+              <div className="grid content-start gap-3 text-[13px] text-muted">
+                <p className="m-0">Features are opt-in props. Leave them off for a plain read-only table; switch on <code className="num text-ink">enableRowSelection</code>, <code className="num text-ink">enableHeaderFilters</code>, <code className="num text-ink">enableExport</code>, and <code className="num text-ink">enableSavedViews</code> as you need them.</p>
+                <p className="m-0">For server data, set the <code className="num text-ink">manual*</code> flags and read <code className="num text-ink">onQueryChange</code> — it emits a serializable <code className="num text-ink">GridQuery</code> you can hand to your fetch layer.</p>
+              </div>
+            </div>
+          </div>
         </Card>
 
         <Card title="Theme recipes" description="Preview and apply token recipes without touching component files. Recipes are just CSS variable overrides in src/theme/recipes.css.">
@@ -413,6 +582,53 @@ export function DocsPage() {
               <Checkbox checked={checked} onChange={(event) => setChecked(event.target.checked)} label="Include churned accounts" hint="Good for reporting screens." />
               <Switch checked={switchOn} onChange={(event) => setSwitchOn(event.target.checked)} label="Server mode" hint="Use role switch for binary system settings." />
             </div>
+          </ExampleBlock>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <ExampleBlock title="Icon buttons & segmented controls">
+            <div className="flex flex-wrap items-center gap-2">
+              <IconButton aria-label="Refresh data">↻</IconButton>
+              <IconButton aria-label="Filter rows" variant="secondary">⚲</IconButton>
+              <IconButton aria-label="More actions" variant="ghost">⋯</IconButton>
+              <IconButton aria-label="Delete" variant="destructive">✕</IconButton>
+            </div>
+            <SegmentedControl
+              label="Row density"
+              value={density}
+              onValueChange={setDensity}
+              options={[
+                { value: 'compact', label: 'Compact' },
+                { value: 'standard', label: 'Standard' },
+                { value: 'comfortable', label: 'Comfortable' },
+              ]}
+            />
+            <p className="m-0 text-[13px] text-muted">Selected density: <code className="num text-ink">{density}</code></p>
+          </ExampleBlock>
+
+          <ExampleBlock title="Inline alerts & drawer">
+            {warnAlertOpen && (
+              <InlineAlert tone="warn" title="Two columns are hidden" onDismiss={() => setWarnAlertOpen(false)}>
+                Reset the view to show every column again.
+              </InlineAlert>
+            )}
+            <InlineAlert tone="pos">Saved view applied.</InlineAlert>
+            <InlineAlert tone="neg" title="Sync failed">Retry the import to continue.</InlineAlert>
+            <div>
+              <Button onClick={() => setDrawerOpen(true)}>Open drawer</Button>
+            </div>
+            {drawerOpen && (
+              <Drawer
+                title="Saved views"
+                onClose={() => setDrawerOpen(false)}
+                footer={<Button variant="primary" onClick={() => setDrawerOpen(false)}>Done</Button>}
+              >
+                <div className="grid gap-3 text-[13px] text-muted">
+                  <p className="m-0">Drawers reuse the Modal focus trap: Escape closes, Tab cycles inside, and focus returns to the opener.</p>
+                  <Field label="View name"><Input placeholder="At-risk enterprise" /></Field>
+                </div>
+              </Drawer>
+            )}
           </ExampleBlock>
         </section>
 
