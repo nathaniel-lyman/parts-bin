@@ -14,6 +14,8 @@ import { ConfirmDialog } from './components/ConfirmDialog'
 import { MrrTrendChart } from './components/charts/MrrTrendChart'
 import { MrrShareDonut } from './components/charts/MrrShareDonut'
 import { RevenueMovementChart } from './components/charts/RevenueMovementChart'
+import { WaterfallChart } from './components/charts/WaterfallChart'
+import { DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH, REVENUE_MOVEMENT_BAR_WIDTH_RANGE } from './components/charts/revenueMovementChartConfig'
 import { Button, Card, PageHeader, Switch, useToast } from './components/ui'
 import {
   AppShell,
@@ -27,7 +29,7 @@ import {
   UserAvatarMenu,
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
-import { sparks } from './data/accounts'
+import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 
@@ -36,6 +38,15 @@ const timePeriodOptions = [
   { value: '90d', label: 'Last 90 days' },
   { value: '12m', label: 'Last 12 months' },
 ]
+
+function formatCompactKValue(value: number) {
+  const absolute = Math.abs(value)
+  return absolute >= 10 || Number.isInteger(absolute) ? absolute.toFixed(0) : absolute.toFixed(1)
+}
+
+function formatCurrencyK(value: number) {
+  return `${value < 0 ? '-' : ''}$${formatCompactKValue(value)}k`
+}
 
 interface DashboardPageProps {
   globalSearch: string
@@ -69,6 +80,8 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
   const [deleting, setDeleting] = useState<Account | null>(null)
   const [serverMode, setServerMode] = useState(params.get('server') === '1')
   const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(DEFAULT_STATE))
+  const [movementBarWidth, setMovementBarWidth] = useState(DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH)
+  const [movementLabels, setMovementLabels] = useState(false)
   const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
   const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
   const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [setDeleting, setEditing])
@@ -98,8 +111,43 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
           <Card title="MRR trend ($k)"><MrrTrendChart /></Card>
           <Card title="MRR share — live"><MrrShareDonut accounts={visibleAccounts} /></Card>
         </div>
-        <div className="mb-6">
-          <Card title="Revenue movement ($k)"><RevenueMovementChart /></Card>
+        <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(360px,2fr)]">
+          <Card
+            title="Revenue movement ($k)"
+            actions={
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <label className="micro flex items-center gap-2 text-muted">
+                  <span>Bar width</span>
+                  <input
+                    type="range"
+                    min={REVENUE_MOVEMENT_BAR_WIDTH_RANGE.min}
+                    max={REVENUE_MOVEMENT_BAR_WIDTH_RANGE.max}
+                    step={REVENUE_MOVEMENT_BAR_WIDTH_RANGE.step}
+                    value={movementBarWidth}
+                    aria-label="Revenue movement bar width"
+                    className="h-8 w-24 accent-accent"
+                    onChange={(event) => setMovementBarWidth(Number(event.target.value))}
+                  />
+                  <span className="num w-8 text-right text-[12px] text-muted">{movementBarWidth}px</span>
+                </label>
+                <Switch
+                  label={<span className="micro text-muted">Labels</span>}
+                  checked={movementLabels}
+                  onChange={(event) => setMovementLabels(event.target.checked)}
+                />
+              </div>
+            }
+          >
+            <RevenueMovementChart barWidth={movementBarWidth} showLabels={movementLabels} />
+          </Card>
+          <Card title="MRR bridge ($k)">
+            <WaterfallChart
+              data={revenueWaterfallSeries}
+              ariaLabel="MRR bridge in thousands"
+              valueFormatter={formatCurrencyK}
+              tickFormatter={formatCompactKValue}
+            />
+          </Card>
         </div>
 
         <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">

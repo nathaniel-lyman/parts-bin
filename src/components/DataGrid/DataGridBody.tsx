@@ -1,6 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Row, Table } from '@tanstack/react-table'
 import { DataGridRow } from './DataGridRow'
+import type { ColumnDragPreviewState } from './dragPreview'
 
 interface Props<TData> {
   table: Table<TData>
@@ -12,6 +13,7 @@ interface Props<TData> {
   getRowLabel?: (row: TData, rowId: string) => string
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
+  dragPreview?: ColumnDragPreviewState | null
 }
 
 function defaultRowLabel<TData>(row: TData, rowId: string): string {
@@ -29,6 +31,7 @@ export function DataGridBody<TData>({
   getRowLabel = defaultRowLabel,
   onToggleRow,
   onCellContextMenu,
+  dragPreview,
 }: Props<TData>) {
   const topRows = table.getTopRows()
   const centerRows = table.getCenterRows()
@@ -64,6 +67,7 @@ export function DataGridBody<TData>({
       rowLabel={getRowLabel(row.original, row.id)}
       onToggleRow={onToggleRow}
       onCellContextMenu={onCellContextMenu}
+      dragPreview={dragPreview}
     />
   )
 

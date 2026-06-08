@@ -43,6 +43,30 @@ function Harness() {
   )
 }
 
+function HeaderPreviewHarness() {
+  // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({
+    data,
+    columns,
+    getRowId: (row) => row.id,
+    getCoreRowModel: getCoreRowModel(),
+  })
+  return (
+    <table>
+      <DataGridHeader
+        table={table}
+        dragPreview={{
+          activeId: 'name',
+          overId: 'mrr',
+          projectedOrder: ['mrr', 'name'],
+          offsets: { mrr: -140 },
+        }}
+      />
+    </table>
+  )
+}
+
 describe('DataGridHeader / DataGridBody', () => {
   it('headers expose aria-sort=none initially', () => {
     render(<Harness />)
@@ -82,5 +106,15 @@ describe('DataGridHeader / DataGridBody', () => {
     const { container } = render(<VirtualHarness />)
     expect(container.querySelector('tbody')).toHaveAttribute('data-virtualized', 'true')
     expect(Number(container.querySelector('tbody')?.getAttribute('data-total-size'))).toBeGreaterThan(1000)
+  })
+
+  it('dims and translates header cells during a drag preview', () => {
+    render(<HeaderPreviewHarness />)
+    const activeHeader = screen.getByRole('columnheader', { name: /Name/ })
+    const shiftedHeader = screen.getByRole('columnheader', { name: /MRR/ })
+
+    expect(activeHeader).toHaveAttribute('data-column-id', 'name')
+    expect(activeHeader.style.opacity).toBe('0.28')
+    expect(shiftedHeader.style.transform).toBe('translateX(-140px)')
   })
 })

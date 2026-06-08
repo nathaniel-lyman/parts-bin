@@ -1,0 +1,411 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - link "# Ledger" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8]: "#"
+        - generic [ref=e9]: Ledger
+      - navigation "Primary" [ref=e10]:
+        - link "Overview" [ref=e11] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e12]: Overview
+        - link "Components kit" [ref=e13] [cursor=pointer]:
+          - /url: /docs
+          - generic [ref=e14]: Components
+          - generic [ref=e15]: kit
+        - link "Reports" [ref=e16] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e17]: Reports
+        - generic [ref=e19]: Admin
+        - link "Users" [ref=e20] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e21]: Users
+        - link "Settings" [ref=e22] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e23]: Settings
+      - generic [ref=e25]:
+        - generic [ref=e26]: demo · v1.0
+        - button "Collapse sidebar" [ref=e27]:
+          - img [ref=e28]
+    - generic [ref=e30]:
+      - banner [ref=e31]:
+        - generic [ref=e32]:
+          - navigation "Breadcrumb" [ref=e33]:
+            - link "Ledger" [ref=e35] [cursor=pointer]:
+              - /url: /
+            - generic [ref=e36]:
+              - generic [ref=e37]: /
+              - generic [ref=e38]: Accounts
+          - generic [ref=e39]: Accounts
+        - generic [ref=e40]:
+          - searchbox "Global search" [ref=e41]
+          - generic [ref=e42]:
+            - generic [ref=e43]: Time period
+            - combobox "Time period" [ref=e44]:
+              - option "Last 30 days"
+              - option "Last 90 days" [selected]
+              - option "Last 12 months"
+          - button "Open calendar" [ref=e45]:
+            - img [ref=e46]
+          - button "Risks" [ref=e48]:
+            - img [ref=e49]
+            - text: Risks
+          - button "3 notifications" [ref=e50]:
+            - img [ref=e51]
+            - generic [ref=e53]: "3"
+          - button "Dark" [ref=e54]
+          - button "MO Morgan" [ref=e56]:
+            - generic [ref=e57]:
+              - generic [ref=e58]: MO
+              - generic [ref=e59]: Morgan
+      - main [ref=e60]:
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - generic [ref=e63]: Revenue / Accounts
+            - heading "Account book" [level=1] [ref=e64]
+            - paragraph [ref=e65]: Last 90 days
+          - generic [ref=e67]: 8 accounts · $78,300 MRR
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]: Total MRR
+            - generic [ref=e71]:
+              - generic [ref=e72]:
+                - generic [ref=e73]: $78,300
+                - generic [ref=e74]: ▲ 4.6% vs last mo
+              - img [ref=e75]
+          - generic [ref=e77]:
+            - generic [ref=e78]: Active accounts
+            - generic [ref=e79]:
+              - generic [ref=e80]:
+                - generic [ref=e81]: "5"
+                - generic [ref=e82]: ▲ 2.4% vs last mo
+              - img [ref=e83]
+          - generic [ref=e85]:
+            - generic [ref=e86]: Avg growth
+            - generic [ref=e87]:
+              - generic [ref=e88]:
+                - generic [ref=e89]: 3.7%
+                - generic [ref=e90]: ▲ 1.1% vs last mo
+              - img [ref=e91]
+          - generic [ref=e93]:
+            - generic [ref=e94]: At risk / churned
+            - generic [ref=e95]:
+              - generic [ref=e96]:
+                - generic [ref=e97]: "3"
+                - generic [ref=e98]: ▼ 12.5% vs last mo
+              - img [ref=e99]
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - heading "MRR trend ($k)" [level=2] [ref=e105]
+            - generic [ref=e108]:
+              - list [ref=e110]:
+                - listitem [ref=e111]:
+                  - img "Enterprise legend icon" [ref=e112]
+                  - text: Enterprise
+                - listitem [ref=e114]:
+                  - img "Mid-market legend icon" [ref=e115]
+                  - text: Mid-market
+                - listitem [ref=e117]:
+                  - img "Startup legend icon" [ref=e118]
+                  - text: Startup
+              - application [ref=e120]:
+                - generic [ref=e135]:
+                  - generic [ref=e136]:
+                    - generic [ref=e138]: Jan
+                    - generic [ref=e140]: Feb
+                    - generic [ref=e142]: Mar
+                    - generic [ref=e144]: Apr
+                    - generic [ref=e146]: May
+                    - generic [ref=e148]: Jun
+                    - generic [ref=e150]: Jul
+                    - generic [ref=e152]: Aug
+                    - generic [ref=e154]: Sep
+                    - generic [ref=e156]: Oct
+                  - generic [ref=e157]:
+                    - generic [ref=e159]: "0"
+                    - generic [ref=e161]: "15"
+                    - generic [ref=e163]: "30"
+                    - generic [ref=e165]: "45"
+                    - generic [ref=e167]: "60"
+          - generic [ref=e168]:
+            - heading "MRR share — live" [level=2] [ref=e171]
+            - generic [ref=e173]:
+              - application [ref=e176]
+              - generic:
+                - generic: $78,300
+                - generic: Active MRR
+        - generic [ref=e189]:
+          - generic [ref=e190]:
+            - generic [ref=e191]:
+              - heading "Revenue movement ($k)" [level=2] [ref=e193]
+              - generic [ref=e194]:
+                - generic [ref=e195]:
+                  - generic [ref=e196]: Bar width
+                  - slider "Revenue movement bar width" [ref=e197]: "22"
+                  - generic [ref=e198]: 22px
+                - generic [ref=e199]:
+                  - switch "Labels" [ref=e201] [cursor=pointer]
+                  - generic [ref=e203]: Labels
+            - generic [ref=e206]:
+              - list [ref=e208]:
+                - listitem [ref=e209]:
+                  - img "Churn legend icon" [ref=e210]
+                  - text: Churn
+                - listitem [ref=e212]:
+                  - img "Expansion legend icon" [ref=e213]
+                  - text: Expansion
+                - listitem [ref=e215]:
+                  - img "New legend icon" [ref=e216]
+                  - text: New
+              - application [ref=e218]:
+                - generic [ref=e323]:
+                  - generic [ref=e324]:
+                    - generic [ref=e326]: Jan
+                    - generic [ref=e328]: Feb
+                    - generic [ref=e330]: Mar
+                    - generic [ref=e332]: Apr
+                    - generic [ref=e334]: May
+                    - generic [ref=e336]: Jun
+                    - generic [ref=e338]: Jul
+                    - generic [ref=e340]: Aug
+                    - generic [ref=e342]: Sep
+                    - generic [ref=e344]: Oct
+                  - generic [ref=e345]:
+                    - generic [ref=e347]: "-4"
+                    - generic [ref=e349]: "0"
+                    - generic [ref=e351]: "4"
+                    - generic [ref=e353]: "8"
+                    - generic [ref=e355]: "12"
+          - generic [ref=e356]:
+            - heading "MRR bridge ($k)" [level=2] [ref=e359]
+            - figure "MRR bridge in thousands" [ref=e361]:
+              - generic [ref=e362]:
+                - generic [ref=e363]:
+                  - generic [ref=e364]: Start
+                  - generic [ref=e365]: $73k
+                - generic [ref=e366]:
+                  - generic [ref=e367]: Net
+                  - generic [ref=e368]: +$9.5k
+                - generic [ref=e369]:
+                  - generic [ref=e370]: End
+                  - generic [ref=e371]: $82k
+              - generic [ref=e372]:
+                - generic [ref=e373]: Start
+                - generic [ref=e375]: Increase
+                - generic [ref=e377]: Decrease
+                - generic [ref=e379]: Total
+              - application [ref=e385]:
+                - generic [ref=e431]:
+                  - generic [ref=e432]:
+                    - generic [ref=e434]: Opening
+                    - generic [ref=e436]: New
+                    - generic [ref=e438]: Expansion
+                    - generic [ref=e440]: Contraction
+                    - generic [ref=e442]: Churn
+                    - generic [ref=e444]: Closing
+                  - generic [ref=e445]:
+                    - generic [ref=e447]: "0"
+                    - generic [ref=e449]: "25"
+                    - generic [ref=e451]: "50"
+                    - generic [ref=e453]: "75"
+                    - generic [ref=e455]: "100"
+              - generic [ref=e456]: "Opening: starts at $0k, changes by +$73k, ends at $73k. New: starts at $73k, changes by +$7.1k, ends at $80k. Expansion: starts at $80k, changes by +$4k, ends at $84k. Contraction: starts at $84k, changes by -$1.1k, ends at $83k. Churn: starts at $83k, changes by -$0.5k, ends at $82k. Closing: starts at $0k, changes by $0k, ends at $82k."
+        - generic [ref=e457]:
+          - generic [ref=e458]:
+            - switch "Server mode" [ref=e460] [cursor=pointer]
+            - generic [ref=e462]: Server mode
+          - button "+ New account" [ref=e464]
+        - generic [ref=e465]:
+          - generic [ref=e466]:
+            - searchbox "Quick filter" [ref=e467]
+            - generic [ref=e468]:
+              - button "Export CSV" [ref=e469]
+              - button "Filters" [ref=e470]
+              - button "Views" [ref=e472]
+              - generic [ref=e473]:
+                - generic [ref=e474]: Density
+                - combobox "Density" [ref=e475]:
+                  - option "Compact" [selected]
+                  - option "Standard"
+                  - option "Comfortable"
+              - button "Columns" [ref=e477]
+          - grid [ref=e479]:
+            - rowgroup [ref=e480]:
+              - row "Select all Segment Segment column menu Resize Segment column Account Account column menu Resize Account column Growth ▲ Growth column menu Resize Growth column Owner Owner column menu Resize Owner column MRR MRR column menu Resize MRR column ARR ARR column menu Resize ARR column Since Since column menu Resize Since column actions column menu" [ref=e481]:
+                - columnheader "Select all" [ref=e482]:
+                  - checkbox "Select all" [ref=e483]
+                - columnheader "Segment Segment column menu Resize Segment column" [ref=e484] [cursor=pointer]:
+                  - generic [ref=e485]:
+                    - generic [ref=e486]: Segment
+                    - button "Segment column menu" [ref=e489]:
+                      - generic [ref=e490]: ⋮
+                  - separator "Resize Segment column" [ref=e491]
+                - columnheader "Account Account column menu Resize Account column" [ref=e492] [cursor=pointer]:
+                  - generic [ref=e493]:
+                    - generic [ref=e494]: Account
+                    - button "Account column menu" [ref=e497]:
+                      - generic [ref=e498]: ⋮
+                  - separator "Resize Account column" [ref=e499]
+                - columnheader "Growth ▲ Growth column menu Resize Growth column" [ref=e500] [cursor=pointer]:
+                  - generic [ref=e501]:
+                    - generic [ref=e502]:
+                      - text: Growth
+                      - generic [ref=e503]: ▲
+                    - button "Growth column menu" [ref=e506]:
+                      - generic [ref=e507]: ⋮
+                  - separator "Resize Growth column" [ref=e508]
+                - columnheader "Owner Owner column menu Resize Owner column" [ref=e509] [cursor=pointer]:
+                  - generic [ref=e510]:
+                    - generic [ref=e511]: Owner
+                    - button "Owner column menu" [ref=e514]:
+                      - generic [ref=e515]: ⋮
+                  - separator "Resize Owner column" [ref=e516]
+                - columnheader "MRR MRR column menu Resize MRR column" [ref=e517] [cursor=pointer]:
+                  - generic [ref=e518]:
+                    - generic [ref=e519]: MRR
+                    - button "MRR column menu" [ref=e522]:
+                      - generic [ref=e523]: ⋮
+                  - separator "Resize MRR column" [ref=e524]
+                - columnheader "ARR ARR column menu Resize ARR column" [ref=e525] [cursor=pointer]:
+                  - generic [ref=e526]:
+                    - generic [ref=e527]: ARR
+                    - button "ARR column menu" [ref=e530]:
+                      - generic [ref=e531]: ⋮
+                  - separator "Resize ARR column" [ref=e532]
+                - columnheader "Since Since column menu Resize Since column" [ref=e533] [cursor=pointer]:
+                  - generic [ref=e534]:
+                    - generic [ref=e535]: Since
+                    - button "Since column menu" [ref=e538]:
+                      - generic [ref=e539]: ⋮
+                  - separator "Resize Since column" [ref=e540]
+                - columnheader "actions column menu" [ref=e541]:
+                  - button "actions column menu" [ref=e545]:
+                    - generic [ref=e546]: ⋮
+            - rowgroup [ref=e547]:
+              - row "Select Solstice Media Mid-market Solstice Media ▼ 14.2% M. Chen $4,300 $51,600 2022-04-01 Edit Solstice Media Delete Solstice Media" [ref=e548]:
+                - gridcell "Select Solstice Media" [ref=e549]:
+                  - checkbox "Select Solstice Media" [ref=e550]
+                - gridcell "Mid-market" [ref=e551]
+                - gridcell "Solstice Media" [ref=e552]
+                - gridcell "▼ 14.2%" [ref=e553]
+                - gridcell "M. Chen" [ref=e554]
+                - gridcell "$4,300" [ref=e555]
+                - gridcell "$51,600" [ref=e556]
+                - gridcell "2022-04-01" [ref=e557]
+                - gridcell "Edit Solstice Media Delete Solstice Media" [ref=e558]:
+                  - generic [ref=e559]:
+                    - button "Edit Solstice Media" [ref=e560]: ✎
+                    - button "Delete Solstice Media" [ref=e561]: 🗑
+              - row "Select Quill Analytics Startup Quill Analytics ▼ 8.6% A. Rivera $1,400 $16,800 2024-03-01 Edit Quill Analytics Delete Quill Analytics" [ref=e562]:
+                - gridcell "Select Quill Analytics" [ref=e563]:
+                  - checkbox "Select Quill Analytics" [ref=e564]
+                - gridcell "Startup" [ref=e565]
+                - gridcell "Quill Analytics" [ref=e566]
+                - gridcell "▼ 8.6%" [ref=e567]
+                - gridcell "A. Rivera" [ref=e568]
+                - gridcell "$1,400" [ref=e569]
+                - gridcell "$16,800" [ref=e570]
+                - gridcell "2024-03-01" [ref=e571]
+                - gridcell "Edit Quill Analytics Delete Quill Analytics" [ref=e572]:
+                  - generic [ref=e573]:
+                    - button "Edit Quill Analytics" [ref=e574]: ✎
+                    - button "Delete Quill Analytics" [ref=e575]: 🗑
+              - row "Select Cobalt Freight Enterprise Cobalt Freight ▼ 2.1% K. Osei $24,600 $295,200 2023-02-01 Edit Cobalt Freight Delete Cobalt Freight" [ref=e576]:
+                - gridcell "Select Cobalt Freight" [ref=e577]:
+                  - checkbox "Select Cobalt Freight" [ref=e578]
+                - gridcell "Enterprise" [ref=e579]
+                - gridcell "Cobalt Freight" [ref=e580]
+                - gridcell "▼ 2.1%" [ref=e581]
+                - gridcell "K. Osei" [ref=e582]
+                - gridcell "$24,600" [ref=e583]
+                - gridcell "$295,200" [ref=e584]
+                - gridcell "2023-02-01" [ref=e585]
+                - gridcell "Edit Cobalt Freight Delete Cobalt Freight" [ref=e586]:
+                  - generic [ref=e587]:
+                    - button "Edit Cobalt Freight" [ref=e588]: ✎
+                    - button "Delete Cobalt Freight" [ref=e589]: 🗑
+              - row "Select Harbor & Pine Mid-market Harbor & Pine ▲ 0.4% M. Chen $6,800 $81,600 2023-11-01 Edit Harbor & Pine Delete Harbor & Pine" [ref=e590]:
+                - gridcell "Select Harbor & Pine" [ref=e591]:
+                  - checkbox "Select Harbor & Pine" [ref=e592]
+                - gridcell "Mid-market" [ref=e593]
+                - gridcell "Harbor & Pine" [ref=e594]
+                - gridcell "▲ 0.4%" [ref=e595]
+                - gridcell "M. Chen" [ref=e596]
+                - gridcell "$6,800" [ref=e597]
+                - gridcell "$81,600" [ref=e598]
+                - gridcell "2023-11-01" [ref=e599]
+                - gridcell "Edit Harbor & Pine Delete Harbor & Pine" [ref=e600]:
+                  - generic [ref=e601]:
+                    - button "Edit Harbor & Pine" [ref=e602]: ✎
+                    - button "Delete Harbor & Pine" [ref=e603]: 🗑
+              - row "Select Northwind Paper Enterprise Northwind Paper ▲ 3.9% J. Park $15,750 $189,000 2023-05-01 Edit Northwind Paper Delete Northwind Paper" [ref=e604]:
+                - gridcell "Select Northwind Paper" [ref=e605]:
+                  - checkbox "Select Northwind Paper" [ref=e606]
+                - gridcell "Enterprise" [ref=e607]
+                - gridcell "Northwind Paper" [ref=e608]
+                - gridcell "▲ 3.9%" [ref=e609]
+                - gridcell "J. Park" [ref=e610]
+                - gridcell "$15,750" [ref=e611]
+                - gridcell "$189,000" [ref=e612]
+                - gridcell "2023-05-01" [ref=e613]
+                - gridcell "Edit Northwind Paper Delete Northwind Paper" [ref=e614]:
+                  - generic [ref=e615]:
+                    - button "Edit Northwind Paper" [ref=e616]: ✎
+                    - button "Delete Northwind Paper" [ref=e617]: 🗑
+              - row "Select Meridian Corp Enterprise Meridian Corp ▲ 6.2% K. Osei $18,400 $220,800 2022-09-01 Edit Meridian Corp Delete Meridian Corp" [ref=e618]:
+                - gridcell "Select Meridian Corp" [ref=e619]:
+                  - checkbox "Select Meridian Corp" [ref=e620]
+                - gridcell "Enterprise" [ref=e621]
+                - gridcell "Meridian Corp" [ref=e622]
+                - gridcell "▲ 6.2%" [ref=e623]
+                - gridcell "K. Osei" [ref=e624]
+                - gridcell "$18,400" [ref=e625]
+                - gridcell "$220,800" [ref=e626]
+                - gridcell "2022-09-01" [ref=e627]
+                - gridcell "Edit Meridian Corp Delete Meridian Corp" [ref=e628]:
+                  - generic [ref=e629]:
+                    - button "Edit Meridian Corp" [ref=e630]: ✎
+                    - button "Delete Meridian Corp" [ref=e631]: 🗑
+              - row "Select Bluestem Health Mid-market Bluestem Health ▲ 12.8% J. Park $9,200 $110,400 2024-01-01 Edit Bluestem Health Delete Bluestem Health" [ref=e632]:
+                - gridcell "Select Bluestem Health" [ref=e633]:
+                  - checkbox "Select Bluestem Health" [ref=e634]
+                - gridcell "Mid-market" [ref=e635]
+                - gridcell "Bluestem Health" [ref=e636]
+                - gridcell "▲ 12.8%" [ref=e637]
+                - gridcell "J. Park" [ref=e638]
+                - gridcell "$9,200" [ref=e639]
+                - gridcell "$110,400" [ref=e640]
+                - gridcell "2024-01-01" [ref=e641]
+                - gridcell "Edit Bluestem Health Delete Bluestem Health" [ref=e642]:
+                  - generic [ref=e643]:
+                    - button "Edit Bluestem Health" [ref=e644]: ✎
+                    - button "Delete Bluestem Health" [ref=e645]: 🗑
+              - row "Select Foxglove Labs Startup Foxglove Labs ▲ 31.4% A. Rivera $2,150 $25,800 2024-06-01 Edit Foxglove Labs Delete Foxglove Labs" [ref=e646]:
+                - gridcell "Select Foxglove Labs" [ref=e647]:
+                  - checkbox "Select Foxglove Labs" [ref=e648]
+                - gridcell "Startup" [ref=e649]
+                - gridcell "Foxglove Labs" [ref=e650]
+                - gridcell "▲ 31.4%" [ref=e651]
+                - gridcell "A. Rivera" [ref=e652]
+                - gridcell "$2,150" [ref=e653]
+                - gridcell "$25,800" [ref=e654]
+                - gridcell "2024-06-01" [ref=e655]
+                - gridcell "Edit Foxglove Labs Delete Foxglove Labs" [ref=e656]:
+                  - generic [ref=e657]:
+                    - button "Edit Foxglove Labs" [ref=e658]: ✎
+                    - button "Delete Foxglove Labs" [ref=e659]: 🗑
+          - status [ref=e660]
+          - generic [ref=e661]:
+            - generic [ref=e662]:
+              - text: Rows per page
+              - combobox "Rows per page" [ref=e663]:
+                - option "10"
+                - option "25" [selected]
+                - option "50"
+                - option "100"
+            - generic [ref=e664]:
+              - generic [ref=e665]: 8 rows
+              - generic [ref=e666]: Page 1 of 1
+              - button "Previous page" [disabled] [ref=e667]: Prev
+              - button "Next page" [disabled] [ref=e668]: Next
+  - generic [ref=e669]: "25"

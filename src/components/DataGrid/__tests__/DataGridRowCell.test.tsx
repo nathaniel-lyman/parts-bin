@@ -29,6 +29,30 @@ function Harness() {
   )
 }
 
+function PreviewHarness() {
+  // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({ data, columns, getRowId: (row) => row.id, getCoreRowModel: getCoreRowModel() })
+  return (
+    <table>
+      <tbody>
+        {table.getRowModel().rows.map((row) => (
+          <DataGridRow
+            key={row.id}
+            row={row}
+            dragPreview={{
+              activeId: 'name',
+              overId: 'mrr',
+              projectedOrder: ['mrr', 'name'],
+              offsets: { mrr: -140 },
+            }}
+          />
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 describe('DataGridRow / DataGridCell', () => {
   it('renders a row with class "group" and cells with their values', () => {
     render(<Harness />)
@@ -42,5 +66,15 @@ describe('DataGridRow / DataGridCell', () => {
     const cell = screen.getByText('9').closest('td')!
     expect(cell.className).toContain('text-right')
   })
-})
 
+  it('dims the active drag-preview column and translates displaced cells', () => {
+    render(<PreviewHarness />)
+    const activeCell = screen.getByText('Acme').closest('td')!
+    const shiftedCell = screen.getByText('9').closest('td')!
+
+    expect(activeCell).toHaveAttribute('data-column-id', 'name')
+    expect(activeCell.style.opacity).toBe('0.28')
+    expect(shiftedCell).toHaveAttribute('data-column-id', 'mrr')
+    expect(shiftedCell.style.transform).toBe('translateX(-140px)')
+  })
+})

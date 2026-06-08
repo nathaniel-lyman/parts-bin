@@ -46,3 +46,12 @@ export const movementSeries: MovementPoint[] = [
   { month: 'Sep', New: 6.6, Expansion: 3.8, Churn: -0.5 },
   { month: 'Oct', New: 7.1, Expansion: 4.0, Churn: -0.5 },
 ]
+
+export const revenueWaterfallSeries = [
+  { label: 'Opening', kind: 'start', value: 72.8, note: 'Starting MRR' },
+  { label: 'New', kind: 'increase', value: 7.1 },
+  { label: 'Expansion', kind: 'increase', value: 4.0 },
+  { label: 'Contraction', kind: 'decrease', value: 1.1 },
+  { label: 'Churn', kind: 'decrease', value: 0.5 },
+  { label: 'Closing', kind: 'total', note: 'Ending MRR' },
+] as const

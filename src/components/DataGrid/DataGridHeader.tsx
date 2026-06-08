@@ -1,5 +1,5 @@
 import './columnMeta'
-import { closestCenter, DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { flexRender, type ColumnFiltersState, type Header, type Table } from '@tanstack/react-table'
@@ -9,9 +9,11 @@ import { DataGridColumnMenu } from './DataGridColumnMenu'
 import { DataGridResizeHandle } from './DataGridResizeHandle'
 import { DataGridSelectAllCheckbox } from './DataGridSelectionCell'
 import type { FilterValue } from './filtering'
+import type { ColumnDragPreviewState } from './dragPreview'
 import type { ColumnPinning, GridAction, LedgerGridColumn } from './types'
 
 const noopDispatch = () => {}
+const dragPreviewTransition = 'transform 160ms ease'
 
 function headerLabel<TData>(header: Header<TData, unknown>, column?: LedgerGridColumn<TData>) {
   if (typeof column?.header === 'string' && column.header) return column.header
@@ -32,6 +34,7 @@ function SortableHeader<TData>({
   columns,
   columnPinning,
   columnFilters,
+  dragPreview,
 }: {
   header: Header<TData, unknown>
   dispatch?: (action: GridAction) => void
@@ -39,6 +42,7 @@ function SortableHeader<TData>({
   columns: LedgerGridColumn<TData>[]
   columnPinning: ColumnPinning
   columnFilters: ColumnFiltersState
+  dragPreview?: ColumnDragPreviewState | null
 }) {
   const sorted = header.column.getIsSorted()
   const align = header.column.columnDef.meta?.align ?? 'left'
@@ -55,12 +59,16 @@ function SortableHeader<TData>({
     transition,
     isDragging,
   } = useSortable({ id: header.column.id, disabled: !canMove })
+  const previewOffset = dragPreview?.offsets[header.column.id] ?? 0
+  const isPreviewActive = dragPreview?.activeId === header.column.id
+  const previewTransform = previewOffset !== 0 ? `translateX(${previewOffset}px)` : undefined
+  const sortableTransform = canMove && !dragPreview ? CSS.Translate.toString(transform) : undefined
   const style: CSSProperties = {
-    transform: canMove ? CSS.Translate.toString(transform) : undefined,
-    transition: canMove ? transition : undefined,
-    opacity: isDragging ? 0.72 : undefined,
+    transform: isPreviewActive ? undefined : (previewTransform ?? sortableTransform),
+    transition: dragPreview ? dragPreviewTransition : canMove ? transition : undefined,
+    opacity: isPreviewActive ? 0.28 : isDragging ? 0.72 : undefined,
     position: 'relative',
-    zIndex: isDragging ? 1 : undefined,
+    zIndex: isDragging && !dragPreview ? 1 : undefined,
   }
 
   return (
@@ -68,6 +76,7 @@ function SortableHeader<TData>({
       ref={setNodeRef}
       style={style}
       data-testid={`col-header-${header.column.id}`}
+      data-column-id={header.column.id}
       aria-sort={canSort ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined}
       onClick={
         canSort
@@ -131,6 +140,7 @@ export function DataGridHeader<TData>({
   selectAll = 'none',
   onSelectAll,
   dndProvider = true,
+  dragPreview,
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
@@ -144,10 +154,10 @@ export function DataGridHeader<TData>({
   selectAll?: 'none' | 'some' | 'all'
   onSelectAll?: (select: boolean) => void
   dndProvider?: boolean
+  dragPreview?: ColumnDragPreviewState | null
 }) {
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
   const visibleMovable = table.getVisibleLeafColumns().map((column) => column.id).filter(isMovableColumnId)
@@ -184,6 +194,7 @@ export function DataGridHeader<TData>({
                   columns={columns}
                   columnPinning={columnPinning}
                   columnFilters={columnFilters}
+                  dragPreview={dragPreview}
                 />
               ))}
             </tr>
@@ -198,10 +209,26 @@ export function DataGridHeader<TData>({
                 const filterType = meta?.type
                 const current = columnFilters.find((filter) => filter.id === column.id)?.value as FilterValue | undefined
                 const currentValue = current?.value
-                if (isLockedColumn(column.id) || !filterType) return <th key={column.id} className="border-r border-line px-3 py-2" />
+                const previewOffset = dragPreview?.offsets[column.id] ?? 0
+                const isPreviewActive = dragPreview?.activeId === column.id
+                const previewStyle: CSSProperties = {
+                  transform: isPreviewActive || previewOffset === 0 ? undefined : `translateX(${previewOffset}px)`,
+                  transition: dragPreview ? dragPreviewTransition : undefined,
+                  opacity: isPreviewActive ? 0.28 : undefined,
+                }
+                if (isLockedColumn(column.id) || !filterType) {
+                  return (
+                    <th
+                      key={column.id}
+                      className="border-r border-line px-3 py-2"
+                      data-column-id={column.id}
+                      style={previewStyle}
+                    />
+                  )
+                }
                 if (filterType === 'enum' || filterType === 'status') {
                   return (
-                    <th key={column.id} className="border-r border-line px-3 py-2">
+                    <th key={column.id} className="border-r border-line px-3 py-2" data-column-id={column.id} style={previewStyle}>
                       <select
                         className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink"
                         aria-label={`Filter ${label}`}
@@ -217,7 +244,7 @@ export function DataGridHeader<TData>({
                   )
                 }
                 return (
-                  <th key={column.id} className="border-r border-line px-3 py-2">
+                  <th key={column.id} className="border-r border-line px-3 py-2" data-column-id={column.id} style={previewStyle}>
                     <input
                       className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink placeholder:text-faint"
                       aria-label={`Filter ${label}`}

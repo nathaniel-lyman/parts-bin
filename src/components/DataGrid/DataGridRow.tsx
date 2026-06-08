@@ -1,6 +1,7 @@
 import { type Row } from '@tanstack/react-table'
 import { DataGridCell } from './DataGridCell'
 import { DataGridRowCheckbox } from './DataGridSelectionCell'
+import type { ColumnDragPreviewState } from './dragPreview'
 
 interface Props<TData> {
   row: Row<TData>
@@ -10,6 +11,7 @@ interface Props<TData> {
   rowLabel?: string
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
+  dragPreview?: ColumnDragPreviewState | null
 }
 
 export function DataGridRow<TData>({
@@ -20,6 +22,7 @@ export function DataGridRow<TData>({
   rowLabel = row.id,
   onToggleRow,
   onCellContextMenu,
+  dragPreview,
 }: Props<TData>) {
   const toggle = () => onToggleRow?.(row.id)
   return (
@@ -52,6 +55,7 @@ export function DataGridRow<TData>({
         <DataGridCell
           key={cell.id}
           cell={cell}
+          dragPreview={dragPreview}
           onContextMenu={
             onCellContextMenu
               ? (event) => {

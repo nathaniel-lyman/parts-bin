@@ -22,4 +22,11 @@ describe('DataGridHeader reorder handles', () => {
     render(<DataGrid rows={seedAccounts} columns={columns} getRowId={(row) => row.id} />)
     expect(screen.getByRole('columnheader', { name: /Owner/ })).toHaveClass('border-r', 'border-line')
   })
+
+  it('marks header and body cells with column ids for drag-preview measurement', () => {
+    const { container } = render(<DataGrid rows={seedAccounts} columns={columns} getRowId={(row) => row.id} />)
+
+    expect(screen.getByRole('columnheader', { name: /Account/ })).toHaveAttribute('data-column-id', 'account')
+    expect(container.querySelector('td[data-column-id="account"]')).toBeInTheDocument()
+  })
 })

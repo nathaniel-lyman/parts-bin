@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './columnMeta'
-import { closestCenter, DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragMoveEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   getCoreRowModel,
@@ -15,7 +27,7 @@ import {
 import { useGridViewState } from '../../hooks/useGridViewState'
 import { bootGridSeed, useGridPersistence } from '../../hooks/useGridPersistence'
 import { useSavedViews } from '../../hooks/useSavedViews'
-import { canHideColumn, canSortColumn } from './normalize'
+import { canHideColumn, canSortColumn, isMovableColumnId } from './normalize'
 import { gridReducer } from './reducers'
 import { densityClass, pinnedLeafGroups, selectAllState, selectionCount } from './selectors'
 import { hydrate } from './state'
@@ -26,6 +38,7 @@ import { projectView } from './persistence'
 import { resolveCopyIntent } from './keyboard'
 import { DataGridBulkActions } from './DataGridBulkActions'
 import { DataGridBody } from './DataGridBody'
+import { DataGridColumnDragOverlay } from './DataGridColumnDragOverlay'
 import { DataGridContextMenu } from './DataGridContextMenu'
 import { DataGridEmptyState } from './DataGridEmptyState'
 import { DataGridErrorState } from './DataGridErrorState'
@@ -33,6 +46,7 @@ import { DataGridFooter } from './DataGridFooter'
 import { DataGridHeader } from './DataGridHeader'
 import { DataGridLoadingState } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
+import { projectColumnDrag, type ColumnDragPreviewState } from './dragPreview'
 import type { GridAction, LedgerGridColumn, LedgerGridState } from './types'
 
 export interface DataGridProps<TData> {
@@ -110,6 +124,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const [headerFiltersOpen, setHeaderFiltersOpen] = useState(false)
+  const [dragPreview, setDragPreview] = useState<ColumnDragPreviewState | null>(null)
   const view = useGridViewState(seed, columns)
   const savedViews = useSavedViews()
   const state = isControlled ? props.state! : view.state
@@ -202,6 +217,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
 
   const rowCount = table.getRowModel().rows.length
   const visibleRows = table.getRowModel().rows
+  const visibleLeafColumns = table.getVisibleLeafColumns()
   const visibleIds = visibleRows.map((row) => row.id)
   const visibleData = visibleRows.map((row) => row.original)
   const exportData = (manualFiltering ? table.getRowModel().rows : table.getFilteredRowModel().rows).map((row) => row.original)
@@ -211,18 +227,51 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     : Math.max(1, table.getPageCount())
   const selCount = selectionCount(state.rowSelection)
   const allState = selectAllState(state.rowSelection, visibleIds)
-  const pinnedGroups = pinnedLeafGroups(table.getVisibleLeafColumns().map((column) => column.id), state.columnPinning)
+  const visibleColumnIds = visibleLeafColumns.map((column) => column.id)
+  const visibleMovableColumnIds = visibleColumnIds.filter(isMovableColumnId)
+  const columnWidthMap = Object.fromEntries(visibleLeafColumns.map((column) => [column.id, state.columnSizing[column.id] ?? column.getSize()]))
+  const pinnedGroups = pinnedLeafGroups(visibleColumnIds, state.columnPinning)
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
+  const updateDragPreview = (activeId: string, overId: string) => {
+    if (!isMovableColumnId(activeId)) {
+      setDragPreview(null)
+      return
+    }
+    const effectiveOverId = isMovableColumnId(overId) ? overId : activeId
+    const projection = projectColumnDrag({
+      orderedIds: visibleMovableColumnIds,
+      widths: columnWidthMap,
+      activeId,
+      overId: effectiveOverId,
+    })
+    setDragPreview({ activeId, overId: effectiveOverId, ...projection })
+  }
+
+  const onDragStart = (event: DragStartEvent) => {
+    const activeId = String(event.active.id)
+    updateDragPreview(activeId, activeId)
+  }
+
+  const onDragOver = (event: DragOverEvent) => {
+    updateDragPreview(String(event.active.id), event.over ? String(event.over.id) : String(event.active.id))
+  }
+
+  const onDragMove = (event: DragMoveEvent) => {
+    if (!dragPreview) updateDragPreview(String(event.active.id), String(event.active.id))
+  }
+
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
-    if (!over) return
-    dispatch({ type: 'REORDER_COLUMN', activeId: String(active.id), overId: String(over.id) })
+    setDragPreview(null)
+    if (over) dispatch({ type: 'REORDER_COLUMN', activeId: String(active.id), overId: String(over.id) })
   }
+
+  const onDragCancel = () => setDragPreview(null)
+
   const selCountRef = useRef(selCount)
   const menuRef = useRef(menu)
 
@@ -329,13 +378,21 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           <DataGridBulkActions count={selCount} onClear={() => dispatch({ type: 'CLEAR_SELECTION' })} />
         </div>
       )}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragMove={onDragMove}
+        onDragEnd={onDragEnd}
+        onDragCancel={onDragCancel}
+      >
         <div ref={setScrollElement} className="max-h-[640px] overflow-auto" data-testid="datagrid-scroll">
           <table
             className="w-full border-collapse"
             role="grid"
             aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : table.getFilteredRowModel().rows.length}
-            aria-colcount={table.getVisibleLeafColumns().length}
+            aria-colcount={visibleLeafColumns.length}
           >
             <DataGridHeader
               table={table}
@@ -350,6 +407,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
               selectAll={allState}
               onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
               dndProvider={false}
+              dragPreview={dragPreview}
             />
             {!loading && error === undefined && rowCount > 0 && (
               <DataGridBody
@@ -360,10 +418,18 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 enableVirtualization={rowCount > 100}
                 onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
                 onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
+                dragPreview={dragPreview}
               />
             )}
           </table>
         </div>
+        <DragOverlay dropAnimation={null}>
+          <DataGridColumnDragOverlay
+            table={table}
+            columnId={dragPreview?.activeId ?? null}
+            width={dragPreview ? columnWidthMap[dragPreview.activeId] : undefined}
+          />
+        </DragOverlay>
       </DndContext>
       {paginationEnabled && (
         <DataGridFooter

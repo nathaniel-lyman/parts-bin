@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { ToastProvider } from './components/ui/ToastProvider'
@@ -14,6 +14,7 @@ test('renders dashboard with KPIs and table (light)', () => {
   expect(screen.getByText('Account book')).toBeInTheDocument()
   expect(screen.getByText('Total MRR')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
+  expect(screen.getByRole('figure', { name: /MRR bridge in thousands/i })).toBeInTheDocument()
   expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
   expect(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' })).toBeInTheDocument()
   expect(screen.getByRole('searchbox', { name: /quick filter/i })).toBeInTheDocument()
@@ -41,4 +42,19 @@ test('server mode toggle exercises the DataGrid mock server path', async () => {
   expect(screen.getByText(/loading server rows/i)).toBeInTheDocument()
   expect(await screen.findByText(/server rows/i)).toBeInTheDocument()
   expect(screen.getByRole('checkbox', { name: /select all loaded/i })).toBeInTheDocument()
+})
+
+test('revenue movement chart exposes bar width and label controls', async () => {
+  render(<ToastProvider><App /></ToastProvider>)
+  const widthControl = screen.getByRole('slider', { name: /revenue movement bar width/i })
+  const labelControl = screen.getByRole('switch', { name: /labels/i })
+
+  expect(widthControl).toHaveValue('22')
+  fireEvent.change(widthControl, { target: { value: '34' } })
+  expect(widthControl).toHaveValue('34')
+  expect(screen.getByText('34px')).toBeInTheDocument()
+
+  expect(labelControl).not.toBeChecked()
+  await userEvent.click(labelControl)
+  expect(labelControl).toBeChecked()
 })
