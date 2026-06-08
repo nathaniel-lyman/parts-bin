@@ -157,19 +157,39 @@ function formatWaterfallLabel(datum: WaterfallDatum, valueFormatter: (value: num
   return formatSignedValue(datum.delta, valueFormatter)
 }
 
+function getInternalLabelFill(kind: WaterfallDatum['kind']) {
+  if (kind === 'start') return 'var(--bg)'
+  return 'var(--accent-fg)'
+}
+
 function WaterfallValueLabel({
   box,
   datum,
+  zeroY,
+  chartTop,
+  chartBottom,
   valueFormatter,
 }: {
   box: BarLabelBox
   datum: WaterfallDatum
+  zeroY: number | null
+  chartTop: number
+  chartBottom: number
   valueFormatter: (value: number) => string
 }) {
   const label = formatWaterfallLabel(datum, valueFormatter)
   const orientation = getBarLabelOrientation(box, label)
   const x = box.x + box.width / 2
-  const y = orientation ? box.y + box.height / 2 : (datum.delta < 0 ? box.y + box.height + 13 : box.y - 6)
+  const barBottom = box.y + box.height
+  const isAboveAxis = zeroY !== null && barBottom <= zeroY
+  const isBelowAxis = zeroY !== null && box.y >= zeroY
+  const placeBelow = orientation
+    ? false
+    : isBelowAxis || (!isAboveAxis && datum.delta < 0)
+  const outsideY = placeBelow
+    ? Math.min(chartBottom - 7, barBottom + 13)
+    : Math.max(chartTop + 7, box.y - 7)
+  const y = orientation ? box.y + box.height / 2 : outsideY
   const transform = orientation === 'vertical' ? `rotate(-90 ${x} ${y})` : undefined
 
   return (
@@ -177,12 +197,12 @@ function WaterfallValueLabel({
       x={x}
       y={y}
       transform={transform}
-      fill={orientation ? 'var(--accent-fg)' : getDatumFill(datum.kind)}
+      fill={orientation ? getInternalLabelFill(datum.kind) : getDatumFill(datum.kind)}
       fontFamily='"JetBrains Mono", monospace'
       fontSize={11}
       fontWeight={700}
       textAnchor="middle"
-      dominantBaseline="central"
+      dominantBaseline={orientation ? 'central' : placeBelow ? 'hanging' : 'auto'}
       pointerEvents="none"
     >
       {label}
@@ -202,6 +222,9 @@ function renderWaterfallBarShape(showLabels: boolean, valueFormatter: (value: nu
         <WaterfallValueLabel
           box={{ x: props.x, y: props.y, width: props.width, height: props.height }}
           datum={datum}
+          zeroY={Number.isFinite(props.stackedBarStart) ? props.stackedBarStart : null}
+          chartTop={props.parentViewBox.y}
+          chartBottom={props.parentViewBox.y + props.parentViewBox.height}
           valueFormatter={valueFormatter}
         />
       </g>

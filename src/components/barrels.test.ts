@@ -5,6 +5,10 @@ import * as components from './index'
 
 test('charts barrel exposes the public chart surface', () => {
   expect(typeof charts.WaterfallChart).toBe('function')
+  expect(typeof charts.ChartCard).toBe('function')
+  expect(typeof charts.ChartLegend).toBe('function')
+  expect(typeof charts.ChartTooltipContent).toBe('function')
+  expect(typeof charts.ChartEmptyState).toBe('function')
   expect(typeof charts.RevenueMovementChart).toBe('function')
   expect(typeof charts.MrrShareDonut).toBe('function')
   expect(typeof charts.MrrTrendChart).toBe('function')
@@ -25,6 +29,13 @@ test('DataGrid barrel exposes the component, state, query, and helpers', () => {
 test('root barrel aggregates ui, shell, charts, DataGrid, and dashboard components', () => {
   expect(typeof components.Button).toBe('function') // ui
   expect(typeof components.IconButton).toBe('function') // new ui primitive
+  expect(typeof components.FilterChip).toBe('function')
+  expect(typeof components.ActivityFeed).toBe('function')
+  expect(typeof components.DetailHeader).toBe('function')
+  expect(typeof components.WizardLayout).toBe('function')
+  expect(typeof components.Dropzone).toBe('function')
+  expect(typeof components.Avatar).toBe('function')
+  expect(typeof components.ChartCard).toBe('function')
   expect(typeof components.DataGrid).toBe('function') // DataGrid
   expect(typeof components.WaterfallChart).toBe('function') // charts
   expect(typeof components.KpiCard).toBe('function') // dashboard

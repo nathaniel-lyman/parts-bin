@@ -3,23 +3,38 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import {
+  ActivityFeed,
+  AppliedFiltersBar,
+  AssigneeChip,
+  AttachmentList,
+  Avatar,
+  AvatarGroup,
   Button,
   Checkbox,
   Combobox,
+  DetailHeader,
   Drawer,
   DropdownMenu,
+  Dropzone,
+  FacetedFilter,
   Field,
   IconButton,
+  ImportProgress,
   InlineAlert,
   Input,
+  KeyValueList,
   LoadingProgress,
+  MetadataPanel,
   Pagination,
   RadioGroup,
   SegmentedControl,
   Select,
   Spinner,
+  Stepper,
   Switch,
   Tabs,
+  Timeline,
+  WizardLayout,
 } from './index'
 
 test('barrel exports form primitives with accessible labels', async () => {
@@ -177,4 +192,115 @@ test('barrel exports loading animation primitives', () => {
   render(<LoadingProgress label="Loading account rows" detail="Syncing accounts" />)
   expect(screen.getByRole('status', { name: 'Loading account rows' })).toBeInTheDocument()
   expect(screen.getByText('Syncing accounts')).toBeInTheDocument()
+})
+
+test('filter primitives expose applied filters and faceted selection', async () => {
+  const user = userEvent.setup()
+  const onClear = vi.fn()
+  const onRemove = vi.fn()
+  const onValues = vi.fn()
+
+  render(
+    <div>
+      <AppliedFiltersBar
+        filters={[{ id: 'status', label: 'Status', value: 'Active', onRemove }]}
+        onClearAll={onClear}
+      />
+      <FacetedFilter
+        label="Segment"
+        selectedValues={['enterprise']}
+        onSelectedValuesChange={onValues}
+        options={[
+          { value: 'enterprise', label: 'Enterprise', count: 12 },
+          { value: 'startup', label: 'Startup', count: 8 },
+        ]}
+      />
+    </div>,
+  )
+
+  await user.click(screen.getByRole('button', { name: /remove status filter/i }))
+  expect(onRemove).toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Clear all' }))
+  expect(onClear).toHaveBeenCalled()
+
+  await user.click(screen.getByRole('button', { name: /segment/i }))
+  await user.click(screen.getByRole('checkbox', { name: /startup/i }))
+  expect(onValues).toHaveBeenCalledWith(['enterprise', 'startup'])
+})
+
+test('activity and detail primitives render semantic account surfaces', () => {
+  const events = [
+    { id: 'one', title: 'Account edited', description: 'Plan changed to Enterprise', timestamp: 'Today', tone: 'accent' as const },
+    { id: 'two', title: 'Renewal reviewed', actor: 'Avery', tone: 'positive' as const },
+  ]
+
+  render(
+    <div>
+      <ActivityFeed title="Activity" items={events} />
+      <Timeline items={events} />
+      <DetailHeader title="Cobalt Freight" subtitle="Enterprise account" />
+      <KeyValueList items={[{ label: 'Owner', value: 'Avery Cohen' }]} />
+      <MetadataPanel items={[{ label: 'Created', value: 'June 2026' }]} />
+    </div>,
+  )
+
+  expect(screen.getAllByRole('heading', { name: 'Account edited' })[0]).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Cobalt Freight' })).toBeInTheDocument()
+  expect(screen.getByText('Avery Cohen')).toBeInTheDocument()
+  expect(screen.getByText('June 2026')).toBeInTheDocument()
+})
+
+test('wizard and file primitives expose progress and upload controls', async () => {
+  const user = userEvent.setup()
+  const onStep = vi.fn()
+  const onFiles = vi.fn()
+  const onNext = vi.fn()
+
+  render(
+    <div>
+      <Stepper
+        currentStepId="map"
+        onStepSelect={onStep}
+        steps={[
+          { id: 'upload', label: 'Upload', state: 'complete' },
+          { id: 'map', label: 'Map columns', state: 'current' },
+          { id: 'review', label: 'Review', state: 'error' },
+        ]}
+      />
+      <WizardLayout
+        currentStepId="map"
+        title="Map columns"
+        steps={[{ id: 'upload', label: 'Upload' }, { id: 'map', label: 'Map columns' }]}
+        onNext={onNext}
+      >
+        <p>Match CSV headers to Ledger fields.</p>
+      </WizardLayout>
+      <Dropzone onFilesSelected={onFiles} />
+      <AttachmentList attachments={[{ id: 'csv', name: 'accounts.csv', size: 2048 }]} />
+      <ImportProgress value={42} />
+    </div>,
+  )
+
+  await user.click(screen.getByRole('button', { name: /upload/i }))
+  expect(onStep).toHaveBeenCalledWith('upload')
+  await user.click(screen.getByRole('button', { name: 'Continue' }))
+  expect(onNext).toHaveBeenCalled()
+  expect(screen.getByRole('progressbar', { name: 'Import progress' })).toHaveAttribute('aria-valuenow', '42')
+  expect(screen.getByText('accounts.csv')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Browse' })).toBeInTheDocument()
+})
+
+test('avatar primitives render people, presence, and assignees', () => {
+  render(
+    <div>
+      <Avatar name="Avery Cohen" status="online" />
+      <AvatarGroup users={[{ name: 'Avery Cohen' }, { name: 'Blair Nakamura' }, { name: 'Devin Okafor' }]} max={2} />
+      <AssigneeChip name="Blair Nakamura" status="away" meta="Owner" />
+    </div>,
+  )
+
+  expect(screen.getAllByText('Avery Cohen')[0]).toBeInTheDocument()
+  expect(screen.getByLabelText('3 people')).toBeInTheDocument()
+  expect(screen.getByText('+1')).toBeInTheDocument()
+  expect(screen.getByText('Owner')).toBeInTheDocument()
 })

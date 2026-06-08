@@ -1,18 +1,29 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import {
+  ActivityFeed,
+  AppliedFiltersBar,
+  AssigneeChip,
+  AttachmentList,
+  AvatarGroup,
   Button,
   Card,
   Checkbox,
   Combobox,
   CommandPalette,
   DateRangePicker,
+  DescriptionList,
+  DetailHeader,
   Drawer,
+  Dropzone,
   DropdownMenu,
   EmptyState,
+  FacetedFilter,
   Field,
   IconButton,
+  ImportProgress,
   InlineAlert,
   Input,
+  KeyValueList,
   LoadingBars,
   LoadingChartDrawIn,
   LoadingConcentricArcs,
@@ -22,6 +33,7 @@ import {
   LoadingKpiSkeleton,
   LoadingProgress,
   LoadingSparkline,
+  MetadataPanel,
   Metric,
   PageHeader,
   Pagination,
@@ -32,14 +44,22 @@ import {
   Skeleton,
   Spinner,
   StatusBadge,
+  Stepper,
   Switch,
   Tabs,
   Textarea,
+  Timeline,
   Toolbar,
   Tooltip,
   type CommandPaletteGroup,
   type DateRange,
 } from '../ui'
+import {
+  ChartCard,
+  ChartEmptyState,
+  ChartLegend,
+  ChartTooltipContent,
+} from '../charts'
 import { FilterBar, SectionHeader, SettingsPanel } from '../shell'
 import {
   THEME_RECIPES,
@@ -113,6 +133,42 @@ const planOptions = [
   { value: 'starter', label: 'Starter', description: 'Up to 3 seats and the core dashboards.' },
   { value: 'pro', label: 'Pro', description: 'Saved views, export, and server-mode data.' },
   { value: 'enterprise', label: 'Enterprise', description: 'SSO, audit log, and priority support.' },
+]
+
+const segmentFilterOptions = [
+  { value: 'enterprise', label: 'Enterprise', count: 12 },
+  { value: 'midmarket', label: 'Mid-market', count: 24 },
+  { value: 'startup', label: 'Startup', count: 31 },
+]
+
+const activityItems = [
+  { id: 'renewal', title: 'Renewal reviewed', description: 'Success plan updated before the Q3 renewal call.', actor: 'Avery Cohen', timestamp: '2h ago', tone: 'positive' as const },
+  { id: 'risk', title: 'Risk flag added', description: 'Usage fell below the weekly active threshold.', actor: 'Blair Nakamura', timestamp: 'Yesterday', tone: 'warning' as const },
+]
+
+const accountDetailItems = [
+  { label: 'Owner', value: 'Avery Cohen', description: 'Customer success lead' },
+  { label: 'Plan', value: 'Enterprise' },
+  { label: 'Renewal', value: 'September 30, 2026' },
+]
+
+const importWizardSteps = [
+  { id: 'upload', label: 'Upload CSV', state: 'complete' as const },
+  { id: 'map', label: 'Map columns', state: 'current' as const },
+  { id: 'review', label: 'Review', state: 'upcoming' as const },
+]
+
+const avatarUsers = [
+  { name: 'Avery Cohen', status: 'online' as const },
+  { name: 'Blair Nakamura', status: 'away' as const },
+  { name: 'Devin Okafor', status: 'offline' as const },
+  { name: 'Rowan Mitchell', status: 'busy' as const },
+]
+
+const chartLegendItems = [
+  { id: 'enterprise', label: 'Enterprise', value: '$48.2k', colorClassName: 'bg-accent' },
+  { id: 'midmarket', label: 'Mid-market', value: '$22.4k', colorClassName: 'bg-intel' },
+  { id: 'startup', label: 'Startup', value: '$13.6k', colorClassName: 'bg-review' },
 ]
 
 interface PropReferenceRow {
@@ -238,6 +294,42 @@ const uiPropRows: PropReferenceRow[] = [
     accessibility: 'loading sets aria-busy and disables the control so it cannot be activated.',
   },
   {
+    component: 'FilterChip / AppliedFiltersBar / FacetedFilter',
+    props: 'filters, onClearAll, options, selectedValues, onSelectedValuesChange',
+    variants: 'removable chips, empty state, searchable facet menu, selected counts, clear all',
+    accessibility: 'Chips use labeled remove buttons; FacetedFilter is a dialog trigger with native checkboxes and clear-all control.',
+  },
+  {
+    component: 'ActivityFeed / Timeline / AuditLogItem / EventRow',
+    props: 'items, title, actor, timestamp, tone, actions, resource',
+    variants: 'neutral, positive, warning, negative, accent; feed, timeline, and audit row layouts',
+    accessibility: 'Events render as articles with headings; timeline order stays list-based and readable without color.',
+  },
+  {
+    component: 'DetailHeader / KeyValueList / DescriptionList / PropertyGrid / MetadataPanel',
+    props: 'title, subtitle, meta, status, actions, items, columns, footer',
+    variants: 'detail page header, single-column key/value rows, multi-column property panels, metadata aside',
+    accessibility: 'Detail fields use dl/dt/dd semantics and preserve explicit page/detail headings.',
+  },
+  {
+    component: 'Stepper / WizardLayout',
+    props: 'steps, currentStepId, onStepSelect, state, onBack, onNext, nextDisabled',
+    variants: 'horizontal or vertical; complete, current, upcoming, and error states; guided wizard shell',
+    accessibility: 'Current steps expose aria-current=step; selectable steps are native buttons.',
+  },
+  {
+    component: 'Dropzone / FileUpload / AttachmentList / ImportProgress',
+    props: 'accept, multiple, onFilesSelected, files, attachments, value',
+    variants: 'drag target, browse button, removable attachment rows, bounded progress bar',
+    accessibility: 'Browse uses a native file input; ImportProgress exposes progressbar bounds and current value.',
+  },
+  {
+    component: 'Avatar / AvatarGroup / PresenceBadge / AssigneeChip',
+    props: 'name, src, initials, size, status, users, max, meta, onRemove',
+    variants: 'sm, md, lg; online, away, busy, offline; overflow count; removable assignee chip',
+    accessibility: 'Avatars keep names available to assistive tech; presence status has screen-reader text.',
+  },
+  {
     component: 'LoadingKpiSkeleton / LoadingProgress / LoadingDots',
     props: 'label, className, detail, tone',
     variants: 'KPI skeleton, chart draw-in, donut, bars, sparkline, dots, progress, counting metric, concentric arcs',
@@ -332,9 +424,18 @@ const interactionRows = [
   ['Popover', 'Escape closes and returns focus to the trigger.'],
   ['Tooltip', 'Hover and keyboard focus reveal the same content; trigger is described by the tooltip.'],
   ['Field', 'Label, hint, error, required, disabled, and invalid states are wired for single wrapped controls.'],
+  ['FacetedFilter', 'Trigger opens a filter dialog; native checkboxes toggle facets; Clear all removes selected values.'],
+  ['Stepper / WizardLayout', 'Selectable steps use buttons; current step is announced with aria-current=step; Back and Continue are explicit commands.'],
+  ['Dropzone', 'Drag and drop files or use the Browse button, which forwards to a native file input.'],
 ]
 
 const chartPropRows: PropReferenceRow[] = [
+  {
+    component: 'ChartCard / ChartLegend / ChartTooltipContent / ChartEmptyState',
+    props: 'title, description, metric, actions, items, rows, label, action',
+    variants: 'chart shell, custom legend, themed tooltip body, empty chart placeholder',
+    accessibility: 'Chart scaffolds keep titles and empty states semantic while leaving chart internals to Recharts or custom renderers.',
+  },
   {
     component: 'WaterfallChart',
     props: 'data (WaterfallStepInput[]), ariaLabel, height, minWidth, barWidth, valueFormatter',
@@ -453,6 +554,8 @@ export function DocsPage() {
   const [owner, setOwner] = useState('')
   const [plan, setPlan] = useState('pro')
   const [saving, setSaving] = useState(false)
+  const [selectedSegments, setSelectedSegments] = useState(['enterprise'])
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [commandResult, setCommandResult] = useState('No command run')
   const [docsDateRange, setDocsDateRange] = useState<DateRange>({ start: '2026-06-01', end: '2026-06-08' })
   const [recipeId, setRecipeId] = useState<ThemeRecipeId>(() => readStoredThemeRecipe())
@@ -473,6 +576,12 @@ export function DocsPage() {
       ],
     },
   ], [])
+  const appliedFilters = selectedSegments.map((segment) => ({
+    id: segment,
+    label: 'Segment',
+    value: segmentFilterOptions.find((option) => option.value === segment)?.label ?? segment,
+    onRemove: () => setSelectedSegments((current) => current.filter((value) => value !== segment)),
+  }))
 
   const simulateSave = () => {
     setSaving(true)
@@ -560,6 +669,33 @@ export function DocsPage() {
         <Card title="Charts API" description="Recharts-based charts that take data in and derive every color, axis, and gridline from src/theme/chart-theme.ts. Import from src/components/charts.">
           <div className="grid gap-4">
             <PropReferenceTable rows={chartPropRows} />
+            <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+              <ChartCard
+                title="Generic chart scaffold"
+                description="Use ChartCard around arbitrary product charts."
+                metric="$84.2k"
+              >
+                <div className="grid gap-3">
+                  <div className="grid h-36 content-end gap-1 border border-line bg-surface-2 p-3" aria-label="Example chart bars">
+                    <span className="h-16 bg-accent" />
+                    <span className="h-24 bg-intel" />
+                    <span className="h-10 bg-review" />
+                  </div>
+                  <ChartLegend items={chartLegendItems} />
+                </div>
+              </ChartCard>
+              <div className="grid gap-4">
+                <ChartTooltipContent
+                  label="June"
+                  rows={[
+                    { label: 'Enterprise', value: '$48.2k', colorClassName: 'bg-accent' },
+                    { label: 'Mid-market', value: '$22.4k', colorClassName: 'bg-intel' },
+                  ]}
+                  footer="Tooltip content is reusable outside Recharts."
+                />
+                <ChartEmptyState title="No trend yet" description="Add account revenue to draw this chart." />
+              </div>
+            </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
               <Snippet code={chartsUsageSnippet} />
               <div className="grid content-start gap-3 text-[13px] text-muted">
@@ -704,9 +840,54 @@ export function DocsPage() {
               <Switch checked={switchOn} onChange={(event) => setSwitchOn(event.target.checked)} label="Server mode" hint="Use role switch for binary system settings." />
             </div>
           </ExampleBlock>
+
+          <ExampleBlock title="Filters, detail, activity">
+            <div className="flex flex-wrap items-center gap-2">
+              <FacetedFilter
+                label="Segment"
+                options={segmentFilterOptions}
+                selectedValues={selectedSegments}
+                onSelectedValuesChange={setSelectedSegments}
+              />
+              <AppliedFiltersBar
+                filters={appliedFilters}
+                onClearAll={() => setSelectedSegments([])}
+                className="flex-1"
+              />
+            </div>
+            <div className="border border-line bg-surface">
+              <DetailHeader
+                title="Cobalt Freight"
+                subtitle="Enterprise account"
+                status={<StatusBadge status="Active" />}
+                actions={<AssigneeChip name="Avery Cohen" status="online" meta="Owner" />}
+              />
+              <div className="grid gap-3 p-3">
+                <KeyValueList items={accountDetailItems} />
+                <DescriptionList items={accountDetailItems.slice(0, 2)} columns={2} />
+                <MetadataPanel items={[{ label: 'Created', value: 'June 8, 2026' }, { label: 'Source', value: 'CSV import' }]} />
+              </div>
+            </div>
+            <ActivityFeed title="Recent activity" items={activityItems} />
+          </ExampleBlock>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
+          <ExampleBlock title="Wizard, import, avatars">
+            <Stepper steps={importWizardSteps} currentStepId="map" />
+            <Dropzone onFilesSelected={setUploadedFiles} label="Drop CSV files here" description="Choose a customer import file." />
+            <AttachmentList
+              attachments={uploadedFiles.length > 0
+                ? uploadedFiles.map((file) => ({ id: file.name, name: file.name, size: file.size }))
+                : [{ id: 'sample', name: 'accounts-import.csv', size: 14336, status: 'Ready' }]}
+            />
+            <ImportProgress value={64} detail="Mapping 3 of 5 columns." />
+            <div className="flex flex-wrap items-center gap-3">
+              <AvatarGroup users={avatarUsers} max={3} />
+              <AssigneeChip name="Blair Nakamura" status="away" meta="Reviewer" />
+            </div>
+          </ExampleBlock>
+
           <ExampleBlock title="Icon buttons & segmented controls">
             <div className="flex flex-wrap items-center gap-2">
               <IconButton aria-label="Refresh data">↻</IconButton>
@@ -725,6 +906,13 @@ export function DocsPage() {
               ]}
             />
             <p className="m-0 text-[13px] text-muted">Selected density: <code className="num text-ink">{density}</code></p>
+          </ExampleBlock>
+
+          <ExampleBlock title="Activity timeline">
+            <div className="grid gap-3">
+              <MetadataPanel title="Import metadata" items={[{ label: 'Batch', value: 'Q3 expansion accounts' }, { label: 'Rows', value: '148' }]} />
+              <Timeline items={activityItems} />
+            </div>
           </ExampleBlock>
 
           <ExampleBlock title="Inline alerts & drawer">
