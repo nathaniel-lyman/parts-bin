@@ -10,7 +10,7 @@ export function Modal({ title, onClose, children, footer }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="scrim-backdrop fixed inset-0 z-50 flex items-center justify-center"
       onClick={onClose}
     >
       <div

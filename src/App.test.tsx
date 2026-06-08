@@ -47,12 +47,21 @@ test('server mode toggle exercises the DataGrid mock server path', async () => {
 test('revenue movement chart exposes bar width and label controls', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   const widthControl = screen.getByRole('slider', { name: /revenue movement bar width/i })
-  const labelControl = screen.getByRole('switch', { name: /labels/i })
+  const labelControl = screen.getByRole('switch', { name: /movement labels/i })
 
   expect(widthControl).toHaveValue('22')
   fireEvent.change(widthControl, { target: { value: '34' } })
   expect(widthControl).toHaveValue('34')
   expect(screen.getByText('34px')).toBeInTheDocument()
+
+  expect(labelControl).not.toBeChecked()
+  await userEvent.click(labelControl)
+  expect(labelControl).toBeChecked()
+})
+
+test('waterfall chart labels can be toggled', async () => {
+  render(<ToastProvider><App /></ToastProvider>)
+  const labelControl = screen.getByRole('switch', { name: /bridge labels/i })
 
   expect(labelControl).not.toBeChecked()
   await userEvent.click(labelControl)

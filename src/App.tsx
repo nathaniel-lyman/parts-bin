@@ -23,10 +23,21 @@ import {
   DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH,
   REVENUE_MOVEMENT_BAR_WIDTH_RANGE,
 } from './components/charts'
-import { Button, Card, PageHeader, Switch, useToast } from './components/ui'
+import {
+  addDays,
+  Button,
+  Card,
+  CommandPalette,
+  DateRangePicker,
+  formatDateRangeLabel,
+  PageHeader,
+  Switch,
+  useToast,
+  type CommandPaletteGroup,
+  type DateRange,
+} from './components/ui'
 import {
   AppShell,
-  CalendarIconButton,
   FilterButton,
   GlobalSearchInput,
   LeftNavigationDrawer,
@@ -45,6 +56,15 @@ const timePeriodOptions = [
   { value: '90d', label: 'Last 90 days' },
   { value: '12m', label: 'Last 12 months' },
 ]
+
+function todayInputValue() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function makeTrailingRange(days: number): DateRange {
+  const end = todayInputValue()
+  return { start: addDays(end, -days + 1), end }
+}
 
 function formatCompactKValue(value: number) {
   const absolute = Math.abs(value)
@@ -89,6 +109,7 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
   const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(DEFAULT_STATE))
   const [movementBarWidth, setMovementBarWidth] = useState(DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH)
   const [movementLabels, setMovementLabels] = useState(false)
+  const [waterfallLabels, setWaterfallLabels] = useState(false)
   const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
   const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
   const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [setDeleting, setEditing])
@@ -138,7 +159,7 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
                   <span className="num w-8 text-right text-[12px] text-muted">{movementBarWidth}px</span>
                 </label>
                 <Switch
-                  label={<span className="micro text-muted">Labels</span>}
+                  label={<span className="micro text-muted">Movement labels</span>}
                   checked={movementLabels}
                   onChange={(event) => setMovementLabels(event.target.checked)}
                 />
@@ -147,10 +168,20 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
           >
             <RevenueMovementChart barWidth={movementBarWidth} showLabels={movementLabels} />
           </Card>
-          <Card title="MRR bridge ($k)">
+          <Card
+            title="MRR bridge ($k)"
+            actions={
+              <Switch
+                label={<span className="micro text-muted">Bridge labels</span>}
+                checked={waterfallLabels}
+                onChange={(event) => setWaterfallLabels(event.target.checked)}
+              />
+            }
+          >
             <WaterfallChart
               data={revenueWaterfallSeries}
               ariaLabel="MRR bridge in thousands"
+              showLabels={waterfallLabels}
               valueFormatter={formatCurrencyK}
               tickFormatter={formatCompactKValue}
             />
@@ -229,7 +260,64 @@ export default function App() {
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
   const [timePeriod, setTimePeriod] = useState(timePeriodOptions[1].value)
+  const [dateRange, setDateRange] = useState<DateRange>(() => makeTrailingRange(90))
   const timePeriodLabel = timePeriodOptions.find((option) => option.value === timePeriod)?.label ?? timePeriodOptions[1].label
+  const dateRangeLabel = formatDateRangeLabel(dateRange)
+  const dashboardPeriodLabel = dateRange.start || dateRange.end ? `${timePeriodLabel} · ${dateRangeLabel}` : timePeriodLabel
+  const dateRangePresets = useMemo(() => [
+    { id: '7d', label: 'Last 7 days', range: makeTrailingRange(7) },
+    { id: '30d', label: 'Last 30 days', range: makeTrailingRange(30) },
+    { id: '90d', label: 'Last 90 days', range: makeTrailingRange(90) },
+    { id: '12m', label: 'Last 12 months', range: makeTrailingRange(365) },
+  ], [])
+  const commandGroups = useMemo<CommandPaletteGroup[]>(() => [
+    {
+      id: 'navigation',
+      label: 'Navigation',
+      items: [
+        {
+          id: 'dashboard',
+          label: 'Open dashboard',
+          description: 'Revenue account dashboard',
+          shortcut: 'G D',
+          onSelect: () => { window.location.href = '/' },
+        },
+        {
+          id: 'components',
+          label: 'Open component catalog',
+          description: 'Live Ledger UI reference',
+          shortcut: 'G C',
+          onSelect: () => { window.location.href = '/docs' },
+        },
+      ],
+    },
+    {
+      id: 'workspace',
+      label: 'Workspace',
+      items: [
+        {
+          id: 'risk-focus',
+          label: atRiskOnly ? 'Show all accounts' : 'Show risk focus',
+          description: 'Toggle at-risk and churned account focus',
+          shortcut: 'R',
+          onSelect: () => setAtRiskOnly((value) => !value),
+        },
+        {
+          id: 'theme',
+          label: mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode',
+          description: 'Toggle the Ledger color mode',
+          shortcut: 'T',
+          onSelect: toggle,
+        },
+        {
+          id: 'alerts',
+          label: 'Show revenue alerts',
+          description: 'Preview the current notification state',
+          onSelect: () => toast('3 revenue alerts', 'warn'),
+        },
+      ],
+    },
+  ], [atRiskOnly, mode, toast, toggle])
 
   const sidebar = (
     <LeftNavigationDrawer
@@ -271,9 +359,15 @@ export default function App() {
             options={timePeriodOptions}
             onChange={setTimePeriod}
           />
-          <CalendarIconButton label="Open calendar" onClick={() => toast('Calendar controls are ready', 'accent')} />
+          <DateRangePicker
+            label="Dates"
+            value={dateRange}
+            onValueChange={setDateRange}
+            presets={dateRangePresets}
+          />
           <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
           <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
+          <CommandPalette groups={commandGroups} />
           <Button onClick={toggle}>{mode === 'dark' ? 'Light' : 'Dark'}</Button>
           <UserAvatarMenu
             name="Morgan"
@@ -295,7 +389,7 @@ export default function App() {
       {docsActive ? (
         <DocsPage />
       ) : (
-        <DashboardPage globalSearch={globalSearch} atRiskOnly={atRiskOnly} timePeriodLabel={timePeriodLabel} />
+        <DashboardPage globalSearch={globalSearch} atRiskOnly={atRiskOnly} timePeriodLabel={dashboardPeriodLabel} />
       )}
     </AppShell>
   )

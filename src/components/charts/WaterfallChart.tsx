@@ -13,6 +13,7 @@ import {
   type TooltipContentProps,
 } from 'recharts'
 import { axisProps, gridProps, semantic, tooltipProps } from '../../theme/chart-theme'
+import { getBarLabelOrientation, type BarLabelBox } from './barLabelUtils'
 import { buildWaterfallData, type WaterfallDatum, type WaterfallStepInput } from './waterfallData'
 
 interface WaterfallChartProps {
@@ -21,6 +22,7 @@ interface WaterfallChartProps {
   height?: number
   minWidth?: number
   barWidth?: number
+  showLabels?: boolean
   valueFormatter?: (value: number) => string
   tickFormatter?: (value: number) => string
 }
@@ -150,6 +152,63 @@ function describeWaterfallDatum(datum: WaterfallDatum, valueFormatter: (value: n
   return `${datum.label}: changes by ${formatSignedValue(datum.delta, valueFormatter)}, moving from ${valueFormatter(datum.start)} to ${valueFormatter(datum.end)}.`
 }
 
+function formatWaterfallLabel(datum: WaterfallDatum, valueFormatter: (value: number) => string) {
+  if (datum.kind === 'start' || datum.kind === 'total') return valueFormatter(datum.end)
+  return formatSignedValue(datum.delta, valueFormatter)
+}
+
+function WaterfallValueLabel({
+  box,
+  datum,
+  valueFormatter,
+}: {
+  box: BarLabelBox
+  datum: WaterfallDatum
+  valueFormatter: (value: number) => string
+}) {
+  const label = formatWaterfallLabel(datum, valueFormatter)
+  const orientation = getBarLabelOrientation(box, label)
+  const x = box.x + box.width / 2
+  const y = orientation ? box.y + box.height / 2 : (datum.delta < 0 ? box.y + box.height + 13 : box.y - 6)
+  const transform = orientation === 'vertical' ? `rotate(-90 ${x} ${y})` : undefined
+
+  return (
+    <text
+      x={x}
+      y={y}
+      transform={transform}
+      fill={orientation ? 'var(--accent-fg)' : getDatumFill(datum.kind)}
+      fontFamily='"JetBrains Mono", monospace'
+      fontSize={11}
+      fontWeight={700}
+      textAnchor="middle"
+      dominantBaseline="central"
+      pointerEvents="none"
+    >
+      {label}
+    </text>
+  )
+}
+
+function renderWaterfallBarShape(showLabels: boolean, valueFormatter: (value: number) => string) {
+  return function WaterfallBarShapeWithLabels(props: BarShapeProps): ReactElement {
+    const datum = readWaterfallDatum(props.payload)
+    const shape = WaterfallBarShape(props)
+    if (!showLabels || !datum || props.width <= 0 || props.height <= 0) return shape
+
+    return (
+      <g>
+        {shape}
+        <WaterfallValueLabel
+          box={{ x: props.x, y: props.y, width: props.width, height: props.height }}
+          datum={datum}
+          valueFormatter={valueFormatter}
+        />
+      </g>
+    )
+  }
+}
+
 const legendItems = [
   { label: 'Start', className: 'bg-muted' },
   { label: 'Increase', className: 'bg-pos' },
@@ -163,10 +222,12 @@ export function WaterfallChart({
   height = DEFAULT_HEIGHT,
   minWidth = DEFAULT_MIN_WIDTH,
   barWidth = DEFAULT_BAR_WIDTH,
+  showLabels = false,
   valueFormatter = defaultValueFormatter,
   tickFormatter = defaultValueFormatter,
 }: WaterfallChartProps) {
   const { data: chartData, summary } = useMemo(() => buildWaterfallData(data), [data])
+  const barShape = useMemo(() => renderWaterfallBarShape(showLabels, valueFormatter), [showLabels, valueFormatter])
 
   return (
     <figure className="m-0 grid gap-3" aria-label={ariaLabel}>
@@ -199,7 +260,7 @@ export function WaterfallChart({
       <div className="overflow-x-auto">
         <div style={{ height, minWidth }}>
           <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: minWidth, height }}>
-            <BarChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: -16 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 12, bottom: 4, left: -16 }}>
               <CartesianGrid {...gridProps} />
               <XAxis dataKey="label" {...axisProps} interval={0} tickMargin={8} />
               <YAxis {...axisProps} tickFormatter={(value) => tickFormatter(Number(value))} />
@@ -213,7 +274,7 @@ export function WaterfallChart({
                 dataKey="range"
                 barSize={barWidth}
                 maxBarSize={barWidth}
-                shape={WaterfallBarShape}
+                shape={barShape}
                 background={{ fill: 'var(--surface)', fillOpacity: 0 }}
                 isAnimationActive="auto"
               />

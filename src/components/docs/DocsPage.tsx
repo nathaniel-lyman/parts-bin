@@ -1,9 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
   Button,
   Card,
   Checkbox,
   Combobox,
+  CommandPalette,
+  DateRangePicker,
   Drawer,
   DropdownMenu,
   EmptyState,
@@ -35,6 +37,8 @@ import {
   Textarea,
   Toolbar,
   Tooltip,
+  type CommandPaletteGroup,
+  type DateRange,
 } from '../ui'
 import { FilterBar, SectionHeader, SettingsPanel } from '../shell'
 import {
@@ -204,6 +208,18 @@ const uiPropRows: PropReferenceRow[] = [
     accessibility: 'role=combobox + listbox/option, aria-expanded, aria-activedescendant; focus stays on the input.',
   },
   {
+    component: 'CommandPalette',
+    props: 'groups, open, onOpenChange, trigger, placeholder',
+    variants: 'global Ctrl+K launcher, grouped commands, disabled commands, shortcuts, filtered results',
+    accessibility: 'role=dialog containing a combobox/listbox command surface; Arrow keys move, Enter selects, Escape closes.',
+  },
+  {
+    component: 'DatePicker / DateRangePicker',
+    props: 'label, value, onValueChange, presets',
+    variants: 'native date input, compact range trigger, preset buttons, invalid inverted range state',
+    accessibility: 'Native date inputs keep platform semantics; the range popover is role=dialog and closes with Escape.',
+  },
+  {
     component: 'RadioGroup',
     props: 'options, value, defaultValue, onValueChange, name, label, hint, error, orientation',
     variants: 'vertical or horizontal; per-option description; disabled options; controlled or uncontrolled',
@@ -309,6 +325,8 @@ const interactionRows = [
   ['Drawer', 'Same as Modal: Escape closes; Tab cycles inside the panel; focus restores to the opener.'],
   ['DropdownMenu', 'Arrow keys skip disabled items; Home/End jump; Enter/Space selects; Escape restores trigger focus.'],
   ['Combobox', 'Type to filter; Arrow keys move the active option; Enter selects; Escape closes and reverts.'],
+  ['CommandPalette', 'Ctrl+K opens globally; type to filter; Arrow keys move; Enter runs the active command; Escape closes.'],
+  ['DateRangePicker', 'Trigger opens a dialog; native date inputs edit bounds; presets set drafts; Apply commits valid ranges.'],
   ['Tabs / SegmentedControl', 'Arrow keys, Home, and End move the active item and focus together.'],
   ['RadioGroup', 'Native radios: Tab reaches the group, Arrow keys move the selection within it.'],
   ['Popover', 'Escape closes and returns focus to the trigger.'],
@@ -435,7 +453,26 @@ export function DocsPage() {
   const [owner, setOwner] = useState('')
   const [plan, setPlan] = useState('pro')
   const [saving, setSaving] = useState(false)
+  const [commandResult, setCommandResult] = useState('No command run')
+  const [docsDateRange, setDocsDateRange] = useState<DateRange>({ start: '2026-06-01', end: '2026-06-08' })
   const [recipeId, setRecipeId] = useState<ThemeRecipeId>(() => readStoredThemeRecipe())
+  const docsCommandGroups = useMemo<CommandPaletteGroup[]>(() => [
+    {
+      id: 'navigation',
+      label: 'Navigation',
+      items: [
+        { id: 'dashboard', label: 'Open dashboard', description: 'Go to the account book', onSelect: () => setCommandResult('Dashboard command') },
+        { id: 'catalog', label: 'Open component catalog', description: 'Stay on this reference', onSelect: () => setCommandResult('Catalog command') },
+      ],
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      items: [
+        { id: 'risk', label: 'Show risk focus', description: 'Filter the workspace to risk signals', shortcut: 'R', onSelect: () => setCommandResult('Risk command') },
+      ],
+    },
+  ], [])
 
   const simulateSave = () => {
     setSaving(true)
@@ -628,6 +665,24 @@ export function DocsPage() {
                 <Button size="compact">?</Button>
               </Tooltip>
             </div>
+          </ExampleBlock>
+
+          <ExampleBlock title="Command palette & dates">
+            <div className="flex flex-wrap items-center gap-2">
+              <CommandPalette groups={docsCommandGroups} />
+              <DateRangePicker
+                label="Dates"
+                value={docsDateRange}
+                onValueChange={setDocsDateRange}
+                presets={[
+                  { id: 'june', label: 'June 2026', range: { start: '2026-06-01', end: '2026-06-30' } },
+                  { id: 'q2', label: 'Q2 2026', range: { start: '2026-04-01', end: '2026-06-30' } },
+                ]}
+              />
+            </div>
+            <p className="m-0 text-[13px] text-muted">
+              Command result: <code className="num text-ink">{commandResult}</code>
+            </p>
           </ExampleBlock>
 
           <ExampleBlock title="Forms">

@@ -17,6 +17,7 @@ function getActiveElement() {
  */
 export function useDialogFocusTrap(dialogRef: RefObject<HTMLElement | null>, onClose: () => void) {
   useEffect(() => {
+    if (!dialogRef.current) return undefined
     const previousActiveElement = getActiveElement()
     const focusables = getFocusableElements(dialogRef.current)
     ;(focusables[0] ?? dialogRef.current)?.focus()

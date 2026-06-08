@@ -19,7 +19,7 @@ export function Drawer({ title, onClose, children, footer, side = 'right' }: Dra
 
   return (
     <div
-      className={cx('fixed inset-0 z-50 flex bg-black/40', side === 'right' ? 'justify-end' : 'justify-start')}
+      className={cx('scrim-backdrop fixed inset-0 z-50 flex', side === 'right' ? 'justify-end' : 'justify-start')}
       onClick={onClose}
     >
       <div
