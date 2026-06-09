@@ -1,10 +1,18 @@
 import type { ReactNode } from 'react'
 import {
-  Accordion, Avatar, Button, Card, Checkbox, EmptyState, Field, IconButton,
-  InlineAlert, Input, Kbd, KeyValueList, Metric, Pagination, Progress, RadioGroup,
-  SegmentedControl, Select, Skeleton, Slider, Spinner, StatusBadge, Switch, Tabs,
-  Tag, Textarea,
+  Accordion, ActivityFeed, AppliedFiltersBar, AssigneeChip, AttachmentList, AuditLogItem,
+  Avatar, AvatarGroup, Banner, Button, Card, Checkbox, Combobox, DatePicker,
+  DateRangePicker, DescriptionList, DetailHeader, Dropzone, EmptyState, FacetedFilter,
+  Field, FileUpload, IconButton, ImportProgress, InlineAlert, Input, Kbd, KeyValueList,
+  LoadingBars, LoadingChartDrawIn, LoadingConcentricArcs, LoadingDonut, LoadingDots,
+  LoadingKpiSkeleton, LoadingProgress, LoadingSparkline, MetadataPanel, Metric,
+  MultiSelect, Pagination, Progress, PropertyGrid, RadioGroup, SegmentedControl, Select,
+  Skeleton, Slider, Spinner, StatusBadge, Stepper, Switch, Table, Tabs, Tag, Textarea,
+  Timeline, Toolbar,
 } from '../ui'
+import { ChartEmptyState, ChartLegend, ChartTooltipContent } from '../charts'
+import { NotificationBadge } from '../shell'
+import { KpiCard } from '../KpiCard'
 import { Sparkline } from '../Sparkline'
 
 const noop = () => {}
@@ -78,4 +86,139 @@ export const previews: Partial<Record<string, ReactNode>> = {
   KeyValueList: <KeyValueList items={[{ label: 'Owner', value: 'Avery Cohen' }, { label: 'Plan', value: 'Pro' }]} />,
   Accordion: <div className="w-48"><Accordion items={[{ id: 'general', title: 'General', content: 'Workspace settings' }]} defaultOpenIds={['general']} /></div>,
   Tabs: <Tabs items={[{ id: 'a', label: 'Overview', content: null }, { id: 'b', label: 'Activity', content: null }]} defaultValue="a" />,
+  // forms (batch 2) — pickers and dropdowns shown closed
+  Combobox: (
+    <div className="w-48">
+      <Combobox
+        options={[{ value: 'avery', label: 'Avery Cohen' }, { value: 'blair', label: 'Blair Nakamura' }]}
+        value="avery"
+        onValueChange={noop}
+        placeholder="Owner"
+      />
+    </div>
+  ),
+  MultiSelect: (
+    <div className="w-48">
+      <MultiSelect
+        options={[{ value: 'enterprise', label: 'Enterprise' }, { value: 'startup', label: 'Startup' }]}
+        values={['enterprise']}
+        onValuesChange={noop}
+        placeholder="Segments"
+      />
+    </div>
+  ),
+  DatePicker: <div className="w-44"><DatePicker label="Renews" value="2026-06-09" onValueChange={noop} /></div>,
+  DateRangePicker: (
+    <div className="w-56">
+      <DateRangePicker label="Period" value={{ start: '2026-06-01', end: '2026-06-30' }} onValueChange={noop} />
+    </div>
+  ),
+  Dropzone: <div className="w-56"><Dropzone multiple onFilesSelected={noop} /></div>,
+  FileUpload: (
+    <div className="w-56">
+      <FileUpload files={[new File(['ledger,accounts'], 'accounts-import.csv', { type: 'text/csv' })]} onFilesSelected={noop} />
+    </div>
+  ),
+  Stepper: (
+    <Stepper
+      steps={[
+        { id: 'upload', label: 'Upload', state: 'complete' },
+        { id: 'map', label: 'Map', state: 'current' },
+        { id: 'review', label: 'Review', state: 'upcoming' },
+      ]}
+      currentStepId="map"
+    />
+  ),
+  // feedback (batch 2) — LoadingCountingMetric stays placeholder (drives itself with rAF/timeouts)
+  Banner: <Banner tone="warn">Trial ends in 3 days.</Banner>,
+  ImportProgress: <div className="w-56"><ImportProgress value={62} label="Importing" detail="124 of 200 rows" /></div>,
+  LoadingBars: <LoadingBars label="Loading activity" />,
+  LoadingChartDrawIn: <LoadingChartDrawIn label="Loading chart" />,
+  LoadingConcentricArcs: <LoadingConcentricArcs label="Loading" />,
+  LoadingDonut: <LoadingDonut label="Loading donut chart" tone="accent" />,
+  LoadingDots: <LoadingDots label="Loading" />,
+  LoadingKpiSkeleton: <LoadingKpiSkeleton label="Loading KPI" />,
+  LoadingProgress: <div className="w-56"><LoadingProgress label="Syncing" detail="Syncing accounts" /></div>,
+  LoadingSparkline: <LoadingSparkline label="Loading sparkline" />,
+  // data display (batch 2)
+  AvatarGroup: <AvatarGroup users={[{ name: 'Avery Cohen' }, { name: 'Blair Nakamura' }, { name: 'Devin Okafor' }]} max={3} />,
+  AssigneeChip: <AssigneeChip name="Avery Cohen" />,
+  AuditLogItem: (
+    <div className="w-64">
+      <AuditLogItem id="e1" title="Updated MRR" resource="Acme" actor="Avery" timestamp="2m ago" />
+    </div>
+  ),
+  DetailHeader: (
+    <div className="w-64">
+      <DetailHeader title="Acme Corp" subtitle="Enterprise" status={<StatusBadge status="Active" />} />
+    </div>
+  ),
+  DescriptionList: (
+    <div className="w-64">
+      <DescriptionList items={[{ label: 'Owner', value: 'Avery' }, { label: 'Plan', value: 'Pro' }]} columns={2} />
+    </div>
+  ),
+  PropertyGrid: (
+    <div className="w-64">
+      <PropertyGrid items={[{ label: 'Region', value: 'NA' }, { label: 'Seats', value: '48' }]} columns={2} />
+    </div>
+  ),
+  MetadataPanel: (
+    <div className="w-56">
+      <MetadataPanel title="Metadata" items={[{ label: 'Created', value: 'Jan 2026' }]} />
+    </div>
+  ),
+  Table: (
+    <div className="w-64">
+      <Table
+        caption="Top accounts"
+        columns={[{ key: 'name', header: 'Account' }, { key: 'mrr', header: 'MRR', numeric: true }]}
+        rows={[{ id: 'a', name: 'Northwind', mrr: '$8.2k' }, { id: 'b', name: 'Globex', mrr: '$6.4k' }]}
+        rowKey={(r) => r.id}
+      />
+    </div>
+  ),
+  Timeline: (
+    <div className="w-64">
+      <Timeline items={[{ id: 'e1', title: 'Plan upgraded', timestamp: '2m ago' }, { id: 'e2', title: 'Owner assigned', timestamp: '1h ago' }]} />
+    </div>
+  ),
+  ActivityFeed: (
+    <div className="w-64">
+      <ActivityFeed title="Activity" items={[{ id: 'e1', title: 'Plan upgraded', actor: 'Avery', timestamp: '2m ago' }]} />
+    </div>
+  ),
+  Toolbar: (
+    <div className="w-64">
+      <Toolbar leading={<Input placeholder="Search" readOnly />} trailing={<Button size="compact">New</Button>} />
+    </div>
+  ),
+  AppliedFiltersBar: (
+    <div className="w-64">
+      <AppliedFiltersBar filters={[{ id: 'segment', label: 'Segment', value: 'Enterprise' }]} />
+    </div>
+  ),
+  FacetedFilter: (
+    <FacetedFilter
+      label="Segment"
+      options={[{ value: 'enterprise', label: 'Enterprise', count: 12 }, { value: 'startup', label: 'Startup', count: 31 }]}
+      selectedValues={['enterprise']}
+      onSelectedValuesChange={noop}
+    />
+  ),
+  AttachmentList: (
+    <div className="w-56">
+      <AttachmentList attachments={[{ id: 'f1', name: 'report.pdf', size: 12000 }]} />
+    </div>
+  ),
+  NotificationBadge: <NotificationBadge count={12} />,
+  KpiCard: (
+    <div className="w-48">
+      <KpiCard label="Total MRR" value="$78.3k" delta={4.2} spark={[62, 65, 64, 70, 74, 78]} />
+    </div>
+  ),
+  // charts (lightweight only — Recharts charts stay placeholder)
+  ChartLegend: <ChartLegend items={[{ id: 'new', label: 'New', colorClassName: 'bg-pos' }, { id: 'churn', label: 'Churned', colorClassName: 'bg-neg' }]} />,
+  ChartTooltipContent: <ChartTooltipContent label="Jan" rows={[{ label: 'MRR', value: '$78k' }]} />,
+  ChartEmptyState: <ChartEmptyState title="No data" description="Adjust filters." />,
 }
