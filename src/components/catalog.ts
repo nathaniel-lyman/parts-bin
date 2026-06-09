@@ -77,6 +77,13 @@ export const INTERNAL = new Map<string, string>([
   ['CollapseSidebarControl', 'Composed by Sidebar'],
   ['BrandLockup', 'Composed by Sidebar / TopNav'],
   ['LeftNavigationDrawer', 'Composed by AppShell'],
+  // GlobalControls sub-fragments — composed by GlobalControls:
+  ['GlobalSearchInput', 'Composed by GlobalControls'],
+  ['TimePeriodSelector', 'Composed by GlobalControls'],
+  ['NotificationButton', 'Composed by GlobalControls'],
+  ['UserAvatarMenu', 'Composed by GlobalControls'],
+  ['FilterButton', 'Composed by GlobalControls'],
+  ['CalendarIconButton', 'Composed by GlobalControls'],
 ])
 
 /** Capitalized function exports that are NOT components (currently none). */
