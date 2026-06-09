@@ -10,7 +10,8 @@ import { DataGridResizeHandle } from './DataGridResizeHandle'
 import { DataGridSelectAllCheckbox } from './DataGridSelectionCell'
 import type { FilterValue } from './filtering'
 import type { ColumnDragPreviewState } from './dragPreview'
-import type { ColumnPinning, GridAction, LedgerGridColumn } from './types'
+import type { GridFocus } from './keyboard'
+import type { ColumnPinning, ColumnVirtualWindow, GridAction, LedgerGridColumn } from './types'
 
 const noopDispatch = () => {}
 const dragPreviewTransition = 'transform 160ms ease'
@@ -35,6 +36,10 @@ function SortableHeader<TData>({
   columnPinning,
   columnFilters,
   dragPreview,
+  colIndex,
+  focused,
+  pinnedSide,
+  onFocusCell,
 }: {
   header: Header<TData, unknown>
   dispatch?: (action: GridAction) => void
@@ -43,6 +48,10 @@ function SortableHeader<TData>({
   columnPinning: ColumnPinning
   columnFilters: ColumnFiltersState
   dragPreview?: ColumnDragPreviewState | null
+  colIndex?: number
+  focused?: boolean
+  pinnedSide?: 'left' | 'right'
+  onFocusCell?: (row: number, col: number) => void
 }) {
   const sorted = header.column.getIsSorted()
   const align = header.column.columnDef.meta?.align ?? 'left'
@@ -64,10 +73,14 @@ function SortableHeader<TData>({
   const previewTransform = previewOffset !== 0 ? `translateX(${previewOffset}px)` : undefined
   const sortableTransform = canMove && !dragPreview ? CSS.Translate.toString(transform) : undefined
   const style: CSSProperties = {
+    minWidth: header.column.getSize(),
+    width: header.column.getSize(),
     transform: isPreviewActive ? undefined : (previewTransform ?? sortableTransform),
     transition: dragPreview ? dragPreviewTransition : canMove ? transition : undefined,
     opacity: isPreviewActive ? 0.28 : isDragging ? 0.72 : undefined,
-    position: 'relative',
+    position: pinnedSide ? 'sticky' : 'relative',
+    ...(pinnedSide === 'left' ? { left: 0 } : {}),
+    ...(pinnedSide === 'right' ? { right: 0 } : {}),
     zIndex: isDragging && !dragPreview ? 1 : undefined,
   }
 
@@ -77,7 +90,11 @@ function SortableHeader<TData>({
       style={style}
       data-testid={`col-header-${header.column.id}`}
       data-column-id={header.column.id}
+      data-col-id={header.column.id}
+      data-col-index={colIndex}
+      data-col-width={header.column.getSize()}
       aria-sort={canSort ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined}
+      tabIndex={focused ? 0 : -1}
       onClick={
         canSort
           ? dispatch
@@ -85,7 +102,10 @@ function SortableHeader<TData>({
             : header.column.getToggleSortingHandler()
           : undefined
       }
-      className={`group border-r border-line px-3 py-2 ${align === 'right' ? 'text-right' : 'text-left'} ${canSort || canMove ? 'cursor-pointer' : ''}`}
+      onFocus={() => {
+        if (colIndex !== undefined) onFocusCell?.(-1, colIndex)
+      }}
+      className={`group border-r border-line px-3 py-2 ${align === 'right' ? 'text-right' : 'text-left'} ${canSort || canMove ? 'cursor-pointer' : ''} ${pinnedSide ? 'bg-surface-2 shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       {...(canMove ? listeners : {})}
     >
       <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
@@ -141,6 +161,10 @@ export function DataGridHeader<TData>({
   onSelectAll,
   dndProvider = true,
   dragPreview,
+  focus,
+  columnWindow,
+  visibleColumnIds,
+  onFocusCell,
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
@@ -155,12 +179,18 @@ export function DataGridHeader<TData>({
   onSelectAll?: (select: boolean) => void
   dndProvider?: boolean
   dragPreview?: ColumnDragPreviewState | null
+  focus?: GridFocus
+  columnWindow?: ColumnVirtualWindow
+  visibleColumnIds?: string[]
+  onFocusCell?: (row: number, col: number) => void
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
   const visibleMovable = table.getVisibleLeafColumns().map((column) => column.id).filter(isMovableColumnId)
+  const leafIds = visibleColumnIds ?? table.getVisibleLeafColumns().map((column) => column.id)
+  const colIndexFor = (columnId: string) => leafIds.indexOf(columnId)
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over) return
@@ -185,18 +215,77 @@ export function DataGridHeader<TData>({
                   />
                 </th>
               )}
-              {headerGroup.headers.map((header) => (
-                <SortableHeader
-                  key={header.id}
-                  header={header}
-                  dispatch={dispatch}
-                  columnSizing={columnSizing}
-                  columns={columns}
-                  columnPinning={columnPinning}
-                  columnFilters={columnFilters}
-                  dragPreview={dragPreview}
-                />
-              ))}
+              {headerGroup.headers
+                .filter((header) => header.column.getIsPinned() === 'left')
+                .map((header) => {
+                  const colIndex = colIndexFor(header.column.id)
+                  return (
+                    <SortableHeader
+                      key={header.id}
+                      header={header}
+                      dispatch={dispatch}
+                      columnSizing={columnSizing}
+                      columns={columns}
+                      columnPinning={columnPinning}
+                      columnFilters={columnFilters}
+                      dragPreview={dragPreview}
+                      colIndex={colIndex}
+                      focused={focus?.row === -1 && focus.col === colIndex}
+                      pinnedSide="left"
+                      onFocusCell={onFocusCell}
+                    />
+                  )
+                })}
+              {columnWindow && columnWindow.paddingLeft > 0 && (
+                <th aria-hidden="true" data-column-spacer="left" style={{ minWidth: columnWindow.paddingLeft, width: columnWindow.paddingLeft, padding: 0 }} />
+              )}
+              {headerGroup.headers
+                .filter((header) => {
+                  if (header.column.getIsPinned()) return false
+                  return !columnWindow || columnWindow.ids.includes(header.column.id)
+                })
+                .map((header) => {
+                  const colIndex = colIndexFor(header.column.id)
+                  return (
+                    <SortableHeader
+                      key={header.id}
+                      header={header}
+                      dispatch={dispatch}
+                      columnSizing={columnSizing}
+                      columns={columns}
+                      columnPinning={columnPinning}
+                      columnFilters={columnFilters}
+                      dragPreview={dragPreview}
+                      colIndex={colIndex}
+                      focused={focus?.row === -1 && focus.col === colIndex}
+                      onFocusCell={onFocusCell}
+                    />
+                  )
+                })}
+              {columnWindow && columnWindow.paddingRight > 0 && (
+                <th aria-hidden="true" data-column-spacer="right" style={{ minWidth: columnWindow.paddingRight, width: columnWindow.paddingRight, padding: 0 }} />
+              )}
+              {headerGroup.headers
+                .filter((header) => header.column.getIsPinned() === 'right')
+                .map((header) => {
+                  const colIndex = colIndexFor(header.column.id)
+                  return (
+                    <SortableHeader
+                      key={header.id}
+                      header={header}
+                      dispatch={dispatch}
+                      columnSizing={columnSizing}
+                      columns={columns}
+                      columnPinning={columnPinning}
+                      columnFilters={columnFilters}
+                      dragPreview={dragPreview}
+                      colIndex={colIndex}
+                      focused={focus?.row === -1 && focus.col === colIndex}
+                      pinnedSide="right"
+                      onFocusCell={onFocusCell}
+                    />
+                  )
+                })}
             </tr>
           ))}
           {enableHeaderFilters && (

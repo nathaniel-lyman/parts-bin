@@ -2,6 +2,8 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Row, Table } from '@tanstack/react-table'
 import { DataGridRow } from './DataGridRow'
 import type { ColumnDragPreviewState } from './dragPreview'
+import type { GridFocus } from './keyboard'
+import type { ColumnVirtualWindow } from './types'
 
 interface Props<TData> {
   table: Table<TData>
@@ -14,6 +16,10 @@ interface Props<TData> {
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
   dragPreview?: ColumnDragPreviewState | null
+  focus?: GridFocus
+  columnWindow?: ColumnVirtualWindow
+  visibleColumnIds?: string[]
+  onFocusCell?: (row: number, col: number) => void
 }
 
 function defaultRowLabel<TData>(row: TData, rowId: string): string {
@@ -32,6 +38,10 @@ export function DataGridBody<TData>({
   onToggleRow,
   onCellContextMenu,
   dragPreview,
+  focus,
+  columnWindow,
+  visibleColumnIds,
+  onFocusCell,
 }: Props<TData>) {
   const topRows = table.getTopRows()
   const centerRows = table.getCenterRows()
@@ -62,12 +72,17 @@ export function DataGridBody<TData>({
       key={`${pinned ?? 'row'}-${row.id}`}
       row={row}
       pinned={pinned}
+      rowIndex={centerRows.indexOf(row)}
       enableRowSelection={enableRowSelection}
       selected={rowSelection[row.id] === true}
       rowLabel={getRowLabel(row.original, row.id)}
       onToggleRow={onToggleRow}
       onCellContextMenu={onCellContextMenu}
       dragPreview={dragPreview}
+      focus={focus}
+      columnWindow={columnWindow}
+      visibleColumnIds={visibleColumnIds}
+      onFocusCell={onFocusCell}
     />
   )
 

@@ -17,22 +17,36 @@ export const DEFAULT_COLUMN_ORDER: string[] = [
 
 export const MOVABLE_COLUMN_IDS = DEFAULT_COLUMN_ORDER.filter((id) => id !== ACTIONS_COLUMN_ID)
 
-const knownColumnIds = new Set<string>(DEFAULT_COLUMN_ORDER)
 const movableColumnIds = new Set<string>(MOVABLE_COLUMN_IDS)
 
 export const isMovableColumnId = (id: string) => movableColumnIds.has(id)
 
-export function normalizeColumnOrder(value: unknown): string[] {
-  if (!Array.isArray(value)) return [...DEFAULT_COLUMN_ORDER]
+function canonicalOrder(columnIds?: readonly string[]): string[] {
+  if (!columnIds?.length) return [...DEFAULT_COLUMN_ORDER]
+
+  const ordered: string[] = []
+  for (const id of DEFAULT_COLUMN_ORDER) {
+    if (id !== ACTIONS_COLUMN_ID && columnIds.includes(id)) ordered.push(id)
+  }
+  for (const id of columnIds) {
+    if (id !== ACTIONS_COLUMN_ID && !ordered.includes(id)) ordered.push(id)
+  }
+  return [...ordered, ACTIONS_COLUMN_ID]
+}
+
+export function normalizeColumnOrder(value: unknown, columnIds?: readonly string[]): string[] {
+  const canonical = canonicalOrder(columnIds)
+  const known = new Set(canonical)
+  if (!Array.isArray(value)) return canonical
 
   const ordered: string[] = []
   for (const id of value) {
-    if (typeof id === 'string' && knownColumnIds.has(id) && id !== ACTIONS_COLUMN_ID && !ordered.includes(id)) {
+    if (typeof id === 'string' && known.has(id) && id !== ACTIONS_COLUMN_ID && !ordered.includes(id)) {
       ordered.push(id)
     }
   }
 
-  for (const id of DEFAULT_COLUMN_ORDER) {
+  for (const id of canonical) {
     if (id !== ACTIONS_COLUMN_ID && !ordered.includes(id)) ordered.push(id)
   }
 
@@ -60,8 +74,8 @@ export function normalizeSorting(sorting: SortingState): SortingState {
   return sorting.filter((item) => !isLockedColumn(item.id))
 }
 
-export function normalizeState(state: LedgerGridState): LedgerGridState {
-  const columnOrder = normalizeColumnOrder(state.columnOrder)
+export function normalizeState(state: LedgerGridState, columnIds?: readonly string[]): LedgerGridState {
+  const columnOrder = normalizeColumnOrder(state.columnOrder, columnIds)
   const columnPinning = normalizeColumnPinning(state.columnPinning)
   const columnVisibility =
     state.columnVisibility[ACTIONS_COLUMN_ID] === false

@@ -36,9 +36,30 @@ test.describe('reorder + keyboard nav', () => {
     expect(headerOrder.slice(0, 2)).toEqual(['owner', 'account'])
   })
 
-  test.fixme('keyboard nav scrolls a far-down virtualized cell into view (needs roving focus)', async ({ page }) => {
+  test('keyboard nav scrolls a far-down virtualized cell into view', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
     await page.goto('/?rows=10000')
     const scroller = page.getByTestId('datagrid-scroll')
     await expect(scroller).toBeVisible()
+
+    const firstCell = page.getByTestId('grid-row-row-0').locator('[role="gridcell"]').first()
+    await firstCell.focus()
+    for (let index = 0; index < 20; index += 1) await page.keyboard.press('PageDown')
+
+    const focused = page.locator(':focus')
+    await expect(focused).toBeVisible()
+    await expect(focused).toHaveAttribute('role', 'gridcell')
+
+    const rowIndex = Number(await focused.getAttribute('data-row-index'))
+    expect(rowIndex).toBeGreaterThan(100)
+    await expect(page.getByTestId(`grid-row-row-${rowIndex}`)).toBeVisible()
+
+    const [cellBox, scrollerBox] = await Promise.all([
+      focused.boundingBox(),
+      scroller.boundingBox(),
+    ])
+    if (!cellBox || !scrollerBox) throw new Error('Focused cell and scroller must be measurable')
+    expect(cellBox.y).toBeGreaterThanOrEqual(scrollerBox.y)
+    expect(cellBox.y + cellBox.height).toBeLessThanOrEqual(scrollerBox.y + scrollerBox.height + 1)
   })
 })

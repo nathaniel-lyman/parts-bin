@@ -51,6 +51,7 @@ import { CustomerSuccessTemplate } from './components/templates'
 import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
+import type { LedgerGridColumn } from './components/DataGrid'
 
 const timePeriodOptions = [
   { value: '7d', label: 'Last 7 days' },
@@ -82,6 +83,25 @@ function formatCurrencyK(value: number) {
   return `${value < 0 ? '-' : ''}$${formatCompactKValue(value)}k`
 }
 
+function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGridColumn<Account>[] {
+  const actions = columns.find((column) => column.id === 'actions')
+  const base = columns.filter((column) => column.id !== 'actions')
+  const wide: LedgerGridColumn<Account>[] = Array.from({ length: 24 }, (_, index) => ({
+    id: `wide-${index}`,
+    header: `Metric ${index + 1}`,
+    align: 'right',
+    type: 'number',
+    width: 132,
+    minWidth: 112,
+    accessorFn: (row) => {
+      const rowNumber = Number(row.id.replace(/\D/g, '')) || 0
+      return rowNumber * (index + 3)
+    },
+    cell: (ctx) => <span className="num text-muted">{Number(ctx.value).toLocaleString()}</span>,
+  }))
+  return actions ? [...base, ...wide, actions] : [...base, ...wide]
+}
+
 interface DashboardPageProps {
   globalSearch: string
   atRiskOnly: boolean
@@ -93,6 +113,7 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
   const toast = useToast()
   const params = new URLSearchParams(window.location.search)
   const requestedRows = Number(params.get('rows') ?? 0)
+  const wideColumns = params.get('cols') === 'wide'
   const generatedAccounts = useMemo(
     () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
     [requestedRows],
@@ -119,7 +140,10 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
   const [waterfallLabels, setWaterfallLabels] = useState(false)
   const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
   const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
-  const gridColumns = useMemo(() => accountGridColumns({ onEdit: setEditing, onDelete: setDeleting }), [setDeleting, setEditing])
+  const gridColumns = useMemo(() => {
+    const columns = accountGridColumns({ onEdit: setEditing, onDelete: setDeleting })
+    return wideColumns ? wideAccountGridColumns(columns) : columns
+  }, [setDeleting, setEditing, wideColumns])
 
   return (
     <>

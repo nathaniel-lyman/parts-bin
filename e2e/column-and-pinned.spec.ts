@@ -1,9 +1,26 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('column virtualization + pinned-column alignment', () => {
-  test.fixme('off-screen middle columns are absent from the DOM (needs wide-column fixture)', async ({ page }) => {
+  test('off-screen middle columns are absent while the right-pinned actions column stays aligned', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
     await page.goto('/?rows=10000&cols=wide')
-    await expect(page.getByTestId('datagrid-scroll')).toBeVisible()
-    await expect(page.getByTestId('col-header-actions')).toBeVisible()
+    const scroller = page.getByTestId('datagrid-scroll')
+    await expect(scroller).toBeVisible()
+
+    await expect(page.getByTestId('col-header-wide-0')).toBeVisible()
+    await expect(page.getByTestId('col-header-wide-20')).toHaveCount(0)
+
+    const actionsHeader = page.getByTestId('col-header-actions')
+    await expect(actionsHeader).toBeVisible()
+    await scroller.evaluate((el) => { el.scrollLeft = el.scrollWidth })
+    await expect(page.getByTestId('col-header-wide-23')).toBeVisible()
+    await expect(actionsHeader).toBeVisible()
+
+    const [actionsBox, scrollerBox] = await Promise.all([
+      actionsHeader.boundingBox(),
+      scroller.boundingBox(),
+    ])
+    if (!actionsBox || !scrollerBox) throw new Error('Pinned action header and scroller must be measurable')
+    expect(Math.abs(actionsBox.x + actionsBox.width - (scrollerBox.x + scrollerBox.width))).toBeLessThan(3)
   })
 })

@@ -2,6 +2,8 @@ import { type Row } from '@tanstack/react-table'
 import { DataGridCell } from './DataGridCell'
 import { DataGridRowCheckbox } from './DataGridSelectionCell'
 import type { ColumnDragPreviewState } from './dragPreview'
+import type { GridFocus } from './keyboard'
+import type { ColumnVirtualWindow } from './types'
 
 interface Props<TData> {
   row: Row<TData>
@@ -12,6 +14,11 @@ interface Props<TData> {
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
   dragPreview?: ColumnDragPreviewState | null
+  rowIndex?: number
+  focus?: GridFocus
+  columnWindow?: ColumnVirtualWindow
+  visibleColumnIds?: string[]
+  onFocusCell?: (row: number, col: number) => void
 }
 
 export function DataGridRow<TData>({
@@ -23,8 +30,44 @@ export function DataGridRow<TData>({
   onToggleRow,
   onCellContextMenu,
   dragPreview,
+  rowIndex = row.index,
+  focus,
+  columnWindow,
+  visibleColumnIds = row.getVisibleCells().map((cell) => cell.column.id),
+  onFocusCell,
 }: Props<TData>) {
   const toggle = () => onToggleRow?.(row.id)
+  const visibleColIndex = (columnId: string) => visibleColumnIds.indexOf(columnId)
+  const renderCell = (cell: ReturnType<Row<TData>['getVisibleCells']>[number], pinnedSide?: 'left' | 'right') => {
+    const colIndex = visibleColIndex(cell.column.id)
+    return (
+      <DataGridCell
+        key={cell.id}
+        cell={cell}
+        dragPreview={dragPreview}
+        rowIndex={rowIndex}
+        colIndex={colIndex}
+        focused={focus?.row === rowIndex && focus.col === colIndex}
+        pinnedSide={pinnedSide}
+        onFocusCell={onFocusCell}
+        onContextMenu={
+          onCellContextMenu
+            ? (event) => {
+                event.preventDefault()
+                onCellContextMenu(row.id, cell.column.id, event.clientX, event.clientY)
+              }
+            : undefined
+        }
+      />
+    )
+  }
+  const centerIds = new Set(columnWindow?.ids)
+  const leftCells = row.getLeftVisibleCells()
+  const centerCells = row.getCenterVisibleCells()
+  const rightCells = row.getRightVisibleCells()
+  const windowedCenterCells = columnWindow
+    ? centerCells.filter((cell) => centerIds.has(cell.column.id))
+    : centerCells
   return (
     <tr
       role="row"
@@ -39,8 +82,9 @@ export function DataGridRow<TData>({
       onKeyDown={
         enableRowSelection
           ? (event) => {
-              if (event.key !== ' ') return
+              if (event.key !== ' ' && event.key !== 'Spacebar') return
               event.preventDefault()
+              event.stopPropagation()
               toggle()
             }
           : undefined
@@ -51,21 +95,15 @@ export function DataGridRow<TData>({
           <DataGridRowCheckbox rowId={row.id} rowLabel={rowLabel} checked={selected} onToggle={(id) => onToggleRow?.(id)} />
         </td>
       )}
-      {row.getVisibleCells().map((cell) => (
-        <DataGridCell
-          key={cell.id}
-          cell={cell}
-          dragPreview={dragPreview}
-          onContextMenu={
-            onCellContextMenu
-              ? (event) => {
-                  event.preventDefault()
-                  onCellContextMenu(row.id, cell.column.id, event.clientX, event.clientY)
-                }
-              : undefined
-          }
-        />
-      ))}
+      {leftCells.map((cell) => renderCell(cell, 'left'))}
+      {columnWindow && columnWindow.paddingLeft > 0 && (
+        <td aria-hidden="true" data-column-spacer="left" style={{ minWidth: columnWindow.paddingLeft, width: columnWindow.paddingLeft, padding: 0 }} />
+      )}
+      {windowedCenterCells.map((cell) => renderCell(cell))}
+      {columnWindow && columnWindow.paddingRight > 0 && (
+        <td aria-hidden="true" data-column-spacer="right" style={{ minWidth: columnWindow.paddingRight, width: columnWindow.paddingRight, padding: 0 }} />
+      )}
+      {rightCells.map((cell) => renderCell(cell, 'right'))}
     </tr>
   )
 }

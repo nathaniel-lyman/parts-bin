@@ -70,6 +70,12 @@ export interface ColumnPinning {
   right: string[]
 }
 
+export interface ColumnVirtualWindow {
+  ids: string[]
+  paddingLeft: number
+  paddingRight: number
+}
+
 export type GridStatus = 'idle' | 'loading' | 'error'
 
 export interface GridRuntimeStatus {

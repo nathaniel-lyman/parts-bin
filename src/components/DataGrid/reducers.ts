@@ -3,7 +3,6 @@ import { arrayMove } from '@dnd-kit/sortable'
 import {
   ACTIONS_COLUMN_ID,
   DEFAULT_COLUMN_ORDER,
-  isMovableColumnId,
   normalizeColumnOrder,
   normalizePinning,
   normalizeSorting,
@@ -52,23 +51,29 @@ export function columnSizingReducer<TData>(
   }
 }
 
-export function columnOrderReducer(slice: string[], action: GridAction): string[] {
+export function columnOrderReducer<TData>(
+  slice: string[],
+  action: GridAction,
+  columns: LedgerGridColumn<TData>[] = [],
+): string[] {
+  const columnIds = columns.map((column) => column.id)
   switch (action.type) {
     case 'setColumnOrder':
-      return normalizeColumnOrder(action.columnOrder)
+      return normalizeColumnOrder(action.columnOrder, columnIds)
     case 'REORDER_COLUMN': {
       const { activeId, overId } = action
       if (activeId === overId) return slice
       if (activeId === ACTIONS_COLUMN_ID || overId === ACTIONS_COLUMN_ID) return slice
-      if (!isMovableColumnId(activeId) || !isMovableColumnId(overId)) return slice
-      const normalized = normalizeColumnOrder(slice)
+      const knownIds = columnIds.length ? columnIds : DEFAULT_COLUMN_ORDER
+      if (!knownIds.includes(activeId) || !knownIds.includes(overId)) return slice
+      const normalized = normalizeColumnOrder(slice, knownIds)
       const oldIndex = normalized.indexOf(activeId)
       const newIndex = normalized.indexOf(overId)
       if (oldIndex < 0 || newIndex < 0) return slice
-      return normalizeColumnOrder(arrayMove(normalized, oldIndex, newIndex))
+      return normalizeColumnOrder(arrayMove(normalized, oldIndex, newIndex), knownIds)
     }
     case 'RESET_COLUMNS':
-      return [...DEFAULT_COLUMN_ORDER]
+      return normalizeColumnOrder([], columnIds)
     default:
       return slice
   }
@@ -232,9 +237,10 @@ export function gridReducer<TData>(
   action: GridAction,
   columns: LedgerGridColumn<TData>[] = [],
 ): LedgerGridState {
+  const columnIds = columns.map((column) => column.id)
   switch (action.type) {
     case 'APPLY_VIEW':
-      return normalizeState(action.state)
+      return normalizeState(action.state, columnIds)
     case 'setSorting':
       return { ...state, sorting: sortingReducer(state.sorting, action.sorting) }
     case 'setGlobalFilter':
@@ -253,12 +259,12 @@ export function gridReducer<TData>(
       return normalizeState({
         ...state,
         columnVisibility: columnVisibilityReducer(state.columnVisibility, action),
-      })
+      }, columnIds)
     case 'setColumnOrder':
       return normalizeState({
         ...state,
-        columnOrder: columnOrderReducer(state.columnOrder, action),
-      })
+        columnOrder: columnOrderReducer(state.columnOrder, action, columns),
+      }, columnIds)
     case 'RESIZE_COLUMN':
     case 'RESET_COLUMN_WIDTH':
       return { ...state, columnSizing: columnSizingReducer(state.columnSizing, action, columns) }
@@ -271,12 +277,12 @@ export function gridReducer<TData>(
     case 'RESET_COLUMNS':
       return normalizeState({
         ...state,
-        columnOrder: columnOrderReducer(state.columnOrder, action),
+        columnOrder: columnOrderReducer(state.columnOrder, action, columns),
         columnVisibility: columnVisibilityReducer(state.columnVisibility, action),
         columnSizing: columnSizingReducer(state.columnSizing, action, columns),
         columnPinning: columnPinningReducer(state.columnPinning, action),
         density: densityReducer(state.density, action),
-      })
+      }, columnIds)
     case 'SET_SORT':
     case 'CLEAR_SORT':
       return { ...state, sorting: normalizeSorting(sortActionReducer(state.sorting, action)) }

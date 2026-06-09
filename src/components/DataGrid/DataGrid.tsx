@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import './columnMeta'
 import {
   closestCenter,
@@ -35,7 +35,8 @@ import { ledgerFilterFn } from './filtering'
 import { serializeGridQuery, toGridQuery, type GridQuery } from './query'
 import { copyToClipboard, downloadCSV, serializeCSV, serializeCell, serializeTSV } from './export'
 import { projectView } from './persistence'
-import { resolveCopyIntent } from './keyboard'
+import { keyToIntent, moveFocus, resolveCopyIntent, type GridFocus } from './keyboard'
+import { computeColumnRange } from './virtualization'
 import { DataGridBulkActions } from './DataGridBulkActions'
 import { DataGridBody } from './DataGridBody'
 import { DataGridColumnDragOverlay } from './DataGridColumnDragOverlay'
@@ -47,7 +48,7 @@ import { DataGridHeader } from './DataGridHeader'
 import { DataGridLoadingState } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
 import { projectColumnDrag, type ColumnDragPreviewState } from './dragPreview'
-import type { GridAction, LedgerGridColumn, LedgerGridState } from './types'
+import type { ColumnVirtualWindow, GridAction, LedgerGridColumn, LedgerGridState } from './types'
 
 export interface DataGridProps<TData> {
   rows: TData[]
@@ -123,8 +124,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState) : hydrate({ initialState: props.initialState }))
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
+  const [scrollMetrics, setScrollMetrics] = useState({ left: 0, width: 1024 })
   const [headerFiltersOpen, setHeaderFiltersOpen] = useState(false)
   const [dragPreview, setDragPreview] = useState<ColumnDragPreviewState | null>(null)
+  const [focus, setFocus] = useState<GridFocus>({ row: 0, col: 0 })
+  const restoreGridFocusRef = useRef(false)
   const view = useGridViewState(seed, columns)
   const savedViews = useSavedViews()
   const state = isControlled ? props.state! : view.state
@@ -156,6 +160,18 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     return Object.values(row.original as Record<string, unknown>).some((cell) => String(cell ?? '').toLowerCase().includes(needle))
   }
 
+  const effectiveColumnOrder = useMemo(
+    () => {
+      const ids = columns.map((column) => column.id)
+      const ordered = state.columnOrder.filter((id) => ids.includes(id) && id !== 'actions')
+      for (const id of ids) {
+        if (id !== 'actions' && !ordered.includes(id)) ordered.push(id)
+      }
+      return [...ordered, 'actions'].filter((id) => ids.includes(id))
+    },
+    [columns, state.columnOrder],
+  )
+
   // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<TData>({
@@ -167,7 +183,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       globalFilter: state.globalFilter,
       columnFilters: state.columnFilters,
       columnVisibility: state.columnVisibility,
-      columnOrder: state.columnOrder,
+      columnOrder: effectiveColumnOrder,
       columnSizing: state.columnSizing,
       columnPinning: state.columnPinning,
       pagination: state.pagination,
@@ -218,6 +234,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const rowCount = table.getRowModel().rows.length
   const visibleRows = table.getRowModel().rows
   const visibleLeafColumns = table.getVisibleLeafColumns()
+  const centerLeafColumns = table.getCenterVisibleLeafColumns()
   const visibleIds = visibleRows.map((row) => row.id)
   const visibleData = visibleRows.map((row) => row.original)
   const exportData = (manualFiltering ? table.getRowModel().rows : table.getFilteredRowModel().rows).map((row) => row.original)
@@ -231,6 +248,24 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const visibleMovableColumnIds = visibleColumnIds.filter(isMovableColumnId)
   const columnWidthMap = Object.fromEntries(visibleLeafColumns.map((column) => [column.id, state.columnSizing[column.id] ?? column.getSize()]))
   const pinnedGroups = pinnedLeafGroups(visibleColumnIds, state.columnPinning)
+  const columnWindow = useMemo<ColumnVirtualWindow | undefined>(() => {
+    if (centerLeafColumns.length <= 12) return undefined
+    const widths = centerLeafColumns.map((column) => state.columnSizing[column.id] ?? column.getSize())
+    const range = computeColumnRange({
+      widths,
+      scrollOffset: scrollMetrics.left,
+      viewport: scrollMetrics.width,
+      overscan: 2,
+    })
+    const windowed = centerLeafColumns.slice(range.start, range.end)
+    const paddingLeft = widths.slice(0, range.start).reduce((sum, width) => sum + width, 0)
+    const paddingRight = widths.slice(range.end).reduce((sum, width) => sum + width, 0)
+    return {
+      ids: windowed.map((column) => column.id),
+      paddingLeft,
+      paddingRight,
+    }
+  }, [centerLeafColumns, scrollMetrics.left, scrollMetrics.width, state.columnSizing])
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -331,7 +366,117 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   }, [columns, exportData, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    if (!scrollElement) return
+    const update = () => setScrollMetrics({ left: scrollElement.scrollLeft, width: scrollElement.clientWidth })
+    update()
+    scrollElement.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
+    return () => {
+      scrollElement.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [scrollElement])
+
+  const focusActiveCell = useCallback(() => {
+    const root = scrollElement
+    if (!root) return
+    const selector = focus.row < 0
+      ? `th[data-col-index="${focus.col}"]`
+      : `td[data-row-index="${focus.row}"][data-col-index="${focus.col}"]`
+    const el = root.querySelector<HTMLElement>(selector)
+    if (!el) return
+    el.focus()
+    el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+  }, [focus.col, focus.row, scrollElement])
+
+  useEffect(() => {
+    if (!scrollElement) return
+    if (!restoreGridFocusRef.current) return
+    if (focus.row >= 0 && rowCount > 100) {
+      scrollElement.scrollTop = Math.max(0, focus.row * 40)
+    }
+    const restore = () => {
+      focusActiveCell()
+      restoreGridFocusRef.current = false
+    }
+    restore()
+    const frame = requestAnimationFrame(restore)
+    return () => cancelAnimationFrame(frame)
+  }, [focus, focusActiveCell, rowCount, scrollElement])
+
+  const onGridKeyDown = (event: ReactKeyboardEvent<HTMLTableElement>) => {
+    const target = event.target
+    const interactiveTarget =
+      target instanceof HTMLButtonElement ||
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLSelectElement ||
+      target instanceof HTMLTextAreaElement ||
+      (target instanceof HTMLElement && target.closest('[role="separator"]') !== null)
+    if (interactiveTarget) return
+
+    const intent = keyToIntent({
+      key: event.key,
+      shiftKey: event.shiftKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+    })
+    if (intent === 'none') return
+    if (intent === 'close-menu') {
+      setMenu(null)
+      return
+    }
+    const dims = {
+      rowCount,
+      colCount: visibleLeafColumns.length,
+      pageRows: Math.max(1, Math.floor((scrollElement?.clientHeight ?? 400) / 40)),
+    }
+    if (intent === 'move') {
+      event.preventDefault()
+      restoreGridFocusRef.current = true
+      setFocus((current) => moveFocus(current, event.key, dims, { ctrl: event.ctrlKey || event.metaKey }))
+      return
+    }
+    if (focus.row < 0) {
+      const column = visibleLeafColumns[focus.col]
+      if (!column) return
+      if (intent === 'primary-action') {
+        event.preventDefault()
+        if (column.getCanSort()) dispatch({ type: 'TOGGLE_SORT', columnId: column.id, multi: event.shiftKey })
+      }
+      if (intent === 'reorder-prev' || intent === 'reorder-next') {
+        event.preventDefault()
+        const delta = intent === 'reorder-next' ? 1 : -1
+        const over = visibleLeafColumns[focus.col + delta]
+        if (over) {
+          restoreGridFocusRef.current = true
+          dispatch({ type: 'REORDER_COLUMN', activeId: column.id, overId: over.id })
+          setFocus((current) => ({ ...current, col: Math.max(0, Math.min(visibleLeafColumns.length - 1, current.col + delta)) }))
+        }
+      }
+      if (intent === 'resize-grow' || intent === 'resize-shrink') {
+        event.preventDefault()
+        if (column.columnDef.meta?.resizable === false || column.id === 'actions') return
+        const delta = intent === 'resize-grow' ? 16 : -16
+        dispatch({ type: 'RESIZE_COLUMN', id: column.id, width: column.getSize() + delta })
+      }
+      return
+    }
+    const row = visibleRows[focus.row]
+    if (!row) return
+    if (intent === 'toggle-select' && enableRowSelection) {
+      event.preventDefault()
+      dispatch({ type: 'TOGGLE_ROW', id: row.id })
+      return
+    }
+    if (intent === 'primary-action') {
+      event.preventDefault()
+      const rowEl = scrollElement?.querySelector<HTMLElement>(`[data-row-id="${row.id}"]`)
+      rowEl?.querySelector<HTMLButtonElement>('button')?.click()
+    }
+  }
+
+  useEffect(() => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
       const active = document.activeElement
       const editableInput =
         active instanceof HTMLInputElement &&
@@ -393,6 +538,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
             role="grid"
             aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : table.getFilteredRowModel().rows.length}
             aria-colcount={visibleLeafColumns.length}
+            onKeyDown={onGridKeyDown}
           >
             <DataGridHeader
               table={table}
@@ -408,6 +554,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
               onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
               dndProvider={false}
               dragPreview={dragPreview}
+              focus={focus}
+              columnWindow={columnWindow}
+              visibleColumnIds={visibleColumnIds}
+              onFocusCell={(row, col) => setFocus({ row, col })}
             />
             {!loading && error === undefined && rowCount > 0 && (
               <DataGridBody
@@ -419,6 +569,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
                 onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
                 dragPreview={dragPreview}
+                focus={focus}
+                columnWindow={columnWindow}
+                visibleColumnIds={visibleColumnIds}
+                onFocusCell={(row, col) => setFocus({ row, col })}
               />
             )}
           </table>
