@@ -9,6 +9,7 @@ import {
   type ThemeRecipeId,
 } from '../../theme/recipes'
 import { CATALOG, CATEGORIES, type ComponentEntry } from '../catalog'
+import { demos } from './demoRegistry'
 
 const usageSnippet = `import { Button, Card, Field, Input } from './components/ui'
 import { AppShell, Sidebar, TopNav } from './components/shell'
@@ -93,9 +94,8 @@ function CatalogReferenceIndex() {
           <section key={cat}>
             <SectionHeader title={CATEGORY_LABELS[cat] ?? cat} description={`${entries.length} components`} />
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
-              {/* demo prop added in Task 9 */}
               {entries.map((entry) => (
-                <ReferenceCard key={entry.name} entry={entry} />
+                <ReferenceCard key={entry.name} entry={entry} demo={demos[entry.name]} />
               ))}
             </div>
           </section>
