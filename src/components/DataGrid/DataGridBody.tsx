@@ -3,6 +3,7 @@ import type { Row, Table } from '@tanstack/react-table'
 import { DataGridRow } from './DataGridRow'
 import type { ColumnDragPreviewState } from './dragPreview'
 import type { GridFocus } from './keyboard'
+import type { PinnedOffsets } from './selectors'
 import type { ColumnVirtualWindow } from './types'
 
 interface Props<TData> {
@@ -20,6 +21,7 @@ interface Props<TData> {
   columnWindow?: ColumnVirtualWindow
   visibleColumnIds?: string[]
   onFocusCell?: (row: number, col: number) => void
+  pinnedOffsets?: PinnedOffsets
 }
 
 function defaultRowLabel<TData>(row: TData, rowId: string): string {
@@ -42,6 +44,7 @@ export function DataGridBody<TData>({
   columnWindow,
   visibleColumnIds,
   onFocusCell,
+  pinnedOffsets,
 }: Props<TData>) {
   const topRows = table.getTopRows()
   const centerRows = table.getCenterRows()
@@ -59,20 +62,24 @@ export function DataGridBody<TData>({
   })
 
   const virtualItems = enableVirtualization ? rowVirtualizer.getVirtualItems() : []
-  const virtualRows = enableVirtualization
-    ? virtualItems.map((item) => centerRows[item.index]).filter((row): row is Row<TData> => row !== undefined)
-    : centerRows
+  // Pair each visible center row with its index in centerRows so DataGridRow gets the index
+  // directly instead of an O(n) indexOf per row (which is O(n²) across a render).
+  const centerEntries: Array<{ row: Row<TData>; index: number }> = enableVirtualization
+    ? virtualItems
+        .map((item) => ({ row: centerRows[item.index], index: item.index }))
+        .filter((entry): entry is { row: Row<TData>; index: number } => entry.row !== undefined)
+    : centerRows.map((row, index) => ({ row, index }))
   const topSpacer = enableVirtualization ? (virtualItems[0]?.start ?? 0) : 0
   const bottomSpacer = enableVirtualization
     ? Math.max(0, rowVirtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0))
     : 0
 
-  const renderRow = (row: Row<TData>, pinned?: 'top' | 'bottom') => (
+  const renderRow = (row: Row<TData>, rowIndex: number, pinned?: 'top' | 'bottom') => (
     <DataGridRow
       key={`${pinned ?? 'row'}-${row.id}`}
       row={row}
       pinned={pinned}
-      rowIndex={centerRows.indexOf(row)}
+      rowIndex={rowIndex}
       enableRowSelection={enableRowSelection}
       selected={rowSelection[row.id] === true}
       rowLabel={getRowLabel(row.original, row.id)}
@@ -83,24 +90,25 @@ export function DataGridBody<TData>({
       columnWindow={columnWindow}
       visibleColumnIds={visibleColumnIds}
       onFocusCell={onFocusCell}
+      pinnedOffsets={pinnedOffsets}
     />
   )
 
   return (
     <tbody data-virtualized={enableVirtualization ? 'true' : 'false'} data-total-size={enableVirtualization ? rowVirtualizer.getTotalSize() : undefined}>
-      {topRows.map((row) => renderRow(row, 'top'))}
+      {topRows.map((row) => renderRow(row, centerRows.indexOf(row), 'top'))}
       {topSpacer > 0 && (
         <tr aria-hidden="true">
           <td colSpan={colSpan} style={{ height: topSpacer, padding: 0 }} />
         </tr>
       )}
-      {virtualRows.map((row) => renderRow(row))}
+      {centerEntries.map(({ row, index }) => renderRow(row, index))}
       {bottomSpacer > 0 && (
         <tr aria-hidden="true">
           <td colSpan={colSpan} style={{ height: bottomSpacer, padding: 0 }} />
         </tr>
       )}
-      {bottomRows.map((row) => renderRow(row, 'bottom'))}
+      {bottomRows.map((row) => renderRow(row, centerRows.indexOf(row), 'bottom'))}
     </tbody>
   )
 }

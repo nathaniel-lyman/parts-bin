@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { flexRender, type ColumnFiltersState, type Header, type Table } from '@tanstack/react-table'
 import { type CSSProperties } from 'react'
 import { isLockedColumn, isMovableColumnId } from './normalize'
+import type { PinnedOffsets } from './selectors'
 import { DataGridColumnMenu } from './DataGridColumnMenu'
 import { DataGridResizeHandle } from './DataGridResizeHandle'
 import { DataGridSelectAllCheckbox } from './DataGridSelectionCell'
@@ -39,7 +40,9 @@ function SortableHeader<TData>({
   colIndex,
   focused,
   pinnedSide,
+  pinnedOffset = 0,
   onFocusCell,
+  onAutofitColumn,
 }: {
   header: Header<TData, unknown>
   dispatch?: (action: GridAction) => void
@@ -51,12 +54,16 @@ function SortableHeader<TData>({
   colIndex?: number
   focused?: boolean
   pinnedSide?: 'left' | 'right'
+  pinnedOffset?: number
   onFocusCell?: (row: number, col: number) => void
+  onAutofitColumn?: (columnId: string) => void
 }) {
   const sorted = header.column.getIsSorted()
+  const multiSortActive = header.getContext().table.getState().sorting.length > 1
   const align = header.column.columnDef.meta?.align ?? 'left'
   const canSort = header.column.getCanSort()
   const canMove = isMovableColumnId(header.column.id)
+  const isActions = header.column.id === 'actions'
   const source = columns.find((column) => column.id === header.column.id)
   const canResize = header.column.columnDef.meta?.resizable !== false && canMove
   const label = headerLabel(header, source)
@@ -79,9 +86,10 @@ function SortableHeader<TData>({
     transition: dragPreview ? dragPreviewTransition : canMove ? transition : undefined,
     opacity: isPreviewActive ? 0.28 : isDragging ? 0.72 : undefined,
     position: pinnedSide ? 'sticky' : 'relative',
-    ...(pinnedSide === 'left' ? { left: 0 } : {}),
-    ...(pinnedSide === 'right' ? { right: 0 } : {}),
+    ...(pinnedSide === 'left' ? { left: pinnedOffset } : {}),
+    ...(pinnedSide === 'right' ? { right: pinnedOffset } : {}),
     zIndex: isDragging && !dragPreview ? 1 : undefined,
+    boxSizing: isActions ? 'border-box' : undefined,
   }
 
   return (
@@ -105,32 +113,40 @@ function SortableHeader<TData>({
       onFocus={() => {
         if (colIndex !== undefined) onFocusCell?.(-1, colIndex)
       }}
-      className={`group border-r border-line px-3 py-2 ${align === 'right' ? 'text-right' : 'text-left'} ${canSort || canMove ? 'cursor-pointer' : ''} ${pinnedSide ? 'bg-surface-2 shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
+      className={`group border-r border-line py-2 ${isActions ? 'px-2' : 'px-3'} ${align === 'right' ? 'text-right' : 'text-left'} ${canSort || canMove ? 'cursor-pointer' : ''} ${pinnedSide ? 'bg-surface-2 shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       {...(canMove ? listeners : {})}
     >
       <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
         <span className="micro">
           {flexRender(header.column.columnDef.header, header.getContext())}
           {sorted && (
-            <span className="text-accent opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            <span className="text-accent">
               {' '}{sorted === 'asc' ? '▲' : '▼'}
+              {multiSortActive && (
+                <span data-testid="sort-priority" className="ml-0.5 align-super text-[9px] tabular-nums">
+                  {header.column.getSortIndex() + 1}
+                </span>
+              )}
             </span>
           )}
         </span>
-        <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          <DataGridColumnMenu
-            columnId={header.column.id}
-            header={label}
-            type={source?.type ?? 'text'}
-            filterMeta={header.column.columnDef.meta}
-            currentFilter={currentFilter}
-            sortDirection={sorted}
-            hideable={(source?.hideable ?? true) && header.column.id !== 'actions'}
-            canPin={(source?.pinnable ?? true) && header.column.id !== 'actions'}
-            pinSide={pinSide(header.column.id, columnPinning)}
-            dispatch={dispatch ?? noopDispatch}
-          />
-        </span>
+        {!isActions && (
+          <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            <DataGridColumnMenu
+              columnId={header.column.id}
+              header={label}
+              type={source?.type ?? 'text'}
+              filterMeta={header.column.columnDef.meta}
+              currentFilter={currentFilter}
+              sortDirection={sorted}
+              hideable={source?.hideable ?? true}
+              canPin={source?.pinnable ?? true}
+              pinSide={pinSide(header.column.id, columnPinning)}
+              dispatch={dispatch ?? noopDispatch}
+              onAutofit={onAutofitColumn}
+            />
+          </span>
+        )}
       </div>
       {canResize && (
         <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -139,7 +155,7 @@ function SortableHeader<TData>({
             header={label}
             currentWidth={columnSizing[header.column.id] ?? header.column.getSize()}
             onResize={(id, width) => (dispatch ?? noopDispatch)({ type: 'RESIZE_COLUMN', id, width })}
-            onReset={(id) => (dispatch ?? noopDispatch)({ type: 'RESET_COLUMN_WIDTH', id })}
+            onAutofit={(id) => onAutofitColumn?.(id)}
           />
         </span>
       )}
@@ -165,6 +181,8 @@ export function DataGridHeader<TData>({
   columnWindow,
   visibleColumnIds,
   onFocusCell,
+  onAutofitColumn,
+  pinnedOffsets,
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
@@ -183,6 +201,8 @@ export function DataGridHeader<TData>({
   columnWindow?: ColumnVirtualWindow
   visibleColumnIds?: string[]
   onFocusCell?: (row: number, col: number) => void
+  onAutofitColumn?: (columnId: string) => void
+  pinnedOffsets?: PinnedOffsets
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -207,7 +227,7 @@ export function DataGridHeader<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-surface-2" data-testid="grid-header-row">
               {enableRowSelection && (
-                <th className="w-10 border-r border-line px-2">
+                <th className="sticky left-0 z-30 w-10 border-r border-line bg-surface-2 px-2 shadow-pinned">
                   <DataGridSelectAllCheckbox
                     state={selectAll}
                     label={isServerMode ? 'Select all loaded' : 'Select all'}
@@ -232,7 +252,9 @@ export function DataGridHeader<TData>({
                       colIndex={colIndex}
                       focused={focus?.row === -1 && focus.col === colIndex}
                       pinnedSide="left"
+                      pinnedOffset={pinnedOffsets?.left[header.column.id] ?? 0}
                       onFocusCell={onFocusCell}
+                      onAutofitColumn={onAutofitColumn}
                     />
                   )
                 })}
@@ -259,6 +281,7 @@ export function DataGridHeader<TData>({
                       colIndex={colIndex}
                       focused={focus?.row === -1 && focus.col === colIndex}
                       onFocusCell={onFocusCell}
+                      onAutofitColumn={onAutofitColumn}
                     />
                   )
                 })}
@@ -282,7 +305,9 @@ export function DataGridHeader<TData>({
                       colIndex={colIndex}
                       focused={focus?.row === -1 && focus.col === colIndex}
                       pinnedSide="right"
+                      pinnedOffset={pinnedOffsets?.right[header.column.id] ?? 0}
                       onFocusCell={onFocusCell}
+                      onAutofitColumn={onAutofitColumn}
                     />
                   )
                 })}
@@ -290,7 +315,7 @@ export function DataGridHeader<TData>({
           ))}
           {enableHeaderFilters && (
             <tr className="border-t border-line bg-surface" onClick={(event) => event.stopPropagation()}>
-              {enableRowSelection && <th className="border-r border-line px-2" />}
+              {enableRowSelection && <th className="sticky left-0 z-30 border-r border-line bg-surface px-2 shadow-pinned" />}
               {table.getVisibleLeafColumns().map((column) => {
                 const source = columns.find((item) => item.id === column.id)
                 const label = typeof source?.header === 'string' && source.header ? source.header : column.id

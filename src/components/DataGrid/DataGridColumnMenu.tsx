@@ -19,6 +19,7 @@ interface Props {
   canPin: boolean
   pinSide: 'left' | 'right' | false
   dispatch: (action: GridAction) => void
+  onAutofit?: (columnId: string) => void
 }
 
 export function DataGridColumnMenu({
@@ -32,6 +33,7 @@ export function DataGridColumnMenu({
   canPin,
   pinSide,
   dispatch,
+  onAutofit,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [draftOperator, setDraftOperator] = useState<string>('')
@@ -123,6 +125,9 @@ export function DataGridColumnMenu({
             <div className="my-1 border-t border-line" />
             {hideable && (
               <button role="menuitem" className={item} onClick={() => { dispatch({ type: 'TOGGLE_COLUMN_VISIBILITY', id: columnId }); close() }}>Hide column</button>
+            )}
+            {onAutofit && (
+              <button role="menuitem" className={item} onClick={() => { onAutofit(columnId); close() }}>Autofit to content</button>
             )}
             <button role="menuitem" className={item} onClick={() => { dispatch({ type: 'RESET_COLUMN_WIDTH', id: columnId }); close() }}>Reset width</button>
             {canPin && (

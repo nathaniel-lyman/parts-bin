@@ -11,6 +11,7 @@ export function DataGridCell<TData>({
   colIndex,
   focused,
   pinnedSide,
+  pinnedOffset = 0,
   onFocusCell,
 }: {
   cell: Cell<TData, unknown>
@@ -20,20 +21,23 @@ export function DataGridCell<TData>({
   colIndex?: number
   focused?: boolean
   pinnedSide?: 'left' | 'right'
+  pinnedOffset?: number
   onFocusCell?: (row: number, col: number) => void
 }) {
   const align = cell.column.columnDef.meta?.align
+  const isActions = cell.column.id === 'actions'
   const previewOffset = dragPreview?.offsets[cell.column.id] ?? 0
   const isPreviewActive = dragPreview?.activeId === cell.column.id
   const style: CSSProperties = {
     minWidth: cell.column.getSize(),
     width: cell.column.getSize(),
-    padding: 'var(--cell-pad)',
+    padding: isActions ? '0.25rem 0.5rem' : 'var(--cell-pad)',
+    boxSizing: isActions ? 'border-box' : undefined,
     transform: isPreviewActive || previewOffset === 0 ? undefined : `translateX(${previewOffset}px)`,
     transition: dragPreview ? 'transform 160ms ease' : undefined,
     opacity: isPreviewActive ? 0.28 : undefined,
-    ...(pinnedSide === 'left' ? { position: 'sticky', left: 0, zIndex: 10 } : {}),
-    ...(pinnedSide === 'right' ? { position: 'sticky', right: 0, zIndex: 10 } : {}),
+    ...(pinnedSide === 'left' ? { position: 'sticky', left: pinnedOffset, zIndex: 10 } : {}),
+    ...(pinnedSide === 'right' ? { position: 'sticky', right: pinnedOffset, zIndex: 10 } : {}),
   }
   return (
     <td

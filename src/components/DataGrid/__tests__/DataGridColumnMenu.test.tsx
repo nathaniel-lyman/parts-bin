@@ -59,6 +59,18 @@ describe('DataGridColumnMenu shell', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'RESET_COLUMN_WIDTH', id: 'mrr' })
   })
 
+  it('Autofit to content invokes onAutofit with the column id', () => {
+    const onAutofit = vi.fn()
+    open({ onAutofit })
+    fireEvent.click(screen.getByRole('menuitem', { name: /autofit to content/i }))
+    expect(onAutofit).toHaveBeenCalledWith('mrr')
+  })
+
+  it('omits Autofit to content when no onAutofit handler is provided', () => {
+    open()
+    expect(screen.queryByRole('menuitem', { name: /autofit to content/i })).toBeNull()
+  })
+
   it('dispatches per-column filter changes', () => {
     const dispatch = open()
     fireEvent.change(screen.getByLabelText(/mrr filter value/i), { target: { value: '1000' } })

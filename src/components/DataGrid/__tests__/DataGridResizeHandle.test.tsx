@@ -4,30 +4,41 @@ import { DataGridResizeHandle } from '../DataGridResizeHandle'
 
 describe('DataGridResizeHandle', () => {
   it('renders a separator with a column-scoped aria-label', () => {
-    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={() => {}} onReset={() => {}} />)
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={() => {}} onAutofit={() => {}} />)
     expect(screen.getByRole('separator', { name: /resize mrr column/i })).toBeInTheDocument()
   })
 
   it('emits onResize with raw start+delta width while dragging', () => {
     const onResize = vi.fn()
-    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onReset={() => {}} />)
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onAutofit={() => {}} />)
     const handle = screen.getByRole('separator', { name: /resize mrr column/i })
-    fireEvent.mouseDown(handle, { clientX: 200 })
-    fireEvent.mouseMove(window, { clientX: 230 })
+    fireEvent.pointerDown(handle, { clientX: 200, button: 0 })
+    fireEvent.pointerMove(window, { clientX: 230 })
     expect(onResize).toHaveBeenLastCalledWith('mrr', 150)
-    fireEvent.mouseUp(window)
+    fireEvent.pointerUp(window)
   })
 
-  it('double-click resets the width', () => {
-    const onReset = vi.fn()
-    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={() => {}} onReset={onReset} />)
+  it('locks the body cursor and text selection during a drag and restores them after', () => {
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={() => {}} onAutofit={() => {}} />)
+    const handle = screen.getByRole('separator', { name: /resize mrr column/i })
+    fireEvent.pointerDown(handle, { clientX: 200, button: 0 })
+    expect(document.body.style.cursor).toBe('col-resize')
+    expect(document.body.style.userSelect).toBe('none')
+    fireEvent.pointerUp(window)
+    expect(document.body.style.cursor).toBe('')
+    expect(document.body.style.userSelect).toBe('')
+  })
+
+  it('double-click autofits the column to its content', () => {
+    const onAutofit = vi.fn()
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={() => {}} onAutofit={onAutofit} />)
     fireEvent.doubleClick(screen.getByRole('separator', { name: /resize mrr column/i }))
-    expect(onReset).toHaveBeenCalledWith('mrr')
+    expect(onAutofit).toHaveBeenCalledWith('mrr')
   })
 
   it('Ctrl+Arrow keys resize from the keyboard', () => {
     const onResize = vi.fn()
-    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onReset={() => {}} />)
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onAutofit={() => {}} />)
     const handle = screen.getByRole('separator', { name: /resize mrr column/i })
 
     fireEvent.keyDown(handle, { key: 'ArrowRight', ctrlKey: true })
@@ -37,14 +48,25 @@ describe('DataGridResizeHandle', () => {
     expect(onResize).toHaveBeenLastCalledWith('mrr', 104)
   })
 
-  it('does not call onResize after mouseup ends the drag', () => {
+  it('stops pointerdown from reaching the draggable header (no drag-on-resize)', () => {
+    const onParentPointerDown = vi.fn()
+    render(
+      <div onPointerDown={onParentPointerDown}>
+        <DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={() => {}} onAutofit={() => {}} />
+      </div>,
+    )
+    fireEvent.pointerDown(screen.getByRole('separator', { name: /resize mrr column/i }), { clientX: 100 })
+    expect(onParentPointerDown).not.toHaveBeenCalled()
+  })
+
+  it('does not call onResize after pointerup ends the drag', () => {
     const onResize = vi.fn()
-    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onReset={() => {}} />)
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onAutofit={() => {}} />)
     const handle = screen.getByRole('separator', { name: /resize mrr column/i })
-    fireEvent.mouseDown(handle, { clientX: 100 })
-    fireEvent.mouseUp(window)
+    fireEvent.pointerDown(handle, { clientX: 100, button: 0 })
+    fireEvent.pointerUp(window)
     onResize.mockClear()
-    fireEvent.mouseMove(window, { clientX: 300 })
+    fireEvent.pointerMove(window, { clientX: 300 })
     expect(onResize).not.toHaveBeenCalled()
   })
 })

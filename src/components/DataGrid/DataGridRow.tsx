@@ -3,6 +3,7 @@ import { DataGridCell } from './DataGridCell'
 import { DataGridRowCheckbox } from './DataGridSelectionCell'
 import type { ColumnDragPreviewState } from './dragPreview'
 import type { GridFocus } from './keyboard'
+import type { PinnedOffsets } from './selectors'
 import type { ColumnVirtualWindow } from './types'
 
 interface Props<TData> {
@@ -19,6 +20,7 @@ interface Props<TData> {
   columnWindow?: ColumnVirtualWindow
   visibleColumnIds?: string[]
   onFocusCell?: (row: number, col: number) => void
+  pinnedOffsets?: PinnedOffsets
 }
 
 export function DataGridRow<TData>({
@@ -35,6 +37,7 @@ export function DataGridRow<TData>({
   columnWindow,
   visibleColumnIds = row.getVisibleCells().map((cell) => cell.column.id),
   onFocusCell,
+  pinnedOffsets,
 }: Props<TData>) {
   const toggle = () => onToggleRow?.(row.id)
   const visibleColIndex = (columnId: string) => visibleColumnIds.indexOf(columnId)
@@ -49,6 +52,13 @@ export function DataGridRow<TData>({
         colIndex={colIndex}
         focused={focus?.row === rowIndex && focus.col === colIndex}
         pinnedSide={pinnedSide}
+        pinnedOffset={
+          pinnedSide === 'left'
+            ? pinnedOffsets?.left[cell.column.id] ?? 0
+            : pinnedSide === 'right'
+              ? pinnedOffsets?.right[cell.column.id] ?? 0
+              : 0
+        }
         onFocusCell={onFocusCell}
         onContextMenu={
           onCellContextMenu
@@ -91,7 +101,7 @@ export function DataGridRow<TData>({
       }
     >
       {enableRowSelection && (
-        <td className="w-10 px-2 text-center">
+        <td className="sticky left-0 z-10 w-10 bg-surface px-2 text-center">
           <DataGridRowCheckbox rowId={row.id} rowLabel={rowLabel} checked={selected} onToggle={(id) => onToggleRow?.(id)} />
         </td>
       )}

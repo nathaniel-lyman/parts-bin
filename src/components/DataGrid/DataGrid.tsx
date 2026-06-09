@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import './columnMeta'
 import {
   closestCenter,
@@ -29,7 +29,7 @@ import { bootGridSeed, useGridPersistence } from '../../hooks/useGridPersistence
 import { useSavedViews } from '../../hooks/useSavedViews'
 import { canHideColumn, canSortColumn, isMovableColumnId } from './normalize'
 import { gridReducer } from './reducers'
-import { densityClass, pinnedLeafGroups, selectAllState, selectionCount } from './selectors'
+import { densityClass, pinnedLeafGroups, pinnedOffsets, rowHeightForDensity, selectAllState, selectionCount, type PinnedOffsets } from './selectors'
 import { hydrate } from './state'
 import { ledgerFilterFn } from './filtering'
 import { serializeGridQuery, toGridQuery, type GridQuery } from './query'
@@ -48,6 +48,7 @@ import { DataGridHeader } from './DataGridHeader'
 import { DataGridLoadingState } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
 import { projectColumnDrag, type ColumnDragPreviewState } from './dragPreview'
+import { fitColumnWidth, measureColumnContentWidths } from './autofit'
 import type { ColumnVirtualWindow, GridAction, LedgerGridColumn, LedgerGridState } from './types'
 
 export interface DataGridProps<TData> {
@@ -96,6 +97,18 @@ function toColumnDef<TData>(column: LedgerGridColumn<TData>): ColumnDef<TData> {
   if (column.accessorFn) return { ...base, accessorFn: column.accessorFn }
   if (column.accessorKey) return { ...base, accessorKey: column.accessorKey as string }
   return base
+}
+
+const EMPTY_OFFSETS: PinnedOffsets = { left: {}, right: {} }
+
+function sameSide(a: Record<string, number>, b: Record<string, number>): boolean {
+  const keys = Object.keys(a)
+  if (keys.length !== Object.keys(b).length) return false
+  return keys.every((key) => a[key] === b[key])
+}
+
+function sameOffsets(a: PinnedOffsets, b: PinnedOffsets): boolean {
+  return sameSide(a.left, b.left) && sameSide(a.right, b.right)
 }
 
 export function DataGrid<TData>(props: DataGridProps<TData>) {
@@ -248,6 +261,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const visibleMovableColumnIds = visibleColumnIds.filter(isMovableColumnId)
   const columnWidthMap = Object.fromEntries(visibleLeafColumns.map((column) => [column.id, state.columnSizing[column.id] ?? column.getSize()]))
   const pinnedGroups = pinnedLeafGroups(visibleColumnIds, state.columnPinning)
+  const rowHeight = rowHeightForDensity(state.density)
+  // Sticky offsets must come from RENDERED widths: the w-full table stretches columns past
+  // their logical getSize(), and the selection column has no fixed width — so we measure.
+  const [pinnedColumnOffsets, setPinnedColumnOffsets] = useState<PinnedOffsets>({ left: {}, right: {} })
   const columnWindow = useMemo<ColumnVirtualWindow | undefined>(() => {
     if (centerLeafColumns.length <= 12) return undefined
     const widths = centerLeafColumns.map((column) => state.columnSizing[column.id] ?? column.getSize())
@@ -306,6 +323,20 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   }
 
   const onDragCancel = () => setDragPreview(null)
+
+  const autofitColumn = useCallback(
+    (columnId: string) => {
+      if (!scrollElement || columnId === 'actions') return
+      const column = columns.find((item) => item.id === columnId)
+      const widths = measureColumnContentWidths(scrollElement, columnId)
+      if (widths.length === 0) return
+      const width = fitColumnWidth(widths, { min: column?.minWidth, max: column?.maxWidth })
+      dispatch({ type: 'RESIZE_COLUMN', id: columnId, width })
+    },
+    // dispatch is stable for our purposes; recreating per render is harmless here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scrollElement, columns],
+  )
 
   const selCountRef = useRef(selCount)
   const menuRef = useRef(menu)
@@ -377,6 +408,27 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     }
   }, [scrollElement])
 
+  const pinnedKey = `${pinnedGroups.left.join(',')}|${pinnedGroups.right.join(',')}`
+  const layoutKey = `${visibleColumnIds.join(',')}|${JSON.stringify(state.columnSizing)}|${state.density}|${scrollMetrics.width}|${enableRowSelection}`
+  useLayoutEffect(() => {
+    if (!scrollElement) {
+      setPinnedColumnOffsets((prev) => (prev.left === EMPTY_OFFSETS.left ? prev : EMPTY_OFFSETS))
+      return
+    }
+    const headerRow = scrollElement.querySelector('tr[data-testid="grid-header-row"]')
+    if (!headerRow) return
+    const widths: Record<string, number> = {}
+    headerRow.querySelectorAll<HTMLElement>('th[data-column-id]').forEach((th) => {
+      widths[th.dataset.columnId!] = th.getBoundingClientRect().width
+    })
+    const leadingTh = headerRow.querySelector<HTMLElement>('th:not([data-column-id])')
+    const leadingOffset = enableRowSelection && leadingTh ? leadingTh.getBoundingClientRect().width : 0
+    const next = pinnedOffsets({ left: pinnedGroups.left, right: pinnedGroups.right }, widths, leadingOffset)
+    setPinnedColumnOffsets((prev) => (sameOffsets(prev, next) ? prev : next))
+    // pinnedKey/layoutKey capture every layout input; pinnedGroups are derived from them.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollElement, pinnedKey, layoutKey])
+
   const focusActiveCell = useCallback(() => {
     const root = scrollElement
     if (!root) return
@@ -393,7 +445,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     if (!scrollElement) return
     if (!restoreGridFocusRef.current) return
     if (focus.row >= 0 && rowCount > 100) {
-      scrollElement.scrollTop = Math.max(0, focus.row * 40)
+      scrollElement.scrollTop = Math.max(0, focus.row * rowHeight)
     }
     const restore = () => {
       focusActiveCell()
@@ -402,7 +454,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     restore()
     const frame = requestAnimationFrame(restore)
     return () => cancelAnimationFrame(frame)
-  }, [focus, focusActiveCell, rowCount, scrollElement])
+  }, [focus, focusActiveCell, rowCount, rowHeight, scrollElement])
 
   const onGridKeyDown = (event: ReactKeyboardEvent<HTMLTableElement>) => {
     const target = event.target
@@ -428,7 +480,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     const dims = {
       rowCount,
       colCount: visibleLeafColumns.length,
-      pageRows: Math.max(1, Math.floor((scrollElement?.clientHeight ?? 400) / 40)),
+      pageRows: Math.max(1, Math.floor((scrollElement?.clientHeight ?? 400) / rowHeight)),
     }
     if (intent === 'move') {
       event.preventDefault()
@@ -558,12 +610,15 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
               columnWindow={columnWindow}
               visibleColumnIds={visibleColumnIds}
               onFocusCell={(row, col) => setFocus({ row, col })}
+              onAutofitColumn={autofitColumn}
+              pinnedOffsets={pinnedColumnOffsets}
             />
             {!loading && error === undefined && rowCount > 0 && (
               <DataGridBody
                 table={table}
                 enableRowSelection={enableRowSelection}
                 rowSelection={state.rowSelection}
+                rowHeight={rowHeight}
                 scrollElement={scrollElement}
                 enableVirtualization={rowCount > 100}
                 onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
@@ -573,6 +628,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 columnWindow={columnWindow}
                 visibleColumnIds={visibleColumnIds}
                 onFocusCell={(row, col) => setFocus({ row, col })}
+                pinnedOffsets={pinnedColumnOffsets}
               />
             )}
           </table>
