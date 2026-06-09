@@ -438,16 +438,15 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Animated equalizer bars loading indicator.',
     use_when: 'Placeholder for an activity feed or list-style region.',
     props: ['label', 'className'],
-    related: ['LoadingDots', 'LoadingSparkline', 'LoadingChartDrawIn', 'LoadingDonut', 'LoadingConcentricArcs', 'LoadingProgress', 'LoadingKpiSkeleton', 'LoadingCountingMetric'],
+    related: ['LoadingDots', 'LoadingSparkline'],
     snippet: `<LoadingBars label="Loading activity" />`,
   }),
   defineComponent(LoadingChartDrawIn, {
     name: 'LoadingChartDrawIn', import: './components/ui', category: 'feedback',
     purpose: 'Line-chart draw-in animation used as a chart loading state.',
     use_when: 'Placeholder while a line/area chart loads.',
-    props: ['label', 'tone', 'className'],
-    variants: { tone: ['accent', 'pos', 'intel', 'warn', 'neg', 'muted'] },
-    related: ['LoadingDonut', 'LoadingSparkline', 'LoadingBars', 'LoadingDots', 'LoadingConcentricArcs', 'LoadingProgress', 'LoadingKpiSkeleton', 'LoadingCountingMetric'],
+    props: ['label', 'className'],
+    related: ['LoadingDonut', 'LoadingSparkline'],
     snippet: `<LoadingChartDrawIn label="Loading chart" />`,
   }),
   defineComponent(LoadingConcentricArcs, {
@@ -455,7 +454,7 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Concentric rotating arcs loading indicator.',
     use_when: 'A distinctive centered loader for a larger empty region.',
     props: ['label', 'className'],
-    related: ['LoadingDonut', 'LoadingDots', 'LoadingBars', 'LoadingSparkline', 'LoadingChartDrawIn', 'LoadingProgress', 'LoadingKpiSkeleton', 'LoadingCountingMetric'],
+    related: ['LoadingDonut', 'LoadingDots'],
     snippet: `<LoadingConcentricArcs label="Loading" />`,
   }),
   defineComponent(LoadingCountingMetric, {
@@ -463,7 +462,7 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Animated count-up to a target metric value while loading.',
     use_when: 'Placeholder for a single KPI/metric that animates toward its value.',
     props: ['target', 'metricLabel', 'formatValue', 'label', 'className'],
-    related: ['LoadingKpiSkeleton', 'LoadingDots', 'LoadingBars', 'LoadingSparkline', 'LoadingChartDrawIn', 'LoadingDonut', 'LoadingConcentricArcs', 'LoadingProgress'],
+    related: ['LoadingKpiSkeleton', 'LoadingProgress'],
     snippet: `<LoadingCountingMetric metricLabel="Total MRR" target={78300} />`,
   }),
   defineComponent(LoadingDonut, {
@@ -472,7 +471,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Placeholder while a donut/share chart loads.',
     props: ['label', 'tone', 'className'],
     variants: { tone: ['accent', 'pos', 'intel', 'warn', 'neg', 'muted'] },
-    related: ['LoadingChartDrawIn', 'LoadingConcentricArcs', 'LoadingDots', 'LoadingBars', 'LoadingSparkline', 'LoadingProgress', 'LoadingKpiSkeleton', 'LoadingCountingMetric'],
+    related: ['LoadingChartDrawIn', 'LoadingConcentricArcs'],
     snippet: `<LoadingDonut label="Loading donut chart" tone="accent" />`,
   }),
   defineComponent(LoadingDots, {
@@ -480,7 +479,7 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Three bouncing dots loading indicator.',
     use_when: 'Minimal inline loading hint (e.g. pending text).',
     props: ['label', 'className'],
-    related: ['Spinner', 'LoadingBars', 'LoadingSparkline', 'LoadingChartDrawIn', 'LoadingDonut', 'LoadingConcentricArcs', 'LoadingProgress', 'LoadingKpiSkeleton', 'LoadingCountingMetric'],
+    related: ['Spinner', 'LoadingBars'],
     snippet: `<LoadingDots label="Loading" />`,
   }),
   defineComponent(LoadingKpiSkeleton, {
@@ -488,7 +487,7 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Skeleton shaped like a KPI card while metrics load.',
     use_when: 'Reserving layout for a KpiCard before its data arrives.',
     props: ['label', 'className'],
-    related: ['Skeleton', 'LoadingCountingMetric', 'LoadingDots', 'LoadingBars', 'LoadingSparkline', 'LoadingChartDrawIn', 'LoadingDonut', 'LoadingConcentricArcs', 'LoadingProgress'],
+    related: ['Skeleton', 'LoadingCountingMetric'],
     snippet: `<LoadingKpiSkeleton label="Loading KPI" />`,
   }),
   defineComponent(LoadingProgress, {
@@ -497,7 +496,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Background work whose exact percentage is unknown.',
     prefer_over: { ImportProgress: 'Use ImportProgress when you have a measurable percentage.' },
     props: ['label', 'detail', 'className'],
-    related: ['ImportProgress', 'LoadingDots', 'LoadingBars', 'LoadingSparkline', 'LoadingChartDrawIn', 'LoadingDonut', 'LoadingConcentricArcs', 'LoadingKpiSkeleton', 'LoadingCountingMetric'],
+    related: ['ImportProgress', 'LoadingCountingMetric'],
     snippet: `<LoadingProgress label="Syncing" detail="Syncing accounts" />`,
   }),
   defineComponent(LoadingSparkline, {
@@ -505,7 +504,7 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Animated sparkline draw-in loading indicator.',
     use_when: 'Placeholder where a small inline Sparkline will render.',
     props: ['label', 'className'],
-    related: ['Sparkline', 'LoadingChartDrawIn', 'LoadingBars', 'LoadingDots', 'LoadingDonut', 'LoadingConcentricArcs', 'LoadingProgress', 'LoadingKpiSkeleton', 'LoadingCountingMetric'],
+    related: ['Sparkline', 'LoadingChartDrawIn'],
     snippet: `<LoadingSparkline label="Loading sparkline" />`,
   }),
 
@@ -593,7 +592,6 @@ export const CATALOG: ComponentEntry[] = [
       MetadataPanel: 'Use MetadataPanel when the pairs belong in a titled card with a footer.',
     },
     props: ['items', 'columns', 'className'],
-    variants: { columns: ['1', '2', '3'] },
     related: ['KeyValueList', 'PropertyGrid', 'MetadataPanel'],
     snippet: `<DescriptionList items={fields} columns={2} />`,
   }),
@@ -607,7 +605,6 @@ export const CATALOG: ComponentEntry[] = [
       MetadataPanel: 'Use MetadataPanel when the pairs belong in a titled card with a footer.',
     },
     props: ['items', 'columns', 'className'],
-    variants: { columns: ['1', '2', '3'] },
     related: ['KeyValueList', 'DescriptionList', 'MetadataPanel'],
     snippet: `<PropertyGrid items={props} />`,
   }),
