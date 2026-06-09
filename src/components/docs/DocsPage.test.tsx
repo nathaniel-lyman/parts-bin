@@ -1,18 +1,22 @@
 import { expect, test } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { DocsPage } from './DocsPage'
 import { CATALOG } from '../catalog'
 import { demos } from './demoRegistry'
 
-test('renders a reference card for every cataloged component', () => {
+test('renders a gallery card for every cataloged component', () => {
   render(<DocsPage />)
   for (const entry of CATALOG) {
-    expect(document.getElementById(`ref-${entry.name}`), entry.name).not.toBeNull()
+    expect(screen.getByRole('button', { name: entry.name }), entry.name).toBeInTheDocument()
   }
 })
 
-test('mounts without throwing', () => {
-  expect(() => render(<DocsPage />)).not.toThrow()
+test('clicking a card opens the detail drawer with the reference', () => {
+  render(<DocsPage />)
+  fireEvent.click(screen.getByRole('button', { name: 'Button' }))
+  const dialog = screen.getByRole('dialog', { name: 'Button' })
+  expect(dialog).toHaveTextContent('variant')
+  expect(dialog).toHaveTextContent('./components/ui')
 })
 
 test('every demo key is a cataloged component name', () => {
@@ -21,17 +25,8 @@ test('every demo key is a cataloged component name', () => {
   expect(orphanDemos).toEqual([])
 })
 
-test('still renders the copy-into-your-app and reference index sections', () => {
+test('keeps the onboarding and theme sections below the gallery', () => {
   render(<DocsPage />)
   expect(screen.getByRole('heading', { name: 'Copy Ledger into your app' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Start with a real app template' })).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Component reference index' })).toBeInTheDocument()
-})
-
-test('each reference card shows its import path and props', () => {
-  render(<DocsPage />)
-  const button = document.getElementById('ref-Button') as HTMLElement
-  expect(button).not.toBeNull()
-  expect(button).toHaveTextContent('./components/ui')
-  expect(button).toHaveTextContent('variant')
 })

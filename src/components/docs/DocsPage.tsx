@@ -1,6 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { Button, Card, PageHeader } from '../ui'
-import { SectionHeader } from '../shell'
 import {
   THEME_RECIPES,
   applyThemeRecipe,
@@ -8,8 +7,9 @@ import {
   themeRecipeUsageSnippet,
   type ThemeRecipeId,
 } from '../../theme/recipes'
-import { CATALOG, CATEGORIES, type Category, type ComponentEntry } from '../catalog'
-import { demos } from './demoRegistry'
+import type { ComponentEntry } from '../catalog'
+import { ComponentGallery } from './ComponentGallery'
+import { ComponentDetailDrawer } from './ComponentDetailDrawer'
 
 const usageSnippet = `import { Button, Card, Field, Input } from './components/ui'
 import { AppShell, Sidebar, TopNav } from './components/shell'
@@ -33,19 +33,6 @@ const copyChecklist: Array<[string, string]> = [
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
 ]
 
-const CATEGORY_LABELS: Record<Category, string> = {
-  primitive: 'UI primitives',
-  form: 'Form controls',
-  overlay: 'Overlays',
-  feedback: 'Feedback & loading',
-  'data-display': 'Data display',
-  chart: 'Charts',
-  datagrid: 'DataGrid',
-  map: 'Maps',
-  shell: 'Shell',
-  starter: 'Starters & templates',
-}
-
 function Snippet({ code }: { code: string }) {
   return (
     <pre className="max-w-full min-w-0 overflow-auto border border-line bg-surface-2 p-3 text-[12px] text-ink">
@@ -54,69 +41,9 @@ function Snippet({ code }: { code: string }) {
   )
 }
 
-function ReferenceCard({ entry, demo }: { entry: ComponentEntry; demo?: ReactNode }) {
-  return (
-    <section className="border border-line rounded-[2px] bg-surface p-4" id={`ref-${entry.name}`}>
-      <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="m-0 text-[15px] font-semibold text-ink">{entry.name}</h3>
-        <code className="micro text-muted">{entry.import}</code>
-      </header>
-      <p className="m-0 mt-1 text-[13px] text-ink">{entry.purpose}</p>
-      <p className="m-0 mt-1 micro text-muted">Use when: {entry.use_when}</p>
-      {entry.prefer_over && (
-        <ul className="m-0 mt-1 micro text-muted list-disc pl-4">
-          {Object.entries(entry.prefer_over).map(([twin, why]) => (
-            <li key={twin}>
-              vs <strong className="text-ink">{twin}</strong>: {why}
-            </li>
-          ))}
-        </ul>
-      )}
-      {entry.related && entry.related.length > 0 && (
-        <p className="m-0 mt-1 micro text-muted">related: {entry.related.join(', ')}</p>
-      )}
-      <p className="m-0 mt-2 micro text-muted">props: {entry.props.join(', ')}</p>
-      {entry.variants && (
-        <p className="m-0 mt-1 micro text-muted">
-          {Object.entries(entry.variants)
-            .map(([prop, values]) => `${prop}: ${values.join(' | ')}`)
-            .join('   ')}
-        </p>
-      )}
-      <pre className="micro bg-surface-2 border border-line rounded-[2px] p-2 mt-2 overflow-x-auto">
-        <code>{entry.snippet}</code>
-      </pre>
-      {demo && <div className="mt-3 border-t border-line pt-3">{demo}</div>}
-    </section>
-  )
-}
-
-function CatalogReferenceIndex() {
-  return (
-    <div className="grid gap-6">
-      {CATEGORIES.map((cat) => {
-        const entries = CATALOG.filter((entry) => entry.category === cat)
-        if (entries.length === 0) return null
-        return (
-          <section key={cat}>
-            <SectionHeader
-              title={CATEGORY_LABELS[cat] ?? cat}
-              description={`${entries.length} ${entries.length === 1 ? 'component' : 'components'}`}
-            />
-            <div className="mt-3 grid gap-3 lg:grid-cols-2">
-              {entries.map((entry) => (
-                <ReferenceCard key={entry.name} entry={entry} demo={demos[entry.name]} />
-              ))}
-            </div>
-          </section>
-        )
-      })}
-    </div>
-  )
-}
-
 export function DocsPage() {
   const [recipeId, setRecipeId] = useState<ThemeRecipeId>(() => readStoredThemeRecipe())
+  const [selected, setSelected] = useState<ComponentEntry | null>(null)
 
   const selectRecipe = (nextRecipeId: ThemeRecipeId) => {
     setRecipeId(nextRecipeId)
@@ -128,11 +55,15 @@ export function DocsPage() {
       <PageHeader
         eyebrow="Ledger UI Kit"
         title="Component reference"
-        description="Every component is cataloged in src/components/catalog.ts — this page renders that manifest, so coverage is structural. Each card shows the import, when to reach for it, near-twins, real props, and a copy-paste snippet."
+        description="Every component is cataloged in src/components/catalog.ts — this gallery renders that manifest, so coverage is structural. Click any card for import, props, near-twins, and a copy-paste snippet."
         actions={<Button variant="primary" onClick={() => { window.location.href = '/' }}>Open dashboard</Button>}
       />
 
       <div className="grid gap-6">
+        <Card title="Component gallery" description="Every cataloged component, visually. Click a card for the full reference, props, snippet, and live demo.">
+          <ComponentGallery onSelect={setSelected} />
+        </Card>
+
         <Card title="Copy Ledger into your app" description="Ledger is a clone-and-customize kit, not an npm package. Copy the theme, primitives, shell, charts, and DataGrid — plus the lint rule — into the app you are building.">
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
@@ -215,10 +146,6 @@ export function DocsPage() {
           </div>
         </Card>
 
-        <Card title="Component reference index" description="One card per cataloged component, grouped by category. Generated from CATALOG so the page can never drift from the kit's real public surface.">
-          <CatalogReferenceIndex />
-        </Card>
-
         <Card title="Theme-safe styling do / avoid">
           <div className="grid gap-3 text-[13px] text-muted sm:grid-cols-2">
             <div className="border border-line bg-surface-2 p-3">
@@ -232,6 +159,8 @@ export function DocsPage() {
           </div>
         </Card>
       </div>
+
+      {selected && <ComponentDetailDrawer entry={selected} onClose={() => setSelected(null)} />}
     </main>
   )
 }
