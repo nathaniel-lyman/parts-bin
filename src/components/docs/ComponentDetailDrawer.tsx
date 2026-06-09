@@ -36,7 +36,7 @@ export function ComponentDetailDrawer({ entry, onClose }: { entry: ComponentEntr
             <code className="num">
               {Object.entries(entry.variants)
                 .map(([prop, values]) => `${prop}: ${values.join(' | ')}`)
-                .join('   ')}
+                .join(' · ')}
             </code>
           </p>
         )}
