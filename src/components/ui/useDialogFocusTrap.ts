@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { getFocusableElements } from './utils'
 
 function getActiveElement() {
@@ -16,6 +16,14 @@ function getActiveElement() {
  * Matches the existing Modal conventions (no portal, no scroll lock).
  */
 export function useDialogFocusTrap(dialogRef: RefObject<HTMLElement | null>, onClose: () => void) {
+  // Call sites pass inline closures; keep the latest one in a ref so the trap
+  // effect runs once per dialog lifetime instead of re-grabbing focus (and
+  // re-capturing the "opener" to restore) on every parent re-render.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
   useEffect(() => {
     if (!dialogRef.current) return undefined
     const previousActiveElement = getActiveElement()
@@ -25,7 +33,7 @@ export function useDialogFocusTrap(dialogRef: RefObject<HTMLElement | null>, onC
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
-        onClose()
+        onCloseRef.current()
         return
       }
 
@@ -51,5 +59,5 @@ export function useDialogFocusTrap(dialogRef: RefObject<HTMLElement | null>, onC
       document.removeEventListener('keydown', onKey)
       if (previousActiveElement?.isConnected) previousActiveElement.focus()
     }
-  }, [dialogRef, onClose])
+  }, [dialogRef])
 }

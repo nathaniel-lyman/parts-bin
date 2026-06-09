@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CommandPalette } from './CommandPalette'
 
+const switchThemeSelect = vi.fn()
+
 const groups = [
   {
     id: 'nav',
@@ -16,7 +18,7 @@ const groups = [
     id: 'actions',
     label: 'Actions',
     items: [
-      { id: 'theme', label: 'Switch theme', shortcut: 'T', onSelect: vi.fn() },
+      { id: 'theme', label: 'Switch theme', shortcut: 'T', onSelect: switchThemeSelect },
       { id: 'disabled', label: 'Disabled command', disabled: true },
     ],
   },
@@ -48,6 +50,33 @@ test('opens from the trigger, filters commands, and selects with Enter', async (
   await user.keyboard('{Enter}')
   expect(onSelect).toHaveBeenCalled()
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+})
+
+test('options are non-interactive listbox children (focus stays on the combobox input)', async () => {
+  const user = userEvent.setup()
+  render(<CommandPalette groups={groups} />)
+  await user.click(screen.getByRole('button', { name: /command/i }))
+
+  // role=listbox must own plain option elements, not nested buttons —
+  // focus belongs to the input via aria-activedescendant, never the options.
+  const options = screen.getAllByRole('option')
+  expect(options.length).toBeGreaterThan(0)
+  for (const option of options) {
+    expect(option.tagName).not.toBe('BUTTON')
+  }
+  expect(screen.getByRole('option', { name: /disabled command/i })).toHaveAttribute('aria-disabled', 'true')
+
+  await user.click(screen.getByRole('option', { name: /switch theme/i }))
+  expect(switchThemeSelect).toHaveBeenCalled()
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+})
+
+test('clicking a disabled option does nothing', async () => {
+  const user = userEvent.setup()
+  render(<CommandPalette groups={groups} />)
+  await user.click(screen.getByRole('button', { name: /command/i }))
+  await user.click(screen.getByRole('option', { name: /disabled command/i }))
+  expect(screen.getByRole('dialog')).toBeInTheDocument()
 })
 
 test('global Ctrl+K opens the palette and arrow keys skip disabled commands', async () => {

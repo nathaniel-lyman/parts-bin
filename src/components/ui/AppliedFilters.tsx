@@ -132,6 +132,11 @@ export function FacetedFilter({
     triggerRef.current?.focus()
   }
 
+  const closePanel = () => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+
   return (
     <div ref={ref} className={cx('relative inline-flex', className)}>
       <button
@@ -151,6 +156,11 @@ export function FacetedFilter({
           id={id}
           role="dialog"
           aria-label={`${String(label)} filter`}
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape') return
+            event.preventDefault()
+            closePanel()
+          }}
           className="absolute left-0 top-full z-40 mt-2 grid w-72 gap-3 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
         >
           <Input

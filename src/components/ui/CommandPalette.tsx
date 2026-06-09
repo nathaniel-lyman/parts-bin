@@ -7,6 +7,7 @@ import {
   useState,
   type KeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from 'react'
 import { useDialogFocusTrap } from './useDialogFocusTrap'
 import { cx } from './utils'
@@ -50,6 +51,13 @@ function isEditableTarget(target: EventTarget | null) {
   return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
 }
 
+// useDialogFocusTrap engages once per mount, so it must live in a component
+// that mounts with the dialog — CommandPalette itself stays mounted while closed.
+function PaletteFocusTrap({ dialogRef, onClose }: { dialogRef: RefObject<HTMLDivElement | null>; onClose: () => void }) {
+  useDialogFocusTrap(dialogRef, onClose)
+  return null
+}
+
 function getSearchText(item: CommandPaletteItem) {
   return [
     typeof item.label === 'string' ? item.label : '',
@@ -78,7 +86,6 @@ export function CommandPalette({
   const inputId = `${dialogId}-input`
   const listboxId = `${dialogId}-listbox`
   const dialogRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const isOpen = open ?? internalOpen
   const setPaletteOpen = useCallback((next: boolean) => {
@@ -114,14 +121,9 @@ export function CommandPalette({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [isOpen, setPaletteOpen])
 
-  useEffect(() => {
-    if (!isOpen) return undefined
-    requestAnimationFrame(() => inputRef.current?.focus())
-    return undefined
-  }, [isOpen])
-
-  const closePalette = () => setPaletteOpen(false)
-  useDialogFocusTrap(dialogRef, closePalette)
+  // PaletteFocusTrap (mounted with the dialog below) moves focus to the first
+  // focusable element on open — the search input — so no focus effect is needed here.
+  const closePalette = useCallback(() => setPaletteOpen(false), [setPaletteOpen])
 
   const moveActive = (direction: 1 | -1) => {
     if (enabledMatches.length === 0) return
@@ -168,6 +170,7 @@ export function CommandPalette({
       )}
       {isOpen && (
         <div className="scrim-backdrop fixed inset-0 z-50 grid place-items-start px-4 pt-[12vh]" onClick={() => setPaletteOpen(false)}>
+          <PaletteFocusTrap dialogRef={dialogRef} onClose={closePalette} />
           <div
             ref={dialogRef}
             id={dialogId}
@@ -184,7 +187,6 @@ export function CommandPalette({
             <div className="border-b border-line px-3 py-2">
               <h2 id={titleId} className="sr-only">{label}</h2>
               <input
-                ref={inputRef}
                 id={inputId}
                 type="text"
                 role="combobox"
@@ -217,18 +219,22 @@ export function CommandPalette({
                       {groupMatches.map(({ match, index }) => {
                         const active = index === clampedActiveIndex
                         return (
-                          <button
+                          // Plain element, not a <button>: role=listbox may only own
+                          // non-interactive options — focus stays on the combobox input
+                          // and the active option is tracked via aria-activedescendant.
+                          <div
                             key={match.item.id}
                             id={`${listboxId}-option-${index}`}
-                            type="button"
                             role="option"
                             aria-selected={active}
-                            disabled={match.item.disabled}
+                            aria-disabled={match.item.disabled || undefined}
+                            onMouseDown={(event) => event.preventDefault()}
                             onClick={() => runCommand(match)}
                             onMouseEnter={() => !match.item.disabled && setActiveIndex(index)}
                             className={cx(
-                              'grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-[2px] px-2 py-2 text-left text-[13px] text-ink hover:bg-surface-2 disabled:text-faint',
+                              'grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-[2px] px-2 py-2 text-left text-[13px] text-ink hover:bg-surface-2',
                               active && 'bg-accent-soft text-accent',
+                              match.item.disabled && 'cursor-default text-faint',
                             )}
                           >
                             <span className="grid min-w-0 gap-0.5">
@@ -236,7 +242,7 @@ export function CommandPalette({
                               {match.item.description && <span className="truncate text-[12px] text-muted">{match.item.description}</span>}
                             </span>
                             {match.item.shortcut && <span className="num self-center text-[11px] text-muted">{match.item.shortcut}</span>}
-                          </button>
+                          </div>
                         )
                       })}
                     </section>

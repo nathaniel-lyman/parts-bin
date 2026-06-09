@@ -35,12 +35,20 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [open])
 
+  // Read items through a ref so the open-focus effect fires only when the menu
+  // opens — inline `items` arrays change identity every parent render, and the
+  // rAF re-focus would otherwise snap focus back to the first item mid-navigation.
+  const itemsRef = useRef(items)
+  useEffect(() => {
+    itemsRef.current = items
+  })
+
   useEffect(() => {
     if (!open) return undefined
-    const firstEnabled = enabledItems[0]
-    if (firstEnabled) requestAnimationFrame(() => itemRefs.current[firstEnabled.index]?.focus())
+    const firstEnabled = itemsRef.current.findIndex((item) => !item.disabled)
+    if (firstEnabled !== -1) requestAnimationFrame(() => itemRefs.current[firstEnabled]?.focus())
     return undefined
-  }, [enabledItems, open])
+  }, [open])
 
   const close = (returnFocus = true) => {
     setOpen(false)

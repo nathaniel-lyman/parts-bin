@@ -24,7 +24,7 @@ export function Modal({ title, onClose, children, footer }: Props) {
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 id={titleId} className="text-[16px] font-semibold text-ink display">{title}</h2>
-          <button aria-label="Close" className="text-muted hover:text-ink" onClick={onClose}>✕</button>
+          <button type="button" aria-label="Close" className="text-muted hover:text-ink" onClick={onClose}>✕</button>
         </div>
         <div className="px-4 py-4">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-4 py-3">{footer}</div>}

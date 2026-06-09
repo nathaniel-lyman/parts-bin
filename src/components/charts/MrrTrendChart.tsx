@@ -1,6 +1,7 @@
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { axisProps, gridProps, legendProps, SERIES, tooltipProps } from '../../theme/chart-theme'
 import { monthlySeries } from '../../data/accounts'
+import { fmtCurrency } from '../../lib/format'
 
 export function MrrTrendChart() {
   return (
@@ -9,7 +10,7 @@ export function MrrTrendChart() {
         <CartesianGrid {...gridProps} />
         <XAxis dataKey="month" {...axisProps} />
         <YAxis {...axisProps} />
-        <Tooltip {...tooltipProps} />
+        <Tooltip {...tooltipProps} formatter={(v) => fmtCurrency(Number(v))} />
         <Legend {...legendProps} />
         {(['Enterprise', 'Mid-market', 'Startup'] as const).map((k, i) => (
           <Line key={k} dataKey={k} stroke={SERIES[i]} strokeWidth={1.75} dot={false} activeDot={{ r: 3 }} />

@@ -1,8 +1,11 @@
 // Chart styling derived from tokens. Recharts reads CSS vars via var(--…) at render,
 // so dark mode + re-skin apply automatically.
-// Categorical series stay distinct from semantic state colors; segment labels
-// such as Enterprise and Startup should not inherit success/reject meaning.
-export const SERIES = ['#2545ff', '#00a6c2', '#7c4dff', '#f59e0b', '#d6336c', '#0d9488', '#64748b', '#84cc16']
+// SERIES[0] tracks the --accent token so the first chart series re-skins with the rest of
+// the UI (RETHEME.md). Categorical SERIES[1..] stay distinct literal hex — free of semantic
+// state meaning (segment labels such as Enterprise and Startup should not inherit
+// success/reject colors), and Recharts cannot cleanly resolve many CSS vars for
+// categorical fills.
+export const SERIES = ['var(--accent)', '#00a6c2', '#7c4dff', '#f59e0b', '#d6336c', '#0d9488', '#64748b', '#84cc16']
 
 export const axisProps = {
   tick: { fill: 'var(--muted)', fontSize: 11, fontFamily: '"JetBrains Mono", monospace' },
