@@ -197,7 +197,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
   }
 
   return (
-    <main className="mx-auto max-w-[1400px] px-6 py-6">
+    <main className="w-full px-6 py-6">
       <PageHeader
         eyebrow="Template / Customer Success"
         title="Customer operations workspace"

@@ -43,6 +43,10 @@ describe('buildAccountGridColumns', () => {
 
   it('locks the actions column', () => {
     const actions = buildAccountGridColumns(vi.fn(), vi.fn()).find((column) => column.id === 'actions')!
+    expect(actions.header).toBe('Actions')
+    expect(actions.width).toBe(76)
+    expect(actions.minWidth).toBe(76)
+    expect(actions.maxWidth).toBe(76)
     expect(actions.hideable).toBe(false)
     expect(actions.sortable).toBe(false)
     expect(actions.reorderable).toBe(false)
@@ -67,6 +71,18 @@ describe('buildAccountGridColumns', () => {
     expect(onDelete).toHaveBeenCalledWith(acme)
   })
 
+  it('actions cell buttons are type=button and reveal on keyboard focus', () => {
+    const actions = buildAccountGridColumns(vi.fn(), vi.fn()).find((column) => column.id === 'actions')!
+    const { container } = render(<>{actions.cell!({ value: undefined, row: acme, rowId: acme.id })}</>)
+    const edit = screen.getByLabelText('Edit Acme')
+    const del = screen.getByLabelText('Delete Acme')
+    // default <button> type is "submit" — would submit an ancestor form before onClick
+    expect(edit).toHaveAttribute('type', 'button')
+    expect(del).toHaveAttribute('type', 'button')
+    // hover-only reveal hides the actions from keyboard users
+    expect(container.querySelector('.group-focus-within\\:opacity-100')).not.toBeNull()
+  })
+
   it('status cell renders the StatusBadge', () => {
     const status = buildAccountGridColumns(vi.fn(), vi.fn()).find((column) => column.id === 'status')!
     render(<>{status.cell!({ value: acme.status, row: acme, rowId: acme.id })}</>)
@@ -79,4 +95,3 @@ describe('buildAccountGridColumns', () => {
     expect(accountGlobalFilter(acme, 'zzz')).toBe(false)
   })
 })
-

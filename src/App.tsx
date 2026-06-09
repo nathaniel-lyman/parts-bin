@@ -47,7 +47,7 @@ import {
   UserAvatarMenu,
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
-import { CustomerSuccessTemplate } from './components/templates'
+import { CustomerSuccessTemplate, RecommendationReviewTemplate } from './components/templates'
 import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
@@ -147,7 +147,7 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
 
   return (
     <>
-      <main className="mx-auto max-w-[1400px] px-6 py-6">
+      <main className="w-full px-6 py-6">
         <PageHeader
           eyebrow="Revenue / Accounts"
           title="Account book"
@@ -287,7 +287,9 @@ export default function App() {
   const toast = useToast()
   const pathname = window.location.pathname
   const docsActive = pathname === '/docs'
-  const templateActive = pathname === '/templates/customer-success' || pathname === '/examples'
+  const customerTemplateActive = pathname === '/templates/customer-success' || pathname === '/examples'
+  const recommendationTemplateActive = pathname === '/templates/recommendation-review'
+  const templateActive = customerTemplateActive || recommendationTemplateActive
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
@@ -336,10 +338,17 @@ export default function App() {
         },
         {
           id: 'template',
-          label: 'Open app template',
+          label: 'Open customer success template',
           description: 'Customer operations workspace',
           shortcut: 'G T',
           onSelect: () => { window.location.href = '/templates/customer-success' },
+        },
+        {
+          id: 'recommendation-review-template',
+          label: 'Open recommendation review template',
+          description: 'Queue, detail panel, and feedback workflow',
+          shortcut: 'G R',
+          onSelect: () => { window.location.href = '/templates/recommendation-review' },
         },
       ],
     },
@@ -379,7 +388,8 @@ export default function App() {
       onCollapsedChange={setSidebarCollapsed}
       items={[
         { label: 'Overview', href: '/', active: !docsActive && !templateActive },
-        { label: 'Template', href: '/templates/customer-success', active: templateActive, meta: 'app' },
+        { label: 'Customer success', href: '/templates/customer-success', active: customerTemplateActive, meta: 'app' },
+        { label: 'Review queue', href: '/templates/recommendation-review', active: recommendationTemplateActive, meta: 'app' },
         { label: 'Components', href: '/docs', active: docsActive, meta: 'kit' },
         { label: 'Reports', href: '/', active: false },
       ]}
@@ -395,9 +405,9 @@ export default function App() {
     <TopNav
       breadcrumbs={[
         { label: 'Ledger', href: '/' },
-        { label: docsActive ? 'Components' : templateActive ? 'Template' : 'Accounts' },
+        { label: docsActive ? 'Components' : recommendationTemplateActive ? 'Review queue' : customerTemplateActive ? 'Customer success' : 'Accounts' },
       ]}
-      title={docsActive ? 'Component catalog' : templateActive ? 'Customer success' : 'Accounts'}
+      title={docsActive ? 'Component catalog' : recommendationTemplateActive ? 'Recommendation review' : customerTemplateActive ? 'Customer success' : 'Accounts'}
       actions={
         <>
           <GlobalSearchInput
@@ -441,10 +451,15 @@ export default function App() {
     <AppShell sidebar={sidebar} topNav={topNav}>
       {docsActive ? (
         <DocsPage />
-      ) : templateActive ? (
+      ) : customerTemplateActive ? (
         <CustomerSuccessTemplate
           globalSearch={globalSearch}
           atRiskOnly={atRiskOnly}
+          timePeriodLabel={dashboardPeriodLabel}
+        />
+      ) : recommendationTemplateActive ? (
+        <RecommendationReviewTemplate
+          globalSearch={globalSearch}
           timePeriodLabel={dashboardPeriodLabel}
         />
       ) : (

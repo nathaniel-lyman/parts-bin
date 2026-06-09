@@ -94,7 +94,10 @@ export function buildAccountGridColumns(
     },
     {
       id: 'actions',
-      header: '',
+      header: 'Actions',
+      width: 76,
+      minWidth: 76,
+      maxWidth: 76,
       align: 'right',
       type: 'actions',
       hideable: false,
@@ -103,11 +106,11 @@ export function buildAccountGridColumns(
       exportable: false,
       pinnable: true,
       cell: (ctx) => (
-        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100">
-          <button aria-label={`Edit ${ctx.row.name}`} className="text-muted hover:text-accent" onClick={(event) => { event.stopPropagation(); onEdit(ctx.row) }}>
+        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
+          <button type="button" aria-label={`Edit ${ctx.row.name}`} className="text-muted hover:text-accent" onClick={(event) => { event.stopPropagation(); onEdit(ctx.row) }}>
             ✎
           </button>
-          <button aria-label={`Delete ${ctx.row.name}`} className="text-muted hover:text-neg" onClick={(event) => { event.stopPropagation(); onDelete(ctx.row) }}>
+          <button type="button" aria-label={`Delete ${ctx.row.name}`} className="text-muted hover:text-neg" onClick={(event) => { event.stopPropagation(); onDelete(ctx.row) }}>
             🗑
           </button>
         </div>

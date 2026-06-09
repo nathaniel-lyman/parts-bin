@@ -25,7 +25,7 @@ export function AccountsScreen() {
 }`
 
 const copyChecklist: Array<[string, string]> = [
-  ['Template', 'Start from /templates/customer-success when you want a complete internal app screen instead of isolated primitives.'],
+  ['Template', 'Start from /templates/customer-success or /templates/recommendation-review when you want a complete internal app screen instead of isolated primitives.'],
   ['Theme', 'Copy src/theme/ and import theme/theme.css at your root. Re-skin via tokens.css only.'],
   ['Primitives', 'Copy src/components/ui/ and import from the ./ui barrel (Button, Field, Drawer, IconButton, InlineAlert, SegmentedControl, …).'],
   ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
@@ -137,10 +137,13 @@ export function DocsPage() {
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
-                <h2 className="m-0 text-[15px] font-semibold text-ink">Start with the real app template</h2>
-                <p className="m-0 text-[13px] text-muted">Use the customer operations workspace when you need a complete screen: KPIs, queue, grid, detail panel, activity, and a drawer form.</p>
+                <h2 className="m-0 text-[15px] font-semibold text-ink">Start with a real app template</h2>
+                <p className="m-0 text-[13px] text-muted">Use a clone-ready screen when you need workflow structure: KPIs, queues, custom review lists, detail panels, activity, and drawer forms.</p>
               </div>
-              <Button variant="primary" onClick={() => { window.location.href = '/templates/customer-success' }}>Open template</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => { window.location.href = '/templates/customer-success' }}>Customer success</Button>
+                <Button variant="primary" onClick={() => { window.location.href = '/templates/recommendation-review' }}>Recommendation review</Button>
+              </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
               <Snippet code={usageSnippet} />

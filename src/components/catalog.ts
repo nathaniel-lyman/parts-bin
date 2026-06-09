@@ -28,7 +28,7 @@ import {
   AppShell, Sidebar, TopNav, Breadcrumbs, FilterBar, SectionHeader, SettingsPanel,
   NotificationBadge,
 } from './shell'
-import { CustomerSuccessTemplate } from './templates'
+import { CustomerSuccessTemplate, RecommendationReviewTemplate } from './templates'
 import { KpiCard, KpiSummaryRow } from './KpiCard'
 import { Sparkline } from './Sparkline'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -911,5 +911,13 @@ export const CATALOG: ComponentEntry[] = [
     props: ['globalSearch', 'atRiskOnly', 'timePeriodLabel'],
     related: ['DataGrid', 'KpiCard', 'AppShell'],
     snippet: `<CustomerSuccessTemplate globalSearch="" atRiskOnly={false} timePeriodLabel="Last 30 days" />`,
+  }),
+  defineComponent(RecommendationReviewTemplate, {
+    name: 'RecommendationReviewTemplate', import: './components/templates', category: 'starter',
+    purpose: 'Full recommendation-review console with a custom queue, detail panel, and structured feedback.',
+    use_when: 'Starting from a workflow where ranked recommendations need review, decisioning, and operator feedback.',
+    props: ['globalSearch', 'timePeriodLabel'],
+    related: ['PageHeader', 'SegmentedControl', 'ActivityFeed'],
+    snippet: `<RecommendationReviewTemplate globalSearch="" timePeriodLabel="Last 30 days" />`,
   }),
 ]

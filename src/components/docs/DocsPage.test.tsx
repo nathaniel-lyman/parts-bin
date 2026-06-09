@@ -24,7 +24,7 @@ test('every demo key is a cataloged component name', () => {
 test('still renders the copy-into-your-app and reference index sections', () => {
   render(<DocsPage />)
   expect(screen.getByRole('heading', { name: 'Copy Ledger into your app' })).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Start with the real app template' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Start with a real app template' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Component reference index' })).toBeInTheDocument()
 })
 

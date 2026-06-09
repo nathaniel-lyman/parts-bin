@@ -36,10 +36,13 @@ export function LeftNavigationDrawer({
         collapsed ? 'w-14' : 'w-56',
       )}
     >
-      <div className="border-b border-line px-3 py-3">
+      <div className={cx('border-b border-line', collapsed ? 'grid justify-items-center gap-2 p-2' : 'flex items-center justify-between gap-2 px-3 py-3')}>
         <BrandLockup href={brandHref} mark={brandMark} collapsed={collapsed}>
           {brand}
         </BrandLockup>
+        {onCollapsedChange && (
+          <CollapseSidebarControl collapsed={collapsed} onClick={() => onCollapsedChange(!collapsed)} />
+        )}
       </div>
       <nav className="grid gap-1 p-2" aria-label="Primary">
         {items.map((item) => (
@@ -54,14 +57,11 @@ export function LeftNavigationDrawer({
           </>
         )}
       </nav>
-      <div className="mt-auto border-t border-line p-3">
-        <div className={cx('flex items-center gap-2', collapsed ? 'justify-center' : 'justify-between')}>
-          {!collapsed && footer && <div className="min-w-0">{footer}</div>}
-          {onCollapsedChange && (
-            <CollapseSidebarControl collapsed={collapsed} onClick={() => onCollapsedChange(!collapsed)} />
-          )}
+      {!collapsed && footer && (
+        <div className="mt-auto border-t border-line p-3">
+          <div className="min-w-0">{footer}</div>
         </div>
-      </div>
+      )}
     </aside>
   )
 }
