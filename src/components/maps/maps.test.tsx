@@ -1,7 +1,13 @@
 import { expect, test, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { BubbleMap, FlowMap, GeoDrilldown, RegionChoropleth, ledgerFlows, ledgerPoints, ledgerRegions } from './index'
+import { BubbleMap, FlowMap, GeoDrilldown, RegionChoropleth, ledgerFlows, ledgerPoints, ledgerRegions, ledgerStatePaths } from './index'
+
+test('default map data uses real US atlas state geometry', () => {
+  expect(ledgerStatePaths).toHaveLength(51)
+  expect(ledgerStatePaths.find((state) => state.label === 'California')?.path.length).toBeGreaterThan(100)
+  expect(ledgerRegions.find((region) => region.id === 'west')?.stateIds).toContain('06')
+})
 
 test('RegionChoropleth exposes selectable regions by pointer and keyboard', async () => {
   const user = userEvent.setup()

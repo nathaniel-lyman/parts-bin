@@ -2,11 +2,14 @@ import { useId, type KeyboardEvent } from 'react'
 import { cx } from '../ui/utils'
 import { scaleBetween } from './mapMath'
 import { ledgerMapViewport, ledgerPoints, ledgerRegions } from './demoData'
-import type { MapPoint, MapRegion, MapViewport } from './types'
+import { ledgerNationPath, ledgerStatePaths } from './usAtlas'
+import type { MapFeature, MapPoint, MapRegion, MapViewport } from './types'
 
 export interface BubbleMapProps {
   points?: MapPoint[]
   regions?: MapRegion[]
+  features?: MapFeature[]
+  outlinePath?: string
   viewport?: MapViewport
   selectedPointId?: string
   ariaLabel?: string
@@ -18,6 +21,8 @@ export interface BubbleMapProps {
 export function BubbleMap({
   points = ledgerPoints,
   regions = ledgerRegions,
+  features = ledgerStatePaths,
+  outlinePath = ledgerNationPath,
   viewport = ledgerMapViewport,
   selectedPointId,
   ariaLabel = 'Account concentration map',
@@ -47,13 +52,35 @@ export function BubbleMap({
       >
         <title id={titleId}>{ariaLabel}</title>
         <rect width={viewport.width} height={viewport.height} rx="2" fill="var(--surface-2)" />
+        {outlinePath && (
+          <path
+            d={outlinePath}
+            fill="var(--surface)"
+            stroke="var(--line)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
         {regions.map((region) => (
           <path
             key={region.id}
             d={region.path}
-            fill="var(--surface)"
+            fill="var(--accent-soft)"
+            opacity="0.14"
             stroke="var(--line)"
             strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        {features.map((feature) => (
+          <path
+            key={feature.id}
+            d={feature.path}
+            fill="none"
+            stroke="var(--line)"
+            strokeWidth="0.7"
+            opacity="0.85"
+            pointerEvents="none"
             vectorEffect="non-scaling-stroke"
           />
         ))}

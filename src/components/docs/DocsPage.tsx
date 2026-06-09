@@ -493,20 +493,20 @@ const chartPropRows: PropReferenceRow[] = [
 const mapPropRows: PropReferenceRow[] = [
   {
     component: 'RegionChoropleth',
-    props: 'regions, viewport, selectedRegionId, valueLabel, onRegionSelect',
-    variants: 'abstract region map, selected region, keyboard-selectable paths and legend rows',
+    props: 'regions, features, outlinePath, viewport, selectedRegionId, valueLabel, onRegionSelect',
+    variants: 'Census-backed US state geometry grouped into regions, selected region, keyboard-selectable paths and legend rows',
     accessibility: 'SVG has an explicit image label; interactive regions expose button semantics, aria-pressed, and Enter/Space selection.',
   },
   {
     component: 'BubbleMap',
-    props: 'points, regions, selectedPointId, valueLabel, onPointSelect',
-    variants: 'account concentration, office/store locations, incident clusters, selected point',
+    props: 'points, regions, features, outlinePath, selectedPointId, valueLabel, onPointSelect',
+    variants: 'projected city points over real state boundaries; account concentration, office/store locations, incident clusters',
     accessibility: 'Bubbles expose point labels and values; click, Enter, and Space call the same selection handler.',
   },
   {
     component: 'FlowMap',
-    props: 'flows, regions, selectedFlowId, valueLabel, onFlowSelect',
-    variants: 'regional handoffs, referrals, pipeline movement, logistics, selected flow',
+    props: 'flows, regions, features, outlinePath, selectedFlowId, valueLabel, onFlowSelect',
+    variants: 'projected origin/destination flows over real state boundaries; handoffs, referrals, pipeline movement, logistics',
     accessibility: 'Flow paths expose labels and values; legend buttons mirror map selection for pointer and keyboard users.',
   },
   {
@@ -812,6 +812,7 @@ export function DocsPage() {
               <Snippet code={mapsUsageSnippet} />
               <div className="grid content-start gap-3 text-[13px] text-muted">
                 <p className="m-0">The first map pack is intentionally SVG-only: no network tiles, no API keys, no geocoder, and no raw component colors.</p>
+                <p className="m-0">Default geometry comes from <code className="num text-ink">us-atlas/states-albers-10m.json</code>, a TopoJSON redistribution of U.S. Census cartographic boundary shapefiles.</p>
                 <p className="m-0">Use <code className="num text-ink">onRegionChange</code>, <code className="num text-ink">onPointSelect</code>, or <code className="num text-ink">onFlowSelect</code> as the bridge into chart queries, saved views, or DataGrid filters.</p>
               </div>
             </div>

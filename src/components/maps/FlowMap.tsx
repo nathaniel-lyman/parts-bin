@@ -2,11 +2,14 @@ import { useId, type KeyboardEvent } from 'react'
 import { cx } from '../ui/utils'
 import { arcPath, scaleBetween } from './mapMath'
 import { ledgerFlows, ledgerMapViewport, ledgerRegions } from './demoData'
-import type { MapFlow, MapRegion, MapViewport } from './types'
+import { ledgerNationPath, ledgerStatePaths } from './usAtlas'
+import type { MapFeature, MapFlow, MapRegion, MapViewport } from './types'
 
 export interface FlowMapProps {
   flows?: MapFlow[]
   regions?: MapRegion[]
+  features?: MapFeature[]
+  outlinePath?: string
   viewport?: MapViewport
   selectedFlowId?: string
   ariaLabel?: string
@@ -18,6 +21,8 @@ export interface FlowMapProps {
 export function FlowMap({
   flows = ledgerFlows,
   regions = ledgerRegions,
+  features = ledgerStatePaths,
+  outlinePath = ledgerNationPath,
   viewport = ledgerMapViewport,
   selectedFlowId,
   ariaLabel = 'Regional flow map',
@@ -53,13 +58,35 @@ export function FlowMap({
           </marker>
         </defs>
         <rect width={viewport.width} height={viewport.height} rx="2" fill="var(--surface-2)" />
+        {outlinePath && (
+          <path
+            d={outlinePath}
+            fill="var(--surface)"
+            stroke="var(--line)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
         {regions.map((region) => (
           <path
             key={region.id}
             d={region.path}
-            fill="var(--surface)"
+            fill="var(--accent-soft)"
+            opacity="0.12"
             stroke="var(--line)"
             strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        {features.map((feature) => (
+          <path
+            key={feature.id}
+            d={feature.path}
+            fill="none"
+            stroke="var(--line)"
+            strokeWidth="0.7"
+            opacity="0.85"
+            pointerEvents="none"
             vectorEffect="non-scaling-stroke"
           />
         ))}

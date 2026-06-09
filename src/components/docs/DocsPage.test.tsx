@@ -20,6 +20,7 @@ test('DocsPage renders the new API sections and copy checklist', () => {
   expect(screen.getByText('Loading states & spinner')).toBeInTheDocument()
   expect(screen.getByRole('radiogroup', { name: 'Plan' })).toBeInTheDocument()
   expect(screen.getByRole('group', { name: 'Revenue by region' })).toBeInTheDocument()
+  expect(screen.getByText(/us-atlas\/states-albers-10m\.json/)).toBeInTheDocument()
 })
 
 test('DocsPage live examples drive the new primitives', async () => {

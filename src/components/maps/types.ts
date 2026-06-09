@@ -6,6 +6,12 @@ export interface MapMetric {
   tone?: 'neutral' | 'positive' | 'negative' | 'warning' | 'accent' | 'intelligence'
 }
 
+export interface MapFeature {
+  id: string
+  label: string
+  path: string
+}
+
 export interface MapRegion {
   id: string
   label: string
@@ -13,6 +19,7 @@ export interface MapRegion {
   value: number
   detail?: ReactNode
   metrics?: MapMetric[]
+  stateIds?: readonly string[]
 }
 
 export interface MapPoint {
@@ -37,4 +44,3 @@ export interface MapViewport {
   width: number
   height: number
 }
-

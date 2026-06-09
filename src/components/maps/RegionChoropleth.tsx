@@ -2,12 +2,15 @@ import { useId, type KeyboardEvent } from 'react'
 import { cx } from '../ui/utils'
 import { normalizeValue } from './mapMath'
 import { ledgerMapViewport, ledgerRegions } from './demoData'
-import type { MapRegion, MapViewport } from './types'
+import { ledgerNationPath, ledgerStatePaths } from './usAtlas'
+import type { MapFeature, MapRegion, MapViewport } from './types'
 
 export interface RegionChoroplethProps {
   regions?: MapRegion[]
   viewport?: MapViewport
   selectedRegionId?: string
+  features?: MapFeature[]
+  outlinePath?: string
   ariaLabel?: string
   valueLabel?: string
   onRegionSelect?: (region: MapRegion) => void
@@ -18,6 +21,8 @@ export function RegionChoropleth({
   regions = ledgerRegions,
   viewport = ledgerMapViewport,
   selectedRegionId,
+  features = ledgerStatePaths,
+  outlinePath = ledgerNationPath,
   ariaLabel = 'Regional performance map',
   valueLabel = 'score',
   onRegionSelect,
@@ -45,6 +50,15 @@ export function RegionChoropleth({
       >
         <title id={titleId}>{ariaLabel}</title>
         <rect width={viewport.width} height={viewport.height} rx="2" fill="var(--surface-2)" />
+        {outlinePath && (
+          <path
+            d={outlinePath}
+            fill="var(--surface)"
+            stroke="var(--line)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
         {regions.map((region) => {
           const weight = normalizeValue(region.value, values)
           const selected = region.id === selectedRegionId
@@ -72,6 +86,18 @@ export function RegionChoropleth({
             </path>
           )
         })}
+        {features.map((feature) => (
+          <path
+            key={feature.id}
+            d={feature.path}
+            fill="none"
+            stroke="var(--surface)"
+            strokeWidth="0.7"
+            opacity="0.82"
+            pointerEvents="none"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
       </svg>
       <figcaption className="grid gap-2 sm:grid-cols-2">
         {regions.map((region) => (
