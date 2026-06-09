@@ -6,6 +6,12 @@ Guidance for coding agents working in this repository.
 
 "Ledger" is a Vite + React + TypeScript dashboard and clone-and-customize theme starter. The design system is isolated in `src/theme/`; `demo.html` is the behavior reference, `THEME-SPEC.md` is the canonical design reference, and implementation plans live in `docs/superpowers/`.
 
+## Building UI? Read the component catalog first
+
+`src/components/catalog.ts` is the machine-readable index of every component: import path, when to use it versus its near-twins (`prefer_over`), real props, and a copy-paste snippet. Read it before adding UI — it prevents reinventing an existing component or picking the wrong one.
+
+Do not add a new component without adding its `CATALOG` entry. The build (`tsc` verifies `props` are real) and the tests (`src/components/catalog.test.ts` requires every exported component to be cataloged or explicitly `INTERNAL`) enforce this.
+
 ## Commands
 
 ```bash
