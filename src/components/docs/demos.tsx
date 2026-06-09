@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import {
+  Accordion,
   AppliedFiltersBar,
   AttachmentList,
+  Banner,
   Button,
   Checkbox,
   Combobox,
   CommandPalette,
+  ContextMenu,
   DateRangePicker,
   Drawer,
   Dropzone,
@@ -14,12 +17,18 @@ import {
   IconButton,
   InlineAlert,
   Input,
+  Kbd,
   Pagination,
   RadioGroup,
   SegmentedControl,
+  MultiSelect,
+  Progress,
+  Slider,
   Spinner,
   Stepper,
   Switch,
+  Table,
+  Tag,
   type CommandPaletteGroup,
   type DateRange,
 } from '../ui'
@@ -296,6 +305,133 @@ export function FlowMapDemo() {
         valueLabel="pipeline"
       />
       <p className="m-0 text-[13px] text-muted">Selected: <code className="num text-ink">{selectedFlow.label} · {selectedFlow.value}</code></p>
+    </div>
+  )
+}
+
+export function TableDemo() {
+  return (
+    <Table
+      caption="Top accounts by MRR"
+      columns={[
+        { key: 'name', header: 'Account' },
+        { key: 'owner', header: 'Owner' },
+        { key: 'mrr', header: 'MRR', numeric: true, render: (row: { mrr: number }) => `$${row.mrr.toLocaleString()}` },
+      ]}
+      rows={[
+        { id: 'a', name: 'Northwind Atlas', owner: 'Avery Cohen', mrr: 8200 },
+        { id: 'b', name: 'Globex Industrial', owner: 'Blair Nakamura', mrr: 6450 },
+        { id: 'c', name: 'Initech Cloud', owner: 'Devin Okafor', mrr: 5100 },
+      ]}
+      rowKey={(row) => row.id}
+    />
+  )
+}
+
+export function AccordionDemo() {
+  return (
+    <Accordion
+      defaultOpenIds={['general']}
+      items={[
+        { id: 'general', title: 'General', content: 'Workspace name, locale, and default currency.' },
+        { id: 'billing', title: 'Billing', content: 'Plan, payment method, and invoice history.' },
+        { id: 'security', title: 'Security', content: 'SSO, session policy, and audit log retention.' },
+      ]}
+    />
+  )
+}
+
+export function ProgressDemo() {
+  return (
+    <div className="grid gap-3">
+      <Progress value={62} label="Storage" showValue />
+      <Progress value={88} tone="warn" label="API quota" showValue />
+      <Progress value={100} tone="pos" label="Import" showValue />
+    </div>
+  )
+}
+
+export function TagDemo() {
+  const [tags, setTags] = useState(['Beta', 'Priority', 'EMEA'])
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {tags.map((tag) => (
+        <Tag key={tag} tone="accent" label={tag} onRemove={() => setTags((current) => current.filter((value) => value !== tag))} />
+      ))}
+      <Tag tone="neutral" label="read-only" />
+      {tags.length < 3 && (
+        <Button size="compact" variant="ghost" onClick={() => setTags(['Beta', 'Priority', 'EMEA'])}>Reset</Button>
+      )}
+    </div>
+  )
+}
+
+export function MultiSelectDemo() {
+  const [segments, setSegments] = useState(['enterprise'])
+  return (
+    <div className="grid gap-2">
+      <Field label="Segments" hint="Type to filter; Backspace removes the last token.">
+        <MultiSelect
+          options={segmentFilterOptions}
+          values={segments}
+          onValuesChange={setSegments}
+          placeholder="Add segments…"
+        />
+      </Field>
+      <p className="m-0 text-[13px] text-muted">Selected: <code className="num text-ink">{segments.join(', ') || '—'}</code></p>
+    </div>
+  )
+}
+
+export function BannerDemo() {
+  const [visible, setVisible] = useState(true)
+  if (!visible) {
+    return <Button size="compact" variant="ghost" onClick={() => setVisible(true)}>Show banner again</Button>
+  }
+  return (
+    <Banner tone="warn" action={<Button size="compact">Upgrade</Button>} onDismiss={() => setVisible(false)}>
+      Trial ends in 3 days — upgrade to keep saved views.
+    </Banner>
+  )
+}
+
+export function ContextMenuDemo() {
+  const [lastAction, setLastAction] = useState<string | null>(null)
+  return (
+    <div className="grid gap-2">
+      <ContextMenu
+        items={[
+          { id: 'open', label: 'Open account', onSelect: () => setLastAction('Open account') },
+          { id: 'rename', label: 'Rename', onSelect: () => setLastAction('Rename') },
+          { id: 'archive', label: 'Archive', disabled: true },
+          { id: 'delete', label: 'Delete', destructive: true, onSelect: () => setLastAction('Delete') },
+        ]}
+      >
+        <div className="grid place-items-center border border-dashed border-line bg-surface-2 px-4 py-6 text-[13px] text-muted">
+          Right-click this region
+        </div>
+      </ContextMenu>
+      <p className="m-0 text-[13px] text-muted">Last action: <code className="num text-ink">{lastAction ?? '—'}</code></p>
+    </div>
+  )
+}
+
+export function SliderDemo() {
+  const [threshold, setThreshold] = useState(60)
+  return (
+    <div className="grid max-w-72 gap-2">
+      <Slider label="Risk threshold" min={0} max={100} step={5} value={threshold} onValueChange={setThreshold} showValue formatValue={(v) => `${v}%`} />
+      <p className="m-0 text-[13px] text-muted">Accounts above <code className="num text-ink">{threshold}%</code> are flagged.</p>
+    </div>
+  )
+}
+
+export function KbdDemo() {
+  return (
+    <div className="flex items-center gap-4 text-[13px] text-muted">
+      <span className="inline-flex items-center gap-1.5">Open palette <Kbd keys={['Ctrl', 'K']} /></span>
+      <span className="inline-flex items-center gap-1.5">Save view <Kbd keys={['⌘', 'S']} /></span>
+      <span className="inline-flex items-center gap-1.5">Dismiss <Kbd>Esc</Kbd></span>
     </div>
   )
 }

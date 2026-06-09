@@ -79,6 +79,19 @@ test('clicking a disabled option does nothing', async () => {
   expect(screen.getByRole('dialog')).toBeInTheDocument()
 })
 
+test('shortcut hints render as <kbd> chips', async () => {
+  const user = userEvent.setup()
+  render(<CommandPalette groups={groups} />)
+
+  const trigger = screen.getByRole('button', { name: /command/i })
+  const triggerKeys = trigger.querySelectorAll('kbd')
+  expect(Array.from(triggerKeys).map((k) => k.textContent)).toEqual(['Ctrl', 'K'])
+
+  await user.click(trigger)
+  const themeOption = screen.getByRole('option', { name: /switch theme/i })
+  expect(themeOption.querySelector('kbd')).toHaveTextContent('T')
+})
+
 test('global Ctrl+K opens the palette and arrow keys skip disabled commands', async () => {
   const user = userEvent.setup()
   render(<CommandPalette groups={groups} />)

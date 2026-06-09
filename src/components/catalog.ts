@@ -2,21 +2,22 @@ import type { ComponentProps, ComponentType } from 'react'
 
 import {
   // primitives
-  Button, IconButton, Card, StatusBadge, PageHeader,
+  Button, IconButton, Card, StatusBadge, PageHeader, Tag, Kbd,
   // form controls
-  Input, Textarea, Select, Combobox, Checkbox, RadioGroup, Switch,
-  SegmentedControl, Field, DatePicker, DateRangePicker,
+  Input, Textarea, Select, Combobox, MultiSelect, Checkbox, RadioGroup, Switch,
+  SegmentedControl, Slider, Field, DatePicker, DateRangePicker,
   Dropzone, FileUpload, Stepper, WizardLayout,
   // overlays
-  Modal, Drawer, Popover, Tooltip, DropdownMenu, CommandPalette,
+  Modal, Drawer, Popover, Tooltip, DropdownMenu, ContextMenu, CommandPalette,
   // feedback
-  InlineAlert, Toast, ToastProvider, Spinner, Skeleton, EmptyState, ImportProgress,
+  InlineAlert, Banner, Toast, ToastProvider, Spinner, Skeleton, EmptyState, ImportProgress, Progress,
   LoadingBars, LoadingChartDrawIn, LoadingConcentricArcs, LoadingCountingMetric,
   LoadingDonut, LoadingDots, LoadingKpiSkeleton, LoadingProgress, LoadingSparkline,
   // data-display
   Avatar, AvatarGroup, AssigneeChip, ActivityFeed, Timeline, AuditLogItem,
   DetailHeader, KeyValueList, DescriptionList, PropertyGrid, MetadataPanel,
   Tabs, Pagination, Toolbar, AppliedFiltersBar, FacetedFilter, AttachmentList, Metric,
+  Table, Accordion,
 } from './ui'
 import {
   WaterfallChart, RevenueMovementChart, MrrShareDonut, MrrTrendChart,
@@ -162,6 +163,24 @@ export const CATALOG: ComponentEntry[] = [
     related: ['NotificationBadge', 'Metric'],
     snippet: `<StatusBadge status="Active" />`,
   }),
+  defineComponent(Tag, {
+    name: 'Tag', import: './components/ui', category: 'primitive',
+    purpose: 'General-purpose label chip with tone variants and optional remove button.',
+    use_when: 'Tagging records with categories, topics, or token values.',
+    prefer_over: { StatusBadge: 'Use StatusBadge for lifecycle status (Active / At risk / Churned), not free-form labels.' },
+    props: ['label', 'tone', 'onRemove', 'className'],
+    variants: { tone: ['neutral', 'accent', 'pos', 'warn', 'neg'] },
+    related: ['StatusBadge', 'AppliedFiltersBar'],
+    snippet: `<Tag tone="accent" label="Beta" onRemove={() => drop('beta')} />`,
+  }),
+  defineComponent(Kbd, {
+    name: 'Kbd', import: './components/ui', category: 'primitive',
+    purpose: 'Keyboard-key chip for shortcut hints; renders semantic <kbd> elements.',
+    use_when: 'Showing a keyboard shortcut next to a command, menu item, or in help text.',
+    props: ['keys', 'children', 'className'],
+    related: ['CommandPalette', 'Tooltip'],
+    snippet: `<Kbd keys={['Ctrl', 'K']} />`,
+  }),
   defineComponent(PageHeader, {
     name: 'PageHeader', import: './components/ui', category: 'primitive',
     purpose: 'Page-level title block with eyebrow, description, and actions slot.',
@@ -212,6 +231,18 @@ export const CATALOG: ComponentEntry[] = [
     related: ['Select', 'DropdownMenu', 'Field'],
     snippet: `<Combobox options={opts} value={v} onValueChange={setV} placeholder="Owner" />`,
   }),
+  defineComponent(MultiSelect, {
+    name: 'MultiSelect', import: './components/ui', category: 'form',
+    purpose: 'Multi-value combobox with token chips, type-to-filter, and toggle-to-deselect.',
+    use_when: 'Picking several values from a list (tags, owners, segments) in a form.',
+    prefer_over: {
+      Combobox: 'Use Combobox when exactly one value can be selected.',
+      FacetedFilter: 'Use FacetedFilter for filtering a dataset, not capturing a form value.',
+    },
+    props: ['options', 'values', 'defaultValues', 'onValuesChange', 'placeholder', 'disabled'],
+    related: ['Combobox', 'FacetedFilter', 'Tag', 'Field'],
+    snippet: `<MultiSelect options={opts} values={vals} onValuesChange={setVals} placeholder="Segments" />`,
+  }),
   defineComponent(Checkbox, {
     name: 'Checkbox', import: './components/ui', category: 'form',
     purpose: 'Single boolean checkbox with optional label and hint.',
@@ -245,6 +276,15 @@ export const CATALOG: ComponentEntry[] = [
     variants: { size: ['default', 'compact'] },
     related: ['RadioGroup', 'Tabs'],
     snippet: `<SegmentedControl options={opts} value={v} onValueChange={setV} />`,
+  }),
+  defineComponent(Slider, {
+    name: 'Slider', import: './components/ui', category: 'form',
+    purpose: 'Accent-themed range input with optional label and live value readout.',
+    use_when: 'Picking an approximate numeric value where the gesture matters more than precision (thresholds, weights, percentages).',
+    prefer_over: { Input: 'Use Input type="number" when the exact value matters and must be typed.' },
+    props: ['value', 'defaultValue', 'onValueChange', 'min', 'max', 'step', 'label', 'showValue', 'formatValue', 'disabled'],
+    related: ['Input', 'Field'],
+    snippet: `<Slider label="Risk threshold" min={0} max={100} defaultValue={60} showValue formatValue={(v) => v + '%'} onValueChange={setThreshold} />`,
   }),
   defineComponent(Field, {
     name: 'Field', import: './components/ui', category: 'form',
@@ -362,6 +402,15 @@ export const CATALOG: ComponentEntry[] = [
     related: ['Select', 'Combobox', 'CommandPalette'],
     snippet: `<DropdownMenu label="Actions" items={[{ id: 'del', label: 'Delete', destructive: true, onSelect: del }]} />`,
   }),
+  defineComponent(ContextMenu, {
+    name: 'ContextMenu', import: './components/ui', category: 'overlay',
+    purpose: 'Right-click menu that opens at the pointer over a wrapped target.',
+    use_when: 'Contextual actions on rows, cards, or canvas regions via right-click.',
+    prefer_over: { DropdownMenu: 'Use DropdownMenu when actions hang off a visible trigger button.' },
+    props: ['items', 'children', 'className'],
+    related: ['DropdownMenu'],
+    snippet: `<ContextMenu items={[{ id: 'del', label: 'Delete', destructive: true, onSelect: del }]}><AccountRow /></ContextMenu>`,
+  }),
   defineComponent(CommandPalette, {
     name: 'CommandPalette', import: './components/ui', category: 'overlay',
     purpose: 'Searchable, grouped command launcher with keyboard shortcut.',
@@ -382,15 +431,28 @@ export const CATALOG: ComponentEntry[] = [
     related: ['Toast', 'EmptyState'],
     snippet: `<InlineAlert tone="warn" title="Heads up">Renewal is overdue.</InlineAlert>`,
   }),
+  defineComponent(Banner, {
+    name: 'Banner', import: './components/ui', category: 'feedback',
+    purpose: 'Full-width app/page-level announcement bar with tone, action slot, and dismiss.',
+    use_when: 'Maintenance windows, trial expiry, or environment notices spanning the page top.',
+    prefer_over: {
+      InlineAlert: 'Use InlineAlert for a message scoped to a section or form.',
+      Toast: 'Use Toast for transient feedback that should auto-dismiss.',
+    },
+    props: ['tone', 'children', 'action', 'onDismiss', 'className'],
+    variants: { tone: ['accent', 'pos', 'warn', 'neg'] },
+    related: ['InlineAlert', 'Toast'],
+    snippet: `<Banner tone="warn" action={<Button size="compact">Upgrade</Button>} onDismiss={hide}>Trial ends in 3 days.</Banner>`,
+  }),
   defineComponent(Toast, {
     name: 'Toast', import: './components/ui', category: 'feedback',
-    purpose: 'Single transient notification chip rendered by the ToastProvider stack.',
-    use_when: 'Rarely directly — prefer the useToast hook via ToastProvider.',
+    purpose: 'Single transient notification with optional title, action button, and dismiss.',
+    use_when: 'Rarely directly — prefer the useToast hook via ToastProvider: push(text, { tone, title, action, duration }).',
     prefer_over: { InlineAlert: 'Use InlineAlert for a persistent in-context message.' },
-    props: ['tone', 'children'],
+    props: ['tone', 'title', 'action', 'onDismiss', 'children'],
     variants: { tone: ['accent', 'pos', 'neg', 'warn'] },
     related: ['ToastProvider', 'InlineAlert'],
-    snippet: `<Toast tone="pos">Saved</Toast>`,
+    snippet: `toast('Account deleted', { tone: 'neg', title: 'Deleted', action: { label: 'Undo', onClick: undo } })`,
   }),
   defineComponent(ToastProvider, {
     name: 'ToastProvider', import: './components/ui', category: 'feedback',
@@ -424,6 +486,19 @@ export const CATALOG: ComponentEntry[] = [
     props: ['title', 'description', 'action', 'glyph'],
     related: ['ChartEmptyState', 'InlineAlert'],
     snippet: `<EmptyState title="No accounts" description="Add your first account." action={<Button>New</Button>} />`,
+  }),
+  defineComponent(Progress, {
+    name: 'Progress', import: './components/ui', category: 'feedback',
+    purpose: 'Determinate progress bar with tone variants, label, and value readout.',
+    use_when: 'Quotas, capacity meters, and completion percentages.',
+    prefer_over: {
+      ImportProgress: 'Use ImportProgress for a running import/upload with a detail line.',
+      Spinner: 'Use Spinner when progress is indeterminate.',
+    },
+    props: ['value', 'max', 'tone', 'label', 'showValue', 'className'],
+    variants: { tone: ['accent', 'pos', 'warn', 'neg'] },
+    related: ['ImportProgress', 'Spinner', 'Metric'],
+    snippet: `<Progress value={62} label="Storage" showValue tone="warn" />`,
   }),
   defineComponent(ImportProgress, {
     name: 'ImportProgress', import: './components/ui', category: 'feedback',
@@ -621,6 +696,24 @@ export const CATALOG: ComponentEntry[] = [
     related: ['KeyValueList', 'DescriptionList', 'PropertyGrid'],
     snippet: `<MetadataPanel title="Metadata" items={fields} />`,
   }),
+  defineComponent(Table, {
+    name: 'Table', import: './components/ui', category: 'data-display',
+    purpose: 'Lightweight static table (columns + rows) for small read-only datasets.',
+    use_when: 'A detail panel or card needs a handful of rows with no interaction.',
+    prefer_over: { DataGrid: 'Use DataGrid when the data needs sorting, filtering, selection, or column management.' },
+    props: ['columns', 'rows', 'rowKey', 'caption', 'emptyMessage', 'className'],
+    related: ['DataGrid', 'KeyValueList', 'DescriptionList'],
+    snippet: `<Table caption="Top accounts" columns={[{ key: 'name', header: 'Account' }, { key: 'mrr', header: 'MRR', numeric: true }]} rows={rows} rowKey={(r) => r.id} />`,
+  }),
+  defineComponent(Accordion, {
+    name: 'Accordion', import: './components/ui', category: 'data-display',
+    purpose: 'Disclosure list of collapsible sections; single-open by default.',
+    use_when: 'Stacked sections the user expands one at a time (settings groups, FAQs).',
+    prefer_over: { Tabs: 'Use Tabs for equally-ranked views the user switches between, not progressive disclosure.' },
+    props: ['items', 'multiple', 'defaultOpenIds', 'className'],
+    related: ['Tabs', 'Card'],
+    snippet: `<Accordion items={[{ id: 'general', title: 'General', content: body }]} defaultOpenIds={['general']} />`,
+  }),
   defineComponent(Tabs, {
     name: 'Tabs', import: './components/ui', category: 'data-display',
     purpose: 'Tabbed panels switching between content sections.',
@@ -691,9 +784,9 @@ export const CATALOG: ComponentEntry[] = [
   }),
   defineComponent(RevenueMovementChart, {
     name: 'RevenueMovementChart', import: './components/charts', category: 'chart',
-    purpose: 'Pre-wired revenue movement (new/expansion/churn) waterfall.',
-    use_when: 'Dropping in the standard MRR movement breakdown.',
-    props: ['barWidth', 'showLabels'],
+    purpose: 'Stacked monthly movement bars (new/expansion/churn); demo data by default.',
+    use_when: 'Any signed movement breakdown — pass `data` rows of { month, New, Expansion, Churn }.',
+    props: ['data', 'barWidth', 'showLabels'],
     related: ['WaterfallChart', 'MrrTrendChart'],
     snippet: `<RevenueMovementChart showLabels />`,
   }),
@@ -707,11 +800,11 @@ export const CATALOG: ComponentEntry[] = [
   }),
   defineComponent(MrrTrendChart, {
     name: 'MrrTrendChart', import: './components/charts', category: 'chart',
-    purpose: 'Pre-wired MRR trend line chart.',
-    use_when: 'Dropping in the standard MRR-over-time line.',
-    props: [],
+    purpose: 'Multi-series line chart themed from the SERIES palette; demo MRR data by default.',
+    use_when: 'Any value-over-time lines — pass `data` rows and the `series` keys to plot.',
+    props: ['data', 'series', 'xKey'],
     related: ['MrrShareDonut', 'RevenueMovementChart'],
-    snippet: `<MrrTrendChart />`,
+    snippet: `<MrrTrendChart data={rows} series={['Enterprise', 'Startup']} />`,
   }),
   defineComponent(ChartCard, {
     name: 'ChartCard', import: './components/charts', category: 'chart',

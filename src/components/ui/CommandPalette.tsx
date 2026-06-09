@@ -10,6 +10,7 @@ import {
   type RefObject,
 } from 'react'
 import { useDialogFocusTrap } from './useDialogFocusTrap'
+import { Kbd } from './Kbd'
 import { cx } from './utils'
 
 export interface CommandPaletteItem {
@@ -165,7 +166,11 @@ export function CommandPalette({
           className="inline-flex h-8 items-center justify-center gap-2 rounded-[2px] border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
         >
           <span>{trigger}</span>
-          {shortcutLabel && <span className="num text-[11px] text-muted">{shortcutLabel}</span>}
+          {shortcutLabel && (
+            typeof shortcutLabel === 'string'
+              ? <Kbd keys={shortcutLabel.split(' ')} />
+              : <span className="num text-[11px] text-muted">{shortcutLabel}</span>
+          )}
         </button>
       )}
       {isOpen && (
@@ -241,7 +246,11 @@ export function CommandPalette({
                               <span className="truncate font-medium">{match.item.label}</span>
                               {match.item.description && <span className="truncate text-[12px] text-muted">{match.item.description}</span>}
                             </span>
-                            {match.item.shortcut && <span className="num self-center text-[11px] text-muted">{match.item.shortcut}</span>}
+                            {match.item.shortcut && (
+                              typeof match.item.shortcut === 'string'
+                                ? <Kbd className="self-center">{match.item.shortcut}</Kbd>
+                                : <span className="num self-center text-[11px] text-muted">{match.item.shortcut}</span>
+                            )}
                           </div>
                         )
                       })}

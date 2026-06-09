@@ -16,6 +16,15 @@ import {
   SpinnerDemo,
   StepperDemo,
   SwitchDemo,
+  TableDemo,
+  AccordionDemo,
+  ProgressDemo,
+  TagDemo,
+  MultiSelectDemo,
+  BannerDemo,
+  ContextMenuDemo,
+  SliderDemo,
+  KbdDemo,
 } from './demos'
 
 /**
@@ -41,4 +50,13 @@ export const demos: Partial<Record<string, ReactNode>> = {
   Dropzone: createElement(DropzoneDemo),
   BubbleMap: createElement(BubbleMapDemo),
   FlowMap: createElement(FlowMapDemo),
+  Table: createElement(TableDemo),
+  Accordion: createElement(AccordionDemo),
+  Progress: createElement(ProgressDemo),
+  Tag: createElement(TagDemo),
+  MultiSelect: createElement(MultiSelectDemo),
+  Banner: createElement(BannerDemo),
+  ContextMenu: createElement(ContextMenuDemo),
+  Slider: createElement(SliderDemo),
+  Kbd: createElement(KbdDemo),
 }
