@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 "Ledger" — a runnable Vite + React + TS dashboard that doubles as a **clone-and-customize theme starter**. The entire design system is isolated in `src/theme/` so the whole app can be re-skinned by editing one folder. `demo.html` (a standalone vanilla prototype) is the behavior reference; `THEME-SPEC.md` is the canonical design reference. The design spec and implementation plan live in `docs/superpowers/`.
 
+## Component catalog (read before building UI)
+
+`src/components/catalog.ts` is the machine-readable index of all ~87 components: import path, when to use each vs. its near-twins (`prefer_over`), real props, and a copy-paste snippet. Read it before adding UI — it prevents reinventing a component or picking the wrong one. `/docs` renders it. Adding a component? Add its `CATALOG` entry: `npm run build` compile-checks `props` (the `defineComponent` factory), and `src/components/catalog.test.ts` requires every exported component to be cataloged or explicitly `INTERNAL`.
+
 ## Commands
 
 ```bash
@@ -15,6 +19,7 @@ npm test               # Vitest, single run (jsdom)
 npm run test:watch     # Vitest watch mode
 npm run lint           # ESLint
 npm run lint:theme     # boundary guard — fails if raw colors appear outside src/theme/
+npm run test:e2e       # Playwright (e2e/) — layout-sensitive checks jsdom can't verify
 
 # run one test file / one test
 npx vitest run src/selectors/metrics.test.ts
@@ -39,6 +44,7 @@ Note: `lint:theme` only catches `#hex`/`rgb()`/`hsl()` text. Named Tailwind colo
 - `theme.css` — Tailwind v4 entry. **Order matters**: all `@import` statements (fonts, `tailwindcss`, tokens, base) come first (CSS spec), then `@custom-variant dark`, then `@theme inline`. Use `@theme inline` (not plain `@theme`) so utilities resolve `var(--…)` at use-site — that's what makes `.dark` overrides actually apply.
 - `base.css` — `.num`/`.micro`/`.display` and `.shadow-modal`/`.shadow-dropdown` live in `@layer components` on purpose, so Tailwind utilities (later `utilities` layer) can override them (e.g. `text-pos` beating `.micro`'s muted color on a badge).
 - `chart-theme.ts` — the **only** place chart colors are defined. Exports `SERIES` (categorical palette), `semantic` (accent/pos/neg/cyan/muted), `axisProps`, `gridProps`, `tooltipProps`, `legendProps`. `SERIES[0]` is `var(--accent)` so the first chart series re-skins with the accent token. Categorical `SERIES[1..]` are fixed hex (Recharts can't cleanly resolve many CSS vars for categorical fills) — documented and intentional.
+- `recipes.ts` / `recipes.css` — optional named theme presets (e.g. `finance-cobalt`, `ops-green`); `recipes.ts` is the apply/read API and the sole writer of the `ledger.theme.recipe` key.
 - `RETHEME.md` — the user-facing re-skin guide.
 
 ## Data flow
