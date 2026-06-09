@@ -387,15 +387,10 @@ export default function App() {
       collapsed={sidebarCollapsed}
       onCollapsedChange={setSidebarCollapsed}
       items={[
-        { label: 'Overview', href: '/', active: !docsActive && !templateActive },
+        { label: 'Accounts', href: '/', active: !docsActive && !templateActive },
         { label: 'Customer success', href: '/templates/customer-success', active: customerTemplateActive, meta: 'app' },
         { label: 'Review queue', href: '/templates/recommendation-review', active: recommendationTemplateActive, meta: 'app' },
         { label: 'Components', href: '/docs', active: docsActive, meta: 'kit' },
-        { label: 'Reports', href: '/', active: false },
-      ]}
-      adminItems={[
-        { label: 'Users', href: '/', active: false },
-        { label: 'Settings', href: '/', active: false },
       ]}
       footer={<span className="num text-[12px] text-muted">demo · v1.0</span>}
     />
