@@ -19,7 +19,7 @@ export interface ComponentEntry {
   purpose: string
   /** When to reach for this component. */
   use_when: string
-  /** Disambiguation vs near-twins: twin name -> why pick this / the other. */
+  /** Disambiguation vs near-twins: twin name (must be cataloged) -> why pick this / the other. */
   prefer_over?: Record<string, string>
   /** Key prop names — compile-time verified to be real props (see factory). */
   props: readonly string[]
@@ -33,9 +33,10 @@ export interface ComponentEntry {
 
 /**
  * Type-safe entry constructor. `props` is constrained to keys of the component's
- * own props type, so a fictional/misspelled prop is a compile error (caught by
- * `npm run build`). Props derive from the component value, so components need not
- * export a named props interface.
+ * own props type. For well-typed components (all components in this kit), a
+ * fictional/misspelled prop name is a compile error (caught by `npm run build`).
+ * Props derive from the component value, so components need not export a named
+ * props interface.
  */
 export function defineComponent<C extends ComponentType<any>>( // eslint-disable-line @typescript-eslint/no-explicit-any
   component: C,
@@ -49,8 +50,8 @@ export function defineComponent<C extends ComponentType<any>>( // eslint-disable
 /**
  * Real components deliberately NOT cataloged: each is composed by a documented
  * parent and should not be reached for directly. The reason strings double as
- * guidance. Seeded from the spec; reconcile against the runtime enumeration in
- * Task 3.
+ * guidance. Reconciled against the runtime barrel enumeration; update when adding
+ * or renaming composition sub-fragments.
  */
 export const INTERNAL = new Map<string, string>([
   // DataGrid composition pieces — use <DataGrid>, not these directly:
