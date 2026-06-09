@@ -8,7 +8,7 @@ import {
   themeRecipeUsageSnippet,
   type ThemeRecipeId,
 } from '../../theme/recipes'
-import { CATALOG, CATEGORIES, type ComponentEntry } from '../catalog'
+import { CATALOG, CATEGORIES, type Category, type ComponentEntry } from '../catalog'
 import { demos } from './demoRegistry'
 
 const usageSnippet = `import { Button, Card, Field, Input } from './components/ui'
@@ -33,7 +33,7 @@ const copyChecklist: Array<[string, string]> = [
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
 ]
 
-const CATEGORY_LABELS: Record<string, string> = {
+const CATEGORY_LABELS: Record<Category, string> = {
   primitive: 'UI primitives',
   form: 'Form controls',
   overlay: 'Overlays',
@@ -76,6 +76,13 @@ function ReferenceCard({ entry, demo }: { entry: ComponentEntry; demo?: ReactNod
         <p className="m-0 mt-1 micro text-muted">related: {entry.related.join(', ')}</p>
       )}
       <p className="m-0 mt-2 micro text-muted">props: {entry.props.join(', ')}</p>
+      {entry.variants && (
+        <p className="m-0 mt-1 micro text-muted">
+          {Object.entries(entry.variants)
+            .map(([prop, values]) => `${prop}: ${values.join(' | ')}`)
+            .join('   ')}
+        </p>
+      )}
       <pre className="micro bg-surface-2 border border-line rounded-[2px] p-2 mt-2 overflow-x-auto">
         <code>{entry.snippet}</code>
       </pre>
@@ -92,7 +99,10 @@ function CatalogReferenceIndex() {
         if (entries.length === 0) return null
         return (
           <section key={cat}>
-            <SectionHeader title={CATEGORY_LABELS[cat] ?? cat} description={`${entries.length} components`} />
+            <SectionHeader
+              title={CATEGORY_LABELS[cat] ?? cat}
+              description={`${entries.length} ${entries.length === 1 ? 'component' : 'components'}`}
+            />
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
               {entries.map((entry) => (
                 <ReferenceCard key={entry.name} entry={entry} demo={demos[entry.name]} />

@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   AppliedFiltersBar,
-  AssigneeChip,
   AttachmentList,
-  AvatarGroup,
   Button,
   Checkbox,
   Combobox,
@@ -14,7 +12,6 @@ import {
   Field,
   FacetedFilter,
   IconButton,
-  ImportProgress,
   InlineAlert,
   Input,
   Pagination,
@@ -52,13 +49,6 @@ const importWizardSteps = [
   { id: 'upload', label: 'Upload CSV', state: 'complete' as const },
   { id: 'map', label: 'Map columns', state: 'current' as const },
   { id: 'review', label: 'Review', state: 'upcoming' as const },
-]
-
-const avatarUsers = [
-  { name: 'Avery Cohen', status: 'online' as const },
-  { name: 'Blair Nakamura', status: 'away' as const },
-  { name: 'Devin Okafor', status: 'offline' as const },
-  { name: 'Rowan Mitchell', status: 'busy' as const },
 ]
 
 export function CommandPaletteDemo() {
@@ -261,23 +251,7 @@ export function PaginationDemo() {
 }
 
 export function StepperDemo() {
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  return (
-    <div className="grid gap-3">
-      <Stepper steps={importWizardSteps} currentStepId="map" />
-      <Dropzone onFilesSelected={setUploadedFiles} label="Drop CSV files here" description="Choose a customer import file." />
-      <AttachmentList
-        attachments={uploadedFiles.length > 0
-          ? uploadedFiles.map((file) => ({ id: file.name, name: file.name, size: file.size }))
-          : [{ id: 'sample', name: 'accounts-import.csv', size: 14336, status: 'Ready' }]}
-      />
-      <ImportProgress value={64} detail="Mapping 3 of 5 columns." />
-      <div className="flex flex-wrap items-center gap-3">
-        <AvatarGroup users={avatarUsers} max={3} />
-        <AssigneeChip name="Blair Nakamura" status="away" meta="Reviewer" />
-      </div>
-    </div>
-  )
+  return <Stepper steps={importWizardSteps} currentStepId="map" />
 }
 
 export function DropzoneDemo() {
