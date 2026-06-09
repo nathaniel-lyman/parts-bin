@@ -2,9 +2,17 @@ import { describe, expect, test } from 'vitest'
 import * as barrel from './index'
 import { CATALOG, INTERNAL, NON_COMPONENT_OVERRIDES } from './catalog'
 
-/** Catalog-eligible = a function export whose name starts uppercase. */
+/** Catalog-eligible = a component export: a capitalized function, or a
+ *  forwardRef/memo-wrapped component (an object with a React $$typeof).
+ *  Deliberately excludes context objects (react.context) and plain data. */
 function isEligible(name: string, value: unknown): boolean {
-  return typeof value === 'function' && /^[A-Z]/.test(name)
+  if (!/^[A-Z]/.test(name)) return false
+  if (typeof value === 'function') return true
+  if (typeof value === 'object' && value !== null) {
+    const tag = (value as { $$typeof?: symbol }).$$typeof
+    return tag === Symbol.for('react.forward_ref') || tag === Symbol.for('react.memo')
+  }
+  return false
 }
 
 const eligible = Object.entries(barrel).filter(([n, v]) => isEligible(n, v))
