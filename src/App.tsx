@@ -52,6 +52,7 @@ import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 import type { LedgerGridColumn } from './components/DataGrid'
+import { appHref, appPath, navigate } from './lib/routes'
 
 const timePeriodOptions = [
   { value: '7d', label: 'Last 7 days' },
@@ -285,7 +286,7 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
 export default function App() {
   const { mode, toggle } = useTheme()
   const toast = useToast()
-  const pathname = window.location.pathname
+  const pathname = appPath()
   const loginActive = pathname === '/login'
   const settingsActive = pathname === '/settings'
   const docsActive = pathname === '/docs'
@@ -329,41 +330,41 @@ export default function App() {
           label: 'Open dashboard',
           description: 'Revenue account dashboard',
           shortcut: 'G D',
-          onSelect: () => { window.location.href = '/' },
+          onSelect: () => { navigate('/') },
         },
         {
           id: 'components',
           label: 'Open component catalog',
           description: 'Live Ledger UI reference',
           shortcut: 'G C',
-          onSelect: () => { window.location.href = '/docs' },
+          onSelect: () => { navigate('/docs') },
         },
         {
           id: 'template',
           label: 'Open customer success template',
           description: 'Customer operations workspace',
           shortcut: 'G T',
-          onSelect: () => { window.location.href = '/templates/customer-success' },
+          onSelect: () => { navigate('/templates/customer-success') },
         },
         {
           id: 'recommendation-review-template',
           label: 'Open recommendation review template',
           description: 'Queue, detail panel, and feedback workflow',
           shortcut: 'G R',
-          onSelect: () => { window.location.href = '/templates/recommendation-review' },
+          onSelect: () => { navigate('/templates/recommendation-review') },
         },
         {
           id: 'settings',
           label: 'Open settings',
           description: 'Appearance, profile, and notifications',
           shortcut: 'G S',
-          onSelect: () => { window.location.href = '/settings' },
+          onSelect: () => { navigate('/settings') },
         },
         {
           id: 'sign-out',
           label: 'Sign out',
           description: 'Return to the sign-in screen',
-          onSelect: () => { window.location.href = '/login' },
+          onSelect: () => { navigate('/login') },
         },
       ],
     },
@@ -402,17 +403,18 @@ export default function App() {
   const sidebar = (
     <LeftNavigationDrawer
       brand="Ledger"
+      brandHref={appHref('/')}
       brandMark="#"
       collapsed={sidebarCollapsed}
       onCollapsedChange={setSidebarCollapsed}
       items={[
-        { label: 'Accounts', href: '/', active: !docsActive && !templateActive && !settingsActive },
-        { label: 'Customer success', href: '/templates/customer-success', active: customerTemplateActive, meta: 'app' },
-        { label: 'Review queue', href: '/templates/recommendation-review', active: recommendationTemplateActive, meta: 'app' },
-        { label: 'Components', href: '/docs', active: docsActive, meta: 'kit' },
+        { label: 'Accounts', href: appHref('/'), active: !docsActive && !templateActive && !settingsActive },
+        { label: 'Customer success', href: appHref('/templates/customer-success'), active: customerTemplateActive, meta: 'app' },
+        { label: 'Review queue', href: appHref('/templates/recommendation-review'), active: recommendationTemplateActive, meta: 'app' },
+        { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
       ]}
       adminItems={[
-        { label: 'Settings', href: '/settings', active: settingsActive },
+        { label: 'Settings', href: appHref('/settings'), active: settingsActive },
       ]}
       footer={<span className="num text-[12px] text-muted">demo · v1.0</span>}
     />
@@ -421,7 +423,7 @@ export default function App() {
   const topNav = (
     <TopNav
       breadcrumbs={[
-        { label: 'Ledger', href: '/' },
+        { label: 'Ledger', href: appHref('/') },
         { label: settingsActive ? 'Settings' : docsActive ? 'Components' : recommendationTemplateActive ? 'Review queue' : customerTemplateActive ? 'Customer success' : 'Accounts' },
       ]}
       title={settingsActive ? 'Settings' : docsActive ? 'Component catalog' : recommendationTemplateActive ? 'Recommendation review' : customerTemplateActive ? 'Customer success' : 'Accounts'}
@@ -459,8 +461,8 @@ export default function App() {
             meta="Demo workspace"
             items={[
               { id: 'profile', label: 'Profile', description: 'Morgan Operator', onSelect: () => toast('Profile opened', 'accent') },
-              { id: 'settings', label: 'Settings', description: 'Workspace settings', onSelect: () => { window.location.href = '/settings' } },
-              { id: 'sign-out', label: 'Sign out', onSelect: () => { window.location.href = '/login' } },
+              { id: 'settings', label: 'Settings', description: 'Workspace settings', onSelect: () => { navigate('/settings') } },
+              { id: 'sign-out', label: 'Sign out', onSelect: () => { navigate('/login') } },
             ]}
           />
         </>

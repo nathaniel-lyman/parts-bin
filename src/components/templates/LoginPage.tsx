@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTheme } from '../../hooks/useTheme'
+import { appHref, navigate } from '../../lib/routes'
 import {
   Button,
   Checkbox,
@@ -38,14 +39,14 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     // Simulate an async sign-in, then enter the app. Demo only — no backend.
-    window.setTimeout(() => { window.location.href = '/' }, 600)
+    window.setTimeout(() => { navigate('/') }, 600)
   }
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-bg text-ink md:grid-cols-2">
       {/* Brand panel — hidden on small screens to keep the form front-and-center. */}
       <aside className="hidden flex-col justify-between border-r border-line bg-surface p-10 md:flex">
-        <BrandLockup mark="#">Ledger</BrandLockup>
+        <BrandLockup mark="#" href={appHref('/')}>Ledger</BrandLockup>
         <div className="grid gap-3">
           <p className="display m-0 text-[32px] font-semibold leading-tight text-ink">
             Data-first dashboards,<br />ready to ship.
@@ -78,7 +79,7 @@ export function LoginPage() {
 
         <div className="w-full max-w-[360px]">
           <div className="mb-6 grid gap-1 md:hidden">
-            <BrandLockup mark="#">Ledger</BrandLockup>
+            <BrandLockup mark="#" href={appHref('/')}>Ledger</BrandLockup>
           </div>
 
           <div className="mb-6 grid gap-1">
@@ -117,7 +118,7 @@ export function LoginPage() {
 
             <div className="flex items-center justify-between">
               <Checkbox label="Remember me" defaultChecked />
-              <a href="/login" className="text-[13px] font-medium text-accent hover:underline">
+              <a href={appHref('/login')} className="text-[13px] font-medium text-accent hover:underline">
                 Forgot password?
               </a>
             </div>
@@ -132,14 +133,14 @@ export function LoginPage() {
               <span className="h-px flex-1 bg-line" />
             </div>
 
-            <Button type="button" variant="secondary" onClick={() => { window.location.href = '/' }}>
+            <Button type="button" variant="secondary" onClick={() => { navigate('/') }}>
               Continue with SSO
             </Button>
           </form>
 
           <p className="mt-6 text-center text-[13px] text-muted">
             No account?{' '}
-            <a href="/login" className="font-medium text-accent hover:underline">Create one</a>
+            <a href={appHref('/login')} className="font-medium text-accent hover:underline">Create one</a>
           </p>
           <p className="micro mt-4 text-center">Demo — any credentials sign you in.</p>
         </div>

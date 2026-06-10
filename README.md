@@ -6,6 +6,8 @@
 A runnable dashboard starter implementing the **Ledger** design system: sharp, technical,
 data-first. Clone it, run it, customize it — or lift the `src/theme/` folder into your own app.
 
+**[Live demo →](https://nathaniel-lyman.github.io/dashboard-theme/)** · explore `/docs`, `/login`, and `/settings` in the running app.
+
 ![Ledger dashboard, dark mode](docs/screenshots/dashboard-dark.png)
 
 **The whole skin lives in one folder.** Change `src/theme/tokens.css` (or apply a shipped

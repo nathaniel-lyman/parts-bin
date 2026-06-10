@@ -7,6 +7,7 @@ import {
   themeRecipeUsageSnippet,
   type ThemeRecipeId,
 } from '../../theme/recipes'
+import { navigate } from '../../lib/routes'
 import type { ComponentEntry } from '../catalog'
 import { ComponentGallery } from './ComponentGallery'
 import { ComponentDetailDrawer } from './ComponentDetailDrawer'
@@ -56,7 +57,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
         eyebrow="Ledger UI Kit"
         title="Component reference"
         description="Every component is cataloged in src/components/catalog.ts — this gallery renders that manifest, so coverage is structural. Click any card for import, props, near-twins, and a copy-paste snippet."
-        actions={<Button variant="primary" onClick={() => { window.location.href = '/' }}>Open dashboard</Button>}
+        actions={<Button variant="primary" onClick={() => { navigate('/') }}>Open dashboard</Button>}
       />
 
       <div className="grid gap-6">
@@ -72,8 +73,8 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
                 <p className="m-0 text-[13px] text-muted">Use a clone-ready screen when you need workflow structure: KPIs, queues, custom review lists, detail panels, activity, and drawer forms.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" onClick={() => { window.location.href = '/templates/customer-success' }}>Customer success</Button>
-                <Button variant="primary" onClick={() => { window.location.href = '/templates/recommendation-review' }}>Recommendation review</Button>
+                <Button variant="secondary" onClick={() => { navigate('/templates/customer-success') }}>Customer success</Button>
+                <Button variant="primary" onClick={() => { navigate('/templates/recommendation-review') }}>Recommendation review</Button>
               </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
