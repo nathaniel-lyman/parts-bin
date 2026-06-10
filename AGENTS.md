@@ -2,6 +2,19 @@
 
 Agent guidance for this repo. **Read [CLAUDE.md](./CLAUDE.md) first** — it is the canonical source for the project overview, commands, the swappable-theme boundary, data flow, persistence ownership, and gotchas. This file adds only the agent-specific rules not covered there.
 
+## Skills
+
+Step-by-step workflows for the most common tasks live in `skills/` (open Agent Skills format). If your tool doesn't auto-load skills, read the linked file before starting that kind of task:
+
+| Skill | Use when | File |
+|---|---|---|
+| `retheme` | Re-skinning to a new brand: colors, dark mode, radii, fonts, chart palette | [skills/retheme/SKILL.md](./skills/retheme/SKILL.md) |
+| `swap-data-domain` | Replacing the demo accounts/MRR data with your own domain | [skills/swap-data-domain/SKILL.md](./skills/swap-data-domain/SKILL.md) |
+| `add-component` | Adding or substantially modifying any UI component | [skills/add-component/SKILL.md](./skills/add-component/SKILL.md) |
+| `verify-changes` | Before claiming any change is done, fixed, or passing | [skills/verify-changes/SKILL.md](./skills/verify-changes/SKILL.md) |
+
+(Claude Code discovers these automatically via thin pointers in `.claude/skills/`.)
+
 ## Building UI
 
 Read `src/components/catalog.ts` before adding UI (see CLAUDE.md → "Component catalog"). Don't add a component without a `CATALOG` entry — `npm run build` and `src/components/catalog.test.ts` enforce it.

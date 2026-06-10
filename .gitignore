@@ -8,3 +8,6 @@ test-results
 
 # internal planning docs (specs/plans), kept local only
 docs/superpowers/
+
+# local Claude Code settings (the .claude/skills/ wrappers ARE tracked)
+.claude/settings.local.json

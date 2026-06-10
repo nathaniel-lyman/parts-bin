@@ -70,3 +70,5 @@ data/accounts.ts ──> useAccounts ──> selectors/metrics ──> KpiCard �
 ## When changing behavior
 
 `demo.html` is the parity target and `THEME-SPEC.md` §6 the visual spec — consult both before altering KPIs, the table, charts, or component styling. Keep new visual constants in `src/theme/` and run `npm run lint:theme` + `npm run build` + `npm test`.
+
+Procedural workflows (retheme, swap-data-domain, add-component, verify-changes) live in `skills/<name>/SKILL.md` — follow the matching one when doing that kind of task, and update it when the convention it documents changes.

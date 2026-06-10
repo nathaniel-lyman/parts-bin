@@ -53,7 +53,26 @@ Every surface a dashboard product needs, already built from the kit's own primit
   Appearance section is the live home for color mode, theme recipe, and density.
 - **`src/hooks/`, `src/selectors/`, `src/data/`** — client-side state, derived metrics, seed data.
 - **`/docs`** — live component catalog with examples, prop guidance, and copy-paste usage snippets.
+- **`skills/`** — agent skills: step-by-step workflows for re-theming, swapping the data domain,
+  adding components, and verifying changes. See [Agent skills](#agent-skills).
 - **`THEME-SPEC.md`** — the canonical design reference.
+
+## Agent skills
+
+The repo ships executable workflows for AI coding agents (Claude Code, Cursor, Codex, …), so the
+happy path after cloning is: tell your agent *"re-skin this to my brand"*, then *"replace the demo
+data with my domain"* — and it follows a checked-in, verified procedure instead of guessing.
+
+| Skill | What your agent can do with it |
+|---|---|
+| [`retheme`](skills/retheme/SKILL.md) | Re-skin to a new brand — colors, dark mode, radii, fonts, chart palette |
+| [`swap-data-domain`](skills/swap-data-domain/SKILL.md) | Replace the demo accounts/MRR data with your domain, end to end |
+| [`add-component`](skills/add-component/SKILL.md) | Add UI the right way: catalog-first, token-only styling |
+| [`verify-changes`](skills/verify-changes/SKILL.md) | Run the full done-checklist, including the failures tests alone miss |
+
+Skills are plain markdown in the open Agent Skills format (`skills/<name>/SKILL.md`). Claude Code
+picks them up automatically via `.claude/skills/`; other tools find them through
+[AGENTS.md](AGENTS.md).
 
 ## Scripts
 | Command | Does |
