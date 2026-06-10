@@ -73,6 +73,7 @@ describe('DataGridColumnMenu shell', () => {
 
   it('dispatches per-column filter changes', () => {
     const dispatch = open()
+    fireEvent.click(screen.getByRole('menuitem', { name: /filter/i }))
     fireEvent.change(screen.getByLabelText(/mrr filter value/i), { target: { value: '1000' } })
     expect(screen.getByPlaceholderText(/filter value/i)).toBeEnabled()
     expect(screen.queryByText(/filter wired in phase 3/i)).toBeNull()

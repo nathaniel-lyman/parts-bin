@@ -275,7 +275,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
 
           <Card
             title="Account portfolio"
-            description="The same Ledger grid, dropped into a fuller app screen with filters, selection, export, and header filters."
+            description="The same Ledger grid, dropped into a fuller app screen with column filters, selection, and export."
           >
             <DataGrid
               rows={filteredAccounts}
@@ -283,7 +283,6 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
               getRowId={(row) => row.id}
               initialState={DEFAULT_STATE}
               globalFilterFn={accountGlobalFilter}
-              enableHeaderFilters
               enableRowSelection
               enableExport
             />

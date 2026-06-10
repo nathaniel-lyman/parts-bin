@@ -247,7 +247,6 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
           manualSorting={serverMode}
           manualFiltering={serverMode}
           manualPagination={serverMode}
-          enableHeaderFilters
           enableRowSelection
           totalRowCount={serverMode ? server.totalRowCount : undefined}
           onQueryChange={serverMode ? setServerQuery : undefined}

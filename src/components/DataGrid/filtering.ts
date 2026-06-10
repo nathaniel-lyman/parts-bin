@@ -86,7 +86,7 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
           const max = toNumber(hi)
           return (cellValue) => {
             const current = toNumber(cellValue)
-            return current !== null && min !== null && max !== null && current >= min && current <= max
+            return current !== null && (min === null || current >= min) && (max === null || current <= max)
           }
         }
         default:
@@ -103,7 +103,9 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
           const [lo, hi] = Array.isArray(value) ? value : [undefined, undefined]
           return (cellValue) => {
             const current = String(cellValue ?? '')
-            return current !== '' && lo != null && hi != null && current >= String(lo) && current <= String(hi)
+            const min = lo == null || lo === '' ? null : String(lo)
+            const max = hi == null || hi === '' ? null : String(hi)
+            return current !== '' && (min === null || current >= min) && (max === null || current <= max)
           }
         }
         default:

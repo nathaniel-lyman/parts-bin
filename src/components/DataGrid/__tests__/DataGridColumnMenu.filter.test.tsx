@@ -22,7 +22,9 @@ describe('column-menu per-column filter', () => {
 
     await user.click(screen.getByRole('button', { name: /segment column menu/i }))
     const menu = screen.getByRole('menu', { name: /segment column menu/i })
-    await user.click(within(menu).getByRole('checkbox', { name: 'Startup' }))
+    await user.click(within(menu).getByRole('menuitem', { name: 'Filter' }))
+    const dialog = screen.getByRole('dialog', { name: /segment filter/i })
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Startup' }))
 
     expect(screen.getByText('Foxglove Labs')).toBeInTheDocument()
     expect(screen.getByText('Quill Analytics')).toBeInTheDocument()
@@ -34,10 +36,27 @@ describe('column-menu per-column filter', () => {
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
 
     await user.click(screen.getByRole('button', { name: /mrr column menu/i }))
-    await user.selectOptions(screen.getByLabelText(/mrr filter operator/i), 'greaterThan')
-    await user.type(screen.getByLabelText(/mrr filter value/i), '20000')
+    await user.click(within(screen.getByRole('menu', { name: /mrr column menu/i })).getByRole('menuitem', { name: 'Filter' }))
+    const dialog = screen.getByRole('dialog', { name: /mrr filter/i })
+    await user.selectOptions(within(dialog).getByLabelText(/mrr filter operator/i), 'greaterThan')
+    await user.type(within(dialog).getByLabelText(/mrr filter value/i), '20000')
 
     expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
     expect(screen.queryByText('Meridian Corp')).toBeNull()
+  })
+
+  it('shows range inputs for between filters', async () => {
+    const user = userEvent.setup()
+    render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
+
+    await user.click(screen.getByRole('button', { name: /growth column menu/i }))
+    await user.click(within(screen.getByRole('menu', { name: /growth column menu/i })).getByRole('menuitem', { name: 'Filter' }))
+    const dialog = screen.getByRole('dialog', { name: /growth filter/i })
+    await user.selectOptions(within(dialog).getByLabelText(/growth filter operator/i), 'between')
+    await user.type(within(dialog).getByLabelText(/growth filter minimum/i), '0')
+    await user.type(within(dialog).getByLabelText(/growth filter maximum/i), '5')
+
+    expect(screen.getByText('Harbor & Pine')).toBeInTheDocument()
+    expect(screen.queryByText('Bluestem Health')).toBeNull()
   })
 })
