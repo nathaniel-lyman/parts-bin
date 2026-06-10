@@ -5,3 +5,6 @@ dist
 playwright-report
 test-results
 .playwright-mcp/
+
+# internal planning docs (specs/plans), kept local only
+docs/superpowers/
