@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Component catalog (read before building UI)
 
-`src/components/catalog.ts` is the machine-readable index of all ~87 components: import path, when to use each vs. its near-twins (`prefer_over`), real props, and a copy-paste snippet. Read it before adding UI — it prevents reinventing a component or picking the wrong one. `/docs` renders it. Adding a component? Add its `CATALOG` entry: `npm run build` compile-checks `props` (the `defineComponent` factory), and `src/components/catalog.test.ts` requires every exported component to be cataloged or explicitly `INTERNAL`.
+`src/components/catalog.ts` is the machine-readable index of all ~99 components: import path, when to use each vs. its near-twins (`prefer_over`), real props, and a copy-paste snippet. Read it before adding UI — it prevents reinventing a component or picking the wrong one. `/docs` renders it. Adding a component? Add its `CATALOG` entry: `npm run build` compile-checks `props` (the `defineComponent` factory), and `src/components/catalog.test.ts` requires every exported component to be cataloged or explicitly `INTERNAL`.
 
 ## Commands
 

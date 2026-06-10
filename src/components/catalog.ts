@@ -29,7 +29,7 @@ import {
   AppShell, Sidebar, TopNav, Breadcrumbs, FilterBar, SectionHeader, SettingsPanel,
   NotificationBadge,
 } from './shell'
-import { CustomerSuccessTemplate, RecommendationReviewTemplate } from './templates'
+import { CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './templates'
 import { KpiCard, KpiSummaryRow } from './KpiCard'
 import { Sparkline } from './Sparkline'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -1012,5 +1012,21 @@ export const CATALOG: ComponentEntry[] = [
     props: ['globalSearch', 'timePeriodLabel'],
     related: ['PageHeader', 'SegmentedControl', 'ActivityFeed'],
     snippet: `<RecommendationReviewTemplate globalSearch="" timePeriodLabel="Last 30 days" />`,
+  }),
+  defineComponent(LoginPage, {
+    name: 'LoginPage', import: './components/templates', category: 'starter',
+    purpose: 'Full-bleed split brand-panel sign-in page (no app shell).',
+    use_when: 'You need a pre-auth front door — render it before the AppShell. Presentational demo; wire to real auth as needed.',
+    props: [],
+    related: ['Field', 'Input', 'Button', 'InlineAlert'],
+    snippet: `<LoginPage />`,
+  }),
+  defineComponent(SettingsPage, {
+    name: 'SettingsPage', import: './components/templates', category: 'starter',
+    purpose: 'Section-scroll settings page: appearance, profile, notifications, preferences, and a danger zone.',
+    use_when: 'Starting from a complete settings surface; Appearance composes color mode, theme recipe, and density.',
+    props: [],
+    related: ['SettingsPanel', 'SegmentedControl', 'RadioGroup', 'Switch'],
+    snippet: `<SettingsPage />`,
   }),
 ]

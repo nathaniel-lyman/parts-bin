@@ -47,7 +47,7 @@ import {
   UserAvatarMenu,
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
-import { CustomerSuccessTemplate, RecommendationReviewTemplate } from './components/templates'
+import { CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './components/templates'
 import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
@@ -286,6 +286,8 @@ export default function App() {
   const { mode, toggle } = useTheme()
   const toast = useToast()
   const pathname = window.location.pathname
+  const loginActive = pathname === '/login'
+  const settingsActive = pathname === '/settings'
   const docsActive = pathname === '/docs'
   const customerTemplateActive = pathname === '/templates/customer-success' || pathname === '/examples'
   const recommendationTemplateActive = pathname === '/templates/recommendation-review'
@@ -350,6 +352,19 @@ export default function App() {
           shortcut: 'G R',
           onSelect: () => { window.location.href = '/templates/recommendation-review' },
         },
+        {
+          id: 'settings',
+          label: 'Open settings',
+          description: 'Appearance, profile, and notifications',
+          shortcut: 'G S',
+          onSelect: () => { window.location.href = '/settings' },
+        },
+        {
+          id: 'sign-out',
+          label: 'Sign out',
+          description: 'Return to the sign-in screen',
+          onSelect: () => { window.location.href = '/login' },
+        },
       ],
     },
     {
@@ -380,6 +395,10 @@ export default function App() {
     },
   ], [atRiskOnly, mode, toast, toggle])
 
+  // Login is the only pre-auth surface: full-bleed, no sidebar/topnav. Returned
+  // before the AppShell below — placed after all hooks to respect rules-of-hooks.
+  if (loginActive) return <LoginPage />
+
   const sidebar = (
     <LeftNavigationDrawer
       brand="Ledger"
@@ -387,10 +406,13 @@ export default function App() {
       collapsed={sidebarCollapsed}
       onCollapsedChange={setSidebarCollapsed}
       items={[
-        { label: 'Accounts', href: '/', active: !docsActive && !templateActive },
+        { label: 'Accounts', href: '/', active: !docsActive && !templateActive && !settingsActive },
         { label: 'Customer success', href: '/templates/customer-success', active: customerTemplateActive, meta: 'app' },
         { label: 'Review queue', href: '/templates/recommendation-review', active: recommendationTemplateActive, meta: 'app' },
         { label: 'Components', href: '/docs', active: docsActive, meta: 'kit' },
+      ]}
+      adminItems={[
+        { label: 'Settings', href: '/settings', active: settingsActive },
       ]}
       footer={<span className="num text-[12px] text-muted">demo · v1.0</span>}
     />
@@ -400,9 +422,9 @@ export default function App() {
     <TopNav
       breadcrumbs={[
         { label: 'Ledger', href: '/' },
-        { label: docsActive ? 'Components' : recommendationTemplateActive ? 'Review queue' : customerTemplateActive ? 'Customer success' : 'Accounts' },
+        { label: settingsActive ? 'Settings' : docsActive ? 'Components' : recommendationTemplateActive ? 'Review queue' : customerTemplateActive ? 'Customer success' : 'Accounts' },
       ]}
-      title={docsActive ? 'Component catalog' : recommendationTemplateActive ? 'Recommendation review' : customerTemplateActive ? 'Customer success' : 'Accounts'}
+      title={settingsActive ? 'Settings' : docsActive ? 'Component catalog' : recommendationTemplateActive ? 'Recommendation review' : customerTemplateActive ? 'Customer success' : 'Accounts'}
       actions={
         <>
           <GlobalSearchInput
@@ -412,7 +434,7 @@ export default function App() {
             value={globalSearch}
             onChange={(event) => setGlobalSearch(event.target.value)}
           />
-          {!docsActive && (
+          {!docsActive && !settingsActive && (
             <>
               <TimePeriodSelector
                 value={timePeriod}
@@ -437,8 +459,8 @@ export default function App() {
             meta="Demo workspace"
             items={[
               { id: 'profile', label: 'Profile', description: 'Morgan Operator', onSelect: () => toast('Profile opened', 'accent') },
-              { id: 'workspace', label: 'Workspace', description: 'Demo workspace', onSelect: () => toast('Workspace opened', 'accent') },
-              { id: 'sign-out', label: 'Sign out', onSelect: () => toast('Signed out of demo', 'warn') },
+              { id: 'settings', label: 'Settings', description: 'Workspace settings', onSelect: () => { window.location.href = '/settings' } },
+              { id: 'sign-out', label: 'Sign out', onSelect: () => { window.location.href = '/login' } },
             ]}
           />
         </>
@@ -448,7 +470,9 @@ export default function App() {
 
   return (
     <AppShell sidebar={sidebar} topNav={topNav}>
-      {docsActive ? (
+      {settingsActive ? (
+        <SettingsPage />
+      ) : docsActive ? (
         <DocsPage globalSearch={globalSearch} />
       ) : customerTemplateActive ? (
         <CustomerSuccessTemplate

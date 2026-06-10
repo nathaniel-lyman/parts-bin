@@ -33,6 +33,11 @@
   .density-compact { --row-h: var(--row-h-compact); --cell-pad: var(--cell-pad-compact); }
   .density-standard { --row-h: var(--row-h-standard); --cell-pad: var(--cell-pad-standard); }
   .density-comfortable { --row-h: var(--row-h-comfortable); --cell-pad: var(--cell-pad-comfortable); }
+
+  /* App-wide density preference, set on <html> by useSettings (Settings ▸ Appearance).
+     The DataGrid owns its own row density; this exposes the compact row/cell vars at
+     the root as an extension hook for any other surface that reads them. See RETHEME.md. */
+  html[data-density='compact'] { --row-h: var(--row-h-compact); --cell-pad: var(--cell-pad-compact); }
   .shadow-pinned { box-shadow: var(--shadow-pinned); }
 
   .ledger-loading-shimmer {
@@ -207,4 +212,21 @@
     animation-duration: 1ms;
     animation-iteration-count: 1;
   }
+}
+
+/* Opt-in reduce-motion preference (Settings ▸ Appearance), set on <html> by
+   useSettings — mirrors the prefers-reduced-motion rule above for users who
+   toggle it explicitly rather than at the OS level. */
+html[data-reduce-motion='true'] .ledger-loading-shimmer,
+html[data-reduce-motion='true'] .ledger-loading-line,
+html[data-reduce-motion='true'] .ledger-loading-donut-spin,
+html[data-reduce-motion='true'] .ledger-loading-bar,
+html[data-reduce-motion='true'] .ledger-loading-sparkline,
+html[data-reduce-motion='true'] .ledger-loading-sparkline-dot,
+html[data-reduce-motion='true'] .ledger-loading-dot,
+html[data-reduce-motion='true'] .ledger-loading-progress::after,
+html[data-reduce-motion='true'] .ledger-loading-count-track i,
+html[data-reduce-motion='true'] .ledger-loading-arc {
+  animation-duration: 1ms;
+  animation-iteration-count: 1;
 }

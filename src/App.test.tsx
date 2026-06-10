@@ -22,6 +22,25 @@ test('renders dashboard with KPIs and table (light)', () => {
   expect(document.documentElement.classList.contains('dark')).toBe(false)
 })
 
+test('login route renders the sign-in page full-bleed, without the app shell', () => {
+  window.history.pushState({}, '', '/login')
+  render(<ToastProvider><App /></ToastProvider>)
+  expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
+  // No app shell chrome on the pre-auth surface.
+  expect(screen.queryByRole('searchbox', { name: /global search/i })).not.toBeInTheDocument()
+  expect(screen.queryByText('Account book')).not.toBeInTheDocument()
+})
+
+test('settings route renders inside the shell with dashboard-only controls hidden', () => {
+  window.history.pushState({}, '', '/settings')
+  render(<ToastProvider><App /></ToastProvider>)
+  expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Appearance' })).toBeInTheDocument()
+  // Shell controls present, dashboard-only controls absent.
+  expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
+  expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
+})
+
 test('dashboard DataGrid selection is visible without server mode', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))

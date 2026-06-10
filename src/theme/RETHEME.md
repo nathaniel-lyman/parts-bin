@@ -57,6 +57,19 @@ This writes `data-theme-recipe="ops-green"` on `<html>` and stores the choice in
 To add a recipe, add variable overrides in `recipes.css` and a metadata entry in `recipes.ts`.
 Do not edit component files for re-theming.
 
+## Appearance preferences (Settings page)
+
+The `SettingsPage` starter (`src/components/templates/`) wires its Appearance section to the
+three appearance owners: color mode (`useTheme` → `ledger.theme`), theme recipe
+(`recipes.ts` → `ledger.theme.recipe`), and two preference flags persisted by `useSettings`
+(`ledger.user.settings`). The flags are applied as data attributes on `<html>`:
+
+- `data-density="compact"` — exposes the compact `--row-h` / `--cell-pad` tokens at the root
+  (see `base.css`). The DataGrid keeps its own per-grid density; this is an **extension hook**
+  for other surfaces, so extend the `html[data-density='compact']` rule to taste.
+- `data-reduce-motion="true"` — suppresses the loading animations (mirrors the
+  `prefers-reduced-motion` rule in `base.css`) for users who opt in explicitly.
+
 ## The boundary is enforced
 
 `npm run lint:theme` fails the build if a raw color (`#hex`, `rgb()`, `hsl()`) appears outside
