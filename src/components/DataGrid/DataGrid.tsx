@@ -258,6 +258,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     ? Math.max(1, Math.ceil(footerTotalRows / state.pagination.pageSize))
     : Math.max(1, table.getPageCount())
   const selCount = selectionCount(state.rowSelection)
+  // What copySelection would actually copy: selected ∩ currently visible. Hidden-but-selected
+  // rows are never serialized, so copy gates and the menu count must use this, not selCount.
+  const visibleSelectedCount = visibleData.filter((row) => state.rowSelection[getRowId(row)]).length
   const allState = selectAllState(state.rowSelection, visibleIds)
   const visibleColumnIds = visibleLeafColumns.map((column) => column.id)
   const visibleMovableColumnIds = visibleColumnIds.filter(isMovableColumnId)
@@ -340,11 +343,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     [scrollElement, columns],
   )
 
-  const selCountRef = useRef(selCount)
+  const visibleSelectedCountRef = useRef(visibleSelectedCount)
   const focusTargetRef = useRef<{ rowId: string; colId: string } | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
 
-  selCountRef.current = selCount
+  visibleSelectedCountRef.current = visibleSelectedCount
   focusTargetRef.current = (() => {
     if (focus.row < 0) return null
     const row = visibleRows[focus.row]
@@ -556,17 +559,17 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         editableInput ||
         active instanceof HTMLTextAreaElement ||
         (active instanceof HTMLElement && active.isContentEditable)
-      const intent = resolveCopyIntent(event, { hasSelection: selCountRef.current > 0, inEditableTarget })
+      const intent = resolveCopyIntent(event, { hasSelection: visibleSelectedCountRef.current > 0, inEditableTarget })
       if (!intent) return
+      // Both copy intents are window-level, so scope them hard: focus must live inside this
+      // grid, and a native text selection always wins over us (let the browser copy it).
+      if (!rootRef.current || !active || !rootRef.current.contains(active)) return
+      if (window.getSelection()?.isCollapsed === false) return
       if (intent === 'selection') {
         copySelection()
         return
       }
-      // Cell copy is window-level, so scope it hard: focus must live inside this grid,
-      // and a native text selection always wins over us (let the browser copy it).
-      if (!rootRef.current || !active || !rootRef.current.contains(active)) return
       if (!(active instanceof HTMLElement) || !active.closest('td[data-col-index]')) return
-      if (window.getSelection()?.isCollapsed === false) return
       const target = focusTargetRef.current
       if (target && target.colId !== 'actions') copyCell(target.rowId, target.colId)
     }
@@ -688,7 +691,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         <DataGridContextMenu
           x={menu.x}
           y={menu.y}
-          selectionCount={selCount}
+          selectionCount={visibleSelectedCount}
           onCopyCell={() => copyCell(menu.rowId, menu.colId)}
           onCopyRow={() => copyRow(menu.rowId)}
           onCopySelection={copySelection}

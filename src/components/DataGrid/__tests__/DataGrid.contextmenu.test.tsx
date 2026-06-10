@@ -44,6 +44,16 @@ describe('DataGrid context menu + copy', () => {
     expect(writeText).toHaveBeenCalledWith('Acme\tDana\tEnterprise\t900\t5\tActive')
   })
 
+  it('Copy selection (N) shows the count of rows actually copied: selected AND visible', async () => {
+    renderGrid()
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Acme' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Beta' }))
+    // Beta stays selected but is filtered out, so only 1 row would actually be copied.
+    await userEvent.type(screen.getByRole('searchbox', { name: /quick filter/i }), 'Acme')
+    fireEvent.contextMenu(screen.getByText('Acme'))
+    expect(await screen.findByRole('menuitem', { name: /copy selection \(1\)/i })).toBeInTheDocument()
+  })
+
   it('Ctrl+C with a selection copies selection TSV, but not from the quick-filter searchbox', async () => {
     renderGrid()
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select Beta' }))

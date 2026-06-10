@@ -55,9 +55,11 @@ describe('copy feedback toasts', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select Beta' }))
     // Filter so only Acme remains visible; Beta stays selected but is not copied.
     await userEvent.type(screen.getByRole('searchbox', { name: /quick filter/i }), 'Acme')
-    // Typing leaves focus in the searchbox, and the copy handler correctly ignores editable
-    // targets (pinned by DataGrid.contextmenu.test.tsx) — blur before firing Ctrl+C.
-    ;(document.activeElement as HTMLElement).blur()
+    // Copy is grid-scoped and ignores editable targets — move focus from the searchbox
+    // to a grid cell before firing Ctrl+C.
+    const cell = document.querySelector<HTMLElement>('td[data-row-index="0"][data-col-index="0"]')!
+    fireEvent.focus(cell)
+    cell.focus()
     fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
     await waitFor(() => expect(push).toHaveBeenCalledWith('Copied 1 row'))
   })

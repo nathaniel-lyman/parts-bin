@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { Account } from '../../../data/types'
 import { accountGlobalFilter, accountGridColumns } from '../../accountGridColumns'
 import { DataGrid } from '../DataGrid'
@@ -70,11 +71,35 @@ describe('Ctrl/Cmd+C on the focused cell', () => {
     selection.removeAllRanges()
   })
 
-  it('selection copy still wins when rows are selected', () => {
+  it('selection copy still wins when rows are selected and focus is in the grid', () => {
     renderGrid()
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Beta' }))
+    const checkbox = screen.getByRole('checkbox', { name: 'Select Beta' })
+    fireEvent.click(checkbox)
+    checkbox.focus()
     fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
     expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tMRR\tGrowth\tStatus\nBeta\tLee\tStartup\t300\t-2\tAt risk')
+  })
+
+  it('selection copy is also grid-scoped: does nothing when focus is outside the grid', () => {
+    renderGrid()
+    // fireEvent.click does not move focus, so the active element stays on document.body.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Beta' }))
+    fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
+    expect(writeText).not.toHaveBeenCalled()
+  })
+
+  it('falls back to cell copy when every selected row is filtered out', async () => {
+    renderGrid()
+    const checkbox = screen.getByRole('checkbox', { name: 'Select Beta' })
+    fireEvent.click(checkbox)
+    await userEvent.type(screen.getByRole('searchbox', { name: /quick filter/i }), 'Acme')
+    // Beta is selected but hidden, so there is no selection to copy — Ctrl+C on a
+    // focused cell should copy that cell instead of silently doing nothing.
+    const cell = document.querySelector<HTMLElement>('td[data-row-index="0"][data-col-index="0"]')!
+    fireEvent.focus(cell)
+    cell.focus()
+    fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
+    expect(writeText).toHaveBeenCalledWith('Acme')
   })
 
   it('does nothing when the focused cell is the actions column', () => {
