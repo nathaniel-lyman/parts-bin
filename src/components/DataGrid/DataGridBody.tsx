@@ -16,6 +16,7 @@ interface Props<TData> {
   getRowLabel?: (row: TData, rowId: string) => string
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
+  onCopyCell?: (rowId: string, colId: string) => void
   dragPreview?: ColumnDragPreviewState | null
   focus?: GridFocus
   columnWindow?: ColumnVirtualWindow
@@ -39,6 +40,7 @@ export function DataGridBody<TData>({
   getRowLabel = defaultRowLabel,
   onToggleRow,
   onCellContextMenu,
+  onCopyCell,
   dragPreview,
   focus,
   columnWindow,
@@ -85,6 +87,7 @@ export function DataGridBody<TData>({
       rowLabel={getRowLabel(row.original, row.id)}
       onToggleRow={onToggleRow}
       onCellContextMenu={onCellContextMenu}
+      onCopyCell={onCopyCell}
       dragPreview={dragPreview}
       focus={focus}
       columnWindow={columnWindow}

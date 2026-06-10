@@ -3,9 +3,19 @@ import { flexRender, type Cell } from '@tanstack/react-table'
 import type { CSSProperties, MouseEvent } from 'react'
 import type { ColumnDragPreviewState } from './dragPreview'
 
+function CopyGlyph() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1" />
+      <path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
+    </svg>
+  )
+}
+
 export function DataGridCell<TData>({
   cell,
   onContextMenu,
+  onCopy,
   dragPreview,
   rowIndex,
   colIndex,
@@ -16,6 +26,7 @@ export function DataGridCell<TData>({
 }: {
   cell: Cell<TData, unknown>
   onContextMenu?: (event: MouseEvent<HTMLTableCellElement>) => void
+  onCopy?: () => void
   dragPreview?: ColumnDragPreviewState | null
   rowIndex?: number
   colIndex?: number
@@ -39,10 +50,11 @@ export function DataGridCell<TData>({
     ...(pinnedSide === 'left' ? { position: 'sticky', left: pinnedOffset, zIndex: 10 } : {}),
     ...(pinnedSide === 'right' ? { position: 'sticky', right: pinnedOffset, zIndex: 10 } : {}),
   }
+  const showCopy = onCopy !== undefined && !isActions
   return (
     <td
       role="gridcell"
-      className={`${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${pinnedSide ? 'bg-surface shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
+      className={`group/cell relative hover:bg-accent-soft ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${pinnedSide ? 'bg-surface shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       data-column-id={cell.column.id}
       data-row-index={rowIndex}
       data-col-index={colIndex}
@@ -54,6 +66,23 @@ export function DataGridCell<TData>({
       }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      {showCopy && (
+        <button
+          type="button"
+          aria-label="Copy cell value"
+          data-grid-copy=""
+          // tabIndex -1 on purpose: focusable copy icons in every cell would break the grid's
+          // roving tabindex; the reveal rides on the td's own roving focus via group-focus-within.
+          tabIndex={-1}
+          className="absolute right-1 top-1/2 -translate-y-1/2 rounded-[2px] border border-line bg-surface p-0.5 text-muted opacity-0 pointer-events-none transition-opacity hover:text-ink group-hover/cell:opacity-100 group-hover/cell:pointer-events-auto group-focus-within/cell:opacity-100 group-focus-within/cell:pointer-events-auto"
+          onClick={(event) => {
+            event.stopPropagation()
+            onCopy()
+          }}
+        >
+          <CopyGlyph />
+        </button>
+      )}
     </td>
   )
 }

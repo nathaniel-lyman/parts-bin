@@ -14,6 +14,7 @@ interface Props<TData> {
   rowLabel?: string
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
+  onCopyCell?: (rowId: string, colId: string) => void
   dragPreview?: ColumnDragPreviewState | null
   rowIndex?: number
   focus?: GridFocus
@@ -31,6 +32,7 @@ export function DataGridRow<TData>({
   rowLabel = row.id,
   onToggleRow,
   onCellContextMenu,
+  onCopyCell,
   dragPreview,
   rowIndex = row.index,
   focus,
@@ -60,6 +62,7 @@ export function DataGridRow<TData>({
               : 0
         }
         onFocusCell={onFocusCell}
+        onCopy={onCopyCell ? () => onCopyCell(row.id, cell.column.id) : undefined}
         onContextMenu={
           onCellContextMenu
             ? (event) => {

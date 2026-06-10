@@ -523,7 +523,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     if (intent === 'primary-action') {
       event.preventDefault()
       const rowEl = scrollElement?.querySelector<HTMLElement>(`[data-row-id="${row.id}"]`)
-      rowEl?.querySelector<HTMLButtonElement>('button')?.click()
+      rowEl?.querySelector<HTMLButtonElement>('button:not([data-grid-copy])')?.click()
     }
   }
 
@@ -623,6 +623,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 enableVirtualization={rowCount > 100}
                 onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
                 onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
+                onCopyCell={copyCell}
                 dragPreview={dragPreview}
                 focus={focus}
                 columnWindow={columnWindow}
