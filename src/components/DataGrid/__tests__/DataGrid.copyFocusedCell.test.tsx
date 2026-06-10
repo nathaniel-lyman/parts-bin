@@ -76,4 +76,13 @@ describe('Ctrl/Cmd+C on the focused cell', () => {
     fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
     expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tMRR\tGrowth\tStatus\nBeta\tLee\tStartup\t300\t-2\tAt risk')
   })
+
+  it('does nothing when the focused cell is the actions column', () => {
+    renderGrid()
+    const cell = document.querySelector<HTMLElement>('td[data-row-index="0"][data-column-id="actions"]')!
+    fireEvent.focus(cell)
+    cell.focus()
+    fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
+    expect(writeText).not.toHaveBeenCalled()
+  })
 })

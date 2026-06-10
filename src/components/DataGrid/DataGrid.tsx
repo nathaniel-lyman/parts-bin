@@ -568,7 +568,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       if (!(active instanceof HTMLElement) || !active.closest('td[data-col-index]')) return
       if (window.getSelection()?.isCollapsed === false) return
       const target = focusTargetRef.current
-      if (target) copyCell(target.rowId, target.colId)
+      if (target && target.colId !== 'actions') copyCell(target.rowId, target.colId)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
