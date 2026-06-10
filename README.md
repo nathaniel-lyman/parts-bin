@@ -3,11 +3,32 @@
 A runnable dashboard starter implementing the **Ledger** design system: sharp, technical,
 data-first. Clone it, run it, customize it — or lift the `src/theme/` folder into your own app.
 
+![Ledger dashboard, dark mode](docs/screenshots/dashboard-dark.png)
+
+**The whole skin lives in one folder.** Change `src/theme/tokens.css` (or apply a shipped
+recipe) and every component, chart, and page re-skins — zero component edits, enforced by lint:
+
+| Ledger default | `ops-green` recipe — same app, one folder changed |
+|---|---|
+| ![Default theme](docs/screenshots/dashboard-dark.png) | ![Ops green recipe](docs/screenshots/dashboard-ops-green.png) |
+
 ## Quickstart
 ```bash
 npm install
 npm run dev
 ```
+
+Starting a new project from this repo? Use GitHub's **"Use this template"** button (or clone and
+delete `.git`) so you begin with a clean history.
+
+## Pages out of the box
+
+Every surface a dashboard product needs, already built from the kit's own primitives:
+
+| | |
+|---|---|
+| ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — appearance, profile, notifications |
+| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live catalog of ~99 components | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — KPI + charts + data grid, light mode |
 
 ## What's inside
 - **`src/theme/`** — the entire design system (tokens, fonts, base styles, Tailwind mapping,
@@ -21,6 +42,10 @@ npm run dev
   breadcrumbs, filter bars, section headers, and settings panels.
 - **`src/components/`** — dashboard components (KPI cards, data table with sort/filter/columns,
   charts, forms). No raw colors; enforced by `npm run lint:theme`.
+- **`src/components/templates/`** — full-page starters you can route to directly: a dashboard,
+  two workflow consoles, plus a split brand-panel **Login** (`/login`) and a section-scroll
+  **Settings** (`/settings`) page. The starter pages are presentational demos — Settings'
+  Appearance section is the live home for color mode, theme recipe, and density.
 - **`src/hooks/`, `src/selectors/`, `src/data/`** — client-side state, derived metrics, seed data.
 - **`/docs`** — live component catalog with examples, prop guidance, and copy-paste usage snippets.
 - **`THEME-SPEC.md`** — the canonical design reference.
