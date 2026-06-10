@@ -37,6 +37,7 @@ import { copyToClipboard, downloadCSV, serializeCSV, serializeCell, serializeTSV
 import { projectView } from './persistence'
 import { keyToIntent, moveFocus, resolveCopyIntent, type GridFocus } from './keyboard'
 import { computeColumnRange } from './virtualization'
+import { useToast } from '../ui'
 import { DataGridBulkActions } from './DataGridBulkActions'
 import { DataGridBody } from './DataGridBody'
 import { DataGridColumnDragOverlay } from './DataGridColumnDragOverlay'
@@ -144,6 +145,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const restoreGridFocusRef = useRef(false)
   const view = useGridViewState(seed, columns)
   const savedViews = useSavedViews()
+  const toast = useToast()
   const state = isControlled ? props.state! : view.state
   const paginationEnabled = enablePagination || manualPagination
   const savedViewsEnabled = !isControlled && (enableSavedViews || persistenceKey !== undefined)
@@ -361,37 +363,48 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     [columns],
   )
 
+  // Writes to the clipboard and toasts on success; the two-argument then scopes the
+  // error-swallow to the clipboard write only (a throw from toast() would still surface).
+  const copyWithFeedback = useCallback((text: string, message: string) => {
+    void copyToClipboard(text).then(() => toast(message), () => {})
+  }, [toast])
+
   const copyCell = useCallback(
     (rowId: string, colId: string) => {
       const row = visibleData.find((item) => getRowId(item) === rowId) ?? rows.find((item) => getRowId(item) === rowId)
       if (!row) return
-      void copyToClipboard(serializeCell(resolveCellValue(row, colId)))
+      copyWithFeedback(serializeCell(resolveCellValue(row, colId)), 'Copied cell')
     },
-    [getRowId, resolveCellValue, rows, visibleData],
+    [copyWithFeedback, getRowId, resolveCellValue, rows, visibleData],
   )
 
   const copyRow = useCallback(
     (rowId: string) => {
       const row = visibleData.find((item) => getRowId(item) === rowId) ?? rows.find((item) => getRowId(item) === rowId)
       if (!row) return
-      void copyToClipboard(serializeTSV([row], columns, {
+      copyWithFeedback(serializeTSV([row], columns, {
         getRowId,
         columnOrder: state.columnOrder,
         columnVisibility: state.columnVisibility,
         includeHeader: false,
-      }))
+      }), 'Copied row')
     },
-    [columns, getRowId, rows, state.columnOrder, state.columnVisibility, visibleData],
+    [columns, copyWithFeedback, getRowId, rows, state.columnOrder, state.columnVisibility, visibleData],
   )
 
   const copySelection = useCallback(() => {
-    void copyToClipboard(serializeTSV(visibleData, columns, {
+    // Count what serializeTSV actually emits: selected ∩ currently visible (hidden-but-selected
+    // rows are not copied, so they must not be counted in the toast).
+    const copiedCount = visibleData.filter((row) => state.rowSelection[getRowId(row)]).length
+    // Every selected row is filtered out: skip the (header-only) write and the toast entirely.
+    if (copiedCount === 0) return
+    copyWithFeedback(serializeTSV(visibleData, columns, {
       getRowId,
       columnOrder: state.columnOrder,
       columnVisibility: state.columnVisibility,
       rowSelection: state.rowSelection,
-    }))
-  }, [columns, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection, visibleData])
+    }), copiedCount === 1 ? 'Copied 1 row' : `Copied ${copiedCount} rows`)
+  }, [columns, copyWithFeedback, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection, visibleData])
 
   const exportCsv = useCallback(() => {
     downloadCSV('ledger-accounts.csv', serializeCSV(exportData, columns, {
