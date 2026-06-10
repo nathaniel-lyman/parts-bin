@@ -117,7 +117,7 @@ function SortableHeader<TData>({
       {...(canMove ? listeners : {})}
     >
       <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
-        <span className="micro">
+        <span className="micro" data-autofit-label>
           {flexRender(header.column.columnDef.header, header.getContext())}
           {sorted && (
             <span className="text-accent">

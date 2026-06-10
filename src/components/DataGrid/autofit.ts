@@ -22,6 +22,10 @@ const HEADER_AFFORDANCE = 44
  * Text is measured with an off-screen probe using the font of the element that holds it.
  * Block/flex wrappers stretch to fill the cell and are ignored; only inline content
  * (badges, sparklines, pills) contributes its own laid-out width on top of the text.
+ *
+ * Header cells also host the column menu (whose open dropdown renders inline in the <th>)
+ * and the resize handle, so their textContent is NOT the label — only the element marked
+ * `data-autofit-label` is measured. Header cells without one (the filter row) are skipped.
  */
 export function measureColumnContentWidths(scrollEl: HTMLElement, columnId: string): number[] {
   const cells = scrollEl.querySelectorAll<HTMLElement>(`[data-column-id="${CSS.escape(columnId)}"]`)
@@ -38,21 +42,25 @@ export function measureColumnContentWidths(scrollEl: HTMLElement, columnId: stri
 
   const widths: number[] = []
   cells.forEach((cell) => {
-    const isHeader = cell.tagName === 'TH'
+    if (cell.tagName === 'TH') {
+      const label = cell.querySelector<HTMLElement>('[data-autofit-label]')
+      if (!label) return
+      probe.style.font = getComputedStyle(label).font
+      probe.textContent = (label.textContent ?? '').trim()
+      widths.push(probe.getBoundingClientRect().width + HEADER_AFFORDANCE)
+      return
+    }
+
     const textHolder = (cell.firstElementChild as HTMLElement | null) ?? cell
     probe.style.font = getComputedStyle(textHolder).font
     probe.textContent = (cell.textContent ?? '').trim()
     let width = probe.getBoundingClientRect().width
 
-    if (isHeader) {
-      width += HEADER_AFFORDANCE
-    } else {
-      // Inline content has an intrinsic width the text probe can't see; block/flex
-      // wrappers fill the cell and would falsely anchor the result to the current width.
-      const child = cell.firstElementChild as HTMLElement | null
-      if (child && getComputedStyle(child).display.startsWith('inline')) {
-        width = Math.max(width, child.getBoundingClientRect().width)
-      }
+    // Inline content has an intrinsic width the text probe can't see; block/flex
+    // wrappers fill the cell and would falsely anchor the result to the current width.
+    const child = cell.firstElementChild as HTMLElement | null
+    if (child && getComputedStyle(child).display.startsWith('inline')) {
+      width = Math.max(width, child.getBoundingClientRect().width)
     }
 
     widths.push(width)
