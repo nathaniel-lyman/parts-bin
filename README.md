@@ -1,12 +1,12 @@
 # Ledger — a swappable dashboard theme (React + Tailwind v4)
 
-[![CI](https://github.com/nathaniel-lyman/dashboard-theme/actions/workflows/ci.yml/badge.svg)](https://github.com/nathaniel-lyman/dashboard-theme/actions/workflows/ci.yml)
+[![CI](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml/badge.svg)](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A runnable dashboard starter implementing the **Ledger** design system: sharp, technical,
 data-first. Clone it, run it, customize it — or lift the `src/theme/` folder into your own app.
 
-**[Live demo →](https://nathaniel-lyman.github.io/dashboard-theme/)** · explore `/docs`, `/login`, and `/settings` in the running app.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/docs`, `/login`, and `/settings` in the running app.
 
 ![Ledger dashboard, dark mode](docs/screenshots/dashboard-dark.png)
 
