@@ -51,10 +51,10 @@ describe('grid types', () => {
 
   it('GridAction discriminated union covers the Phase 1 slices (compile check)', () => {
     const actions: GridAction[] = [
-      { type: 'setSorting', sorting: [{ id: 'mrr', desc: true }] },
-      { type: 'setGlobalFilter', globalFilter: 'acme' },
-      { type: 'setColumnVisibility', columnVisibility: { arr: true } },
-      { type: 'setColumnOrder', columnOrder: ['owner', 'account', 'actions'] },
+      { type: 'SET_SORTING', sorting: [{ id: 'mrr', desc: true }] },
+      { type: 'SET_GLOBAL_FILTER', value: 'acme' },
+      { type: 'SET_COLUMN_VISIBILITY', columnVisibility: { arr: true } },
+      { type: 'SET_COLUMN_ORDER', columnOrder: ['owner', 'account', 'actions'] },
     ]
     expect(actions).toHaveLength(4)
   })

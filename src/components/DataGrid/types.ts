@@ -84,15 +84,13 @@ export interface GridRuntimeStatus {
 }
 
 export type GridAction =
-  | { type: 'setSorting'; sorting: SortingState }
-  | { type: 'setGlobalFilter'; globalFilter: string }
-  | { type: 'setColumnVisibility'; columnVisibility: Record<string, boolean> }
-  | { type: 'setColumnOrder'; columnOrder: string[] }
+  | { type: 'SET_SORTING'; sorting: SortingState }
+  | { type: 'SET_COLUMN_VISIBILITY'; columnVisibility: Record<string, boolean> }
+  | { type: 'SET_COLUMN_ORDER'; columnOrder: string[] }
   | { type: 'RESIZE_COLUMN'; id: string; width: number }
   | { type: 'RESET_COLUMN_WIDTH'; id: string }
   | { type: 'REORDER_COLUMN'; activeId: string; overId: string }
   | { type: 'TOGGLE_COLUMN_VISIBILITY'; id: string }
-  | { type: 'SET_COLUMN_VISIBILITY'; visibility: Record<string, boolean> }
   | { type: 'RESET_COLUMNS' }
   | { type: 'SET_DENSITY'; density: Density }
   | { type: 'PIN_COLUMN'; id: string; side: 'left' | 'right' }
@@ -103,7 +101,6 @@ export type GridAction =
   | { type: 'SET_COLUMN_FILTER'; columnId: string; value: FilterValue }
   | { type: 'CLEAR_COLUMN_FILTER'; columnId: string }
   | { type: 'SET_COLUMN_FILTERS'; columnFilters: ColumnFiltersState }
-  | { type: 'setColumnFilters'; value: ColumnFiltersState }
   | { type: 'SET_GLOBAL_FILTER'; value: string }
   | { type: 'TOGGLE_ROW'; id: string }
   | { type: 'SELECT_ALL_VISIBLE'; ids: string[]; select: boolean }
@@ -111,6 +108,6 @@ export type GridAction =
   | { type: 'PIN_ROW_TOP'; rowId: string }
   | { type: 'PIN_ROW_BOTTOM'; rowId: string }
   | { type: 'UNPIN_ROW'; rowId: string }
-  | { type: 'setPageIndex'; pageIndex: number }
-  | { type: 'setPageSize'; pageSize: number }
+  | { type: 'SET_PAGE_INDEX'; pageIndex: number }
+  | { type: 'SET_PAGE_SIZE'; pageSize: number }
   | { type: 'APPLY_VIEW'; state: LedgerGridState }

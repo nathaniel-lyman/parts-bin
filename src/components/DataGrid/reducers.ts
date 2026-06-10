@@ -58,7 +58,7 @@ export function columnOrderReducer<TData>(
 ): string[] {
   const columnIds = columns.map((column) => column.id)
   switch (action.type) {
-    case 'setColumnOrder':
+    case 'SET_COLUMN_ORDER':
       return normalizeColumnOrder(action.columnOrder, columnIds)
     case 'REORDER_COLUMN': {
       const { activeId, overId } = action
@@ -81,7 +81,7 @@ export function columnOrderReducer<TData>(
 
 export function columnVisibilityReducer(slice: Record<string, boolean>, action: GridAction): Record<string, boolean> {
   switch (action.type) {
-    case 'setColumnVisibility': {
+    case 'SET_COLUMN_VISIBILITY': {
       const next = { ...action.columnVisibility }
       if (next[ACTIONS_COLUMN_ID] === false) next[ACTIONS_COLUMN_ID] = true
       return next
@@ -90,11 +90,6 @@ export function columnVisibilityReducer(slice: Record<string, boolean>, action: 
       if (action.id === ACTIONS_COLUMN_ID) return slice
       const current = slice[action.id] ?? true
       return { ...slice, [action.id]: !current }
-    }
-    case 'SET_COLUMN_VISIBILITY': {
-      const merged = { ...slice, ...action.visibility }
-      if (merged[ACTIONS_COLUMN_ID] === false) merged[ACTIONS_COLUMN_ID] = true
-      return merged
     }
     case 'RESET_COLUMNS':
       return { ...DEFAULT_COLUMN_VISIBILITY }
@@ -194,9 +189,9 @@ export function paginationReducer(
   action: GridAction,
 ): LedgerGridState['pagination'] {
   switch (action.type) {
-    case 'setPageIndex':
+    case 'SET_PAGE_INDEX':
       return { ...slice, pageIndex: Math.max(0, action.pageIndex) }
-    case 'setPageSize':
+    case 'SET_PAGE_SIZE':
       return { pageIndex: 0, pageSize: action.pageSize }
     default:
       return slice
@@ -241,10 +236,8 @@ export function gridReducer<TData>(
   switch (action.type) {
     case 'APPLY_VIEW':
       return normalizeState(action.state, columnIds)
-    case 'setSorting':
+    case 'SET_SORTING':
       return { ...state, sorting: sortingReducer(state.sorting, action.sorting) }
-    case 'setGlobalFilter':
-      return { ...state, globalFilter: globalFilterReducer(state.globalFilter, action.globalFilter), pagination: { ...state.pagination, pageIndex: 0 } }
     case 'SET_GLOBAL_FILTER':
       return { ...state, globalFilter: globalFilterReducer(state.globalFilter, action.value), pagination: { ...state.pagination, pageIndex: 0 } }
     case 'SET_COLUMN_FILTER':
@@ -253,14 +246,12 @@ export function gridReducer<TData>(
       return { ...state, columnFilters: columnFiltersReducer(state.columnFilters, action, 'clear'), pagination: { ...state.pagination, pageIndex: 0 } }
     case 'SET_COLUMN_FILTERS':
       return { ...state, columnFilters: action.columnFilters, pagination: { ...state.pagination, pageIndex: 0 } }
-    case 'setColumnFilters':
-      return { ...state, columnFilters: action.value, pagination: { ...state.pagination, pageIndex: 0 } }
-    case 'setColumnVisibility':
+    case 'SET_COLUMN_VISIBILITY':
       return normalizeState({
         ...state,
         columnVisibility: columnVisibilityReducer(state.columnVisibility, action),
       }, columnIds)
-    case 'setColumnOrder':
+    case 'SET_COLUMN_ORDER':
       return normalizeState({
         ...state,
         columnOrder: columnOrderReducer(state.columnOrder, action, columns),
@@ -270,7 +261,6 @@ export function gridReducer<TData>(
       return { ...state, columnSizing: columnSizingReducer(state.columnSizing, action, columns) }
     case 'REORDER_COLUMN':
     case 'TOGGLE_COLUMN_VISIBILITY':
-    case 'SET_COLUMN_VISIBILITY':
     case 'SET_DENSITY':
     case 'PIN_COLUMN':
     case 'UNPIN_COLUMN':
@@ -296,8 +286,8 @@ export function gridReducer<TData>(
     case 'PIN_ROW_BOTTOM':
     case 'UNPIN_ROW':
       return { ...state, rowPinning: rowPinningReducer(state.rowPinning, action) }
-    case 'setPageIndex':
-    case 'setPageSize':
+    case 'SET_PAGE_INDEX':
+    case 'SET_PAGE_SIZE':
       return { ...state, pagination: paginationReducer(state.pagination, action) }
     default:
       return state

@@ -9,9 +9,9 @@ describe('useGridViewState (uncontrolled live state)', () => {
     expect(result.current.state.density).toBe('compact')
   })
 
-  it('dispatch routes through the root reducer (setGlobalFilter)', () => {
+  it('dispatch routes through the root reducer (SET_GLOBAL_FILTER)', () => {
     const { result } = renderHook(() => useGridViewState(DEFAULT_STATE))
-    act(() => result.current.dispatch({ type: 'setGlobalFilter', globalFilter: 'acme' }))
+    act(() => result.current.dispatch({ type: 'SET_GLOBAL_FILTER', value: 'acme' }))
     expect(result.current.state.globalFilter).toBe('acme')
   })
 
@@ -19,7 +19,7 @@ describe('useGridViewState (uncontrolled live state)', () => {
     const { result } = renderHook(() => useGridViewState(DEFAULT_STATE))
     act(() =>
       result.current.dispatch({
-        type: 'setColumnOrder',
+        type: 'SET_COLUMN_ORDER',
         columnOrder: ['actions', 'owner', 'account', 'segment', 'mrr', 'growth', 'status', 'arr', 'since'],
       }),
     )

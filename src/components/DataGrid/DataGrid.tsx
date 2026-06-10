@@ -210,7 +210,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     },
     onSortingChange: (updater) => {
       const next = typeof updater === 'function' ? updater(state.sorting) : updater
-      dispatch({ type: 'setSorting', sorting: next })
+      dispatch({ type: 'SET_SORTING', sorting: next })
     },
     onGlobalFilterChange: (updater) => {
       const next = typeof updater === 'function' ? updater(state.globalFilter) : updater
@@ -222,16 +222,16 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     },
     onColumnVisibilityChange: (updater) => {
       const next = typeof updater === 'function' ? updater(state.columnVisibility) : updater
-      dispatch({ type: 'setColumnVisibility', columnVisibility: next })
+      dispatch({ type: 'SET_COLUMN_VISIBILITY', columnVisibility: next })
     },
     onColumnOrderChange: (updater) => {
       const next = typeof updater === 'function' ? updater(state.columnOrder) : updater
-      dispatch({ type: 'setColumnOrder', columnOrder: next })
+      dispatch({ type: 'SET_COLUMN_ORDER', columnOrder: next })
     },
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(state.pagination) : updater
-      if (next.pageIndex !== state.pagination.pageIndex) dispatch({ type: 'setPageIndex', pageIndex: next.pageIndex })
-      if (next.pageSize !== state.pagination.pageSize) dispatch({ type: 'setPageSize', pageSize: next.pageSize })
+      if (next.pageIndex !== state.pagination.pageIndex) dispatch({ type: 'SET_PAGE_INDEX', pageIndex: next.pageIndex })
+      if (next.pageSize !== state.pagination.pageSize) dispatch({ type: 'SET_PAGE_SIZE', pageSize: next.pageSize })
     },
     globalFilterFn: effectiveGlobalFilterFn,
     manualSorting,
@@ -680,8 +680,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           pageSize={state.pagination.pageSize}
           pageCount={footerPageCount}
           totalRowCount={footerTotalRows}
-          onPageIndexChange={(pageIndex) => dispatch({ type: 'setPageIndex', pageIndex })}
-          onPageSizeChange={(pageSize) => dispatch({ type: 'setPageSize', pageSize })}
+          onPageIndexChange={(pageIndex) => dispatch({ type: 'SET_PAGE_INDEX', pageIndex })}
+          onPageSizeChange={(pageSize) => dispatch({ type: 'SET_PAGE_SIZE', pageSize })}
         />
       )}
       {loading && <DataGridLoadingState />}

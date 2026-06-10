@@ -19,8 +19,8 @@ describe('columnVisibilityReducer', () => {
     expect(columnVisibilityReducer(slice, { type: 'TOGGLE_COLUMN_VISIBILITY', id: 'actions' })).toBe(slice)
   })
 
-  it('SET_COLUMN_VISIBILITY merges and never hides actions', () => {
-    const next = columnVisibilityReducer({ arr: false }, { type: 'SET_COLUMN_VISIBILITY', visibility: { arr: true, actions: false } })
+  it('SET_COLUMN_VISIBILITY replaces the map and never hides actions', () => {
+    const next = columnVisibilityReducer({ arr: false }, { type: 'SET_COLUMN_VISIBILITY', columnVisibility: { arr: true, actions: false } })
     expect(next.arr).toBe(true)
     expect(next.actions).not.toBe(false)
   })
