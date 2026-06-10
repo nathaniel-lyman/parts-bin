@@ -339,10 +339,16 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   )
 
   const selCountRef = useRef(selCount)
-  const menuRef = useRef(menu)
+  const focusTargetRef = useRef<{ rowId: string; colId: string } | null>(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
 
   selCountRef.current = selCount
-  menuRef.current = menu
+  focusTargetRef.current = (() => {
+    if (focus.row < 0) return null
+    const row = visibleRows[focus.row]
+    const colId = visibleColumnIds[focus.col]
+    return row && colId ? { rowId: row.id, colId } : null
+  })()
 
   const resolveCellValue = useCallback(
     (row: TData, columnId: string): unknown => {
@@ -539,8 +545,17 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         (active instanceof HTMLElement && active.isContentEditable)
       const intent = resolveCopyIntent(event, { hasSelection: selCountRef.current > 0, inEditableTarget })
       if (!intent) return
-      if (intent === 'selection') copySelection()
-      else if (menuRef.current) copyCell(menuRef.current.rowId, menuRef.current.colId)
+      if (intent === 'selection') {
+        copySelection()
+        return
+      }
+      // Cell copy is window-level, so scope it hard: focus must live inside this grid,
+      // and a native text selection always wins over us (let the browser copy it).
+      if (!rootRef.current || !active || !rootRef.current.contains(active)) return
+      if (!(active instanceof HTMLElement) || !active.closest('td[data-col-index]')) return
+      if (window.getSelection()?.isCollapsed === false) return
+      const target = focusTargetRef.current
+      if (target) copyCell(target.rowId, target.colId)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -548,6 +563,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
 
   return (
     <div
+      ref={rootRef}
       className={`rounded-[2px] border border-line bg-surface ${densityClass(state.density)}`}
       data-pinned-left={pinnedGroups.left.length}
       data-pinned-center={pinnedGroups.center.length}
