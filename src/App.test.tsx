@@ -129,6 +129,26 @@ test('recommendation review feedback drawer updates status and history', async (
   expect(screen.getAllByText('Rejected').length).toBeGreaterThan(0)
 })
 
+test('components route drops dashboard-only header controls and wires global search to the gallery', async () => {
+  const user = userEvent.setup()
+  window.history.pushState({}, '', '/docs')
+  render(<ToastProvider><App /></ToastProvider>)
+
+  expect(screen.getByText('Component reference')).toBeInTheDocument()
+  // dashboard-only controls have no function on the docs page
+  expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /risks/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /notifications/i })).not.toBeInTheDocument()
+  // shell-wide controls stay
+  expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /morgan/i })).toBeInTheDocument()
+
+  await user.type(screen.getByRole('searchbox', { name: /global search/i }), 'sparkline')
+  expect(screen.getByRole('heading', { name: 'Sparkline' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Button' })).not.toBeInTheDocument()
+})
+
 test('revenue movement chart exposes bar width and label controls', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   const widthControl = screen.getByRole('slider', { name: /revenue movement bar width/i })

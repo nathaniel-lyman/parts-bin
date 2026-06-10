@@ -407,24 +407,28 @@ export default function App() {
         <>
           <GlobalSearchInput
             className="w-[190px]"
-            placeholder="Search workspace"
+            placeholder={docsActive ? 'Search components' : 'Search workspace'}
             aria-label="Global search"
             value={globalSearch}
             onChange={(event) => setGlobalSearch(event.target.value)}
           />
-          <TimePeriodSelector
-            value={timePeriod}
-            options={selectableTimePeriodOptions}
-            onChange={handleTimePeriodChange}
-          />
-          <DateRangePicker
-            label="Dates"
-            value={dateRange}
-            onValueChange={handleDateRangeChange}
-            presets={dateRangePresets}
-          />
-          <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
-          <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
+          {!docsActive && (
+            <>
+              <TimePeriodSelector
+                value={timePeriod}
+                options={selectableTimePeriodOptions}
+                onChange={handleTimePeriodChange}
+              />
+              <DateRangePicker
+                label="Dates"
+                value={dateRange}
+                onValueChange={handleDateRangeChange}
+                presets={dateRangePresets}
+              />
+              <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
+              <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
+            </>
+          )}
           <CommandPalette groups={commandGroups} />
           <Button onClick={toggle}>{mode === 'dark' ? 'Light' : 'Dark'}</Button>
           <UserAvatarMenu
@@ -445,7 +449,7 @@ export default function App() {
   return (
     <AppShell sidebar={sidebar} topNav={topNav}>
       {docsActive ? (
-        <DocsPage />
+        <DocsPage globalSearch={globalSearch} />
       ) : customerTemplateActive ? (
         <CustomerSuccessTemplate
           globalSearch={globalSearch}

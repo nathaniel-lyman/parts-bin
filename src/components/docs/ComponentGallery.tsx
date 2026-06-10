@@ -50,13 +50,21 @@ function GalleryCard({ entry, onSelect }: { entry: ComponentEntry; onSelect: (en
   )
 }
 
-export function ComponentGallery({ onSelect }: { onSelect: (entry: ComponentEntry) => void }) {
+export function ComponentGallery({
+  onSelect,
+  externalQuery = '',
+}: {
+  onSelect: (entry: ComponentEntry) => void
+  /** Extra query ANDed with the local search box — lets the shell's global search drive the gallery. */
+  externalQuery?: string
+}) {
   const [query, setQuery] = useState('')
   const q = query.trim().toLowerCase()
-  const filtered = useMemo(
-    () => CATALOG.filter((e) => !q || e.name.toLowerCase().includes(q) || e.purpose.toLowerCase().includes(q)),
-    [q],
-  )
+  const ext = externalQuery.trim().toLowerCase()
+  const filtered = useMemo(() => {
+    const terms = [q, ext].filter(Boolean)
+    return CATALOG.filter((e) => terms.every((t) => e.name.toLowerCase().includes(t) || e.purpose.toLowerCase().includes(t)))
+  }, [q, ext])
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center gap-2">

@@ -41,7 +41,7 @@ function Snippet({ code }: { code: string }) {
   )
 }
 
-export function DocsPage() {
+export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
   const [recipeId, setRecipeId] = useState<ThemeRecipeId>(() => readStoredThemeRecipe())
   const [selected, setSelected] = useState<ComponentEntry | null>(null)
 
@@ -61,7 +61,7 @@ export function DocsPage() {
 
       <div className="grid gap-6">
         <Card title="Component gallery" description="Every cataloged component, visually. Click a card for the full reference, props, snippet, and live demo.">
-          <ComponentGallery onSelect={setSelected} />
+          <ComponentGallery onSelect={setSelected} externalQuery={globalSearch} />
         </Card>
 
         <Card title="Copy Ledger into your app" description="Ledger is a clone-and-customize kit, not an npm package. Copy the theme, primitives, shell, charts, and DataGrid — plus the lint rule — into the app you are building.">
