@@ -167,9 +167,12 @@ export function CommandPalette({
         >
           <span>{trigger}</span>
           {shortcutLabel && (
-            typeof shortcutLabel === 'string'
-              ? <Kbd keys={shortcutLabel.split(' ')} />
-              : <span className="num text-[11px] text-muted">{shortcutLabel}</span>
+            // Keyboard hint is noise on touch viewports — hide below sm.
+            <span className="hidden sm:inline-flex">
+              {typeof shortcutLabel === 'string'
+                ? <Kbd keys={shortcutLabel.split(' ')} />
+                : <span className="num text-[11px] text-muted">{shortcutLabel}</span>}
+            </span>
           )}
         </button>
       )}

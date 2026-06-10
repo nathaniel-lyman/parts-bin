@@ -3,7 +3,7 @@ import { Button } from '../ui/Button'
 import { DropdownMenu, type DropdownMenuItem } from '../ui/DropdownMenu'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
-import { cx } from '../ui/utils'
+import { cx, hasWidthUtility } from '../ui/utils'
 import { BellGlyph, CalendarGlyph, FilterGlyph } from './icons'
 
 export interface TimePeriodOption {
@@ -83,7 +83,7 @@ export function GlobalSearchInput({ className, ...rest }: GlobalSearchInputProps
   return (
     <Input
       type="search"
-      className={cx('w-[220px]', className)}
+      className={cx(!hasWidthUtility(className) && 'w-[220px]', className)}
       {...rest}
     />
   )

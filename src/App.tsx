@@ -429,7 +429,7 @@ export default function App() {
       actions={
         <>
           <GlobalSearchInput
-            className="w-[190px]"
+            className="hidden w-[190px] md:block"
             placeholder={docsActive ? 'Search components' : 'Search workspace'}
             aria-label="Global search"
             value={globalSearch}
@@ -437,18 +437,27 @@ export default function App() {
           />
           {!docsActive && !settingsActive && (
             <>
-              <TimePeriodSelector
-                value={timePeriod}
-                options={selectableTimePeriodOptions}
-                onChange={handleTimePeriodChange}
-              />
-              <DateRangePicker
-                label="Dates"
-                value={dateRange}
-                onValueChange={handleDateRangeChange}
-                presets={dateRangePresets}
-              />
-              <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
+              {/* Secondary controls collapse on narrow viewports so the bar
+                  stays one row; everything hidden here remains reachable via
+                  the command palette. Widest + most redundant hides first. */}
+              <div className="hidden xl:block">
+                <TimePeriodSelector
+                  value={timePeriod}
+                  options={selectableTimePeriodOptions}
+                  onChange={handleTimePeriodChange}
+                />
+              </div>
+              <div className="hidden 2xl:block">
+                <DateRangePicker
+                  label="Dates"
+                  value={dateRange}
+                  onValueChange={handleDateRangeChange}
+                  presets={dateRangePresets}
+                />
+              </div>
+              <div className="hidden lg:block">
+                <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
+              </div>
               <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
             </>
           )}
