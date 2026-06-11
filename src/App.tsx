@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useServerData } from './hooks/useServerData'
@@ -290,7 +290,11 @@ export default function App() {
   const toast = useToast()
   const accountsApi = useAccounts()
   const accountsRef = useRef(accountsApi.accounts)
-  accountsRef.current = accountsApi.accounts
+  useLayoutEffect(() => { accountsRef.current = accountsApi.accounts })
+  // getAccounts reads accountsRef.current only when the adapter's send() is
+  // called (async, not during render). The disable-next-line suppresses the
+  // react-hooks/refs false-positive for passing a ref-reading getter to useMemo.
+  // eslint-disable-next-line react-hooks/refs
   const assistantAdapter = useMemo(() => createDemoAdapter(() => accountsRef.current), [])
   const [assistantOpen, setAssistantOpen] = useState(false)
   const pathname = appPath()

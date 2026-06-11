@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ChatAdapter, ChatMessageData } from './types'
 
 let counter = 0
@@ -17,11 +17,15 @@ export function useChat(adapter: ChatAdapter) {
   const controllerRef = useRef<AbortController | null>(null)
   const disposedRef = useRef(false)
   const adapterRef = useRef(adapter)
-  adapterRef.current = adapter
   const messagesRef = useRef(messages)
-  messagesRef.current = messages
   const statusRef = useRef(status)
-  statusRef.current = status
+  // Keep refs in sync with latest values so callbacks capture fresh state
+  // without stale closures. useLayoutEffect (not render-body assignment) to
+  // satisfy react-hooks/refs; layout timing ensures they're updated before any
+  // async continuations that run after the same paint.
+  useLayoutEffect(() => { adapterRef.current = adapter })
+  useLayoutEffect(() => { messagesRef.current = messages })
+  useLayoutEffect(() => { statusRef.current = status })
 
   useEffect(() => {
     disposedRef.current = false // reset for StrictMode re-mount
