@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { ToastProvider } from './components/ui/ToastProvider'
@@ -17,9 +17,15 @@ test('renders dashboard with KPIs and table (light)', () => {
   expect(screen.getByText('Total MRR')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
   expect(screen.getByRole('figure', { name: /MRR bridge in thousands/i })).toBeInTheDocument()
+  const groupingDemo = screen.getByTestId('grouping-demo-grid')
+  expect(within(groupingDemo).getByText('Pipeline by stage')).toBeInTheDocument()
+  expect(within(groupingDemo).getByTestId('grouping-chips')).toHaveTextContent('Stage')
+  expect(within(groupingDemo).getByPlaceholderText('Search opportunities or owners...')).toBeInTheDocument()
+  expect(within(groupingDemo).getAllByText('Commit').length).toBeGreaterThan(0)
+  expect(within(groupingDemo).getByText('$239,000')).toBeInTheDocument()
   expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
   expect(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' })).toBeInTheDocument()
-  expect(screen.getByRole('searchbox', { name: /quick filter/i })).toBeInTheDocument()
+  expect(within(screen.getByTestId('accounts-grid')).getByRole('searchbox', { name: /quick filter/i })).toBeInTheDocument()
   expect(document.documentElement.classList.contains('dark')).toBe(false)
 })
 

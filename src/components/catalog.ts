@@ -904,7 +904,7 @@ export const CATALOG: ComponentEntry[] = [
     name: 'DataGrid', import: './components/DataGrid', category: 'datagrid',
     purpose: 'Headless-table-backed data grid: sort, filter, select, paginate, export, saved views, inline editing, grouping, aggregation.',
     use_when: 'Displaying tabular records with interaction; the rows prop takes the data. Mark columns editable/groupable/aggregate to light up editing, grouping chips, and the totals footer.',
-    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport', 'onContextChange', 'enableGrouping', 'onRowUpdate', 'editMode'],
+    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport', 'onContextChange', 'quickFilterPlaceholder', 'enableGrouping', 'onRowUpdate', 'editMode'],
     related: ['Pagination', 'FacetedFilter', 'AppliedFiltersBar'],
     snippet: `<DataGrid rows={accounts} columns={cols} getRowId={(r) => r.id} enableRowSelection enableGrouping onRowUpdate={(id, patch) => update(id, patch)} />`,
   }),

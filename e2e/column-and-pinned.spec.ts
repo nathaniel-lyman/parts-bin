@@ -4,16 +4,17 @@ test.describe('column virtualization + pinned-column alignment', () => {
   test('off-screen middle columns are absent while the right-pinned actions column stays aligned', async ({ page }) => {
     await page.addInitScript(() => localStorage.clear())
     await page.goto('/?rows=10000&cols=wide')
-    const scroller = page.getByTestId('datagrid-scroll')
+    const accountGrid = page.getByTestId('accounts-grid')
+    const scroller = accountGrid.getByTestId('datagrid-scroll')
     await expect(scroller).toBeVisible()
 
-    await expect(page.getByTestId('col-header-wide-0')).toBeVisible()
-    await expect(page.getByTestId('col-header-wide-20')).toHaveCount(0)
+    await expect(accountGrid.getByTestId('col-header-wide-0')).toBeVisible()
+    await expect(accountGrid.getByTestId('col-header-wide-20')).toHaveCount(0)
 
-    const actionsHeader = page.getByTestId('col-header-actions')
+    const actionsHeader = accountGrid.getByTestId('col-header-actions')
     await expect(actionsHeader).toBeVisible()
     await scroller.evaluate((el) => { el.scrollLeft = el.scrollWidth })
-    await expect(page.getByTestId('col-header-wide-23')).toBeVisible()
+    await expect(accountGrid.getByTestId('col-header-wide-23')).toBeVisible()
     await expect(actionsHeader).toBeVisible()
 
     const [actionsBox, scrollerBox] = await Promise.all([

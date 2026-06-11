@@ -91,6 +91,8 @@ export interface DataGridProps<TData> {
   totalRowCount?: number
   onQueryChange?: (query: GridQuery) => void
   onContextChange?: (context: DataGridContextSnapshot<TData>) => void
+  /** Placeholder text for the toolbar quick filter. */
+  quickFilterPlaceholder?: string
   /** Enables row grouping (toolbar chips + "Group by" in column menus). Client-side data only. */
   enableGrouping?: boolean
   /**
@@ -179,6 +181,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     totalRowCount,
     onQueryChange,
     onContextChange,
+    quickFilterPlaceholder,
     enableGrouping,
     onRowUpdate,
     editMode = 'cell',
@@ -857,6 +860,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         columns={columns}
         columnVisibility={state.columnVisibility}
         globalFilter={state.globalFilter}
+        quickFilterPlaceholder={quickFilterPlaceholder}
         density={state.density}
         grouping={state.grouping}
         enableGrouping={groupingActive}

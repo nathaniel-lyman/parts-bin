@@ -5,8 +5,9 @@ test.describe('reorder + keyboard nav', () => {
     await page.addInitScript(() => localStorage.clear())
     await page.goto('/')
 
-    const accountHeader = page.getByTestId('col-header-account')
-    const ownerHeader = page.getByTestId('col-header-owner')
+    const accountGrid = page.getByTestId('accounts-grid')
+    const accountHeader = accountGrid.getByTestId('col-header-account')
+    const ownerHeader = accountGrid.getByTestId('col-header-owner')
     await expect(accountHeader).toBeVisible()
     await expect(ownerHeader).toBeVisible()
     await accountHeader.scrollIntoViewIfNeeded()
@@ -24,25 +25,26 @@ test.describe('reorder + keyboard nav', () => {
     await expect(overlay).toBeVisible()
     await expect(overlay).toHaveAttribute('data-column-id', 'account')
 
-    const activeCellOpacity = await page.locator('td[data-column-id="account"]').first().evaluate((element) => getComputedStyle(element).opacity)
-    const ownerCellTransform = await page.locator('td[data-column-id="owner"]').first().evaluate((element) => getComputedStyle(element).transform)
+    const activeCellOpacity = await accountGrid.locator('td[data-column-id="account"]').first().evaluate((element) => getComputedStyle(element).opacity)
+    const ownerCellTransform = await accountGrid.locator('td[data-column-id="owner"]').first().evaluate((element) => getComputedStyle(element).transform)
     expect(Number(activeCellOpacity)).toBeLessThan(0.6)
     expect(ownerCellTransform).not.toBe('none')
 
     await page.mouse.up()
     await expect(overlay).toHaveCount(0)
 
-    const headerOrder = await page.locator('th[data-column-id]').evaluateAll((headers) => headers.map((header) => header.getAttribute('data-column-id')))
+    const headerOrder = await accountGrid.locator('th[data-column-id]').evaluateAll((headers) => headers.map((header) => header.getAttribute('data-column-id')))
     expect(headerOrder.slice(0, 2)).toEqual(['owner', 'account'])
   })
 
   test('keyboard nav scrolls a far-down virtualized cell into view', async ({ page }) => {
     await page.addInitScript(() => localStorage.clear())
     await page.goto('/?rows=10000')
-    const scroller = page.getByTestId('datagrid-scroll')
+    const accountGrid = page.getByTestId('accounts-grid')
+    const scroller = accountGrid.getByTestId('datagrid-scroll')
     await expect(scroller).toBeVisible()
 
-    const firstCell = page.getByTestId('grid-row-row-0').locator('[role="gridcell"]').first()
+    const firstCell = accountGrid.getByTestId('grid-row-row-0').locator('[role="gridcell"]').first()
     await firstCell.focus()
     for (let index = 0; index < 20; index += 1) await page.keyboard.press('PageDown')
 
@@ -52,7 +54,7 @@ test.describe('reorder + keyboard nav', () => {
 
     const rowIndex = Number(await focused.getAttribute('data-row-index'))
     expect(rowIndex).toBeGreaterThan(100)
-    await expect(page.getByTestId(`grid-row-row-${rowIndex}`)).toBeVisible()
+    await expect(accountGrid.getByTestId(`grid-row-row-${rowIndex}`)).toBeVisible()
 
     const [cellBox, scrollerBox] = await Promise.all([
       focused.boundingBox(),

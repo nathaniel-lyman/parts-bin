@@ -9,6 +9,7 @@ interface Props<TData> {
   columns: Pick<LedgerGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable'>[]
   columnVisibility: Record<string, boolean>
   globalFilter: string
+  quickFilterPlaceholder?: string
   density: Density
   grouping?: string[]
   enableGrouping?: boolean
@@ -29,6 +30,7 @@ export function DataGridToolbar<TData>({
   columns,
   columnVisibility,
   globalFilter,
+  quickFilterPlaceholder = 'Search accounts or owners...',
   density,
   grouping = [],
   enableGrouping,
@@ -58,7 +60,7 @@ export function DataGridToolbar<TData>({
       <Input
         type="search"
         className="max-w-sm"
-        placeholder="Search accounts or owners..."
+        placeholder={quickFilterPlaceholder}
         aria-label="Quick filter"
         value={globalFilter}
         onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}

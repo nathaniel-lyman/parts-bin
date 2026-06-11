@@ -64,7 +64,7 @@ import { AppComposerPage, CustomerSuccessTemplate, LoginPage, RecommendationRevi
 import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
-import type { LedgerGridColumn } from './components/DataGrid'
+import type { LedgerGridColumn, LedgerGridState } from './components/DataGrid'
 import { appHref, appPath, navigate } from './lib/routes'
 
 const timePeriodOptions = [
@@ -122,6 +122,86 @@ function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGri
   }))
   return actions ? [...base, ...wide, actions] : [...base, ...wide]
 }
+
+type PipelineStage = 'Commit' | 'Best case' | 'Qualified'
+
+interface PipelineRow {
+  id: string
+  opportunity: string
+  owner: string
+  stage: PipelineStage
+  forecast: number
+  confidence: number
+}
+
+const groupingDemoRows: PipelineRow[] = [
+  { id: 'pipeline-1', opportunity: 'Finch Logistics expansion', owner: 'K. Osei', stage: 'Commit', forecast: 142000, confidence: 88 },
+  { id: 'pipeline-2', opportunity: 'Meridian renewal', owner: 'K. Osei', stage: 'Commit', forecast: 97000, confidence: 82 },
+  { id: 'pipeline-3', opportunity: 'Bluestem rollout', owner: 'J. Park', stage: 'Best case', forecast: 76000, confidence: 64 },
+  { id: 'pipeline-4', opportunity: 'Harbor & Pine stores', owner: 'M. Chen', stage: 'Best case', forecast: 58000, confidence: 57 },
+  { id: 'pipeline-5', opportunity: 'Northwind add-on', owner: 'J. Park', stage: 'Qualified', forecast: 41000, confidence: 38 },
+  { id: 'pipeline-6', opportunity: 'Quill Analytics pilot', owner: 'A. Rivera', stage: 'Qualified', forecast: 26000, confidence: 34 },
+]
+
+const groupingDemoColumns: LedgerGridColumn<PipelineRow>[] = [
+  {
+    id: 'opportunity',
+    accessorKey: 'opportunity',
+    header: 'Opportunity',
+    type: 'text',
+    minWidth: 220,
+    cell: (ctx) => <span className="text-ink">{String(ctx.value)}</span>,
+  },
+  {
+    id: 'stage',
+    accessorKey: 'stage',
+    header: 'Stage',
+    type: 'status',
+    groupable: true,
+    minWidth: 132,
+    cell: (ctx) => <span className="text-muted">{String(ctx.value)}</span>,
+  },
+  {
+    id: 'owner',
+    accessorKey: 'owner',
+    header: 'Owner',
+    type: 'text',
+    groupable: true,
+    minWidth: 112,
+    cell: (ctx) => <span className="text-muted">{String(ctx.value)}</span>,
+  },
+  {
+    id: 'forecast',
+    accessorKey: 'forecast',
+    header: 'Forecast',
+    type: 'currency',
+    align: 'right',
+    aggregate: 'sum',
+    minWidth: 124,
+    cell: (ctx) => <span className="num text-ink">{fmtCurrency(Number(ctx.value))}</span>,
+  },
+  {
+    id: 'confidence',
+    accessorKey: 'confidence',
+    header: 'Confidence',
+    type: 'percent',
+    align: 'right',
+    aggregate: 'avg',
+    minWidth: 128,
+    cell: (ctx) => <span className="num text-muted">{fmtPercent(Number(ctx.value))}</span>,
+  },
+]
+
+const groupingDemoInitialState = {
+  sorting: [],
+  columnOrder: ['opportunity', 'stage', 'owner', 'forecast', 'confidence'],
+  columnVisibility: {},
+  columnPinning: { left: [], right: [] },
+  pagination: { pageIndex: 0, pageSize: 10 },
+  density: 'compact',
+  grouping: ['stage'],
+  expanded: true,
+} satisfies Partial<LedgerGridState>
 
 interface DashboardPageProps {
   accountsApi: ReturnType<typeof useAccounts>
@@ -274,6 +354,25 @@ function DashboardPage({
           </Card>
         </div>
 
+        {!generatedAccounts && !serverMode && (
+          <div className="mb-6" data-testid="grouping-demo-grid">
+            <Card
+              title="Pipeline by stage"
+              description="6 opportunities grouped by stage, with forecast and confidence rollups."
+            >
+              <DataGrid
+                rows={groupingDemoRows}
+                columns={groupingDemoColumns}
+                getRowId={(row) => row.id}
+                initialState={groupingDemoInitialState}
+                quickFilterPlaceholder="Search opportunities or owners..."
+                enableGrouping
+                enablePagination={false}
+              />
+            </Card>
+          </div>
+        )}
+
         <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">
           <Switch
             label={<span className="micro text-muted">Server mode</span>}
@@ -289,32 +388,34 @@ function DashboardPage({
             </span>
           )}
         </div>
-        <DataGrid
-          rows={serverMode ? server.rows : visibleAccounts}
-          columns={gridColumns}
-          getRowId={(row) => row.id}
-          initialState={gridInitialState}
-          enablePagination={!generatedAccounts}
-          enableExport
-          persistenceKey={generatedAccounts ? undefined : 'ledger.accounts.grid'}
-          globalFilterFn={accountGlobalFilter}
-          manualSorting={serverMode}
-          manualFiltering={serverMode}
-          manualPagination={serverMode}
-          enableRowSelection
-          totalRowCount={serverMode ? server.totalRowCount : undefined}
-          onQueryChange={serverMode ? setServerQuery : undefined}
-          loading={serverMode && server.status === 'loading'}
-          error={serverMode && server.status === 'error' ? server.error : undefined}
-          onContextChange={handleAssistantGridContextChange}
-          enableGrouping={!serverMode}
-          onRowUpdate={serverMode ? undefined : (id, patch, row) => {
-            // ARR is derived: keep it in sync when MRR is edited inline.
-            const next = patch.mrr !== undefined ? { ...patch, arr: Number(patch.mrr) * 12 } : patch
-            update(id, next)
-            toast(`Saved ${row.name}`, 'accent')
-          }}
-        />
+        <div data-testid="accounts-grid">
+          <DataGrid
+            rows={serverMode ? server.rows : visibleAccounts}
+            columns={gridColumns}
+            getRowId={(row) => row.id}
+            initialState={gridInitialState}
+            enablePagination={!generatedAccounts}
+            enableExport
+            persistenceKey={generatedAccounts ? undefined : 'ledger.accounts.grid'}
+            globalFilterFn={accountGlobalFilter}
+            manualSorting={serverMode}
+            manualFiltering={serverMode}
+            manualPagination={serverMode}
+            enableRowSelection
+            totalRowCount={serverMode ? server.totalRowCount : undefined}
+            onQueryChange={serverMode ? setServerQuery : undefined}
+            loading={serverMode && server.status === 'loading'}
+            error={serverMode && server.status === 'error' ? server.error : undefined}
+            onContextChange={handleAssistantGridContextChange}
+            enableGrouping={!serverMode}
+            onRowUpdate={serverMode ? undefined : (id, patch, row) => {
+              // ARR is derived: keep it in sync when MRR is edited inline.
+              const next = patch.mrr !== undefined ? { ...patch, arr: Number(patch.mrr) * 12 } : patch
+              update(id, next)
+              toast(`Saved ${row.name}`, 'accent')
+            }}
+          />
+        </div>
       </main>
 
       {creating && (
