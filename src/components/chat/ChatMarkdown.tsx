@@ -7,12 +7,20 @@ export interface ChatMarkdownProps {
   content: string
 }
 
+/** Recursively flatten a React node tree to its text content (survives nested spans, e.g. from rehype-highlight). */
+function textOf(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(textOf).join('')
+  if (isValidElement(node)) return textOf((node.props as { children?: ReactNode }).children)
+  return ''
+}
+
 /** Pull the code text + language out of the single <code> child of a <pre>. */
 function extractCode(children: ReactNode): { code: string; language?: string } | null {
   if (!isValidElement(children)) return null
   const props = children.props as { className?: string; children?: ReactNode }
   const language = /language-(\w+)/.exec(props.className ?? '')?.[1]
-  return { code: String(props.children ?? '').replace(/\n$/, ''), language }
+  return { code: textOf(props.children).replace(/\n$/, ''), language }
 }
 
 /**

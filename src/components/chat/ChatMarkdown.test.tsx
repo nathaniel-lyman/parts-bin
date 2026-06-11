@@ -50,4 +50,13 @@ describe('ChatMarkdown', () => {
     expect(writeText).toHaveBeenCalledWith('const x = 1')
     expect(toast).toHaveBeenCalledWith('Copied code')
   })
+
+  test('multi-line fenced code copies its full text via the flattener', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+    render(<ChatMarkdown content={'```ts\nconst a = 1\nconst b = 2\n```'} />)
+    await user.click(screen.getByRole('button', { name: 'Copy code' }))
+    expect(writeText).toHaveBeenCalledWith('const a = 1\nconst b = 2')
+  })
 })

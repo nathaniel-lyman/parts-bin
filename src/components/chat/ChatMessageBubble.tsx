@@ -27,6 +27,7 @@ export function ChatMessageBubble({ message, actions }: ChatMessageBubbleProps) 
       <Avatar name="Assistant" initials="AI" size="sm" className="mt-0.5" />
       <div className="min-w-0 flex-1">
         {thinking ? <TypingIndicator /> : <ChatMarkdown content={message.content} />}
+        {/* Streaming cursor renders below the markdown block — known visual compromise; inlining through react-markdown isn't worth the complexity. */}
         {message.status === 'streaming' && message.content !== '' && (
           <span className="mt-1 inline-block h-3.5 w-1.5 animate-pulse bg-accent" aria-hidden="true" />
         )}

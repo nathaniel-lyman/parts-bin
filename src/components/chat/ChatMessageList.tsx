@@ -43,7 +43,7 @@ export function ChatMessageList({ children, className }: ChatMessageListProps) {
 
   return (
     <div ref={scrollRef} onScroll={onScroll} className={cx('min-h-0 flex-1 overflow-y-auto', className)}>
-      <div className="grid gap-4">{children}</div>
+      <div role="log" className="grid gap-4">{children}</div>
     </div>
   )
 }

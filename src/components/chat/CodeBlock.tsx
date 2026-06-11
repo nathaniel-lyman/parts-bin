@@ -15,7 +15,12 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
   const toast = useToast()
   const copy = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(code).then(() => toast('Copied code'), () => {})
+      void navigator.clipboard.writeText(code).then(
+        () => toast('Copied code'),
+        () => toast('Copy failed'),
+      )
+    } else {
+      toast('Copy failed')
     }
   }
   return (
