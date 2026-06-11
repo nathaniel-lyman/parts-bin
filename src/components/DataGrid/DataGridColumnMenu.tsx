@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
@@ -63,6 +64,7 @@ export function DataGridColumnMenu({
   const triggerRef = useRef<HTMLDivElement | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const filterPanelRef = useRef<HTMLDivElement | null>(null)
+  const portalRoot = typeof document === 'undefined' ? null : document.body
   const close = () => {
     setOpen(false)
     setFilterOpen(false)
@@ -162,14 +164,14 @@ export function DataGridColumnMenu({
       >
         <span aria-hidden="true">⋮</span>
       </Button>
-      {open && (
+      {open && portalRoot && createPortal(
         <>
-          <div className="fixed inset-0 z-10" onClick={close} />
+          <div className="fixed inset-0 z-40" onClick={close} />
           <div
             ref={menuRef}
             role="menu"
             aria-label={`${label} column menu`}
-            className="shadow-dropdown fixed z-30 w-52 rounded-[2px] border border-line bg-surface py-1"
+            className="shadow-dropdown fixed z-50 w-52 rounded-[2px] border border-line bg-surface py-1"
             style={{ top: menuPosition.top, left: menuPosition.left }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -223,16 +225,17 @@ export function DataGridColumnMenu({
               </>
             )}
           </div>
-        </>
+        </>,
+        portalRoot,
       )}
-      {filterOpen && filterType && (
+      {filterOpen && filterType && portalRoot && createPortal(
         <>
-          <div className="fixed inset-0 z-20" onClick={close} />
+          <div className="fixed inset-0 z-40" onClick={close} />
           <div
             ref={filterPanelRef}
             role="dialog"
             aria-label={`${label} filter`}
-            className="shadow-modal fixed z-30 rounded-[4px] border border-line bg-surface p-4"
+            className="shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
             style={{ top: filterPosition.top, left: filterPosition.left, width: filterPosition.width }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -318,7 +321,8 @@ export function DataGridColumnMenu({
               </div>
             </div>
           </div>
-        </>
+        </>,
+        portalRoot,
       )}
     </div>
   )

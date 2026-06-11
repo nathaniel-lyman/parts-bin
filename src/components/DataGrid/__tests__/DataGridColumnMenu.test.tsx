@@ -120,6 +120,8 @@ describe('DataGridColumnMenu shell', () => {
 
     const menu = screen.getByRole('menu', { name: /mrr column menu/i })
     expect(menu).toHaveClass('fixed')
+    expect(menu).toHaveClass('z-50')
+    expect(menu.parentElement).toBe(document.body)
     expect(menu).toHaveStyle({
       left: '8px',
       top: '132px',
