@@ -17,6 +17,21 @@ recipe) and every component, chart, and page re-skins — zero component edits, 
 |---|---|
 | ![Default theme](docs/screenshots/dashboard-dark.png) | ![Ops green recipe](docs/screenshots/dashboard-ops-green.png) |
 
+## Who is this for?
+
+- **Developers** building an internal tool or SaaS dashboard — clone it, re-skin it, swap the
+  demo data for your domain, ship.
+- **Data analysts** with a reporting need — hand this repo to your AI coding agent (or a
+  developer) with your brand colors and KPIs, and you get a branded, interactive dashboard
+  instead of another static spreadsheet. The [agent skills](#agent-skills) make that a guided,
+  verified procedure, not a hope.
+- **Founders and PMs** who need a credible product demo fast — every page a dashboard product
+  needs is already built; `/compose` walks you through assembling your own.
+
+The demo domain is SaaS accounts and MRR, but nothing about the framework is SaaS-specific —
+see [the domain mapping below](#your-first-30-minutes) for what the same dashboard looks like
+as grocery store performance or a supplier scorecard.
+
 ## Quickstart
 ```bash
 npm install
@@ -26,9 +41,45 @@ npm run dev
 Starting a new project from this repo? Use GitHub's **"Use this template"** button (or clone and
 delete `.git`) so you begin with a clean history.
 
+**First stop after the dev server starts: open [`/compose`](http://localhost:5173/compose).**
+The guided App composer is the front door to the kit — pick a use case, layout, theme recipe,
+and data mapping, and it generates the route, import, and theme snippets to build from.
+
+## Your first 30 minutes
+
+The fastest path from clone to *your* dashboard is three steps, and an AI coding agent can run
+all of them via the checked-in [agent skills](#agent-skills). Suppose you're an analyst at a
+grocery chain like Aldi:
+
+1. **Re-skin** — *"run the `retheme` skill: accent Aldi blue `#00005F`, secondary cyan
+   `#25C5E8`, warm orange highlights, slightly rounder corners."* Every component, chart, and
+   page re-skins from `src/theme/` alone.
+2. **Swap the data** — *"run the `swap-data-domain` skill: the entity is Store, KPIs are total
+   weekly sales, open stores, stores below target, and comp sales growth."* The KPI cards,
+   charts, and data grid all derive from one pipeline, so they follow automatically.
+3. **Verify** — *"run the `verify-changes` skill."* Build, tests, and the theme-boundary lint.
+
+Nothing in the framework is tied to the SaaS demo domain — it's one mapping away from yours:
+
+| Shipped SaaS demo | Grocery store performance | Supplier scorecard |
+|---|---|---|
+| Account — name, owner | Store — number, district manager | Supplier — vendor, buyer |
+| MRR | Weekly net sales | On-time fill rate (%) |
+| Segment: Enterprise / Mid-market / Startup | Division or store format | Category: produce / dairy / dry goods |
+| Status: Active / At risk / Churned | On-target / Below target / Remodel | Compliant / Watch / Suspended |
+| Growth % | Comp sales growth | Fill-rate trend |
+
+Both alternate domains exist as typechecked reference files —
+[`src/data/examples/grocery-stores.ts`](src/data/examples/grocery-stores.ts) and
+[`src/data/examples/supplier-scorecard.ts`](src/data/examples/supplier-scorecard.ts) — showing
+the demo's types, seed rows, and chart series remapped, plus the selector semantics you'd need
+to decide. The mechanics of the swap — types, seed data, selectors, grid columns, in dependency
+order — are written down in [`skills/swap-data-domain/SKILL.md`](skills/swap-data-domain/SKILL.md).
+
 ## Pages out of the box
 
-Every surface a dashboard product needs, already built from the kit's own primitives:
+Every surface a dashboard product needs, already built from the kit's own primitives. Start at
+**`/compose`** — the guided composer that assembles the rest of these into your app:
 
 | | |
 |---|---|

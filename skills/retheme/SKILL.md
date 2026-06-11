@@ -49,6 +49,29 @@ canonical reference; this is the working checklist.
    `ledger.theme.recipe`) overrides `tokens.css` values — if your edits seem
    to do nothing, check that no recipe is active.
 
+## Worked example: an Aldi-style grocery brand
+
+A brand brief like *"Aldi blue, cyan secondary, orange highlights, friendlier
+corners"* maps to the checklist like this:
+
+- **Accent** — `:root`: `--accent: #00005F` (brand navy), `--accent-soft`
+  derived as a light navy tint, `--accent-fg: #ffffff`. **Dark mode**: navy
+  has no contrast on a dark surface — promote the secondary instead, e.g.
+  `.dark { --accent: #25C5E8 }`. Picking a different accent per mode is
+  normal; the skill is choosing one that keeps focus rings and buttons
+  legible in each.
+- **Brand orange** — resist wiring it to `--warn` just because it's orange:
+  semantic tokens carry meaning (review/at-risk), not decoration. If orange
+  is decorative in the brand, give it a chart slot (`SERIES[1..]` in
+  `chart-theme.ts`) rather than a semantic role.
+- **Radius** — grocery retail reads friendlier than fintech: bump
+  `--radius` from `2px` to `6px` in `tokens.css` **and** under
+  `@theme inline` in `theme.css` (step 3).
+- **Charts** — `SERIES[0]` follows `--accent` automatically; set
+  `SERIES[1]` to the cyan and slot the orange after it.
+- **Ship it as a recipe** (step 6) if the team wants to A/B it against the
+  default before committing.
+
 ## Verify
 
 1. `npm run lint:theme` — must pass.
