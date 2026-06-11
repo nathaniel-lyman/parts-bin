@@ -34,6 +34,8 @@ interface Props {
   hideable: boolean
   canPin: boolean
   pinSide: 'left' | 'right' | false
+  canGroup?: boolean
+  isGrouped?: boolean
   dispatch: (action: GridAction) => void
   onAutofit?: (columnId: string) => void
 }
@@ -48,6 +50,8 @@ export function DataGridColumnMenu({
   hideable,
   canPin,
   pinSide,
+  canGroup,
+  isGrouped,
   dispatch,
   onAutofit,
 }: Props) {
@@ -186,6 +190,18 @@ export function DataGridColumnMenu({
               </button>
             )}
             {filterType && <div className="my-1 border-t border-line" />}
+            {canGroup && (
+              <>
+                <button
+                  role="menuitem"
+                  className={item}
+                  onClick={() => { dispatch({ type: 'TOGGLE_GROUP_BY', columnId }); close() }}
+                >
+                  {isGrouped ? `Ungroup by ${label}` : `Group by ${label}`}
+                </button>
+                <div className="my-1 border-t border-line" />
+              </>
+            )}
             {hideable && (
               <button role="menuitem" className={item} onClick={() => { dispatch({ type: 'TOGGLE_COLUMN_VISIBILITY', id: columnId }); close() }}>Hide column</button>
             )}

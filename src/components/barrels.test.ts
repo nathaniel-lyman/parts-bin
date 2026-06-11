@@ -48,6 +48,7 @@ test('root barrel aggregates ui, shell, charts, DataGrid, and dashboard componen
   expect(typeof components.Avatar).toBe('function')
   expect(typeof components.ChartCard).toBe('function')
   expect(typeof components.GeoDrilldown).toBe('function') // maps
+  expect(typeof components.AppComposerPage).toBe('function')
   expect(typeof components.DataGrid).toBe('function') // DataGrid
   expect(typeof components.WaterfallChart).toBe('function') // charts
   expect(typeof components.KpiCard).toBe('function') // dashboard

@@ -6,7 +6,7 @@
 A runnable dashboard starter implementing the **Ledger** design system: sharp, technical,
 data-first. Clone it, run it, customize it — or lift the `src/theme/` folder into your own app.
 
-**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/docs`, `/login`, and `/settings` in the running app.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/compose`, `/docs`, `/login`, and `/settings` in the running app.
 
 ![Ledger dashboard, dark mode](docs/screenshots/dashboard-dark.png)
 
@@ -47,11 +47,12 @@ Every surface a dashboard product needs, already built from the kit's own primit
   breadcrumbs, filter bars, section headers, and settings panels.
 - **`src/components/`** — dashboard components (KPI cards, data table with sort/filter/columns,
   charts, forms). No raw colors; enforced by `npm run lint:theme`.
-- **`src/components/templates/`** — full-page starters you can route to directly: a dashboard,
-  two workflow consoles, plus a split brand-panel **Login** (`/login`) and a section-scroll
+- **`src/components/templates/`** — full-page starters you can route to directly: a guided
+  **App composer** (`/compose`), a dashboard, two workflow consoles, plus a split brand-panel **Login** (`/login`) and a section-scroll
   **Settings** (`/settings`) page. The starter pages are presentational demos — Settings'
   Appearance section is the live home for color mode, theme recipe, and density.
 - **`src/hooks/`, `src/selectors/`, `src/data/`** — client-side state, derived metrics, seed data.
+- **`/compose`** — guided admin-app composer that generates route, import, data-mapping, and theme snippets.
 - **`/docs`** — live component catalog with examples, prop guidance, and copy-paste usage snippets.
 - **`skills/`** — agent skills: step-by-step workflows for re-theming, swapping the data domain,
   adding components, and verifying changes. See [Agent skills](#agent-skills).
@@ -84,6 +85,7 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 
 ## Use Ledger in an existing app
 Copy-paste checklist (clone what you need, in order):
+- [ ] **Composer** — open `/compose` to choose a use case, layout, theme recipe, and data mapping, then use the generated route/import snippets.
 - [ ] **Theme** — copy `src/theme/` and import `theme/theme.css` at your root. Re-skin via `tokens.css` only.
 - [ ] **Primitives** — copy `src/components/ui/`; import from the `ui` barrel (`Button`, `Field`, `Drawer`,
   `IconButton`, `InlineAlert`, `SegmentedControl`, modals, tabs, toasts, …).

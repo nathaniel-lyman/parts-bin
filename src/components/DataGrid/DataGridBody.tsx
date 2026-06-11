@@ -1,7 +1,9 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Row, Table } from '@tanstack/react-table'
+import type { ReactNode } from 'react'
 import { DataGridRow } from './DataGridRow'
 import type { ColumnDragPreviewState } from './dragPreview'
+import type { GridEditingApi } from './editing'
 import type { GridFocus } from './keyboard'
 import type { PinnedOffsets } from './selectors'
 import type { ColumnVirtualWindow } from './types'
@@ -23,9 +25,13 @@ interface Props<TData> {
   visibleColumnIds?: string[]
   onFocusCell?: (row: number, col: number) => void
   pinnedOffsets?: PinnedOffsets
+  editing?: GridEditingApi
+  renderAggregatedCell?: (columnId: string, leafRows: TData[]) => ReactNode
 }
 
 function defaultRowLabel<TData>(row: TData, rowId: string): string {
+  // Group rows have no original data object.
+  if (row === null || row === undefined) return rowId
   const record = row as Record<string, unknown>
   return String(record.name ?? record.account ?? rowId)
 }
@@ -47,6 +53,8 @@ export function DataGridBody<TData>({
   visibleColumnIds,
   onFocusCell,
   pinnedOffsets,
+  editing,
+  renderAggregatedCell,
 }: Props<TData>) {
   const topRows = table.getTopRows()
   const centerRows = table.getCenterRows()
@@ -94,6 +102,8 @@ export function DataGridBody<TData>({
       visibleColumnIds={visibleColumnIds}
       onFocusCell={onFocusCell}
       pinnedOffsets={pinnedOffsets}
+      editing={editing}
+      renderAggregatedCell={renderAggregatedCell}
     />
   )
 

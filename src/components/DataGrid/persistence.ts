@@ -16,6 +16,8 @@ export interface PersistedGridView {
   columnFilters: ColumnFiltersState
   sorting: SortingState
   pagination: { pageSize: number }
+  /** Optional for backwards compatibility with pre-grouping persisted blobs. */
+  grouping?: string[]
 }
 
 export const DEFAULT_PERSISTED_VIEW: PersistedGridView = project(DEFAULT_STATE)
@@ -31,6 +33,7 @@ export function project(state: LedgerGridState): PersistedGridView {
     columnFilters: state.columnFilters,
     sorting: state.sorting,
     pagination: { pageSize: state.pagination.pageSize },
+    grouping: state.grouping,
   }
 }
 
@@ -46,6 +49,11 @@ export function hydrateView(view: Partial<PersistedGridView>, initialState?: Par
   if (view.columnFilters) persisted.columnFilters = view.columnFilters
   if (view.sorting) persisted.sorting = view.sorting
   if (view.pagination) persisted.pagination = { pageIndex: 0, pageSize: view.pagination.pageSize }
+  if (view.grouping) {
+    persisted.grouping = view.grouping
+    // Expansion state is ephemeral; a restored grouped view starts fully expanded.
+    persisted.expanded = view.grouping.length > 0 ? true : {}
+  }
   return hydrate({ initialState, persisted })
 }
 

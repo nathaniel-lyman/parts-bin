@@ -2,7 +2,7 @@ import { Drawer } from '../ui/Drawer'
 import { EmptyState } from '../ui/EmptyState'
 import { Button } from '../ui/Button'
 import { useToast } from '../ui/ToastContext'
-import { useChat } from './useChat'
+import { useChat, type ChatController } from './useChat'
 import { ChatMessageList } from './ChatMessageList'
 import { ChatMessageBubble } from './ChatMessageBubble'
 import { MessageActions } from './MessageActions'
@@ -15,16 +15,18 @@ export interface AssistantPanelProps {
   onClose: () => void
   title?: string
   suggestions?: string[]
+  chat?: ChatController
 }
 
 /**
  * Slide-over AI chat composed from the chat primitives. Conditionally render
- * it like Drawer/Modal: `{open && <AssistantPanel … />}`. Conversation state
- * lives inside, so closing the panel resets it — lift useChat out if you need
- * persistence.
+ * it like Drawer/Modal: `{open && <AssistantPanel … />}`. Pass a lifted
+ * `chat={useChat(adapter)}` controller when close/reopen should preserve the
+ * conversation.
  */
-export function AssistantPanel({ adapter, onClose, title = 'Assistant', suggestions = [] }: AssistantPanelProps) {
-  const { messages, status, send, stop, regenerate } = useChat(adapter)
+export function AssistantPanel({ adapter, onClose, title = 'Assistant', suggestions = [], chat }: AssistantPanelProps) {
+  const internalChat = useChat(adapter)
+  const { messages, status, send, stop, regenerate } = chat ?? internalChat
   const toast = useToast()
 
   return (
@@ -34,7 +36,7 @@ export function AssistantPanel({ adapter, onClose, title = 'Assistant', suggesti
           <EmptyState
             glyph="✳"
             title="Ask about your accounts"
-            description="The demo assistant answers with live numbers derived from the account book."
+            description="The assistant reads the active screen, selected rows, filters, saved views, and route context."
           />
           {suggestions.length > 0 && <SuggestedPrompts prompts={suggestions} onSelect={send} />}
         </div>

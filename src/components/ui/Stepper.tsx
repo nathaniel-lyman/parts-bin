@@ -33,7 +33,7 @@ export function Stepper({ steps, currentStepId, onStepSelect, orientation = 'hor
   return (
     <ol
       className={cx(
-        'm-0 list-none gap-2 p-0',
+        'm-0 list-none content-start gap-2 p-0',
         orientation === 'horizontal' ? 'grid sm:grid-cols-[repeat(var(--step-count),minmax(0,1fr))]' : 'grid',
         className,
       )}

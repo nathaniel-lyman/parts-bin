@@ -16,7 +16,9 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
+  getGroupedRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -50,6 +52,21 @@ import { DataGridLoadingState } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
 import { projectColumnDrag, type ColumnDragPreviewState } from './dragPreview'
 import { fitColumnWidth, measureColumnContentWidths } from './autofit'
+import { aggregate, computeAggregates, formatAggregate, resolveColumnValue } from './aggregation'
+import {
+  commitSession,
+  editorTypeFor,
+  isColumnEditable,
+  isDirtyCell,
+  markDirty,
+  setDraft,
+  startEdit,
+  type DirtyCells,
+  type EditMode,
+  type EditSession,
+  type GridEditingApi,
+} from './editing'
+import { DataGridAggregationFooter } from './DataGridAggregationFooter'
 import type { ColumnVirtualWindow, GridAction, LedgerGridColumn, LedgerGridState } from './types'
 
 export interface DataGridProps<TData> {
@@ -73,6 +90,35 @@ export interface DataGridProps<TData> {
   persistenceKey?: string
   totalRowCount?: number
   onQueryChange?: (query: GridQuery) => void
+  onContextChange?: (context: DataGridContextSnapshot<TData>) => void
+  /** Enables row grouping (toolbar chips + "Group by" in column menus). Client-side data only. */
+  enableGrouping?: boolean
+  /**
+   * Enables inline editing for columns marked `editable`. Called with the validated patch
+   * (keyed by accessorKey) when an edit commits with changes. Client-side data only.
+   */
+  onRowUpdate?: (rowId: string, patch: Partial<TData>, row: TData) => void
+  /** 'cell' edits one cell at a time (default); 'row' opens every editable cell in the row. */
+  editMode?: EditMode
+}
+
+export interface DataGridContextSnapshot<TData> {
+  totalRowCount: number
+  visibleRowCount: number
+  selectedRowCount: number
+  visibleRows: TData[]
+  selectedRows: TData[]
+  globalFilter: string
+  columnFilters: LedgerGridState['columnFilters']
+  sorting: LedgerGridState['sorting']
+  savedViews: { id: string; name: string }[]
+  currentSavedView?: { id: string; name: string }
+  actions: {
+    saveCurrentView: (name: string) => string
+    applySavedView: (id: string) => void
+    resetView: () => void
+    clearSelection: () => void
+  }
 }
 
 function toColumnDef<TData>(column: LedgerGridColumn<TData>): ColumnDef<TData> {
@@ -90,6 +136,7 @@ function toColumnDef<TData>(column: LedgerGridColumn<TData>): ColumnDef<TData> {
     size: column.width,
     minSize: column.minWidth,
     maxSize: column.maxWidth,
+    enableGrouping: column.groupable === true,
     cell: column.cell
       ? (ctx) => column.cell!({ value: ctx.getValue(), row: ctx.row.original, rowId: ctx.row.id })
       : undefined,
@@ -131,9 +178,15 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     persistenceKey,
     totalRowCount,
     onQueryChange,
+    onContextChange,
+    enableGrouping,
+    onRowUpdate,
+    editMode = 'cell',
   } = props
   const isControlled = props.state !== undefined && props.onStateChange !== undefined
   const isServerMode = Boolean(manualSorting || manualFiltering || manualPagination)
+  const groupingActive = Boolean(enableGrouping) && !isServerMode
+  const editingEnabled = onRowUpdate !== undefined && !isServerMode
   const persistenceEnabled = !isControlled && persistenceKey !== undefined
   const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState) : hydrate({ initialState: props.initialState }))
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
@@ -144,7 +197,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const [focus, setFocus] = useState<GridFocus>({ row: 0, col: 0 })
   const restoreGridFocusRef = useRef(false)
   const view = useGridViewState(seed, columns)
-  const savedViews = useSavedViews()
+  const {
+    views: savedViewItems,
+    create: createSavedView,
+    remove: removeSavedView,
+    apply: applySavedView,
+    reset: resetSavedView,
+  } = useSavedViews()
   const toast = useToast()
   const state = isControlled ? props.state! : view.state
   const paginationEnabled = enablePagination || manualPagination
@@ -204,6 +263,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       pagination: state.pagination,
       rowSelection: state.rowSelection,
       rowPinning: state.rowPinning,
+      grouping: groupingActive ? state.grouping : [],
+      expanded: groupingActive ? state.expanded : {},
     },
     defaultColumn: {
       filterFn: ledgerFilterFn as unknown as FilterFn<TData>,
@@ -233,16 +294,27 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       if (next.pageIndex !== state.pagination.pageIndex) dispatch({ type: 'SET_PAGE_INDEX', pageIndex: next.pageIndex })
       if (next.pageSize !== state.pagination.pageSize) dispatch({ type: 'SET_PAGE_SIZE', pageSize: next.pageSize })
     },
+    onGroupingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(state.grouping) : updater
+      dispatch({ type: 'SET_GROUPING', grouping: next })
+    },
+    onExpandedChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(state.expanded) : updater
+      dispatch({ type: 'SET_EXPANDED', expanded: next })
+    },
     globalFilterFn: effectiveGlobalFilterFn,
     manualSorting,
     manualFiltering,
     manualPagination,
     enableRowPinning: true,
     keepPinnedRows: true,
+    // Keep grouped columns in their configured position instead of TanStack's default reorder.
+    groupedColumnMode: false,
     pageCount: manualPagination && totalRowCount != null ? Math.ceil(totalRowCount / state.pagination.pageSize) : undefined,
     getCoreRowModel: getCoreRowModel(),
     ...(manualSorting ? {} : { getSortedRowModel: getSortedRowModel() }),
     ...(manualFiltering ? {} : { getFilteredRowModel: getFilteredRowModel() }),
+    ...(groupingActive ? { getGroupedRowModel: getGroupedRowModel(), getExpandedRowModel: getExpandedRowModel() } : {}),
     ...(paginationEnabled && !manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
   })
 
@@ -250,8 +322,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const visibleRows = table.getRowModel().rows
   const visibleLeafColumns = table.getVisibleLeafColumns()
   const centerLeafColumns = table.getCenterVisibleLeafColumns()
-  const visibleIds = visibleRows.map((row) => row.id)
-  const visibleData = visibleRows.map((row) => row.original)
+  // Group rows have no `original`; selection/copy/context must only ever see leaf rows.
+  const visibleLeafRows = visibleRows.filter((row) => !row.getIsGrouped())
+  const visibleIds = visibleLeafRows.map((row) => row.id)
+  const visibleData = visibleLeafRows.map((row) => row.original)
   const exportData = (manualFiltering ? table.getRowModel().rows : table.getFilteredRowModel().rows).map((row) => row.original)
   const footerTotalRows = manualPagination ? (totalRowCount ?? rowCount) : table.getFilteredRowModel().rows.length
   const footerPageCount = manualPagination
@@ -292,6 +366,97 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
+
+  const projectedView = useMemo(() => projectView(state), [state])
+  const projectedViewKey = useMemo(() => JSON.stringify(projectedView), [projectedView])
+  const currentSavedView = useMemo(() => {
+    if (!savedViewsEnabled) return undefined
+    return savedViewItems.find((item) => JSON.stringify(item.view) === projectedViewKey)
+  }, [projectedViewKey, savedViewItems, savedViewsEnabled])
+  const selectedRows = useMemo(
+    () => rows.filter((row) => state.rowSelection[getRowId(row)]),
+    [getRowId, rows, state.rowSelection],
+  )
+  const selectedRowIds = useMemo(() => selectedRows.map(getRowId), [getRowId, selectedRows])
+  const visibleRowIds = useMemo(() => visibleData.map(getRowId), [getRowId, visibleData])
+  const saveCurrentView = useCallback(
+    (name: string) => createSavedView(name, projectedView),
+    [createSavedView, projectedView],
+  )
+  const applySavedViewById = useCallback(
+    (id: string) => applySavedView(id, view.applyView),
+    [applySavedView, view.applyView],
+  )
+  const resetCurrentView = useCallback(
+    () => resetSavedView(view.applyView),
+    [resetSavedView, view.applyView],
+  )
+  const clearSelection = useCallback(
+    () => dispatch({ type: 'CLEAR_SELECTION' }),
+    // dispatch is stable for our purposes; recreating per render is harmless here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const contextSnapshot = useMemo<DataGridContextSnapshot<TData>>(() => ({
+    totalRowCount: footerTotalRows,
+    visibleRowCount: visibleData.length,
+    selectedRowCount: selectedRows.length,
+    visibleRows: visibleData,
+    selectedRows,
+    globalFilter: state.globalFilter,
+    columnFilters: state.columnFilters,
+    sorting: state.sorting,
+    savedViews: savedViewsEnabled ? savedViewItems.map((item) => ({ id: item.id, name: item.name })) : [],
+    currentSavedView: currentSavedView ? { id: currentSavedView.id, name: currentSavedView.name } : undefined,
+    actions: {
+      saveCurrentView,
+      applySavedView: applySavedViewById,
+      resetView: resetCurrentView,
+      clearSelection,
+    },
+  }), [
+    applySavedViewById,
+    clearSelection,
+    currentSavedView,
+    footerTotalRows,
+    resetCurrentView,
+    saveCurrentView,
+    savedViewItems,
+    savedViewsEnabled,
+    selectedRows,
+    state.columnFilters,
+    state.globalFilter,
+    state.sorting,
+    visibleData,
+  ])
+  const contextReportKey = useMemo(() => JSON.stringify({
+    totalRowCount: footerTotalRows,
+    visibleRowIds,
+    selectedRowIds,
+    globalFilter: state.globalFilter,
+    columnFilters: state.columnFilters,
+    sorting: state.sorting,
+    savedViews: savedViewItems.map((item) => ({ id: item.id, name: item.name })),
+    currentSavedView: currentSavedView ? { id: currentSavedView.id, name: currentSavedView.name } : undefined,
+    projectedViewKey,
+  }), [
+    currentSavedView,
+    footerTotalRows,
+    projectedViewKey,
+    savedViewItems,
+    selectedRowIds,
+    state.columnFilters,
+    state.globalFilter,
+    state.sorting,
+    visibleRowIds,
+  ])
+  const lastContextReportKeyRef = useRef('')
+
+  useEffect(() => {
+    if (contextReportKey === lastContextReportKeyRef.current) return
+    lastContextReportKeyRef.current = contextReportKey
+    onContextChange?.(contextSnapshot)
+  }, [contextReportKey, contextSnapshot, onContextChange])
 
   const updateDragPreview = (activeId: string, overId: string) => {
     if (!isMovableColumnId(activeId)) {
@@ -342,6 +507,95 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [scrollElement, columns],
   )
+
+  const [editSession, setEditSession] = useState<EditSession | null>(null)
+  const [dirtyCells, setDirtyCells] = useState<DirtyCells>({})
+  const columnsById = useMemo(() => new Map(columns.map((column) => [column.id, column])), [columns])
+
+  const refocusActiveCell = useCallback(() => {
+    restoreGridFocusRef.current = true
+    setFocus((current) => ({ ...current }))
+  }, [])
+
+  const startEditing = useCallback(
+    (rowId: string, columnId: string) => {
+      const row = rows.find((item) => getRowId(item) === rowId)
+      if (!row || !isColumnEditable(columnsById.get(columnId))) return
+      setEditSession(startEdit(editMode, rowId, columnId, columns, row))
+    },
+    [columns, columnsById, editMode, getRowId, rows],
+  )
+
+  const cancelEditing = useCallback(() => {
+    setEditSession(null)
+    refocusActiveCell()
+  }, [refocusActiveCell])
+
+  const commitEditing = useCallback(
+    (move?: 'next' | 'prev') => {
+      if (!editSession) return
+      const row = rows.find((item) => getRowId(item) === editSession.rowId)
+      if (!row) {
+        setEditSession(null)
+        return
+      }
+      const result = commitSession(editSession, columns, row)
+      if (!result.ok) {
+        setEditSession({ ...editSession, errors: result.errors })
+        return
+      }
+      if (Object.keys(result.patch).length > 0) {
+        onRowUpdate?.(editSession.rowId, result.patch as Partial<TData>, row)
+        setDirtyCells((current) => markDirty(current, editSession.rowId, result.changed))
+      }
+      if (move && editSession.mode === 'cell') {
+        const step = move === 'next' ? 1 : -1
+        const from = visibleColumnIds.indexOf(editSession.columnId)
+        for (let index = from + step; index >= 0 && index < visibleColumnIds.length; index += step) {
+          if (isColumnEditable(columnsById.get(visibleColumnIds[index]))) {
+            setFocus((current) => ({ ...current, col: index }))
+            setEditSession(startEdit('cell', editSession.rowId, visibleColumnIds[index], columns, row))
+            return
+          }
+        }
+      }
+      setEditSession(null)
+      refocusActiveCell()
+    },
+    [columns, columnsById, editSession, getRowId, onRowUpdate, refocusActiveCell, rows, visibleColumnIds],
+  )
+
+  const editingApi: GridEditingApi | undefined = editingEnabled
+    ? {
+        session: editSession,
+        isEditable: (columnId) => isColumnEditable(columnsById.get(columnId)),
+        isDirty: (rowId, columnId) => isDirtyCell(dirtyCells, rowId, columnId),
+        editorFor: (columnId) => {
+          const column = columnsById.get(columnId)
+          return column
+            ? { type: editorTypeFor(column), options: column.meta?.options }
+            : { type: 'text' }
+        },
+        start: startEditing,
+        setDraft: (columnId, value) => setEditSession((session) => (session ? setDraft(session, columnId, value) : session)),
+        commit: commitEditing,
+        cancel: cancelEditing,
+      }
+    : undefined
+
+  const renderAggregatedCell = useCallback(
+    (columnId: string, leafRows: TData[]) => {
+      const column = columnsById.get(columnId)
+      if (!column?.aggregate) return null
+      const value = aggregate(column.aggregate, leafRows.map((row) => resolveColumnValue(column, row)))
+      if (column.aggregatedCell) return column.aggregatedCell({ value })
+      return <span className="num text-muted">{formatAggregate(value, column.type)}</span>
+    },
+    [columnsById],
+  )
+
+  const hasAggregates = columns.some((column) => column.aggregate !== undefined)
+  const footerAggregates = hasAggregates ? computeAggregates(columns, exportData) : {}
 
   const visibleSelectedCountRef = useRef(visibleSelectedCount)
   const focusTargetRef = useRef<{ rowId: string; colId: string } | null>(null)
@@ -537,6 +791,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     }
     const row = visibleRows[focus.row]
     if (!row) return
+    if (row.getIsGrouped()) {
+      if (intent === 'primary-action') {
+        event.preventDefault()
+        row.toggleExpanded()
+      }
+      return
+    }
     if (intent === 'toggle-select' && enableRowSelection) {
       event.preventDefault()
       dispatch({ type: 'TOGGLE_ROW', id: row.id })
@@ -544,6 +805,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     }
     if (intent === 'primary-action') {
       event.preventDefault()
+      const colId = visibleColumnIds[focus.col]
+      if (editingApi && colId && editingApi.isEditable(colId)) {
+        editingApi.start(row.id, colId)
+        return
+      }
       const rowEl = scrollElement?.querySelector<HTMLElement>(`[data-row-id="${row.id}"]`)
       rowEl?.querySelector<HTMLButtonElement>('button:not([data-grid-copy])')?.click()
     }
@@ -590,17 +856,19 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         columnVisibility={state.columnVisibility}
         globalFilter={state.globalFilter}
         density={state.density}
+        grouping={state.grouping}
+        enableGrouping={groupingActive}
         dispatch={dispatch}
         enableExport={enableExport}
         enableHeaderFilters={enableHeaderFilters}
         headerFiltersOpen={headerFiltersOpen}
         onToggleHeaderFilters={() => setHeaderFiltersOpen((value) => !value)}
         onExportCsv={exportCsv}
-        savedViews={savedViewsEnabled ? savedViews.views.map((item) => ({ id: item.id, name: item.name })) : undefined}
-        onSaveView={(name) => savedViews.create(name, projectView(state))}
-        onApplyView={(id) => savedViews.apply(id, view.applyView)}
-        onDeleteView={(id) => savedViews.remove(id)}
-        onResetView={() => savedViews.reset(view.applyView)}
+        savedViews={savedViewsEnabled ? savedViewItems.map((item) => ({ id: item.id, name: item.name })) : undefined}
+        onSaveView={saveCurrentView}
+        onApplyView={applySavedViewById}
+        onDeleteView={removeSavedView}
+        onResetView={resetCurrentView}
       />
       {enableRowSelection && selCount > 0 && (
         <div className="flex items-center justify-between border-b border-line px-3 py-2">
@@ -644,6 +912,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
               onFocusCell={(row, col) => setFocus({ row, col })}
               onAutofitColumn={autofitColumn}
               pinnedOffsets={pinnedColumnOffsets}
+              enableGrouping={groupingActive}
+              grouping={state.grouping}
             />
             {!loading && error === undefined && rowCount > 0 && (
               <DataGridBody
@@ -661,6 +931,18 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 columnWindow={columnWindow}
                 visibleColumnIds={visibleColumnIds}
                 onFocusCell={(row, col) => setFocus({ row, col })}
+                pinnedOffsets={pinnedColumnOffsets}
+                editing={editingApi}
+                renderAggregatedCell={groupingActive ? renderAggregatedCell : undefined}
+              />
+            )}
+            {hasAggregates && !loading && error === undefined && rowCount > 0 && (
+              <DataGridAggregationFooter
+                table={table}
+                aggregates={footerAggregates}
+                rowCount={footerTotalRows}
+                enableRowSelection={enableRowSelection}
+                columnWindow={columnWindow}
                 pinnedOffsets={pinnedColumnOffsets}
               />
             )}

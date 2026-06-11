@@ -19,6 +19,10 @@ export type GridColumnType =
   | 'status'
   | 'actions'
 
+export type AggregateKind = 'sum' | 'avg' | 'min' | 'max' | 'count'
+
+export type GridExpandedState = true | Record<string, boolean>
+
 export interface LedgerCellContext<TData, TValue = unknown> {
   value: TValue
   row: TData
@@ -49,6 +53,16 @@ export interface LedgerGridColumn<TData, TValue = unknown> {
   pinnable?: boolean
   hideable?: boolean
   exportable?: boolean
+  /** Opt-in: the column can be edited inline. Requires `accessorKey` so commits can patch the row. */
+  editable?: boolean
+  /** Returns an error message to block the commit, or null/undefined to accept. */
+  validate?: (value: TValue, row: TData) => string | null | undefined
+  /** Opt-in: the column appears in "Group by" menus and grouping chips. */
+  groupable?: boolean
+  /** Aggregate shown in group summary rows and the totals footer. */
+  aggregate?: AggregateKind
+  /** Custom renderer for aggregated values; defaults to type-aware formatting. */
+  aggregatedCell?: (ctx: { value: unknown }) => ReactNode
 }
 
 export interface LedgerGridState {
@@ -63,6 +77,8 @@ export interface LedgerGridState {
   rowPinning: { top: string[]; bottom: string[] }
   pagination: { pageIndex: number; pageSize: number }
   density: Density
+  grouping: string[]
+  expanded: GridExpandedState
 }
 
 export interface ColumnPinning {
@@ -110,4 +126,8 @@ export type GridAction =
   | { type: 'UNPIN_ROW'; rowId: string }
   | { type: 'SET_PAGE_INDEX'; pageIndex: number }
   | { type: 'SET_PAGE_SIZE'; pageSize: number }
+  | { type: 'SET_GROUPING'; grouping: string[] }
+  | { type: 'TOGGLE_GROUP_BY'; columnId: string }
+  | { type: 'CLEAR_GROUPING' }
+  | { type: 'SET_EXPANDED'; expanded: GridExpandedState }
   | { type: 'APPLY_VIEW'; state: LedgerGridState }

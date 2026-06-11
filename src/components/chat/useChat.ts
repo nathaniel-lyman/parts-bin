@@ -6,12 +6,20 @@ const genId = () => `msg_${Date.now().toString(36)}_${(counter++).toString(36)}`
 
 export type ChatStatus = 'idle' | 'streaming'
 
+export interface ChatController {
+  messages: ChatMessageData[]
+  status: ChatStatus
+  send: (text: string) => void
+  stop: () => void
+  regenerate: () => void
+}
+
 /**
  * Chat state machine over any ChatAdapter. One in-flight stream at a time;
  * stop() aborts it keeping partial text as a completed message; regenerate()
  * re-streams the last user turn (also the retry path for errored messages).
  */
-export function useChat(adapter: ChatAdapter) {
+export function useChat(adapter: ChatAdapter): ChatController {
   const [messages, setMessages] = useState<ChatMessageData[]>([])
   const [status, setStatus] = useState<ChatStatus>('idle')
   const controllerRef = useRef<AbortController | null>(null)

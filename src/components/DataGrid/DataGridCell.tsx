@@ -1,7 +1,9 @@
 import './columnMeta'
 import { flexRender, type Cell } from '@tanstack/react-table'
-import type { CSSProperties, MouseEvent } from 'react'
+import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 import type { ColumnDragPreviewState } from './dragPreview'
+import { isEditingCell, type GridEditingApi } from './editing'
+import { DataGridCellEditor } from './DataGridCellEditor'
 
 function CopyGlyph() {
   return (
@@ -23,6 +25,9 @@ export function DataGridCell<TData>({
   pinnedSide,
   pinnedOffset = 0,
   onFocusCell,
+  editing,
+  groupContent,
+  aggregatedContent,
 }: {
   cell: Cell<TData, unknown>
   onContextMenu?: (event: MouseEvent<HTMLTableCellElement>) => void
@@ -34,6 +39,11 @@ export function DataGridCell<TData>({
   pinnedSide?: 'left' | 'right'
   pinnedOffset?: number
   onFocusCell?: (row: number, col: number) => void
+  editing?: GridEditingApi
+  /** Rendered instead of the normal cell content for a grouped cell (chevron + value + count). */
+  groupContent?: ReactNode
+  /** Rendered instead of the normal cell content for an aggregated cell in a group row. */
+  aggregatedContent?: ReactNode
 }) {
   const align = cell.column.columnDef.meta?.align
   const isActions = cell.column.id === 'actions'
@@ -50,7 +60,12 @@ export function DataGridCell<TData>({
     ...(pinnedSide === 'left' ? { position: 'sticky', left: pinnedOffset, zIndex: 10 } : {}),
     ...(pinnedSide === 'right' ? { position: 'sticky', right: pinnedOffset, zIndex: 10 } : {}),
   }
-  const showCopy = onCopy !== undefined && !isActions
+  const isGroupCell = groupContent !== undefined || aggregatedContent !== undefined
+  const editable = !isGroupCell && editing !== undefined && editing.isEditable(cell.column.id)
+  const isEditing = editable && isEditingCell(editing.session, cell.row.id, cell.column.id, editing.isEditable)
+  const isDirty = !isGroupCell && editing !== undefined && editing.isDirty(cell.row.id, cell.column.id)
+  const showCopy = onCopy !== undefined && !isActions && !isEditing && !isGroupCell
+  const editor = isEditing ? editing.editorFor(cell.column.id) : undefined
   return (
     <td
       role="gridcell"
@@ -58,14 +73,46 @@ export function DataGridCell<TData>({
       data-column-id={cell.column.id}
       data-row-index={rowIndex}
       data-col-index={colIndex}
+      data-cell-dirty={isDirty ? 'true' : undefined}
       style={style}
       tabIndex={focused ? 0 : -1}
       onContextMenu={onContextMenu}
+      onDoubleClick={
+        editable && !isEditing
+          ? (event) => {
+              event.stopPropagation()
+              editing.start(cell.row.id, cell.column.id)
+            }
+          : undefined
+      }
       onFocus={() => {
         if (rowIndex !== undefined && colIndex !== undefined) onFocusCell?.(rowIndex, colIndex)
       }}
     >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      {isEditing && editor ? (
+        <DataGridCellEditor
+          columnId={cell.column.id}
+          editorType={editor.type}
+          options={editor.options}
+          value={editing.session?.drafts[cell.column.id] ?? ''}
+          error={editing.session?.errors[cell.column.id]}
+          align={align}
+          onChange={(value) => editing.setDraft(cell.column.id, value)}
+          onCommit={(move) => editing.commit(move)}
+          onCancel={() => editing.cancel()}
+        />
+      ) : isGroupCell ? (
+        groupContent ?? aggregatedContent
+      ) : (
+        flexRender(cell.column.columnDef.cell, cell.getContext())
+      )}
+      {isDirty && !isEditing && (
+        <span
+          aria-hidden="true"
+          data-testid="dirty-marker"
+          className="absolute right-0 top-0 border-l-8 border-t-8 border-l-transparent border-t-accent"
+        />
+      )}
       {showCopy && (
         <button
           type="button"

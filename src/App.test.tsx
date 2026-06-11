@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { ToastProvider } from './components/ui/ToastProvider'
+import { SAVED_VIEWS_KEY } from './hooks/useSavedViews'
 
 afterEach(() => {
   window.history.pushState({}, '', '/')
@@ -168,6 +169,26 @@ test('components route drops dashboard-only header controls and wires global sea
   expect(screen.queryByRole('heading', { name: 'Button' })).not.toBeInTheDocument()
 })
 
+test('composer route renders a guided starter and hides dashboard-only controls', () => {
+  window.history.pushState({}, '', '/compose')
+  render(<ToastProvider><App /></ToastProvider>)
+
+  expect(screen.getByRole('heading', { name: 'App composer' })).toBeInTheDocument()
+  expect(screen.getByText('Guided build')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Generate screen' })).toBeInTheDocument()
+  expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /risks/i })).not.toBeInTheDocument()
+})
+
+test('docs start alias renders the app composer', () => {
+  window.history.pushState({}, '', '/docs/start')
+  render(<ToastProvider><App /></ToastProvider>)
+
+  expect(screen.getByRole('heading', { name: 'App composer' })).toBeInTheDocument()
+  expect(screen.queryByText('Component imports')).not.toBeInTheDocument()
+})
+
 test('revenue movement chart exposes bar width and label controls', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   const widthControl = screen.getByRole('slider', { name: /revenue movement bar width/i })
@@ -197,11 +218,41 @@ test('assistant opens from the top nav and answers with live MRR', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
   expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: 'How is MRR looking?' }))
+  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'How is MRR looking?{Enter}')
   // waitFor + getByText (not findByText): each streamed chunk re-renders the
   // markdown and replaces its DOM nodes, so a node captured by findByText can
   // detach before the assertion runs. Re-querying inside waitFor is race-free.
   // Generous timeout: the demo adapter streams ~40 jittered 24ms chunks, slow
   // under parallel-suite load.
   await waitFor(() => expect(screen.getByText(/Total MRR is/)).toBeInTheDocument(), { timeout: 10000 })
+})
+
+test('assistant summarizes selected rows from the current grid context', async () => {
+  const user = userEvent.setup()
+  render(<ToastProvider><App /></ToastProvider>)
+
+  await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
+  await user.click(screen.getByRole('button', { name: 'Open assistant' }))
+  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Summarize selected accounts{Enter}')
+
+  await waitFor(() => expect(screen.getAllByText((_content, node) => (
+    node?.tagName === 'P' && (node.textContent?.includes('You selected 1 account') ?? false)
+  )).length).toBeGreaterThan(0), { timeout: 10000 })
+  expect(screen.getAllByText(/Cobalt Freight/).length).toBeGreaterThan(0)
+})
+
+test('assistant creates a saved view from the current grid context', async () => {
+  const user = userEvent.setup()
+  render(<ToastProvider><App /></ToastProvider>)
+
+  await user.click(screen.getByRole('button', { name: 'Open assistant' }))
+  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Create a saved view for this screen{Enter}')
+
+  await waitFor(() => {
+    const saved = JSON.parse(localStorage.getItem(SAVED_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
+    expect(saved.some((view) => view.name === 'Current accounts')).toBe(true)
+  }, { timeout: 10000 })
+  await waitFor(() => expect(screen.getAllByText((_content, node) => (
+    node?.textContent?.includes('Saved view created') ?? false
+  )).length).toBeGreaterThan(0), { timeout: 10000 })
 })

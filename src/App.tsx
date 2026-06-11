@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useServerData } from './hooks/useServerData'
@@ -11,6 +11,7 @@ import {
   generateAccounts,
   toGridQuery,
   DEFAULT_STATE,
+  type DataGridContextSnapshot,
   type GridQuery,
 } from './components/DataGrid'
 import { AccountFormModal } from './components/AccountFormModal'
@@ -37,7 +38,17 @@ import {
   type CommandPaletteGroup,
   type DateRange,
 } from './components/ui'
-import { AssistantPanel, createDemoAdapter, DEMO_SUGGESTIONS } from './components/chat'
+import {
+  AssistantPanel,
+  contextualAssistantSuggestions,
+  createDemoAdapter,
+  useChat,
+  type AssistantActions,
+  type AssistantGridContext,
+  type AssistantRouteKind,
+  type AssistantScreenContext,
+  type RecommendationFeedbackAction,
+} from './components/chat'
 import {
   AppShell,
   FilterButton,
@@ -49,7 +60,7 @@ import {
   UserAvatarMenu,
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
-import { CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './components/templates'
+import { AppComposerPage, CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './components/templates'
 import { revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
@@ -86,6 +97,13 @@ function formatCurrencyK(value: number) {
   return `${value < 0 ? '-' : ''}$${formatCompactKValue(value)}k`
 }
 
+function filterValueLabel(value: unknown): string {
+  if (value == null) return ''
+  if (Array.isArray(value)) return value.map(filterValueLabel).filter(Boolean).join(', ')
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
 function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGridColumn<Account>[] {
   const actions = columns.find((column) => column.id === 'actions')
   const base = columns.filter((column) => column.id !== 'actions')
@@ -110,9 +128,19 @@ interface DashboardPageProps {
   globalSearch: string
   atRiskOnly: boolean
   timePeriodLabel: string
+  onAssistantGridContextChange?: (
+    context: AssistantGridContext,
+    actions: DataGridContextSnapshot<Account>['actions'],
+  ) => void
 }
 
-function DashboardPage({ accountsApi, globalSearch, atRiskOnly, timePeriodLabel }: DashboardPageProps) {
+function DashboardPage({
+  accountsApi,
+  globalSearch,
+  atRiskOnly,
+  timePeriodLabel,
+  onAssistantGridContextChange,
+}: DashboardPageProps) {
   const { accounts, create, update, remove } = accountsApi
   const toast = useToast()
   const params = new URLSearchParams(window.location.search)
@@ -148,6 +176,29 @@ function DashboardPage({ accountsApi, globalSearch, atRiskOnly, timePeriodLabel 
     const columns = accountGridColumns({ onEdit: setEditing, onDelete: setDeleting })
     return wideColumns ? wideAccountGridColumns(columns) : columns
   }, [setDeleting, setEditing, wideColumns])
+  const handleAssistantGridContextChange = useCallback(
+    (snapshot: DataGridContextSnapshot<Account>) => {
+      onAssistantGridContextChange?.({
+        visibleAccounts: snapshot.visibleRows,
+        selectedAccounts: snapshot.selectedRows,
+        totalRowCount: snapshot.totalRowCount,
+        visibleRowCount: snapshot.visibleRowCount,
+        selectedRowCount: snapshot.selectedRowCount,
+        globalSearch,
+        quickFilter: snapshot.globalFilter,
+        atRiskOnly,
+        timePeriodLabel,
+        columnFilters: snapshot.columnFilters.map((filter) => ({
+          id: filter.id,
+          value: filterValueLabel(filter.value),
+        })),
+        sorting: snapshot.sorting.map((sort) => ({ id: sort.id, desc: sort.desc })),
+        savedViews: snapshot.savedViews,
+        currentSavedViewName: snapshot.currentSavedView?.name,
+      }, snapshot.actions)
+    },
+    [atRiskOnly, globalSearch, onAssistantGridContextChange, timePeriodLabel],
+  )
 
   return (
     <>
@@ -255,6 +306,14 @@ function DashboardPage({ accountsApi, globalSearch, atRiskOnly, timePeriodLabel 
           onQueryChange={serverMode ? setServerQuery : undefined}
           loading={serverMode && server.status === 'loading'}
           error={serverMode && server.status === 'error' ? server.error : undefined}
+          onContextChange={handleAssistantGridContextChange}
+          enableGrouping={!serverMode}
+          onRowUpdate={serverMode ? undefined : (id, patch, row) => {
+            // ARR is derived: keep it in sync when MRR is edited inline.
+            const next = patch.mrr !== undefined ? { ...patch, arr: Number(patch.mrr) * 12 } : patch
+            update(id, next)
+            toast(`Saved ${row.name}`, 'accent')
+          }}
         />
       </main>
 
@@ -294,19 +353,48 @@ export default function App() {
   const accountsApi = useAccounts()
   const accountsRef = useRef(accountsApi.accounts)
   useLayoutEffect(() => { accountsRef.current = accountsApi.accounts })
-  // getAccounts reads accountsRef.current only when the adapter's send() is
-  // called (async, not during render). The disable-next-line suppresses the
-  // react-hooks/refs false-positive for passing a ref-reading getter to useMemo.
-  // eslint-disable-next-line react-hooks/refs
-  const assistantAdapter = useMemo(() => createDemoAdapter(() => accountsRef.current), [])
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const assistantGridContextRef = useRef<AssistantGridContext | undefined>(undefined)
+  const gridAssistantActionsRef = useRef<DataGridContextSnapshot<Account>['actions'] | null>(null)
+  const [customerAssistantDraft, setCustomerAssistantDraft] = useState<{ id: number } | undefined>()
+  const [recommendationAssistantFeedback, setRecommendationAssistantFeedback] = useState<{
+    id: number
+    action: RecommendationFeedbackAction
+  } | undefined>()
   const pathname = appPath()
   const loginActive = pathname === '/login'
   const settingsActive = pathname === '/settings'
   const docsActive = pathname === '/docs'
+  const composerActive = pathname === '/compose' || pathname === '/docs/start'
   const customerTemplateActive = pathname === '/templates/customer-success' || pathname === '/examples'
   const recommendationTemplateActive = pathname === '/templates/recommendation-review'
   const templateActive = customerTemplateActive || recommendationTemplateActive
+  const kitActive = docsActive || composerActive
+  const accountsActive = !loginActive && !kitActive && !templateActive && !settingsActive
+  const routeKind: AssistantRouteKind = settingsActive
+    ? 'settings'
+    : composerActive
+      ? 'composer'
+      : docsActive
+        ? 'components'
+        : recommendationTemplateActive
+          ? 'recommendation-review'
+          : customerTemplateActive
+            ? 'customer-success'
+            : accountsActive
+              ? 'accounts'
+              : 'unknown'
+  const routeLabel = settingsActive
+    ? 'Settings'
+    : composerActive
+      ? 'App composer'
+      : docsActive
+        ? 'Component catalog'
+        : recommendationTemplateActive
+          ? 'Recommendation review'
+          : customerTemplateActive
+            ? 'Customer success'
+            : 'Accounts'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
@@ -324,6 +412,92 @@ export default function App() {
   const timePeriodLabel = [...timePeriodOptions, customTimePeriodOption].find((option) => option.value === timePeriod)?.label ?? customTimePeriodOption.label
   const dateRangeLabel = formatDateRangeLabel(dateRange)
   const dashboardPeriodLabel = dateRange.start || dateRange.end ? `${timePeriodLabel} · ${dateRangeLabel}` : timePeriodLabel
+  const handleAssistantGridContextChange = useCallback((
+    context: AssistantGridContext,
+    actions: DataGridContextSnapshot<Account>['actions'],
+  ) => {
+    gridAssistantActionsRef.current = actions
+    assistantGridContextRef.current = context
+  }, [])
+  const assistantShellContext = useMemo<AssistantScreenContext>(() => ({
+    route: pathname,
+    routeLabel,
+    routeKind,
+    activeTemplate: customerTemplateActive
+      ? 'Customer success'
+      : recommendationTemplateActive
+        ? 'Recommendation review'
+        : composerActive
+          ? 'App composer'
+          : undefined,
+    globalSearch,
+    atRiskOnly,
+    timePeriodLabel: dashboardPeriodLabel,
+  }), [
+    atRiskOnly,
+    composerActive,
+    customerTemplateActive,
+    dashboardPeriodLabel,
+    globalSearch,
+    pathname,
+    recommendationTemplateActive,
+    routeKind,
+    routeLabel,
+  ])
+  const assistantShellContextRef = useRef(assistantShellContext)
+  useLayoutEffect(() => { assistantShellContextRef.current = assistantShellContext })
+  const assistantActions = useMemo<AssistantActions>(() => ({
+    createSavedView: (name) => {
+      const trimmedName = name.trim() || 'Assistant view'
+      const viewId = gridAssistantActionsRef.current?.saveCurrentView(trimmedName)
+      if (!viewId) {
+        return {
+          title: 'No grid view saved',
+          body: 'Open the account grid first so I can save its current filters, columns, sort, density, and page size.',
+        }
+      }
+      toast(`Saved view ${trimmedName}`, 'pos')
+      return {
+        title: 'Saved view created',
+        body: `Saved **${trimmedName}** from the current account grid. You can apply it from the grid Views menu.`,
+      }
+    },
+    draftTouchpointNote: () => {
+      window.history.pushState({}, '', appHref('/templates/customer-success'))
+      setCustomerAssistantDraft({ id: Date.now() })
+      return {
+        title: 'Touchpoint note drafted',
+        body: 'Opened the customer success template and prepared the touchpoint drawer with a renewal-risk follow-up note.',
+      }
+    },
+    fillRecommendationFeedback: (action) => {
+      window.history.pushState({}, '', appHref('/templates/recommendation-review'))
+      setRecommendationAssistantFeedback({ id: Date.now(), action })
+      return {
+        title: 'Recommendation feedback prepared',
+        body: `Opened the recommendation review template and prepared the **${action}** feedback drawer for the selected recommendation.`,
+      }
+    },
+  }), [toast])
+  const assistantSuggestions = useMemo(
+    () => contextualAssistantSuggestions(assistantShellContext),
+    [assistantShellContext],
+  )
+  // getAccounts/getContext read refs only when the adapter's send() runs
+  // asynchronously. The disable-next-line suppresses the react-hooks/refs
+  // false-positive for passing ref-reading getters through useMemo.
+  // eslint-disable-next-line react-hooks/refs
+  const assistantAdapter = useMemo(() => createDemoAdapter(() => accountsRef.current, {
+    getContext: () => {
+      const shell = assistantShellContextRef.current
+      return {
+        ...shell,
+        grid: shell.routeKind === 'accounts' ? assistantGridContextRef.current : undefined,
+      }
+    },
+    actions: assistantActions,
+  }), [assistantActions])
+  const assistantChat = useChat(assistantAdapter)
   const handleTimePeriodChange = (nextPeriod: string) => {
     setTimePeriod(nextPeriod)
     const preset = dateRangePresets.find((option) => option.id === nextPeriod)
@@ -352,6 +526,13 @@ export default function App() {
           description: 'Live Ledger UI reference',
           shortcut: 'G C',
           onSelect: () => { navigate('/docs') },
+        },
+        {
+          id: 'composer',
+          label: 'Open app composer',
+          description: 'Build a routed Ledger admin screen',
+          shortcut: 'G A',
+          onSelect: () => { navigate('/compose') },
         },
         {
           id: 'template',
@@ -429,9 +610,10 @@ export default function App() {
       collapsed={sidebarCollapsed}
       onCollapsedChange={setSidebarCollapsed}
       items={[
-        { label: 'Accounts', href: appHref('/'), active: !docsActive && !templateActive && !settingsActive },
+        { label: 'Accounts', href: appHref('/'), active: !kitActive && !templateActive && !settingsActive },
         { label: 'Customer success', href: appHref('/templates/customer-success'), active: customerTemplateActive, meta: 'app' },
         { label: 'Review queue', href: appHref('/templates/recommendation-review'), active: recommendationTemplateActive, meta: 'app' },
+        { label: 'Compose', href: appHref('/compose'), active: composerActive, meta: 'start' },
         { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
       ]}
       adminItems={[
@@ -445,19 +627,19 @@ export default function App() {
     <TopNav
       breadcrumbs={[
         { label: 'Ledger', href: appHref('/') },
-        { label: settingsActive ? 'Settings' : docsActive ? 'Components' : recommendationTemplateActive ? 'Review queue' : customerTemplateActive ? 'Customer success' : 'Accounts' },
+        { label: routeLabel },
       ]}
-      title={settingsActive ? 'Settings' : docsActive ? 'Component catalog' : recommendationTemplateActive ? 'Recommendation review' : customerTemplateActive ? 'Customer success' : 'Accounts'}
+      title={routeLabel}
       actions={
         <>
           <GlobalSearchInput
-            className="hidden w-[190px] md:block"
+            className="hidden w-[190px] xl:block"
             placeholder={docsActive ? 'Search components' : 'Search workspace'}
             aria-label="Global search"
             value={globalSearch}
             onChange={(event) => setGlobalSearch(event.target.value)}
           />
-          {!docsActive && !settingsActive && (
+          {!kitActive && !settingsActive && (
             <>
               {/* Secondary controls collapse on narrow viewports so the bar
                   stays one row; everything hidden here remains reachable via
@@ -477,14 +659,23 @@ export default function App() {
                   presets={dateRangePresets}
                 />
               </div>
-              <div className="hidden lg:block">
+              <div className="hidden 2xl:block">
                 <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
               </div>
               <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
             </>
           )}
           <IconButton aria-label="Open assistant" onClick={() => setAssistantOpen(true)}>✦</IconButton>
-          <CommandPalette groups={commandGroups} />
+          <CommandPalette
+            groups={commandGroups}
+            trigger={(
+              <>
+                <span className="sr-only">Command</span>
+                <span aria-hidden="true" className="sm:hidden">Cmd</span>
+                <span aria-hidden="true" className="hidden sm:inline">Command</span>
+              </>
+            )}
+          />
           <Button onClick={toggle}>{mode === 'dark' ? 'Light' : 'Dark'}</Button>
           <UserAvatarMenu
             name="Morgan"
@@ -505,6 +696,8 @@ export default function App() {
     <AppShell sidebar={sidebar} topNav={topNav}>
       {settingsActive ? (
         <SettingsPage />
+      ) : composerActive ? (
+        <AppComposerPage />
       ) : docsActive ? (
         <DocsPage globalSearch={globalSearch} />
       ) : customerTemplateActive ? (
@@ -512,19 +705,28 @@ export default function App() {
           globalSearch={globalSearch}
           atRiskOnly={atRiskOnly}
           timePeriodLabel={dashboardPeriodLabel}
+          assistantDraft={customerAssistantDraft}
         />
       ) : recommendationTemplateActive ? (
         <RecommendationReviewTemplate
           globalSearch={globalSearch}
           timePeriodLabel={dashboardPeriodLabel}
+          assistantFeedback={recommendationAssistantFeedback}
         />
       ) : (
-        <DashboardPage accountsApi={accountsApi} globalSearch={globalSearch} atRiskOnly={atRiskOnly} timePeriodLabel={dashboardPeriodLabel} />
+        <DashboardPage
+          accountsApi={accountsApi}
+          globalSearch={globalSearch}
+          atRiskOnly={atRiskOnly}
+          timePeriodLabel={dashboardPeriodLabel}
+          onAssistantGridContextChange={handleAssistantGridContextChange}
+        />
       )}
       {assistantOpen && (
         <AssistantPanel
           adapter={assistantAdapter}
-          suggestions={DEMO_SUGGESTIONS}
+          chat={assistantChat}
+          suggestions={assistantSuggestions}
           onClose={() => setAssistantOpen(false)}
         />
       )}

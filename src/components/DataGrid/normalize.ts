@@ -74,6 +74,19 @@ export function normalizeSorting(sorting: SortingState): SortingState {
   return sorting.filter((item) => !isLockedColumn(item.id))
 }
 
+export function normalizeGrouping(value: unknown, columnIds?: readonly string[]): string[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  const grouping: string[] = []
+  for (const id of value) {
+    if (typeof id !== 'string' || id === ACTIONS_COLUMN_ID || seen.has(id)) continue
+    if (columnIds?.length && !columnIds.includes(id)) continue
+    seen.add(id)
+    grouping.push(id)
+  }
+  return grouping
+}
+
 export function normalizeState(state: LedgerGridState, columnIds?: readonly string[]): LedgerGridState {
   const columnOrder = normalizeColumnOrder(state.columnOrder, columnIds)
   const columnPinning = normalizeColumnPinning(state.columnPinning)
@@ -81,5 +94,6 @@ export function normalizeState(state: LedgerGridState, columnIds?: readonly stri
     state.columnVisibility[ACTIONS_COLUMN_ID] === false
       ? { ...state.columnVisibility, [ACTIONS_COLUMN_ID]: true }
       : state.columnVisibility
-  return { ...state, columnOrder, columnPinning, columnVisibility }
+  const grouping = normalizeGrouping(state.grouping, columnIds)
+  return { ...state, columnOrder, columnPinning, columnVisibility, grouping }
 }

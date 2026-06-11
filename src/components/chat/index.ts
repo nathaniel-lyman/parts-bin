@@ -1,6 +1,20 @@
 export * from './types'
-export { useChat, type ChatStatus } from './useChat'
-export { createDemoAdapter, DEMO_SUGGESTIONS } from './demoAdapter'
+export { useChat, type ChatController, type ChatStatus } from './useChat'
+export {
+  createDemoAdapter,
+  contextualAssistantSuggestions,
+  DEMO_SUGGESTIONS,
+  type AssistantActions,
+  type AssistantActionResult,
+  type AssistantGridContext,
+  type AssistantGridFilterRef,
+  type AssistantGridSortRef,
+  type AssistantRouteKind,
+  type AssistantSavedViewRef,
+  type AssistantScreenContext,
+  type DemoAdapterOptions,
+  type RecommendationFeedbackAction,
+} from './demoAdapter'
 export { ChatMarkdown, type ChatMarkdownProps } from './ChatMarkdown'
 export { CodeBlock, type CodeBlockProps } from './CodeBlock'
 export { ChatMessageBubble, type ChatMessageBubbleProps } from './ChatMessageBubble'

@@ -198,6 +198,43 @@ export function paginationReducer(
   }
 }
 
+export function groupingReducer(slice: string[], action: GridAction): string[] {
+  switch (action.type) {
+    case 'SET_GROUPING':
+      return action.grouping.filter((id) => id !== ACTIONS_COLUMN_ID)
+    case 'TOGGLE_GROUP_BY':
+      if (action.columnId === ACTIONS_COLUMN_ID) return slice
+      return slice.includes(action.columnId)
+        ? slice.filter((id) => id !== action.columnId)
+        : [...slice, action.columnId]
+    case 'CLEAR_GROUPING':
+    case 'RESET_COLUMNS':
+      return []
+    default:
+      return slice
+  }
+}
+
+export function expandedReducer(
+  slice: LedgerGridState['expanded'],
+  action: GridAction,
+  nextGrouping?: string[],
+): LedgerGridState['expanded'] {
+  switch (action.type) {
+    case 'SET_EXPANDED':
+      return action.expanded
+    case 'SET_GROUPING':
+    case 'TOGGLE_GROUP_BY':
+      // Grouping changed: expand everything when grouped, reset when ungrouped.
+      return nextGrouping && nextGrouping.length > 0 ? true : {}
+    case 'CLEAR_GROUPING':
+    case 'RESET_COLUMNS':
+      return {}
+    default:
+      return slice
+  }
+}
+
 function sortActionReducer(slice: SortingState, action: GridAction): SortingState {
   switch (action.type) {
     case 'SET_SORT': {
@@ -272,7 +309,22 @@ export function gridReducer<TData>(
         columnSizing: columnSizingReducer(state.columnSizing, action, columns),
         columnPinning: columnPinningReducer(state.columnPinning, action),
         density: densityReducer(state.density, action),
+        grouping: groupingReducer(state.grouping, action),
+        expanded: action.type === 'RESET_COLUMNS' ? {} : state.expanded,
       }, columnIds)
+    case 'SET_GROUPING':
+    case 'TOGGLE_GROUP_BY':
+    case 'CLEAR_GROUPING': {
+      const grouping = groupingReducer(state.grouping, action)
+      return normalizeState({
+        ...state,
+        grouping,
+        expanded: expandedReducer(state.expanded, action, grouping),
+        pagination: { ...state.pagination, pageIndex: 0 },
+      }, columnIds)
+    }
+    case 'SET_EXPANDED':
+      return { ...state, expanded: expandedReducer(state.expanded, action) }
     case 'SET_SORT':
     case 'CLEAR_SORT':
       return { ...state, sorting: normalizeSorting(sortActionReducer(state.sorting, action)) }

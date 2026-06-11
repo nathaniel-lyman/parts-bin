@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityFeed,
   Button,
@@ -20,8 +20,13 @@ import { FilterBar } from '../shell'
 import { fmtCurrency } from '../../lib/format'
 
 type RecommendationStatus = 'New' | 'Reviewed' | 'Accepted' | 'Rejected' | 'Scheduled'
-type FeedbackAction = 'accept' | 'modify' | 'reject' | 'flag'
+export type FeedbackAction = 'accept' | 'modify' | 'reject' | 'flag'
 type SortMode = 'impact' | 'confidence'
+
+export interface RecommendationAssistantFeedback {
+  id: number
+  action: FeedbackAction
+}
 
 interface Recommendation {
   id: string
@@ -422,9 +427,10 @@ function RecommendationCode({ code }: { code: string }) {
 interface RecommendationReviewTemplateProps {
   globalSearch: string
   timePeriodLabel: string
+  assistantFeedback?: RecommendationAssistantFeedback
 }
 
-export function RecommendationReviewTemplate({ globalSearch, timePeriodLabel }: RecommendationReviewTemplateProps) {
+export function RecommendationReviewTemplate({ globalSearch, timePeriodLabel, assistantFeedback }: RecommendationReviewTemplateProps) {
   const toast = useToast()
   const [statusFilter, setStatusFilter] = useState<(typeof statusOrder)[number]>('All')
   const [category, setCategory] = useState('all')
@@ -437,6 +443,7 @@ export function RecommendationReviewTemplate({ globalSearch, timePeriodLabel }: 
   const [feedbackAction, setFeedbackAction] = useState<FeedbackAction | null>(null)
   const [feedbackReason, setFeedbackReason] = useState(reasonOptions.accept[0])
   const [feedbackNote, setFeedbackNote] = useState('Reviewed against scope, readiness, and projected lift.')
+  const lastAssistantFeedbackId = useRef<number | null>(null)
 
   const enriched = useMemo(
     () => recommendations.map((recommendation) => ({
@@ -479,6 +486,18 @@ export function RecommendationReviewTemplate({ globalSearch, timePeriodLabel }: 
       tone: 'accent' as EventTone,
     },
   ]
+
+  useEffect(() => {
+    if (!assistantFeedback || assistantFeedback.id === lastAssistantFeedbackId.current) return
+    lastAssistantFeedbackId.current = assistantFeedback.id
+    const action = assistantFeedback.action
+    setFeedbackAction(action)
+    setFeedbackReason(reasonOptions[action][0])
+    setFeedbackNote(action === 'modify'
+      ? `Assistant draft: adjust scope or launch timing for ${selected.title}; confirm readiness gaps before routing.`
+      : `Assistant draft: ${actionLabels[action].toLowerCase()} this recommendation based on scope, readiness, and projected lift.`)
+    toast(`Prepared ${actionLabels[action].toLowerCase()} feedback for ${selected.title}`, 'accent')
+  }, [assistantFeedback, selected.title, toast])
 
   const openFeedback = (action: FeedbackAction) => {
     setFeedbackAction(action)

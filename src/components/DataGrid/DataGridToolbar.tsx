@@ -6,10 +6,12 @@ import { DENSITIES, DENSITY_LABELS } from './types'
 import type { Density, GridAction, LedgerGridColumn } from './types'
 
 interface Props<TData> {
-  columns: Pick<LedgerGridColumn<TData>, 'id' | 'header' | 'hideable'>[]
+  columns: Pick<LedgerGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable'>[]
   columnVisibility: Record<string, boolean>
   globalFilter: string
   density: Density
+  grouping?: string[]
+  enableGrouping?: boolean
   dispatch: (action: GridAction) => void
   enableExport?: boolean
   enableHeaderFilters?: boolean
@@ -28,6 +30,8 @@ export function DataGridToolbar<TData>({
   columnVisibility,
   globalFilter,
   density,
+  grouping = [],
+  enableGrouping,
   dispatch,
   enableExport,
   enableHeaderFilters,
@@ -44,6 +48,10 @@ export function DataGridToolbar<TData>({
   const [viewsOpen, setViewsOpen] = useState(false)
   const [draftName, setDraftName] = useState('')
   const hideable = columns.filter((column) => column.hideable !== false && column.id !== 'actions')
+  const headerFor = (id: string) => {
+    const column = columns.find((item) => item.id === id)
+    return typeof column?.header === 'string' && column.header ? column.header : id
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
@@ -55,6 +63,36 @@ export function DataGridToolbar<TData>({
         value={globalFilter}
         onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}
       />
+      {enableGrouping && grouping.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5" data-testid="grouping-chips">
+          <span className="micro text-faint">Grouped by</span>
+          {grouping.map((id) => (
+            <span
+              key={id}
+              className="micro flex items-center gap-1 rounded-[2px] bg-accent-soft px-1.5 py-0.5 text-accent"
+            >
+              {headerFor(id)}
+              <button
+                type="button"
+                aria-label={`Remove grouping by ${headerFor(id)}`}
+                className="hover:text-ink"
+                onClick={() => dispatch({ type: 'TOGGLE_GROUP_BY', columnId: id })}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+          {grouping.length > 1 && (
+            <button
+              type="button"
+              className="micro text-muted hover:text-ink"
+              onClick={() => dispatch({ type: 'CLEAR_GROUPING' })}
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+      )}
       <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
         {enableExport && (
           <Button size="compact" onClick={onExportCsv} aria-label="Export CSV">

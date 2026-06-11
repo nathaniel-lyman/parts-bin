@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest'
-import { createDemoAdapter, DEMO_SUGGESTIONS } from './demoAdapter'
+import {
+  contextualAssistantSuggestions,
+  createDemoAdapter,
+  DEMO_SUGGESTIONS,
+  type AssistantScreenContext,
+} from './demoAdapter'
 import { totalMrr } from '../../selectors/metrics'
 import { fmtCurrency } from '../../lib/format'
 import type { Account } from '../../data/types'
@@ -14,6 +19,30 @@ const fixture: Account[] = [
 const userMsg = (content: string): ChatMessageData[] => [
   { id: 'u1', role: 'user', content, status: 'done' },
 ]
+
+const screenContext: AssistantScreenContext = {
+  route: '/',
+  routeLabel: 'Accounts',
+  routeKind: 'accounts',
+  globalSearch: 'kim',
+  atRiskOnly: false,
+  timePeriodLabel: 'Last 90 days',
+  grid: {
+    visibleAccounts: fixture.slice(0, 2),
+    selectedAccounts: [fixture[1]],
+    totalRowCount: 3,
+    visibleRowCount: 2,
+    selectedRowCount: 1,
+    globalSearch: 'kim',
+    quickFilter: 'startup',
+    atRiskOnly: false,
+    timePeriodLabel: 'Last 90 days',
+    columnFilters: [{ id: 'segment', value: 'Startup' }],
+    sorting: [{ id: 'mrr', desc: true }],
+    savedViews: [{ id: 'view-1', name: 'Risk queue' }],
+    currentSavedViewName: 'Risk queue',
+  },
+}
 
 async function collect(adapter: ChatAdapter, text: string): Promise<string> {
   const controller = new AbortController()
@@ -76,6 +105,36 @@ describe('createDemoAdapter', () => {
     const after = await collect(liveAdapter, 'mrr')
     expect(before).toContain(fmtCurrency(1200))
     expect(after).toContain(fmtCurrency(2000))
+  })
+
+  test('summarizes selected accounts from screen context', async () => {
+    const contextualAdapter = createDemoAdapter(() => fixture, { delayMs: 0, getContext: () => screenContext })
+    const out = await collect(contextualAdapter, 'summarize selected accounts')
+    expect(out).toContain('You selected **1** account')
+    expect(out).toContain('Globex')
+    expect(out).not.toContain('Acme')
+  })
+
+  test('creates a saved view through the registered screen action', async () => {
+    let savedName = ''
+    const contextualAdapter = createDemoAdapter(() => fixture, {
+      delayMs: 0,
+      getContext: () => screenContext,
+      actions: {
+        createSavedView: (name) => {
+          savedName = name
+          return { title: 'Saved view created', body: `Saved ${name}.` }
+        },
+      },
+    })
+
+    const out = await collect(contextualAdapter, 'create a saved view called "Startup watch"')
+    expect(savedName).toBe('Startup watch')
+    expect(out).toContain('Saved view created')
+  })
+
+  test('contextual suggestions reflect selected grid rows', () => {
+    expect(contextualAssistantSuggestions(screenContext)[0]).toBe('Summarize 1 selected account')
   })
 
   test('exports one suggestion per route', () => {

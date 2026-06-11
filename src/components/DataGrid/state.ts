@@ -24,6 +24,8 @@ export const DEFAULT_STATE: LedgerGridState = {
   rowPinning: { top: [], bottom: [] },
   pagination: { pageIndex: 0, pageSize: 25 },
   density: 'compact',
+  grouping: [],
+  expanded: {},
 }
 
 export interface HydrateOptions {

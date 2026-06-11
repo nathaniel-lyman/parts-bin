@@ -26,6 +26,7 @@ export function AccountsScreen() {
 }`
 
 const copyChecklist: Array<[string, string]> = [
+  ['Composer', 'Open /compose to select an admin use case, layout, theme recipe, and data mapping before copying code.'],
   ['Template', 'Start from /templates/customer-success or /templates/recommendation-review when you want a complete internal app screen instead of isolated primitives.'],
   ['Theme', 'Copy src/theme/ and import theme/theme.css at your root. Re-skin via tokens.css only.'],
   ['Primitives', 'Copy src/components/ui/ and import from the ./ui barrel (Button, Field, Drawer, IconButton, InlineAlert, SegmentedControl, …).'],
@@ -57,7 +58,12 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
         eyebrow="Ledger UI Kit"
         title="Component reference"
         description="Every component is cataloged in src/components/catalog.ts — this gallery renders that manifest, so coverage is structural. Click any card for import, props, near-twins, and a copy-paste snippet."
-        actions={<Button variant="primary" onClick={() => { navigate('/') }}>Open dashboard</Button>}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="primary" onClick={() => { navigate('/compose') }}>Open composer</Button>
+            <Button variant="secondary" onClick={() => { navigate('/') }}>Open dashboard</Button>
+          </div>
+        }
       />
 
       <div className="grid gap-6">
@@ -65,16 +71,17 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
           <ComponentGallery onSelect={setSelected} externalQuery={globalSearch} />
         </Card>
 
-        <Card title="Copy Ledger into your app" description="Ledger is a clone-and-customize kit, not an npm package. Copy the theme, primitives, shell, charts, and DataGrid — plus the lint rule — into the app you are building.">
+        <Card title="Copy Ledger into your app" description="Ledger is a clone-and-customize kit, not an npm package. Start in the composer, then copy the theme, primitives, shell, charts, and DataGrid into the app you are building.">
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
                 <h2 className="m-0 text-[15px] font-semibold text-ink">Start with a real app template</h2>
-                <p className="m-0 text-[13px] text-muted">Use a clone-ready screen when you need workflow structure: KPIs, queues, custom review lists, detail panels, activity, and drawer forms.</p>
+                <p className="m-0 text-[13px] text-muted">Use the composer for a routed screen plan, or jump straight into a clone-ready workflow surface.</p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Button variant="primary" onClick={() => { navigate('/compose') }}>App composer</Button>
                 <Button variant="secondary" onClick={() => { navigate('/templates/customer-success') }}>Customer success</Button>
-                <Button variant="primary" onClick={() => { navigate('/templates/recommendation-review') }}>Recommendation review</Button>
+                <Button variant="secondary" onClick={() => { navigate('/templates/recommendation-review') }}>Recommendation review</Button>
               </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">

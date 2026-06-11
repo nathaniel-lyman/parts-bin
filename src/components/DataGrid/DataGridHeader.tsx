@@ -43,6 +43,8 @@ function SortableHeader<TData>({
   pinnedOffset = 0,
   onFocusCell,
   onAutofitColumn,
+  enableGrouping,
+  grouping = [],
 }: {
   header: Header<TData, unknown>
   dispatch?: (action: GridAction) => void
@@ -57,6 +59,8 @@ function SortableHeader<TData>({
   pinnedOffset?: number
   onFocusCell?: (row: number, col: number) => void
   onAutofitColumn?: (columnId: string) => void
+  enableGrouping?: boolean
+  grouping?: string[]
 }) {
   const sorted = header.column.getIsSorted()
   const multiSortActive = header.getContext().table.getState().sorting.length > 1
@@ -142,6 +146,8 @@ function SortableHeader<TData>({
               hideable={source?.hideable ?? true}
               canPin={source?.pinnable ?? true}
               pinSide={pinSide(header.column.id, columnPinning)}
+              canGroup={Boolean(enableGrouping && source?.groupable)}
+              isGrouped={grouping.includes(header.column.id)}
               dispatch={dispatch ?? noopDispatch}
               onAutofit={onAutofitColumn}
             />
@@ -183,6 +189,8 @@ export function DataGridHeader<TData>({
   onFocusCell,
   onAutofitColumn,
   pinnedOffsets,
+  enableGrouping = false,
+  grouping = [],
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
@@ -203,6 +211,8 @@ export function DataGridHeader<TData>({
   onFocusCell?: (row: number, col: number) => void
   onAutofitColumn?: (columnId: string) => void
   pinnedOffsets?: PinnedOffsets
+  enableGrouping?: boolean
+  grouping?: string[]
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -255,6 +265,8 @@ export function DataGridHeader<TData>({
                       pinnedOffset={pinnedOffsets?.left[header.column.id] ?? 0}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
+                      enableGrouping={enableGrouping}
+                      grouping={grouping}
                     />
                   )
                 })}
@@ -282,6 +294,8 @@ export function DataGridHeader<TData>({
                       focused={focus?.row === -1 && focus.col === colIndex}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
+                      enableGrouping={enableGrouping}
+                      grouping={grouping}
                     />
                   )
                 })}
@@ -308,6 +322,8 @@ export function DataGridHeader<TData>({
                       pinnedOffset={pinnedOffsets?.right[header.column.id] ?? 0}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
+                      enableGrouping={enableGrouping}
+                      grouping={grouping}
                     />
                   )
                 })}

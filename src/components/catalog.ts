@@ -29,7 +29,7 @@ import {
   AppShell, Sidebar, TopNav, Breadcrumbs, FilterBar, SectionHeader, SettingsPanel,
   NotificationBadge,
 } from './shell'
-import { CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './templates'
+import { AppComposerPage, CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './templates'
 import { KpiCard, KpiSummaryRow } from './KpiCard'
 import { Sparkline } from './Sparkline'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -902,11 +902,11 @@ export const CATALOG: ComponentEntry[] = [
   // ── DataGrid ──────────────────────────────────────────────────────────────
   defineComponent(DataGrid, {
     name: 'DataGrid', import: './components/DataGrid', category: 'datagrid',
-    purpose: 'Headless-table-backed data grid: sort, filter, select, paginate, export, saved views.',
-    use_when: 'Displaying tabular records with interaction; the rows prop takes the data.',
-    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport'],
+    purpose: 'Headless-table-backed data grid: sort, filter, select, paginate, export, saved views, inline editing, grouping, aggregation.',
+    use_when: 'Displaying tabular records with interaction; the rows prop takes the data. Mark columns editable/groupable/aggregate to light up editing, grouping chips, and the totals footer.',
+    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport', 'onContextChange', 'enableGrouping', 'onRowUpdate', 'editMode'],
     related: ['Pagination', 'FacetedFilter', 'AppliedFiltersBar'],
-    snippet: `<DataGrid rows={accounts} columns={cols} getRowId={(r) => r.id} enableRowSelection />`,
+    snippet: `<DataGrid rows={accounts} columns={cols} getRowId={(r) => r.id} enableRowSelection enableGrouping onRowUpdate={(id, patch) => update(id, patch)} />`,
   }),
 
   // ── chat ──────────────────────────────────────────────────────────────────
@@ -915,7 +915,7 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Slide-over AI chat: empty state, streaming messages, composer — wired to any ChatAdapter.',
     use_when: 'An embedded AI assistant surface. Demo runs on createDemoAdapter; go live by passing an adapter that streams from a real LLM API.',
     prefer_over: { Drawer: 'Use Drawer for generic side panels; AssistantPanel for conversational AI surfaces.' },
-    props: ['adapter', 'onClose', 'title', 'suggestions'],
+    props: ['adapter', 'onClose', 'title', 'suggestions', 'chat'],
     related: ['ChatComposer', 'ChatMessageList'],
     snippet: `{open && <AssistantPanel adapter={createDemoAdapter(() => accounts)} suggestions={DEMO_SUGGESTIONS} onClose={close} />}`,
   }),
@@ -1094,6 +1094,14 @@ export const CATALOG: ComponentEntry[] = [
     props: ['globalSearch', 'atRiskOnly', 'timePeriodLabel'],
     related: ['DataGrid', 'KpiCard', 'AppShell'],
     snippet: `<CustomerSuccessTemplate globalSearch="" atRiskOnly={false} timePeriodLabel="Last 30 days" />`,
+  }),
+  defineComponent(AppComposerPage, {
+    name: 'AppComposerPage', import: './components/templates', category: 'starter',
+    purpose: 'Guided app composer that turns a use case, layout, theme, and data mapping into route/component snippets.',
+    use_when: 'Starting a new admin app route from Ledger instead of browsing isolated catalog parts.',
+    props: [],
+    related: ['CustomerSuccessTemplate', 'RecommendationReviewTemplate', 'SettingsPage', 'DataGrid'],
+    snippet: `<AppComposerPage />`,
   }),
   defineComponent(RecommendationReviewTemplate, {
     name: 'RecommendationReviewTemplate', import: './components/templates', category: 'starter',

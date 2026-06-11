@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { accountGlobalFilter, accountGridColumns } from '../accountGridColumns'
 import { DataGrid, DEFAULT_STATE } from '../DataGrid'
 import { KpiCard, KpiSummaryRow } from '../KpiCard'
@@ -125,9 +125,10 @@ interface TemplateProps {
   globalSearch: string
   atRiskOnly: boolean
   timePeriodLabel: string
+  assistantDraft?: { id: number }
 }
 
-export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLabel }: TemplateProps) {
+export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLabel, assistantDraft }: TemplateProps) {
   const { accounts } = useAccounts()
   const toast = useToast()
   const [localSearch, setLocalSearch] = useState('')
@@ -139,6 +140,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
   const [touchpointNote, setTouchpointNote] = useState('Confirm next milestone and owner before the weekly review.')
   const [touchpointOutcome, setTouchpointOutcome] = useState('accent')
   const [activityOverrides, setActivityOverrides] = useState<Record<string, ActivityEvent[]>>({})
+  const lastAssistantDraftId = useRef<number | null>(null)
 
   const combinedSearch = [globalSearch, localSearch].filter(Boolean).join(' ')
   const filteredAccounts = useMemo(() => accounts.filter((account) => {
@@ -174,6 +176,18 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
   const active = activeCount(filteredAccounts)
   const risk = atRiskCount(filteredAccounts)
   const selectedWorkItem = visibleWork.find((item) => item.accountId === selectedAccount?.id) ?? visibleWork[0]
+
+  useEffect(() => {
+    if (!assistantDraft || assistantDraft.id === lastAssistantDraftId.current || !selectedAccount) return
+    lastAssistantDraftId.current = assistantDraft.id
+    setTouchpointTitle(selectedAccount.status === 'Active' ? 'Expansion health check' : 'Renewal risk follow-up')
+    setTouchpointOutcome(selectedAccount.status === 'Active' ? 'positive' : 'warning')
+    setTouchpointNote(
+      `Follow up with ${selectedAccount.owner} on ${selectedAccount.name}. Confirm sponsor coverage, next milestone, and any renewal blockers before the weekly review.`,
+    )
+    setDrawerOpen(true)
+    toast(`Drafted touchpoint note for ${selectedAccount.name}`, 'accent')
+  }, [assistantDraft, selectedAccount, toast])
 
   const saveTouchpoint = () => {
     if (!selectedAccount) return

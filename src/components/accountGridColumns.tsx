@@ -30,6 +30,8 @@ export function buildAccountGridColumns(
       header: 'Account',
       align: 'left',
       type: 'text',
+      editable: true,
+      validate: (value) => (String(value).trim() === '' ? 'Name is required' : null),
       cell: (ctx) => <span className="text-ink">{String(ctx.value)}</span>,
     },
     {
@@ -38,6 +40,9 @@ export function buildAccountGridColumns(
       header: 'Owner',
       align: 'left',
       type: 'text',
+      editable: true,
+      groupable: true,
+      validate: (value) => (String(value).trim() === '' ? 'Owner is required' : null),
       cell: (ctx) => <span className="text-muted">{String(ctx.value)}</span>,
     },
     {
@@ -46,6 +51,8 @@ export function buildAccountGridColumns(
       header: 'Segment',
       align: 'left',
       type: 'status',
+      editable: true,
+      groupable: true,
       cell: (ctx) => <span className="text-muted">{String(ctx.value)}</span>,
     },
     {
@@ -54,6 +61,9 @@ export function buildAccountGridColumns(
       header: 'MRR',
       align: 'right',
       type: 'currency',
+      editable: true,
+      aggregate: 'sum',
+      validate: (value) => (Number(value) < 0 ? 'MRR cannot be negative' : null),
       cell: (ctx) => <span className="num text-ink">{fmtCurrency(Number(ctx.value))}</span>,
     },
     {
@@ -62,6 +72,8 @@ export function buildAccountGridColumns(
       header: 'Growth',
       align: 'right',
       type: 'percent',
+      editable: true,
+      aggregate: 'avg',
       cell: (ctx) => (
         <span className={`num ${Number(ctx.value) < 0 ? 'text-neg' : 'text-pos'}`}>
           {fmtDelta(Number(ctx.value))}
@@ -74,6 +86,8 @@ export function buildAccountGridColumns(
       header: 'Status',
       align: 'left',
       type: 'status',
+      editable: true,
+      groupable: true,
       cell: (ctx) => <StatusBadge status={ctx.value as Status} />,
     },
     {
@@ -82,6 +96,7 @@ export function buildAccountGridColumns(
       header: 'ARR',
       align: 'right',
       type: 'currency',
+      aggregate: 'sum',
       cell: (ctx) => <span className="num text-ink">{fmtCurrency(Number(ctx.value))}</span>,
     },
     {
