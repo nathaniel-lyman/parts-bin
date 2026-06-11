@@ -6,7 +6,7 @@
   --accent-fg: #ffffff;
   --intel: #7c3aed; --intel-soft: #ede9fe;
   --pos: #16a34a;   --pos-soft: #dcfce7;
-  --neg: #dc2626;   --neg-soft: #fee2e2;
+  --neg: #dc2626;   --neg-soft: #fee2e2; --neg-fg: #ffffff;
   --warn: #d97706;  --warn-soft: #fef3c7;
   --review: var(--warn); --review-soft: var(--warn-soft);
   --reject: var(--neg);  --reject-soft: var(--neg-soft);
@@ -24,7 +24,7 @@
   --popover: var(--surface);      --popover-foreground: var(--ink);
   --primary: var(--accent);       --primary-foreground: var(--accent-fg);
   --secondary: var(--surface-2);  --secondary-foreground: var(--ink);
-  --destructive: var(--neg);      --destructive-foreground: #ffffff;
+  --destructive: var(--neg);      --destructive-foreground: var(--neg-fg);
   --border: var(--line);          --input: var(--line);
   --ring: var(--accent);
 }
@@ -35,7 +35,7 @@
   --faint: #64748b;       --accent: #60a5fa;      --accent-soft: #172554;
   --intel: #a78bfa; --intel-soft: #2e1065;
   --pos: #22c55e;   --pos-soft: #052e16;
-  --neg: #f87171;   --neg-soft: #450a0a;
+  --neg: #f87171;   --neg-soft: #450a0a; --neg-fg: #020617;
   --warn: #f59e0b;  --warn-soft: #451a03;
   --review: var(--warn); --review-soft: var(--warn-soft);
   --reject: var(--neg);  --reject-soft: var(--neg-soft);

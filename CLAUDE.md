@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow preferences
+
+- Default to direct implementation — no TDD, no subagents, no multi-agent workflows unless I explicitly ask.
+- You may recommend a heavier approach (e.g. "this might benefit from TDD / a workflow") but wait for my confirmation before proceeding.
+
 ## What this is
 
 "Ledger" — a runnable Vite + React + TS dashboard that doubles as a **clone-and-customize theme starter**. The entire design system is isolated in `src/theme/` so the whole app can be re-skinned by editing one folder. `demo.html` (a standalone vanilla prototype) is the behavior reference; `THEME-SPEC.md` is the canonical design reference. The design spec and implementation plan live in `docs/superpowers/`.

@@ -27,6 +27,7 @@
   --color-pos-soft: var(--pos-soft);
   --color-neg: var(--neg);
   --color-neg-soft: var(--neg-soft);
+  --color-neg-fg: var(--neg-fg);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-review: var(--review);
