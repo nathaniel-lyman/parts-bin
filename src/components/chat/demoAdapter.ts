@@ -61,12 +61,16 @@ const INTEGRATE_ANSWER = [
   '',
   'export const claudeAdapter: ChatAdapter = {',
   '  async *send(messages, { signal }) {',
-  '    const stream = await client.messages.stream({',
+  '    const stream = client.messages.stream({',
   '      model: "claude-sonnet-4-6",',
   '      max_tokens: 1024,',
   '      messages: messages.map(({ role, content }) => ({ role, content })),',
   '    }, { signal })',
-  '    for await (const text of stream.textStream) yield text',
+  '    for await (const event of stream) {',
+  '      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {',
+  '        yield event.delta.text',
+  '      }',
+  '    }',
   '  },',
   '}',
   '```',
@@ -84,13 +88,17 @@ function fallbackAnswer(): string {
   ].join('\n')
 }
 
-/** First match wins, top to bottom. */
+/**
+ * First match wins, top to bottom. Left word boundaries prevent substring
+ * over-matches ('api' in "rapid", 'risk' in "asterisk") while keeping
+ * intentional prefix matches ('churn' → "churned", 'grow' → "growth").
+ */
 function route(text: string, accounts: Account[]): string {
   const q = text.toLowerCase()
-  if (q.includes('mrr') || q.includes('revenue')) return mrrAnswer(accounts)
-  if (q.includes('risk') || q.includes('churn')) return riskAnswer(accounts)
-  if (q.includes('grow')) return growthAnswer(accounts)
-  if (q.includes('integrate') || q.includes('adapter') || q.includes('api') || q.includes('code')) return INTEGRATE_ANSWER
+  if (/\bmrr/.test(q) || /\brevenue/.test(q)) return mrrAnswer(accounts)
+  if (/\brisk/.test(q) || /\bchurn/.test(q)) return riskAnswer(accounts)
+  if (/\bgrow/.test(q)) return growthAnswer(accounts)
+  if (/\bintegrat/.test(q) || /\badapter/.test(q) || /\bapi\b/.test(q) || /\bcode\b/.test(q)) return INTEGRATE_ANSWER
   return fallbackAnswer()
 }
 

@@ -120,4 +120,39 @@ describe('useChat', () => {
     act(() => result.current.regenerate())
     expect(calls).toHaveLength(0)
   })
+
+  test('double-fired regenerate in the same tick starts only one stream', async () => {
+    const { adapter, calls } = scriptedAdapter(['answer'])
+    const { result } = renderHook(() => useChat(adapter))
+
+    act(() => result.current.send('q'))
+    await waitFor(() => expect(result.current.status).toBe('idle'))
+    expect(calls).toHaveLength(1)
+
+    // Same-tick double fire: statusRef hasn't re-rendered between calls,
+    // so only the controllerRef guard can stop the second one.
+    act(() => {
+      result.current.regenerate()
+      result.current.regenerate()
+    })
+    await waitFor(() => expect(result.current.status).toBe('idle'))
+
+    expect(calls).toHaveLength(2)
+    expect(result.current.messages).toHaveLength(2)
+    expect(result.current.messages[1].status).toBe('done')
+  })
+
+  test('unmount mid-stream aborts cleanly without errors', async () => {
+    const { adapter, release } = gatedAdapter()
+    const { result, unmount } = renderHook(() => useChat(adapter))
+
+    act(() => result.current.send('q'))
+    await waitFor(() => expect(result.current.messages[1]?.content).toBe('partial '))
+
+    unmount()
+    release()
+    // Flush microtasks so the generator resumes and the disposed-path
+    // (no setState after unmount) runs; any throw would fail the test.
+    await act(async () => { await Promise.resolve() })
+  })
 })

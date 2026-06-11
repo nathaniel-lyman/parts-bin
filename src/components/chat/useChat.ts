@@ -78,7 +78,8 @@ export function useChat(adapter: ChatAdapter) {
   }, [])
 
   const regenerate = useCallback(() => {
-    if (statusRef.current === 'streaming') return
+    // controllerRef closes the same-tick race: statusRef only updates on re-render.
+    if (statusRef.current === 'streaming' || controllerRef.current !== null) return
     const history = [...messagesRef.current]
     while (history.length && history[history.length - 1].role === 'assistant') history.pop()
     if (!history.length) return
