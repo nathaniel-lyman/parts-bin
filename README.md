@@ -6,7 +6,7 @@
 A runnable dashboard starter implementing the **Ledger** design system: sharp, technical,
 data-first. Clone it, run it, customize it — or lift the `src/theme/` folder into your own app.
 
-**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/compose`, `/docs`, `/login`, and `/settings` in the running app.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/compose`, `/docs`, `/login`, `/settings`, and the workflow starters under `/templates/*`.
 
 ![Ledger dashboard, dark mode](docs/screenshots/dashboard-dark.png)
 
@@ -25,8 +25,9 @@ recipe) and every component, chart, and page re-skins — zero component edits, 
   developer) with your brand colors and KPIs, and you get a branded, interactive dashboard
   instead of another static spreadsheet. The [agent skills](#agent-skills) make that a guided,
   verified procedure, not a hope.
-- **Founders and PMs** who need a credible product demo fast — every page a dashboard product
-  needs is already built; `/compose` walks you through assembling your own.
+- **Founders and PMs** who need a credible product demo fast — the core dashboard, settings,
+  sign-in, component catalog, and workflow starter pages are already built; `/compose` walks you
+  through assembling your own.
 
 The demo domain is SaaS accounts and MRR, but nothing about the framework is SaaS-specific —
 see [the domain mapping below](#your-first-30-minutes) for what the same dashboard looks like
@@ -78,13 +79,16 @@ order — are written down in [`skills/swap-data-domain/SKILL.md`](skills/swap-d
 
 ## Pages out of the box
 
-Every surface a dashboard product needs, already built from the kit's own primitives. Start at
-**`/compose`** — the guided composer that assembles the rest of these into your app:
+The starter surfaces are already built from the kit's own primitives. Start at
+**`/compose`** — the guided composer that assembles routes, imports, data mapping, and theme snippets:
 
 | | |
 |---|---|
 | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — appearance, profile, notifications |
-| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live catalog of ~99 components | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — KPI + charts + data grid, light mode |
+| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live gallery/reference for 110 cataloged components | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — KPI + charts + DataGrid, light mode |
+
+Workflow starter routes are included too: **`/templates/customer-success`** for an account-health console and
+**`/templates/recommendation-review`** for a queue/detail review surface.
 
 ## What's inside
 - **`src/theme/`** — the entire design system (tokens, fonts, base styles, Tailwind mapping,
@@ -96,12 +100,16 @@ Every surface a dashboard product needs, already built from the kit's own primit
   empty/loading states, spinners, pagination, and toasts.
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
-- **`src/components/`** — dashboard components (KPI cards, data table with sort/filter/columns,
-  charts, forms). No raw colors; enforced by `npm run lint:theme`.
+- **`src/components/`** — dashboard components (KPI cards, DataGrid with sorting, filtering,
+  selection, saved views, grouping, editing, export, virtualization, charts, and forms). No raw
+  colors; enforced by `npm run lint:theme`.
+- **`src/components/chat/`** — a composable assistant panel with markdown messages, prompt chips,
+  streaming state, and a demo adapter that can read the current screen context.
 - **`src/components/templates/`** — full-page starters you can route to directly: a guided
-  **App composer** (`/compose`), a dashboard, two workflow consoles, plus a split brand-panel **Login** (`/login`) and a section-scroll
-  **Settings** (`/settings`) page. The starter pages are presentational demos — Settings'
-  Appearance section is the live home for color mode, theme recipe, and density.
+  **App composer** (`/compose`), a dashboard, two workflow consoles, plus a split brand-panel
+  **Login** (`/login`) and a section-scroll **Settings** (`/settings`) page. The starter pages
+  are presentational demos — Settings' Appearance section is the live home for color mode,
+  theme recipe, and density.
 - **`src/hooks/`, `src/selectors/`, `src/data/`** — client-side state, derived metrics, seed data.
 - **`/compose`** — guided admin-app composer that generates route, import, data-mapping, and theme snippets.
 - **`/docs`** — live component catalog with examples, prop guidance, and copy-paste usage snippets.
@@ -133,6 +141,7 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 | `npm run build` | typecheck + production build |
 | `npm run test` | run the Vitest suite |
 | `npm run lint:theme` | fail if raw colors leak outside `src/theme/` |
+| `npm run test:e2e` | run Playwright checks for layout-sensitive flows |
 
 ## Use Ledger in an existing app
 Copy-paste checklist (clone what you need, in order):
@@ -163,4 +172,4 @@ The default theme maps primary action, recommendation intelligence, success, rev
 reject/blocker states to `--accent`, `--intel`, `--pos`, `--warn`, and `--neg`.
 
 ## Tech
-Vite · React · TypeScript · Tailwind CSS v4 · Recharts · TanStack Table · Vitest
+Vite · React · TypeScript · Tailwind CSS v4 · Recharts · TanStack Table · Playwright · Vitest
