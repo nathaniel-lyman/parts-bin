@@ -389,9 +389,9 @@ export const CATALOG: ComponentEntry[] = [
   defineComponent(Drawer, {
     name: 'Drawer', import: './components/ui', category: 'overlay',
     purpose: 'Edge-anchored sliding panel with title, body, and footer.',
-    use_when: 'A contextual task or detail view that should keep the page in sight.',
+    use_when: 'A contextual task or detail view that should keep the page in sight. bodyClassName REPLACES (not merges with) the default body padding/scroll classes — for full-bleed layouts like AssistantPanel.',
     prefer_over: { Modal: 'Use Modal for a centered, fully blocking confirm/decision.' },
-    props: ['title', 'onClose', 'children', 'footer', 'side'],
+    props: ['title', 'onClose', 'children', 'footer', 'side', 'bodyClassName'],
     variants: { side: ['right', 'left'] },
     related: ['Modal'],
     snippet: `<Drawer title="Filters" side="right" onClose={close}>{body}</Drawer>`,

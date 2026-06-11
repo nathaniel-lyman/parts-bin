@@ -288,6 +288,9 @@ function DashboardPage({ accountsApi, globalSearch, atRiskOnly, timePeriodLabel 
 export default function App() {
   const { mode, toggle } = useTheme()
   const toast = useToast()
+  // Shared instance for the dashboard AND the assistant adapter, so the demo
+  // answers track live CRUD edits. (CustomerSuccessTemplate intentionally keeps
+  // its own read-only useAccounts instance.)
   const accountsApi = useAccounts()
   const accountsRef = useRef(accountsApi.accounts)
   useLayoutEffect(() => { accountsRef.current = accountsApi.accounts })

@@ -50,7 +50,10 @@ export function AssistantPanel({ adapter, onClose, title = 'Assistant', suggesti
                   onRegenerate={isLast ? regenerate : undefined}
                   onFeedback={() => toast('Thanks for the feedback')}
                 />
-              ) : message.status === 'error' ? (
+              ) : message.status === 'error' && isLast ? (
+                // isLast gate: regenerate() pops the LATEST assistant turn and
+                // re-streams the LATEST user question — a Retry on a non-last
+                // errored message would destroy the newer answer instead.
                 <div className="mt-1">
                   <Button size="compact" variant="secondary" onClick={regenerate}>Retry</Button>
                 </div>

@@ -26,6 +26,7 @@ export function MessageActions({ content, onRegenerate, onFeedback }: MessageAct
       )}
       {onFeedback && (
         <>
+          {/* Color emoji here is a conscious exception to the kit's monochrome-glyph convention (✦ ⧉ ↻): thumbs are instantly recognizable feedback affordances. */}
           <IconButton size="compact" aria-label="Good response" onClick={() => onFeedback('up')}>👍</IconButton>
           <IconButton size="compact" aria-label="Bad response" onClick={() => onFeedback('down')}>👎</IconButton>
         </>

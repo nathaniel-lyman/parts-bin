@@ -6,6 +6,7 @@ import { createDemoAdapter, DEMO_SUGGESTIONS } from './demoAdapter'
 import { totalMrr } from '../../selectors/metrics'
 import { fmtCurrency } from '../../lib/format'
 import type { Account } from '../../data/types'
+import type { ChatAdapter } from './types'
 
 const fixture: Account[] = [
   { id: 'a1', name: 'Acme', owner: 'Kim', segment: 'Enterprise', mrr: 1000, growth: 10, status: 'Active', arr: 12000, since: '2024-01-01' },
@@ -50,5 +51,28 @@ describe('AssistantPanel', () => {
     expect(scrim).not.toBeNull()
     await user.click(scrim as Element)
     expect(onClose).toHaveBeenCalled()
+  })
+
+  test('Retry renders only on the LAST errored message', async () => {
+    const user = userEvent.setup()
+    let calls = 0
+    const adapter: ChatAdapter = {
+      async *send() {
+        calls += 1
+        if (calls === 1) throw new Error('boom')
+        yield 'All good now.'
+      },
+    }
+    render(<AssistantPanel adapter={adapter} onClose={vi.fn()} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'first{Enter}')
+    expect(await screen.findByRole('button', { name: 'Retry' })).toBeInTheDocument()
+
+    // A new question demotes the errored turn to non-last; its Retry must
+    // disappear because regenerate() re-streams the LATEST user turn — clicking
+    // it from an older message would destroy the newer answer.
+    await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'second{Enter}')
+    expect(await screen.findByText('All good now.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
   })
 })
