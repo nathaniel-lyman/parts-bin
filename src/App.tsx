@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useServerData } from './hooks/useServerData'
@@ -30,12 +30,14 @@ import {
   CommandPalette,
   DateRangePicker,
   formatDateRangeLabel,
+  IconButton,
   PageHeader,
   Switch,
   useToast,
   type CommandPaletteGroup,
   type DateRange,
 } from './components/ui'
+import { AssistantPanel, createDemoAdapter, DEMO_SUGGESTIONS } from './components/chat'
 import {
   AppShell,
   FilterButton,
@@ -104,13 +106,14 @@ function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGri
 }
 
 interface DashboardPageProps {
+  accountsApi: ReturnType<typeof useAccounts>
   globalSearch: string
   atRiskOnly: boolean
   timePeriodLabel: string
 }
 
-function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardPageProps) {
-  const { accounts, create, update, remove } = useAccounts()
+function DashboardPage({ accountsApi, globalSearch, atRiskOnly, timePeriodLabel }: DashboardPageProps) {
+  const { accounts, create, update, remove } = accountsApi
   const toast = useToast()
   const params = new URLSearchParams(window.location.search)
   const requestedRows = Number(params.get('rows') ?? 0)
@@ -285,6 +288,11 @@ function DashboardPage({ globalSearch, atRiskOnly, timePeriodLabel }: DashboardP
 export default function App() {
   const { mode, toggle } = useTheme()
   const toast = useToast()
+  const accountsApi = useAccounts()
+  const accountsRef = useRef(accountsApi.accounts)
+  accountsRef.current = accountsApi.accounts
+  const assistantAdapter = useMemo(() => createDemoAdapter(() => accountsRef.current), [])
+  const [assistantOpen, setAssistantOpen] = useState(false)
   const pathname = appPath()
   const loginActive = pathname === '/login'
   const settingsActive = pathname === '/settings'
@@ -391,6 +399,13 @@ export default function App() {
           description: 'Preview the current notification state',
           onSelect: () => toast('3 revenue alerts', 'warn'),
         },
+        {
+          id: 'assistant',
+          label: 'Ask the assistant',
+          description: 'Open the AI assistant panel',
+          shortcut: 'A',
+          onSelect: () => setAssistantOpen(true),
+        },
       ],
     },
   ], [atRiskOnly, mode, toast, toggle])
@@ -461,6 +476,7 @@ export default function App() {
               <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
             </>
           )}
+          <IconButton aria-label="Open assistant" onClick={() => setAssistantOpen(true)}>✦</IconButton>
           <CommandPalette groups={commandGroups} />
           <Button onClick={toggle}>{mode === 'dark' ? 'Light' : 'Dark'}</Button>
           <UserAvatarMenu
@@ -496,7 +512,14 @@ export default function App() {
           timePeriodLabel={dashboardPeriodLabel}
         />
       ) : (
-        <DashboardPage globalSearch={globalSearch} atRiskOnly={atRiskOnly} timePeriodLabel={dashboardPeriodLabel} />
+        <DashboardPage accountsApi={accountsApi} globalSearch={globalSearch} atRiskOnly={atRiskOnly} timePeriodLabel={dashboardPeriodLabel} />
+      )}
+      {assistantOpen && (
+        <AssistantPanel
+          adapter={assistantAdapter}
+          suggestions={DEMO_SUGGESTIONS}
+          onClose={() => setAssistantOpen(false)}
+        />
       )}
     </AppShell>
   )

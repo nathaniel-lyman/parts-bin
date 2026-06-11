@@ -191,3 +191,12 @@ test('waterfall chart labels can be toggled', async () => {
   await userEvent.click(labelControl)
   expect(labelControl).toBeChecked()
 })
+
+test('assistant opens from the top nav and answers with live MRR', async () => {
+  const user = userEvent.setup()
+  render(<ToastProvider><App /></ToastProvider>)
+  await user.click(screen.getByRole('button', { name: 'Open assistant' }))
+  expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'How is MRR looking?' }))
+  expect(await screen.findByText(/Total MRR is/, {}, { timeout: 3000 })).toBeInTheDocument()
+})
