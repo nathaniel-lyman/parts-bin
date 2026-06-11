@@ -9,10 +9,12 @@ export interface DrawerProps {
   children: ReactNode
   footer?: ReactNode
   side?: 'right' | 'left'
+  /** REPLACES the default body classes ('flex-1 overflow-auto px-4 py-4') for full-bleed layouts. */
+  bodyClassName?: string
 }
 
 /** Slide-in side panel. Shares Modal's focus-trap behavior (no portal, no scroll lock). */
-export function Drawer({ title, onClose, children, footer, side = 'right' }: DrawerProps) {
+export function Drawer({ title, onClose, children, footer, side = 'right', bodyClassName }: DrawerProps) {
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
   useDialogFocusTrap(dialogRef, onClose)
@@ -38,7 +40,7 @@ export function Drawer({ title, onClose, children, footer, side = 'right' }: Dra
           <h2 id={titleId} className="display text-[16px] font-semibold text-ink">{title}</h2>
           <IconButton size="compact" aria-label="Close" onClick={onClose}>✕</IconButton>
         </div>
-        <div className="flex-1 overflow-auto px-4 py-4">{children}</div>
+        <div className={bodyClassName ?? 'flex-1 overflow-auto px-4 py-4'}>{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-4 py-3">{footer}</div>}
       </div>
     </div>
