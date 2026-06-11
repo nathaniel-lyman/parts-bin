@@ -13,6 +13,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   chart: 'Charts',
   datagrid: 'DataGrid',
   map: 'Maps',
+  chat: 'AI chat',
   shell: 'Shell',
   starter: 'Starters & templates',
 }

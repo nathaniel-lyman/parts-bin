@@ -34,10 +34,14 @@ import { KpiCard, KpiSummaryRow } from './KpiCard'
 import { Sparkline } from './Sparkline'
 import { ConfirmDialog } from './ConfirmDialog'
 import { AccountFormModal } from './AccountFormModal'
+import {
+  AssistantPanel, ChatComposer, ChatMarkdown, ChatMessageBubble, ChatMessageList,
+  CodeBlock, MessageActions, SuggestedPrompts,
+} from './chat'
 
 export const CATEGORIES = [
   'primitive', 'form', 'overlay', 'feedback',
-  'data-display', 'chart', 'datagrid', 'map', 'shell', 'starter',
+  'data-display', 'chart', 'datagrid', 'map', 'chat', 'shell', 'starter',
 ] as const
 export type Category = (typeof CATEGORIES)[number]
 
@@ -120,6 +124,8 @@ export const INTERNAL = new Map<string, string>([
   ['UserAvatarMenu', 'Composed by GlobalControls'],
   ['FilterButton', 'Composed by GlobalControls'],
   ['CalendarIconButton', 'Composed by GlobalControls'],
+  // chat composition pieces:
+  ['TypingIndicator', 'Rendered by ChatMessageBubble while the assistant is thinking'],
 ])
 
 /** Capitalized function exports that are NOT components (currently none). */
@@ -901,6 +907,71 @@ export const CATALOG: ComponentEntry[] = [
     props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport'],
     related: ['Pagination', 'FacetedFilter', 'AppliedFiltersBar'],
     snippet: `<DataGrid rows={accounts} columns={cols} getRowId={(r) => r.id} enableRowSelection />`,
+  }),
+
+  // ── chat ──────────────────────────────────────────────────────────────────
+  defineComponent(AssistantPanel, {
+    name: 'AssistantPanel', import: './components/chat', category: 'chat',
+    purpose: 'Slide-over AI chat: empty state, streaming messages, composer — wired to any ChatAdapter.',
+    use_when: 'An embedded AI assistant surface. Demo runs on createDemoAdapter; go live by passing an adapter that streams from a real LLM API.',
+    prefer_over: { Drawer: 'Use Drawer for generic side panels; AssistantPanel for conversational AI surfaces.' },
+    props: ['adapter', 'onClose', 'title', 'suggestions'],
+    related: ['ChatComposer', 'ChatMessageList'],
+    snippet: `{open && <AssistantPanel adapter={createDemoAdapter(() => accounts)} suggestions={DEMO_SUGGESTIONS} onClose={close} />}`,
+  }),
+  defineComponent(ChatMessageList, {
+    name: 'ChatMessageList', import: './components/chat', category: 'chat',
+    purpose: 'Chat scroll container that follows streaming output and releases when the reader scrolls up.',
+    use_when: 'Any custom chat layout; wrap ChatMessageBubble children.',
+    props: ['children', 'className'],
+    related: ['ChatMessageBubble'],
+    snippet: `<ChatMessageList>{messages.map((m) => <ChatMessageBubble key={m.id} message={m} />)}</ChatMessageList>`,
+  }),
+  defineComponent(ChatMessageBubble, {
+    name: 'ChatMessageBubble', import: './components/chat', category: 'chat',
+    purpose: 'One chat turn: user bubble, or assistant markdown with streaming cursor and error state.',
+    use_when: 'Rendering ChatMessageData from useChat; pass MessageActions via the actions slot.',
+    props: ['message', 'actions'],
+    related: ['MessageActions', 'ChatMarkdown'],
+    snippet: `<ChatMessageBubble message={m} actions={<MessageActions content={m.content} />} />`,
+  }),
+  defineComponent(ChatComposer, {
+    name: 'ChatComposer', import: './components/chat', category: 'chat',
+    purpose: 'Auto-growing chat input: Enter sends, Shift+Enter newlines, send morphs to Stop while streaming.',
+    use_when: 'The input row of any chat surface.',
+    props: ['onSend', 'streaming', 'onStop', 'placeholder', 'autoFocus'],
+    snippet: `<ChatComposer onSend={send} streaming={status === 'streaming'} onStop={stop} />`,
+  }),
+  defineComponent(ChatMarkdown, {
+    name: 'ChatMarkdown', import: './components/chat', category: 'chat',
+    purpose: 'Token-styled markdown renderer (GFM tables, lists, links, fenced code via CodeBlock).',
+    use_when: 'Rendering LLM output anywhere; re-skins with the theme tokens.',
+    prefer_over: { CodeBlock: 'Use CodeBlock directly only for standalone code; ChatMarkdown routes fenced blocks to it.' },
+    props: ['content'],
+    related: ['CodeBlock'],
+    snippet: `<ChatMarkdown content={assistantText} />`,
+  }),
+  defineComponent(CodeBlock, {
+    name: 'CodeBlock', import: './components/chat', category: 'chat',
+    purpose: 'Themed monospace code block with language label and copy-to-clipboard.',
+    use_when: 'Showing code outside markdown. No syntax highlighting by design (token boundary).',
+    props: ['code', 'language'],
+    snippet: `<CodeBlock code={'npm run dev'} language="bash" />`,
+  }),
+  defineComponent(MessageActions, {
+    name: 'MessageActions', import: './components/chat', category: 'chat',
+    purpose: 'Copy / regenerate / feedback action row for a completed assistant message.',
+    use_when: 'The actions slot of ChatMessageBubble.',
+    props: ['content', 'onRegenerate', 'onFeedback'],
+    related: ['ChatMessageBubble'],
+    snippet: `<MessageActions content={m.content} onRegenerate={regenerate} onFeedback={(k) => track(k)} />`,
+  }),
+  defineComponent(SuggestedPrompts, {
+    name: 'SuggestedPrompts', import: './components/chat', category: 'chat',
+    purpose: 'Clickable prompt chips for a chat empty state.',
+    use_when: 'Seeding a conversation with example questions.',
+    props: ['prompts', 'onSelect'],
+    snippet: `<SuggestedPrompts prompts={DEMO_SUGGESTIONS} onSelect={send} />`,
   }),
 
   // ── shell ─────────────────────────────────────────────────────────────────
