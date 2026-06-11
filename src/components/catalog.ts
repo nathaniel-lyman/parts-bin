@@ -2,7 +2,7 @@ import type { ComponentProps, ComponentType } from 'react'
 
 import {
   // primitives
-  Button, IconButton, Card, StatusBadge, PageHeader, Tag, Kbd,
+  Button, IconButton, Card, StatusBadge, PageHeader, Tag, Kbd, Link, Separator,
   // form controls
   Input, Textarea, Select, Combobox, MultiSelect, Checkbox, RadioGroup, Switch,
   SegmentedControl, Slider, Field, DatePicker, DateRangePicker,
@@ -180,6 +180,25 @@ export const CATALOG: ComponentEntry[] = [
     props: ['keys', 'children', 'className'],
     related: ['CommandPalette', 'Tooltip'],
     snippet: `<Kbd keys={['Ctrl', 'K']} />`,
+  }),
+  defineComponent(Link, {
+    name: 'Link', import: './components/ui', category: 'primitive',
+    purpose: 'Token-styled anchor with accent/muted variants and an external-link preset.',
+    use_when: 'Navigation rendered as text — inline references, "view all" links, footer links.',
+    prefer_over: { Button: 'Use Button (or variant="ghost") for actions that change state; Link is for navigation.' },
+    props: ['href', 'variant', 'external', 'children', 'className'],
+    variants: { variant: ['accent', 'muted'] },
+    related: ['Button', 'Breadcrumbs'],
+    snippet: `<Link href="/docs" variant="muted">Component docs</Link>`,
+  }),
+  defineComponent(Separator, {
+    name: 'Separator', import: './components/ui', category: 'primitive',
+    purpose: 'Hairline rule on the line token; horizontal or vertical, decorative by default.',
+    use_when: 'Visually dividing groups in toolbars, menus, cards, or stacked sections.',
+    props: ['orientation', 'decorative', 'className'],
+    variants: { orientation: ['horizontal', 'vertical'] },
+    related: ['Toolbar', 'SectionHeader'],
+    snippet: `<Separator orientation="vertical" className="mx-2" />`,
   }),
   defineComponent(PageHeader, {
     name: 'PageHeader', import: './components/ui', category: 'primitive',

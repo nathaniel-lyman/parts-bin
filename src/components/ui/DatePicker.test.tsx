@@ -84,3 +84,21 @@ test('date helpers format labels and trailing ranges', () => {
   expect(formatDateRangeLabel({ start: '2026-06-01', end: '2026-06-08' })).toBe('Jun 1, 2026 - Jun 8, 2026')
   expect(formatDateRangeLabel({ start: '', end: '' })).toBe('Select dates')
 })
+
+test('DateRangePicker renders the panel in a portal and traps focus like a dialog', async () => {
+  const user = userEvent.setup()
+  render(
+    <div style={{ overflow: 'hidden' }}>
+      <DateRangePicker value={{ start: '', end: '' }} onValueChange={() => {}} />
+    </div>,
+  )
+
+  const trigger = screen.getByRole('button', { name: /date range/i })
+  await user.click(trigger)
+  const dialog = screen.getByRole('dialog')
+  expect(dialog.parentElement).toBe(document.body)
+
+  await user.keyboard('{Escape}')
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(trigger).toHaveFocus()
+})

@@ -81,14 +81,17 @@ test('DropdownMenu supports arrow navigation, selection, and Escape focus return
   await waitFor(() => expect(trigger).toHaveFocus())
 })
 
-test('Popover closes with Escape and restores focus', async () => {
+test('Popover traps focus, closes with Escape, and restores focus', async () => {
   const user = userEvent.setup()
   render(<Popover trigger="Open filters"><Button>Apply</Button></Popover>)
 
   const trigger = screen.getByRole('button', { name: 'Open filters' })
   await user.click(trigger)
-  const dialog = screen.getByRole('dialog')
-  await waitFor(() => expect(dialog).toHaveFocus())
+  const apply = screen.getByRole('button', { name: 'Apply' })
+  await waitFor(() => expect(apply).toHaveFocus())
+
+  await user.tab()
+  expect(apply).toHaveFocus() // sole focusable — Tab cycles inside the dialog
 
   await user.keyboard('{Escape}')
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -123,17 +126,28 @@ test('Tabs expose tab-panel relationships and roving keyboard focus', async () =
   expect(onValueChange).toHaveBeenCalledWith('states')
 })
 
-test('Tooltip describes a focusable trigger', () => {
+test('Tooltip shows on focus, describes its trigger, and dismisses with Escape', async () => {
+  const user = userEvent.setup()
   render(
     <Tooltip content="Export visible rows">
       <Button>Export</Button>
     </Tooltip>,
   )
 
+  // Hidden tooltips stay out of the accessibility tree.
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+
+  await user.tab()
   const trigger = screen.getByRole('button', { name: 'Export' })
+  expect(trigger).toHaveFocus()
   const tooltip = screen.getByRole('tooltip')
   expect(trigger).toHaveAttribute('aria-describedby', tooltip.id)
   expect(tooltip).toHaveTextContent('Export visible rows')
+
+  // WCAG 1.4.13: dismissible without moving focus.
+  await user.keyboard('{Escape}')
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+  expect(trigger).toHaveFocus()
 })
 
 test('Field wires generated labels, descriptions, and invalid state', () => {

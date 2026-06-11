@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { cx } from './utils'
+import { useAnchoredPosition } from './useAnchoredPosition'
 
 export interface DropdownMenuItem {
   id: string
@@ -19,9 +21,10 @@ export interface DropdownMenuProps {
 export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProps) {
   const [open, setOpen] = useState(false)
   const menuId = useId()
-  const ref = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const menuStyle = useAnchoredPosition(open, triggerRef, menuRef, { align })
   const enabledItems = items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => !item.disabled)
@@ -29,7 +32,9 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
   useEffect(() => {
     if (!open) return undefined
     const onPointerDown = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      setOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
@@ -86,6 +91,11 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
     if (event.key === 'Escape') {
       event.preventDefault()
       close()
+    } else if (event.key === 'Tab') {
+      // The menu renders in a portal, so letting Tab proceed would drop focus
+      // somewhere unrelated in the document — close and return to the trigger.
+      event.preventDefault()
+      close()
     } else if (event.key === 'ArrowDown') {
       event.preventDefault()
       focusRelativeItem(index, 1)
@@ -107,7 +117,7 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
   }
 
   return (
-    <div ref={ref} className="relative inline-flex">
+    <>
       <button
         ref={triggerRef}
         type="button"
@@ -120,14 +130,13 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
       >
         {label}
       </button>
-      {open && (
+      {open && createPortal(
         <div
+          ref={menuRef}
           id={menuId}
           role="menu"
-          className={cx(
-            'absolute top-full z-40 mt-2 w-56 border border-line bg-surface p-1 shadow-dropdown',
-            align === 'end' ? 'right-0' : 'left-0',
-          )}
+          style={menuStyle}
+          className="z-50 w-56 border border-line bg-surface p-1 shadow-dropdown"
         >
           {items.map((item, index) => {
             const descriptionId = item.description ? `${menuId}-${item.id}-description` : undefined
@@ -155,8 +164,9 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
             </button>
             )
           })}
-        </div>
+        </div>,
+        document.body,
       )}
-    </div>
+    </>
   )
 }

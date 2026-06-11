@@ -1,5 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { Tag } from './Tag'
+import { useAnchoredPosition } from './useAnchoredPosition'
 import { cx, hasWidthUtility } from './utils'
 
 export interface MultiSelectOption {
@@ -48,6 +50,7 @@ export function MultiSelect({
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
 
   const [internalValues, setInternalValues] = useState<string[]>(defaultValues ?? [])
   const selectedValues = values ?? internalValues
@@ -70,11 +73,15 @@ export function MultiSelect({
   }, [options, query])
 
   const clampedActive = activeIndex < filtered.length ? activeIndex : 0
+  // gap 4 matches the mt-1 the list had before it moved to a portal.
+  const listStyle = useAnchoredPosition(open, containerRef, listRef, { gap: 4, matchWidth: true })
 
   useEffect(() => {
     if (!open) return undefined
     const onPointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (containerRef.current?.contains(target) || listRef.current?.contains(target)) return
+      setOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
@@ -175,12 +182,14 @@ export function MultiSelect({
           className="min-w-20 flex-1 bg-surface text-[13px] text-ink outline-none disabled:bg-surface-2 disabled:text-faint"
         />
       </div>
-      {open && (
+      {open && createPortal(
         <ul
+          ref={listRef}
           id={listboxId}
           role="listbox"
           aria-multiselectable="true"
-          className="absolute z-40 mt-1 max-h-60 w-full overflow-auto border border-line bg-surface p-1 text-[13px] shadow-dropdown"
+          style={listStyle}
+          className="z-50 max-h-60 overflow-auto border border-line bg-surface p-1 text-[13px] shadow-dropdown"
         >
           {filtered.length === 0 ? (
             <li role="presentation" className="px-2 py-1.5 text-muted">{emptyMessage}</li>
@@ -209,7 +218,8 @@ export function MultiSelect({
               )
             })
           )}
-        </ul>
+        </ul>,
+        document.body,
       )}
     </div>
   )

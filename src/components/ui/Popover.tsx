@@ -1,5 +1,8 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { cx } from './utils'
+import { useAnchoredPosition } from './useAnchoredPosition'
+import { useDialogFocusTrap } from './useDialogFocusTrap'
 
 export interface PopoverProps {
   trigger: ReactNode
@@ -11,39 +14,23 @@ export interface PopoverProps {
 export function Popover({ trigger, children, align = 'start', className }: PopoverProps) {
   const [open, setOpen] = useState(false)
   const popoverId = useId()
-  const ref = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const panelStyle = useAnchoredPosition(open, triggerRef, panelRef, { align })
 
   useEffect(() => {
     if (!open) return undefined
     const onPointerDown = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return
+      setOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [open])
 
-  useEffect(() => {
-    if (!open) return undefined
-    requestAnimationFrame(() => panelRef.current?.focus())
-    return undefined
-  }, [open])
-
-  const close = () => {
-    setOpen(false)
-    requestAnimationFrame(() => triggerRef.current?.focus())
-  }
-
-  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      close()
-    }
-  }
-
   return (
-    <div ref={ref} className="relative inline-flex">
+    <>
       <button
         ref={triggerRef}
         type="button"
@@ -51,27 +38,50 @@ export function Popover({ trigger, children, align = 'start', className }: Popov
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
         onClick={() => setOpen((current) => !current)}
-        onKeyDown={onKeyDown}
         className="inline-flex h-8 items-center justify-center rounded-[2px] border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
       >
         {trigger}
       </button>
-      {open && (
-        <div
-          ref={panelRef}
+      {open && createPortal(
+        <PopoverPanel
           id={popoverId}
-          role="dialog"
-          tabIndex={-1}
-          onKeyDown={onKeyDown}
-          className={cx(
-            'absolute top-full z-40 mt-2 w-72 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown',
-            align === 'end' ? 'right-0' : 'left-0',
-            className,
-          )}
+          panelRef={panelRef}
+          style={panelStyle}
+          className={className}
+          onClose={() => setOpen(false)}
         >
           {children}
-        </div>
+        </PopoverPanel>,
+        document.body,
       )}
+    </>
+  )
+}
+
+interface PopoverPanelProps {
+  id: string
+  panelRef: RefObject<HTMLDivElement | null>
+  style: CSSProperties
+  className?: string
+  onClose: () => void
+  children: ReactNode
+}
+
+// Mounted only while open so the focus trap's open/close lifecycle matches
+// Modal's (focus moves in on mount, restores to the opener on unmount).
+function PopoverPanel({ id, panelRef, style, className, onClose, children }: PopoverPanelProps) {
+  useDialogFocusTrap(panelRef, onClose)
+
+  return (
+    <div
+      ref={panelRef}
+      id={id}
+      role="dialog"
+      tabIndex={-1}
+      style={style}
+      className={cx('z-50 w-72 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown', className)}
+    >
+      {children}
     </div>
   )
 }

@@ -1,4 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { createPortal } from 'react-dom'
+import { useAnchoredPosition } from './useAnchoredPosition'
 import { cx, hasWidthUtility } from './utils'
 
 export interface ComboboxOption {
@@ -48,6 +50,7 @@ export function Combobox({
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
 
   const [internalValue, setInternalValue] = useState(defaultValue)
   const selectedValue = value ?? internalValue
@@ -71,11 +74,15 @@ export function Combobox({
   }, [options, query, selectedOption])
 
   const clampedActive = activeIndex < filtered.length ? activeIndex : 0
+  // gap 4 matches the mt-1 the list had before it moved to a portal.
+  const listStyle = useAnchoredPosition(open, containerRef, listRef, { gap: 4, matchWidth: true })
 
   useEffect(() => {
     if (!open) return undefined
     const onPointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (containerRef.current?.contains(target) || listRef.current?.contains(target)) return
+      setOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
@@ -159,11 +166,13 @@ export function Combobox({
         onKeyDown={onKeyDown}
         className="h-8 w-full rounded-[2px] border border-line bg-surface px-2 text-[13px] text-ink focus:border-accent disabled:bg-surface-2 disabled:text-faint"
       />
-      {open && (
+      {open && createPortal(
         <ul
+          ref={listRef}
           id={listboxId}
           role="listbox"
-          className="absolute z-40 mt-1 max-h-60 w-full overflow-auto border border-line bg-surface p-1 text-[13px] shadow-dropdown"
+          style={listStyle}
+          className="z-50 max-h-60 overflow-auto border border-line bg-surface p-1 text-[13px] shadow-dropdown"
         >
           {filtered.length === 0 ? (
             <li role="presentation" className="px-2 py-1.5 text-muted">{emptyMessage}</li>
@@ -191,7 +200,8 @@ export function Combobox({
               )
             })
           )}
-        </ul>
+        </ul>,
+        document.body,
       )}
     </div>
   )

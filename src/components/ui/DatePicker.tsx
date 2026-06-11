@@ -3,13 +3,17 @@ import {
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type InputHTMLAttributes,
-  type KeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { CalendarGlyph } from '../shell/icons'
 import { Button } from './Button'
 import { formatDateRangeLabel, type DateRange, type DateRangePreset } from './dateUtils'
+import { useAnchoredPosition } from './useAnchoredPosition'
+import { useDialogFocusTrap } from './useDialogFocusTrap'
 import { cx, hasWidthUtility } from './utils'
 
 export interface DatePickerProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> {
@@ -87,6 +91,7 @@ export function DateRangePicker({
   const pickerId = useId()
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const panelStyle = useAnchoredPosition(open, triggerRef, panelRef, { align: 'end' })
   const labelText = formatDateRangeLabel(value)
   const invalid = Boolean(draft.start && draft.end && draft.start > draft.end)
 
@@ -104,19 +109,10 @@ export function DateRangePicker({
   const openPanel = () => {
     setDraft(value)
     setOpen(true)
-    requestAnimationFrame(() => panelRef.current?.querySelector<HTMLInputElement>('input')?.focus())
   }
 
   const closePanel = () => {
     setOpen(false)
-    requestAnimationFrame(() => triggerRef.current?.focus())
-  }
-
-  const onPanelKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      closePanel()
-    }
   }
 
   const applyDraft = () => {
@@ -146,15 +142,13 @@ export function DateRangePicker({
         <span className="micro shrink-0">{label}</span>
         <span className={cx('num truncate text-[12px]', labelText === emptyLabel && 'text-muted')}>{labelText}</span>
       </button>
-      {open && (
-        <div
-          ref={panelRef}
+      {open && createPortal(
+        <DateRangePanel
           id={pickerId}
-          role="dialog"
-          aria-label={typeof label === 'string' ? label : 'Date range'}
-          tabIndex={-1}
-          onKeyDown={onPanelKeyDown}
-          className="absolute right-0 top-full z-40 mt-2 grid w-[340px] max-w-[calc(100vw-2rem)] gap-3 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
+          panelRef={panelRef}
+          style={panelStyle}
+          ariaLabel={typeof label === 'string' ? label : 'Date range'}
+          onClose={closePanel}
         >
           {presets.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
@@ -180,8 +174,38 @@ export function DateRangePicker({
             <Button size="compact" onClick={closePanel}>Cancel</Button>
             <Button size="compact" variant="primary" disabled={invalid} onClick={applyDraft}>Apply</Button>
           </div>
-        </div>
+        </DateRangePanel>,
+        document.body,
       )}
+    </div>
+  )
+}
+
+interface DateRangePanelProps {
+  id: string
+  panelRef: RefObject<HTMLDivElement | null>
+  style: CSSProperties
+  ariaLabel: string
+  onClose: () => void
+  children: ReactNode
+}
+
+// Mounted only while open so the focus trap's open/close lifecycle matches
+// Modal's (focus moves in on mount, restores to the opener on unmount).
+function DateRangePanel({ id, panelRef, style, ariaLabel, onClose, children }: DateRangePanelProps) {
+  useDialogFocusTrap(panelRef, onClose)
+
+  return (
+    <div
+      ref={panelRef}
+      id={id}
+      role="dialog"
+      aria-label={ariaLabel}
+      tabIndex={-1}
+      style={style}
+      className="z-50 grid w-[340px] max-w-[calc(100vw-2rem)] gap-3 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
+    >
+      {children}
     </div>
   )
 }

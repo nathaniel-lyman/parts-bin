@@ -47,7 +47,10 @@ export function Dropzone({
         if (!disabled) setDragging(true)
       }}
       onDragOver={(event) => event.preventDefault()}
-      onDragLeave={() => setDragging(false)}
+      onDragLeave={(event) => {
+        // dragleave also fires when entering a child; only clear when truly leaving
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false)
+      }}
       onDrop={onDrop}
       className={cx(
         'grid min-h-36 place-items-center border border-dashed border-line bg-surface p-6 text-center',
@@ -59,6 +62,7 @@ export function Dropzone({
       <input
         ref={inputRef}
         type="file"
+        aria-label={typeof label === 'string' ? label : 'Choose files'}
         className="sr-only"
         accept={accept}
         multiple={multiple}

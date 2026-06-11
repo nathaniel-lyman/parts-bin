@@ -67,3 +67,15 @@ test('Combobox integrates with Field label and selects by click', async () => {
   await user.click(screen.getByRole('option', { name: 'Avery' }))
   expect(input).toHaveValue('Avery')
 })
+
+test('Combobox renders the listbox in a portal so overflow ancestors cannot clip it', async () => {
+  const user = userEvent.setup()
+  render(
+    <div style={{ overflow: 'hidden' }}>
+      <Combobox options={options} />
+    </div>,
+  )
+
+  await user.click(screen.getByRole('combobox'))
+  expect(screen.getByRole('listbox').parentElement).toBe(document.body)
+})

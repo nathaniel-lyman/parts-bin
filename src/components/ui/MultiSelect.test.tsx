@@ -76,3 +76,14 @@ test('Escape closes the listbox and disabled options cannot be picked', () => {
   fireEvent.keyDown(input, { key: 'Escape' })
   expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
 })
+
+test('MultiSelect renders the listbox in a portal so overflow ancestors cannot clip it', () => {
+  render(
+    <div style={{ overflow: 'hidden' }}>
+      <MultiSelect options={options} defaultValues={[]} />
+    </div>,
+  )
+
+  fireEvent.focus(screen.getByRole('combobox'))
+  expect(screen.getByRole('listbox').parentElement).toBe(document.body)
+})
