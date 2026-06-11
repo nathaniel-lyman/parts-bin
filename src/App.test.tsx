@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { ToastProvider } from './components/ui/ToastProvider'
@@ -198,5 +198,10 @@ test('assistant opens from the top nav and answers with live MRR', async () => {
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
   expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'How is MRR looking?' }))
-  expect(await screen.findByText(/Total MRR is/, {}, { timeout: 3000 })).toBeInTheDocument()
+  // waitFor + getByText (not findByText): each streamed chunk re-renders the
+  // markdown and replaces its DOM nodes, so a node captured by findByText can
+  // detach before the assertion runs. Re-querying inside waitFor is race-free.
+  // Generous timeout: the demo adapter streams ~40 jittered 24ms chunks, slow
+  // under parallel-suite load.
+  await waitFor(() => expect(screen.getByText(/Total MRR is/)).toBeInTheDocument(), { timeout: 10000 })
 })

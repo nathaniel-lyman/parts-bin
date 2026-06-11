@@ -1,7 +1,6 @@
 import { Drawer } from '../ui/Drawer'
 import { EmptyState } from '../ui/EmptyState'
 import { Button } from '../ui/Button'
-import { ToastProvider } from '../ui/ToastProvider'
 import { useToast } from '../ui/ToastContext'
 import { useChat } from './useChat'
 import { ChatMessageList } from './ChatMessageList'
@@ -18,7 +17,13 @@ export interface AssistantPanelProps {
   suggestions?: string[]
 }
 
-function AssistantPanelInner({ adapter, onClose, title = 'Assistant', suggestions = [] }: AssistantPanelProps) {
+/**
+ * Slide-over AI chat composed from the chat primitives. Conditionally render
+ * it like Drawer/Modal: `{open && <AssistantPanel … />}`. Conversation state
+ * lives inside, so closing the panel resets it — lift useChat out if you need
+ * persistence.
+ */
+export function AssistantPanel({ adapter, onClose, title = 'Assistant', suggestions = [] }: AssistantPanelProps) {
   const { messages, status, send, stop, regenerate } = useChat(adapter)
   const toast = useToast()
 
@@ -56,19 +61,5 @@ function AssistantPanelInner({ adapter, onClose, title = 'Assistant', suggestion
       )}
       <ChatComposer onSend={send} streaming={status === 'streaming'} onStop={stop} autoFocus />
     </Drawer>
-  )
-}
-
-/**
- * Slide-over AI chat composed from the chat primitives. Conditionally render
- * it like Drawer/Modal: `{open && <AssistantPanel … />}`. Conversation state
- * lives inside, so closing the panel resets it — lift useChat out if you need
- * persistence.
- */
-export function AssistantPanel(props: AssistantPanelProps) {
-  return (
-    <ToastProvider>
-      <AssistantPanelInner {...props} />
-    </ToastProvider>
   )
 }
