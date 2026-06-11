@@ -45,6 +45,8 @@ describe('grid types', () => {
       rowPinning: { top: [], bottom: [] },
       pagination: { pageIndex: 0, pageSize: 25 },
       density: 'compact',
+      grouping: [],
+      expanded: {},
     }
     expect(state.density).toBe('compact')
   })

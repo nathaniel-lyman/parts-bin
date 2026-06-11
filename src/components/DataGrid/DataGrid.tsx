@@ -310,6 +310,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     keepPinnedRows: true,
     // Keep grouped columns in their configured position instead of TanStack's default reorder.
     groupedColumnMode: false,
+    // Expansion lives in our reducer; TanStack must not reset it when grouping/data change.
+    autoResetExpanded: false,
     pageCount: manualPagination && totalRowCount != null ? Math.ceil(totalRowCount / state.pagination.pageSize) : undefined,
     getCoreRowModel: getCoreRowModel(),
     ...(manualSorting ? {} : { getSortedRowModel: getSortedRowModel() }),

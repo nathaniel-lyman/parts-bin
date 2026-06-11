@@ -12,7 +12,8 @@ const rows = Array.from({ length: 30 }, (_, index) => ({
 }))
 
 function bodyRows() {
-  return screen.getAllByRole('row').slice(1)
+  // Data rows only — skips the header row and the aggregation footer row.
+  return screen.getAllByRole('row').filter((row) => row.hasAttribute('data-row-id'))
 }
 
 describe('DataGrid pagination', () => {

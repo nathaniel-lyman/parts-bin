@@ -59,6 +59,8 @@ const base: LedgerGridState = {
   rowPinning: { top: [], bottom: [] },
   pagination: { pageIndex: 0, pageSize: 25 },
   density: 'compact',
+  grouping: [],
+  expanded: {},
 }
 
 describe('normalizeColumnPinning (actions always right, never left/absent)', () => {
