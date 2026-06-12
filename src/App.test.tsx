@@ -257,3 +257,57 @@ test('assistant creates a saved view from the current grid context', async () =>
     node?.textContent?.includes('Saved view created') ?? false
   )).length).toBeGreaterThan(0), { timeout: 10000 })
 })
+
+test('command shortcuts run workspace actions without opening the palette', () => {
+  render(<ToastProvider><App /></ToastProvider>)
+
+  expect(document.documentElement.classList.contains('dark')).toBe(false)
+  fireEvent.keyDown(document, { key: 't' })
+  expect(document.documentElement.classList.contains('dark')).toBe(true)
+
+  fireEvent.keyDown(document, { key: 'r' })
+  expect(screen.getByText(/At-risk focus/)).toBeInTheDocument()
+  expect(screen.queryByRole('dialog', { name: /command palette/i })).not.toBeInTheDocument()
+})
+
+test('command shortcuts save and reset the current account grid view', async () => {
+  render(<ToastProvider><App /></ToastProvider>)
+
+  fireEvent.keyDown(document, { key: 'v' })
+  fireEvent.keyDown(document, { key: 's' })
+
+  await waitFor(() => {
+    const saved = JSON.parse(localStorage.getItem(SAVED_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
+    expect(saved.some((view) => view.name === 'Current accounts')).toBe(true)
+  })
+  expect(screen.getByText('Saved view Current accounts')).toBeInTheDocument()
+
+  fireEvent.keyDown(document, { key: 'v' })
+  fireEvent.keyDown(document, { key: 'r' })
+  expect(screen.getByText('Reset account grid layout')).toBeInTheDocument()
+})
+
+test('command shortcuts clear selected grid rows', async () => {
+  const user = userEvent.setup()
+  render(<ToastProvider><App /></ToastProvider>)
+
+  await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
+  expect(screen.getByText('1 selected')).toBeInTheDocument()
+
+  fireEvent.keyDown(document, { key: 'v' })
+  fireEvent.keyDown(document, { key: 'c' })
+
+  await waitFor(() => expect(screen.queryByText('1 selected')).not.toBeInTheDocument())
+  expect(screen.getByText('Cleared 1 selected row')).toBeInTheDocument()
+})
+
+test('command shortcuts can ask the assistant from the current screen', async () => {
+  render(<ToastProvider><App /></ToastProvider>)
+
+  fireEvent.keyDown(document, { key: 's' })
+
+  expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument()
+  await waitFor(() => expect(screen.getAllByText((_content, node) => (
+    node?.textContent?.includes('You are on Accounts') ?? false
+  )).length).toBeGreaterThan(0), { timeout: 10000 })
+})

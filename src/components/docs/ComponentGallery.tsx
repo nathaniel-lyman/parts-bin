@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CATALOG, CATEGORIES, type Category, type ComponentEntry } from '../catalog'
-import { Input } from '../ui'
+import { EmptyState, Input } from '../ui'
 import { SectionHeader } from '../shell'
 import { previews } from './previewRegistry'
 
@@ -51,6 +51,20 @@ function GalleryCard({ entry, onSelect }: { entry: ComponentEntry; onSelect: (en
   )
 }
 
+function searchableText(entry: ComponentEntry) {
+  return [
+    entry.name,
+    entry.import,
+    entry.category,
+    entry.purpose,
+    entry.use_when,
+    ...entry.props,
+    ...(entry.related ?? []),
+    ...Object.entries(entry.prefer_over ?? {}).flatMap(([name, why]) => [name, why]),
+    ...Object.entries(entry.variants ?? {}).flatMap(([prop, values]) => [prop, ...values]),
+  ].join(' ').toLowerCase()
+}
+
 export function ComponentGallery({
   onSelect,
   externalQuery = '',
@@ -64,8 +78,14 @@ export function ComponentGallery({
   const ext = externalQuery.trim().toLowerCase()
   const filtered = useMemo(() => {
     const terms = [q, ext].filter(Boolean)
-    return CATALOG.filter((e) => terms.every((t) => e.name.toLowerCase().includes(t) || e.purpose.toLowerCase().includes(t)))
+    return CATALOG.filter((entry) => {
+      const haystack = searchableText(entry)
+      return terms.every((term) => haystack.includes(term))
+    })
   }, [q, ext])
+  const emptyDescription = ext
+    ? 'Try clearing the shell search or using a component name, prop, category, import path, or related pattern.'
+    : 'Try a component name, prop, category, import path, or related pattern.'
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center gap-2">
@@ -90,6 +110,13 @@ export function ComponentGallery({
           ))}
         </nav>
       </div>
+      {filtered.length === 0 && (
+        <EmptyState
+          title="No matching components"
+          description={emptyDescription}
+          glyph="[]"
+        />
+      )}
       {CATEGORIES.map((cat) => {
         const entries = filtered.filter((entry) => entry.category === cat)
         if (entries.length === 0) return null

@@ -440,7 +440,7 @@ export const CATALOG: ComponentEntry[] = [
     name: 'CommandPalette', import: './components/ui', category: 'overlay',
     purpose: 'Searchable, grouped command launcher with keyboard shortcut.',
     use_when: 'A global, type-to-find action launcher across the app.',
-    props: ['groups', 'open', 'onOpenChange', 'placeholder', 'trigger'],
+    props: ['groups', 'open', 'onOpenChange', 'enableGlobalShortcuts', 'placeholder', 'trigger'],
     related: ['DropdownMenu'],
     snippet: `<CommandPalette groups={groups} open={open} onOpenChange={setOpen} />`,
   }),

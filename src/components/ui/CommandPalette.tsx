@@ -34,6 +34,7 @@ export interface CommandPaletteProps {
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
+  enableGlobalShortcuts?: boolean
   trigger?: ReactNode
   placeholder?: string
   emptyMessage?: ReactNode
@@ -47,9 +48,17 @@ interface CommandMatch {
   item: CommandPaletteItem
 }
 
+interface CommandShortcut {
+  tokens: string[]
+  match: CommandMatch
+}
+
 function isEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false
-  return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+  if (target.closest('textarea, select, [contenteditable="true"]')) return true
+  const input = target.closest('input')
+  if (!(input instanceof HTMLInputElement)) return false
+  return !['button', 'checkbox', 'color', 'file', 'radio', 'range', 'reset', 'submit'].includes(input.type)
 }
 
 // useDialogFocusTrap engages once per mount, so it must live in a component
@@ -63,8 +72,36 @@ function getSearchText(item: CommandPaletteItem) {
   return [
     typeof item.label === 'string' ? item.label : '',
     typeof item.description === 'string' ? item.description : '',
+    typeof item.shortcut === 'string' ? item.shortcut : '',
     ...(item.keywords ?? []),
   ].join(' ').toLowerCase()
+}
+
+function shortcutTokens(shortcut: ReactNode): string[] {
+  if (typeof shortcut !== 'string') return []
+  return shortcut
+    .trim()
+    .split(/\s+/)
+    .map((token) => token.toLowerCase())
+    .filter(Boolean)
+}
+
+function shortcutDisplayTokens(shortcut: string): string[] {
+  return shortcut.trim().split(/\s+/).filter(Boolean)
+}
+
+function eventShortcutToken(event: globalThis.KeyboardEvent): string | null {
+  if (event.metaKey || event.ctrlKey || event.altKey) return null
+  if (event.key === 'Shift' || event.key === 'Control' || event.key === 'Meta' || event.key === 'Alt') return null
+  return event.key.length === 1 ? event.key.toLowerCase() : event.key.toLowerCase()
+}
+
+function tokensMatch(a: string[], b: string[]) {
+  return a.length === b.length && a.every((token, index) => token === b[index])
+}
+
+function tokensStartWith(tokens: string[], prefix: string[]) {
+  return prefix.every((token, index) => tokens[index] === token)
 }
 
 export function CommandPalette({
@@ -72,6 +109,7 @@ export function CommandPalette({
   open,
   defaultOpen = false,
   onOpenChange,
+  enableGlobalShortcuts = false,
   trigger = 'Command',
   placeholder = 'Search commands',
   emptyMessage = 'No commands found',
@@ -87,6 +125,8 @@ export function CommandPalette({
   const inputId = `${dialogId}-input`
   const listboxId = `${dialogId}-listbox`
   const dialogRef = useRef<HTMLDivElement>(null)
+  const shortcutBufferRef = useRef<string[]>([])
+  const shortcutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isOpen = open ?? internalOpen
   const setPaletteOpen = useCallback((next: boolean) => {
@@ -111,6 +151,20 @@ export function CommandPalette({
   const clampedActiveIndex = activeIndex < matches.length ? activeIndex : 0
   const activeId = isOpen && matches[clampedActiveIndex] ? `${listboxId}-option-${clampedActiveIndex}` : undefined
 
+  const commandShortcuts = useMemo<CommandShortcut[]>(() => {
+    return groups.flatMap((group) => group.items.flatMap((item) => {
+      if (item.disabled) return []
+      const tokens = shortcutTokens(item.shortcut)
+      return tokens.length > 0 ? [{ tokens, match: { group, item } }] : []
+    }))
+  }, [groups])
+
+  const runCommand = useCallback((match: CommandMatch | undefined) => {
+    if (!match || match.item.disabled) return
+    match.item.onSelect?.()
+    setPaletteOpen(false)
+  }, [setPaletteOpen])
+
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !isEditableTarget(event.target)) {
@@ -121,6 +175,68 @@ export function CommandPalette({
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [isOpen, setPaletteOpen])
+
+  useEffect(() => {
+    if (!enableGlobalShortcuts || commandShortcuts.length === 0) return
+    const resetShortcutBuffer = () => {
+      shortcutBufferRef.current = []
+      if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+      shortcutTimerRef.current = null
+    }
+    const armResetTimer = () => {
+      if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+      shortcutTimerRef.current = setTimeout(resetShortcutBuffer, 900)
+    }
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return
+      const token = eventShortcutToken(event)
+      if (!token) return
+
+      const attempt = [...shortcutBufferRef.current, token]
+      const exact = commandShortcuts.find((shortcut) => tokensMatch(shortcut.tokens, attempt))
+      if (exact) {
+        event.preventDefault()
+        resetShortcutBuffer()
+        runCommand(exact.match)
+        return
+      }
+
+      const prefix = commandShortcuts.some((shortcut) => (
+        shortcut.tokens.length > attempt.length && tokensStartWith(shortcut.tokens, attempt)
+      ))
+      if (prefix) {
+        event.preventDefault()
+        shortcutBufferRef.current = attempt
+        armResetTimer()
+        return
+      }
+
+      if (shortcutBufferRef.current.length > 0) {
+        const freshExact = commandShortcuts.find((shortcut) => tokensMatch(shortcut.tokens, [token]))
+        if (freshExact) {
+          event.preventDefault()
+          resetShortcutBuffer()
+          runCommand(freshExact.match)
+          return
+        }
+        const freshPrefix = commandShortcuts.some((shortcut) => (
+          shortcut.tokens.length > 1 && tokensStartWith(shortcut.tokens, [token])
+        ))
+        if (freshPrefix) {
+          event.preventDefault()
+          shortcutBufferRef.current = [token]
+          armResetTimer()
+          return
+        }
+        resetShortcutBuffer()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      resetShortcutBuffer()
+    }
+  }, [commandShortcuts, enableGlobalShortcuts, runCommand])
 
   // PaletteFocusTrap (mounted with the dialog below) moves focus to the first
   // focusable element on open — the search input — so no focus effect is needed here.
@@ -133,12 +249,6 @@ export function CommandPalette({
       ? 0
       : (enabledIndex + direction + enabledMatches.length) % enabledMatches.length
     setActiveIndex(enabledMatches[nextEnabledIndex].index)
-  }
-
-  const runCommand = (match: CommandMatch | undefined) => {
-    if (!match || match.item.disabled) return
-    match.item.onSelect?.()
-    setPaletteOpen(false)
   }
 
   const onInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -251,7 +361,7 @@ export function CommandPalette({
                             </span>
                             {match.item.shortcut && (
                               typeof match.item.shortcut === 'string'
-                                ? <Kbd className="self-center">{match.item.shortcut}</Kbd>
+                                ? <Kbd keys={shortcutDisplayTokens(match.item.shortcut)} className="self-center" />
                                 : <span className="num self-center text-[11px] text-muted">{match.item.shortcut}</span>
                             )}
                           </div>

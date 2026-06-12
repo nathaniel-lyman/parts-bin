@@ -104,6 +104,15 @@ function filterValueLabel(value: unknown): string {
   return String(value)
 }
 
+function commandSavedViewName(grid: AssistantGridContext | undefined): string {
+  if (!grid) return 'Command palette view'
+  const bits: string[] = []
+  if (grid.atRiskOnly) bits.push('Risk focus')
+  if (grid.quickFilter.trim()) bits.push(`Quick filter ${grid.quickFilter.trim()}`)
+  if (grid.globalSearch.trim()) bits.push(`Search ${grid.globalSearch.trim()}`)
+  return bits.length ? bits.join(' - ') : 'Current accounts'
+}
+
 function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGridColumn<Account>[] {
   const actions = columns.find((column) => column.id === 'actions')
   const base = columns.filter((column) => column.id !== 'actions')
@@ -500,11 +509,52 @@ export default function App() {
     actions: assistantActions,
   }), [assistantActions])
   const assistantChat = useChat(assistantAdapter)
-  const handleTimePeriodChange = (nextPeriod: string) => {
+  const { send: sendAssistantMessage, status: assistantStatus } = assistantChat
+  const assistantBusy = assistantStatus === 'streaming'
+  const sendAssistantCommand = useCallback((prompt: string) => {
+    setAssistantOpen(true)
+    sendAssistantMessage(prompt)
+  }, [sendAssistantMessage])
+  const saveCurrentGridView = useCallback(() => {
+    if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
+      toast('Open the account grid before saving a view', 'warn')
+      return
+    }
+    const name = commandSavedViewName(assistantGridContextRef.current)
+    gridAssistantActionsRef.current.saveCurrentView(name)
+    toast(`Saved view ${name}`, 'pos')
+  }, [routeKind, toast])
+  const resetAccountGridView = useCallback(() => {
+    if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
+      toast('Open the account grid before resetting the view', 'warn')
+      return
+    }
+    gridAssistantActionsRef.current.resetView()
+    toast('Reset account grid layout', 'accent')
+  }, [routeKind, toast])
+  const clearSelectedGridRows = useCallback(() => {
+    if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
+      toast('Open the account grid before clearing selection', 'warn')
+      return
+    }
+    const selected = assistantGridContextRef.current?.selectedRowCount ?? 0
+    if (selected === 0) {
+      toast('No selected rows to clear', 'warn')
+      return
+    }
+    gridAssistantActionsRef.current.clearSelection()
+    toast(selected === 1 ? 'Cleared 1 selected row' : `Cleared ${selected} selected rows`, 'accent')
+  }, [routeKind, toast])
+  const clearWorkspaceFilters = useCallback(() => {
+    setGlobalSearch('')
+    setAtRiskOnly(false)
+    toast('Cleared workspace filters', 'accent')
+  }, [toast])
+  const handleTimePeriodChange = useCallback((nextPeriod: string) => {
     setTimePeriod(nextPeriod)
     const preset = dateRangePresets.find((option) => option.id === nextPeriod)
     if (preset) setDateRange(preset.range)
-  }
+  }, [dateRangePresets])
   const handleDateRangeChange = (nextRange: DateRange) => {
     setDateRange(nextRange)
     const matchingPreset = dateRangePresets.find((option) => dateRangesEqual(option.range, nextRange))
@@ -566,6 +616,39 @@ export default function App() {
       ],
     },
     {
+      id: 'assistant',
+      label: 'Assistant',
+      items: [
+        {
+          id: 'assistant-screen-summary',
+          label: 'Summarize current screen',
+          description: assistantBusy ? 'Assistant is already responding' : `Ask about ${routeLabel}`,
+          shortcut: 'S',
+          disabled: assistantBusy,
+          keywords: ['assistant', 'context', 'where am i'],
+          onSelect: () => sendAssistantCommand('Summarize the current screen'),
+        },
+        {
+          id: 'assistant-revenue-movement',
+          label: 'Explain revenue movement',
+          description: assistantBusy ? 'Assistant is already responding' : 'Ask from the current visible account scope',
+          shortcut: 'M',
+          disabled: assistantBusy,
+          keywords: ['assistant', 'mrr', 'bridge', 'movement'],
+          onSelect: () => sendAssistantCommand('Explain this revenue movement'),
+        },
+        {
+          id: 'assistant-selected-accounts',
+          label: 'Summarize selected accounts',
+          description: assistantBusy ? 'Assistant is already responding' : 'Uses the current account grid selection',
+          shortcut: 'X',
+          disabled: assistantBusy,
+          keywords: ['assistant', 'selected', 'rows'],
+          onSelect: () => sendAssistantCommand('Summarize selected accounts'),
+        },
+      ],
+    },
+    {
       id: 'workspace',
       label: 'Workspace',
       items: [
@@ -575,6 +658,13 @@ export default function App() {
           description: 'Toggle at-risk and churned account focus',
           shortcut: 'R',
           onSelect: () => setAtRiskOnly((value) => !value),
+        },
+        {
+          id: 'clear-workspace-filters',
+          label: 'Clear workspace filters',
+          description: globalSearch.trim() || atRiskOnly ? 'Clear search and risk focus' : 'Search and risk focus are already clear',
+          shortcut: 'C F',
+          onSelect: clearWorkspaceFilters,
         },
         {
           id: 'theme',
@@ -587,6 +677,7 @@ export default function App() {
           id: 'alerts',
           label: 'Show revenue alerts',
           description: 'Preview the current notification state',
+          shortcut: 'N',
           onSelect: () => toast('3 revenue alerts', 'warn'),
         },
         {
@@ -598,7 +689,68 @@ export default function App() {
         },
       ],
     },
-  ], [atRiskOnly, mode, toast, toggle])
+    {
+      id: 'account-grid',
+      label: 'Account grid',
+      items: [
+        {
+          id: 'save-grid-view',
+          label: 'Save current grid view',
+          description: routeKind === 'accounts' ? 'Persist filters, columns, sort, density, and page size' : 'Available on the account grid',
+          shortcut: 'V S',
+          disabled: routeKind !== 'accounts',
+          keywords: ['saved view', 'view', 'grid'],
+          onSelect: saveCurrentGridView,
+        },
+        {
+          id: 'reset-grid-view',
+          label: 'Reset grid layout',
+          description: routeKind === 'accounts' ? 'Restore the default account grid layout' : 'Available on the account grid',
+          shortcut: 'V R',
+          disabled: routeKind !== 'accounts',
+          keywords: ['view', 'columns', 'grid'],
+          onSelect: resetAccountGridView,
+        },
+        {
+          id: 'clear-grid-selection',
+          label: 'Clear selected rows',
+          description: routeKind === 'accounts' ? 'Deselect all selected account rows' : 'Available on the account grid',
+          shortcut: 'V C',
+          disabled: routeKind !== 'accounts',
+          keywords: ['selection', 'selected', 'rows'],
+          onSelect: clearSelectedGridRows,
+        },
+      ],
+    },
+    {
+      id: 'time-range',
+      label: 'Time range',
+      items: timePeriodOptions.map((option) => ({
+        id: `period-${option.value}`,
+        label: option.label,
+        description: option.value === timePeriod ? 'Current reporting window' : 'Switch reporting window',
+        shortcut: option.value === '7d' ? 'P 7' : option.value === '30d' ? 'P 3' : option.value === '90d' ? 'P 9' : 'P 1',
+        keywords: ['period', 'date', 'range', option.label],
+        onSelect: () => handleTimePeriodChange(option.value),
+      })),
+    },
+  ], [
+    assistantBusy,
+    atRiskOnly,
+    clearSelectedGridRows,
+    clearWorkspaceFilters,
+    globalSearch,
+    handleTimePeriodChange,
+    mode,
+    resetAccountGridView,
+    routeKind,
+    routeLabel,
+    saveCurrentGridView,
+    sendAssistantCommand,
+    timePeriod,
+    toast,
+    toggle,
+  ])
 
   // Login is the only pre-auth surface: full-bleed, no sidebar/topnav. Returned
   // before the AppShell below — placed after all hooks to respect rules-of-hooks.
@@ -670,6 +822,7 @@ export default function App() {
           <IconButton aria-label="Open assistant" onClick={() => setAssistantOpen(true)}>✦</IconButton>
           <CommandPalette
             groups={commandGroups}
+            enableGlobalShortcuts
             trigger={(
               <>
                 <span className="sr-only">Command</span>
