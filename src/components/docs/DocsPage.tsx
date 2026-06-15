@@ -15,7 +15,7 @@ import { ComponentDetailDrawer } from './ComponentDetailDrawer'
 const usageSnippet = `import { Button, Card, Field, Input } from './components/ui'
 import { AppShell, Sidebar, TopNav } from './components/shell'
 
-export function AccountsScreen() {
+export function SampleAccountsScreen() {
   return (
     <Card title="Account details">
       <Field label="Name" required>
@@ -31,7 +31,8 @@ const copyChecklist: Array<[string, string]> = [
   ['Theme', 'Copy src/theme/ and import theme/theme.css at your root. Re-skin via tokens.css only.'],
   ['Primitives', 'Copy src/components/ui/ and import from the ./ui barrel (Button, Field, Drawer, IconButton, InlineAlert, SegmentedControl, …).'],
   ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
-  ['Charts, maps & DataGrid', 'Copy src/components/charts/, src/components/maps/, and src/components/DataGrid/; import from the ./charts, ./maps, and ./DataGrid barrels.'],
+  ['Charts', 'Copy src/components/charts/ for token-styled Recharts wrappers and ChartCard examples; import from the ./charts barrel.'],
+  ['Maps & DataGrid', 'Copy src/components/maps/ and src/components/DataGrid/ for geographic views and the headless-table-backed grid.'],
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
 ]
 
@@ -55,13 +56,13 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
   return (
     <main className="mx-auto max-w-[1180px] px-6 py-6">
       <PageHeader
-        eyebrow="Ledger UI Kit"
-        title="Component reference"
-        description="Every component is cataloged in src/components/catalog.ts — this gallery renders that manifest, so coverage is structural. Click any card for import, props, near-twins, and a copy-paste snippet."
+        eyebrow="parts-kit component kit"
+        title="Components and sample dashboard"
+        description="parts-kit is a working dashboard that demonstrates the components cataloged in src/components/catalog.ts. Click any card for import, props, near-twins, and a copy-paste snippet."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="primary" onClick={() => { navigate('/compose') }}>Open composer</Button>
-            <Button variant="secondary" onClick={() => { navigate('/') }}>Open dashboard</Button>
+            <Button variant="secondary" onClick={() => { navigate('/') }}>Open sample dashboard</Button>
           </div>
         }
       />
@@ -71,7 +72,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
           <ComponentGallery onSelect={setSelected} externalQuery={globalSearch} />
         </Card>
 
-        <Card title="Copy Ledger into your app" description="Ledger is a clone-and-customize kit, not an npm package. Start in the composer, then copy the theme, primitives, shell, charts, and DataGrid into the app you are building.">
+        <Card title="Copy parts-kit into your app" description="parts-kit is a clone-and-customize component kit, not an npm package. The dashboard is only a sample assembly; copy the theme, primitives, shell, charts, and DataGrid into the app you are building.">
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
@@ -147,7 +148,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
               <Snippet code={themeRecipeUsageSnippet(recipeId)} />
               <div className="grid content-start gap-3 text-[13px] text-muted">
-                <p className="m-0">The selected recipe is stored as <code className="num text-ink">ledger.theme.recipe</code>. Light and dark mode still use <code className="num text-ink">ledger.theme</code>.</p>
+                <p className="m-0">The selected recipe is stored as <code className="num text-ink">parts-kit.theme.recipe</code>. Light and dark mode use <code className="num text-ink">parts-kit.theme</code>; old <code className="num text-ink">ledger.*</code> keys are read for migration.</p>
                 <p className="m-0">To create another recipe, add a <code className="num text-ink">data-theme-recipe</code> block in <code className="num text-ink">src/theme/recipes.css</code> and add its metadata in <code className="num text-ink">src/theme/recipes.ts</code>.</p>
               </div>
             </div>

@@ -13,14 +13,14 @@ export interface ChartCardProps {
 
 export function ChartCard({ title, description, metric, actions, children, className }: ChartCardProps) {
   return (
-    <section className={cx('min-w-0 border border-line bg-surface', className)}>
-      <header className="flex min-w-0 items-start justify-between gap-3 border-b border-line px-4 py-3">
+    <section className={cx('min-w-0 rounded-[2px] border border-line bg-surface', className)}>
+      <header className="grid min-w-0 gap-3 border-b border-line px-4 py-3 sm:flex sm:items-start sm:justify-between">
         <div className="grid min-w-0 gap-1">
-          <h2 className="micro m-0">{title}</h2>
-          {description && <p className="m-0 text-[12px] text-muted">{description}</p>}
+          <h2 className="m-0 text-[13px] font-semibold leading-snug text-ink">{title}</h2>
+          {description && <p className="m-0 text-[12px] leading-5 text-muted">{description}</p>}
         </div>
         {(metric || actions) && (
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
             {metric && <div className="num text-[18px] font-semibold text-ink">{metric}</div>}
             {actions}
           </div>
@@ -34,6 +34,7 @@ export function ChartCard({ title, description, metric, actions, children, class
 export interface ChartLegendItem {
   id: string
   label: ReactNode
+  color?: string
   colorClassName?: string
   value?: ReactNode
 }
@@ -48,7 +49,11 @@ export function ChartLegend({ items, className }: ChartLegendProps) {
     <ul className={cx('m-0 flex list-none flex-wrap items-center gap-x-4 gap-y-2 p-0', className)}>
       {items.map((item) => (
         <li key={item.id} className="inline-flex items-center gap-1.5 text-[12px] text-muted">
-          <span className={cx('h-2 w-2 rounded-[2px] bg-accent', item.colorClassName)} aria-hidden="true" />
+          <span
+            className={cx('h-2 w-2 rounded-[2px]', item.colorClassName ?? 'bg-accent')}
+            style={item.color ? { backgroundColor: item.color } : undefined}
+            aria-hidden="true"
+          />
           <span>{item.label}</span>
           {item.value && <span className="num text-ink">{item.value}</span>}
         </li>

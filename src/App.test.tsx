@@ -11,9 +11,18 @@ afterEach(() => {
   localStorage.clear()
 })
 
+function expectTextContent(fragment: string) {
+  const matches = screen.queryAllByText((_content, node) => (
+    node?.textContent?.includes(fragment) ?? false
+  ))
+  const dialogText = screen.queryByRole('dialog', { name: 'Assistant' })?.textContent ?? document.body.textContent ?? ''
+  expect(matches.length, `Expected to find "${fragment}" in text: ${dialogText}`).toBeGreaterThan(0)
+}
+
 test('renders dashboard with KPIs and table (light)', () => {
   render(<ToastProvider><App /></ToastProvider>)
-  expect(screen.getByText('Account book')).toBeInTheDocument()
+  expect(screen.getByText('Accounts dashboard demo')).toBeInTheDocument()
+  expect(screen.getByText(/A working sample assembled from parts-kit components/)).toBeInTheDocument()
   expect(screen.getByText('Total MRR')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
   expect(screen.getByRole('figure', { name: /MRR bridge in thousands/i })).toBeInTheDocument()
@@ -30,7 +39,7 @@ test('login route renders the sign-in page full-bleed, without the app shell', (
   expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   // No app shell chrome on the pre-auth surface.
   expect(screen.queryByRole('searchbox', { name: /global search/i })).not.toBeInTheDocument()
-  expect(screen.queryByText('Account book')).not.toBeInTheDocument()
+  expect(screen.queryByText('Accounts dashboard demo')).not.toBeInTheDocument()
 })
 
 test('settings route renders inside the shell with dashboard-only controls hidden', () => {
@@ -53,9 +62,9 @@ test('Dark toggle switches to dark mode', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('button', { name: /Dark/ }))
   expect(document.documentElement.classList.contains('dark')).toBe(true)
-  expect(localStorage.getItem('ledger.theme')).toBe('dark')
+  expect(localStorage.getItem('parts-kit.theme')).toBe('dark')
   // app still renders its content in dark mode
-  expect(screen.getByText('Account book')).toBeInTheDocument()
+  expect(screen.getByText('Accounts dashboard demo')).toBeInTheDocument()
 })
 
 test('manual date ranges update the dashboard period label dynamically', async () => {
@@ -155,7 +164,7 @@ test('components route drops dashboard-only header controls and wires global sea
   window.history.pushState({}, '', '/docs')
   render(<ToastProvider><App /></ToastProvider>)
 
-  expect(screen.getByText('Component reference')).toBeInTheDocument()
+  expect(screen.getByText('Components and sample dashboard')).toBeInTheDocument()
   // dashboard-only controls have no function on the docs page
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
@@ -200,18 +209,18 @@ test('revenue movement chart exposes bar width and label controls', async () => 
   expect(widthControl).toHaveValue('34')
   expect(screen.getByText('34px')).toBeInTheDocument()
 
-  expect(labelControl).not.toBeChecked()
-  await userEvent.click(labelControl)
   expect(labelControl).toBeChecked()
+  await userEvent.click(labelControl)
+  expect(labelControl).not.toBeChecked()
 })
 
 test('waterfall chart labels can be toggled', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   const labelControl = screen.getByRole('switch', { name: /bridge labels/i })
 
-  expect(labelControl).not.toBeChecked()
-  await userEvent.click(labelControl)
   expect(labelControl).toBeChecked()
+  await userEvent.click(labelControl)
+  expect(labelControl).not.toBeChecked()
 })
 
 test('assistant opens from the top nav and answers with live MRR', async () => {
@@ -225,7 +234,7 @@ test('assistant opens from the top nav and answers with live MRR', async () => {
   // detach before the assertion runs. Re-querying inside waitFor is race-free.
   // Generous timeout: the demo adapter streams ~40 jittered 24ms chunks, slow
   // under parallel-suite load.
-  await waitFor(() => expect(screen.getByText(/Total MRR is/)).toBeInTheDocument(), { timeout: 10000 })
+  await waitFor(() => expect(screen.getByText(/Total active MRR is/)).toBeInTheDocument(), { timeout: 10000 })
 })
 
 test('assistant summarizes selected rows from the current grid context', async () => {
@@ -241,6 +250,24 @@ test('assistant summarizes selected rows from the current grid context', async (
   )).length).toBeGreaterThan(0), { timeout: 10000 })
   expect(screen.getAllByText(/Cobalt Freight/).length).toBeGreaterThan(0)
 })
+
+test('assistant explains revenue movement with chart and filtered grid evidence', async () => {
+  const user = userEvent.setup()
+  render(<ToastProvider><App /></ToastProvider>)
+
+  await user.type(screen.getByRole('searchbox', { name: /global search/i }), 'cobalt')
+  await waitFor(() => expect(screen.getByText(/Search: cobalt/)).toBeInTheDocument())
+  await user.click(screen.getByRole('button', { name: 'Open assistant' }))
+  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Explain this revenue movement{Enter}')
+
+  await waitFor(() => expectTextContent('Revenue movement is net positive'), { timeout: 10000 })
+  await waitFor(() => expectTextContent('Separation: chart evidence uses dashboard monthly movement data'), { timeout: 10000 })
+  await waitFor(() => expectTextContent('Chart: Revenue movement ($k), 10 monthly rows'), { timeout: 15000 })
+  await waitFor(() => expectTextContent('Filters: global search "cobalt"'), { timeout: 15000 })
+  expectTextContent('Evidence used')
+  expectTextContent('Grid scope: 1 of 1 rows visible')
+  expectTextContent('Separation: chart evidence uses dashboard monthly movement data')
+}, 30000)
 
 test('assistant creates a saved view from the current grid context', async () => {
   const user = userEvent.setup()

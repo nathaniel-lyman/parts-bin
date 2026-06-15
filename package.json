@@ -1,6 +1,6 @@
 {
-  "name": "ledger-dashboard",
-  "description": "Ledger — a swappable dashboard theme starter: React, TypeScript, Tailwind v4, ~100 token-only components, re-skinnable from one folder.",
+  "name": "parts-kit",
+  "description": "parts-kit — a swappable component demo dashboard: React, TypeScript, Tailwind v4, ~100 token-only components, re-skinnable from one folder.",
   "license": "MIT",
   "private": true,
   "version": "0.0.0",

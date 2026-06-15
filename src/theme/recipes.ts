@@ -10,7 +10,7 @@ export interface ThemeRecipe {
 export const THEME_RECIPES: ThemeRecipe[] = [
   {
     id: 'ledger-default',
-    name: 'Ledger default',
+    name: 'parts-kit default',
     description: 'Slate surfaces, blue actions, purple intelligence, and explicit review states.',
     bestFor: 'Revenue dashboards, account books, and finance-heavy tools.',
   },
@@ -34,7 +34,8 @@ export const THEME_RECIPES: ThemeRecipe[] = [
   },
 ]
 
-export const THEME_RECIPE_STORAGE_KEY = 'ledger.theme.recipe'
+export const THEME_RECIPE_STORAGE_KEY = 'parts-kit.theme.recipe'
+const LEGACY_THEME_RECIPE_STORAGE_KEY = 'ledger.theme.recipe'
 
 const ids = new Set<ThemeRecipeId>(THEME_RECIPES.map((recipe) => recipe.id))
 
@@ -45,6 +46,7 @@ export function isThemeRecipeId(value: string | null | undefined): value is Them
 export function readStoredThemeRecipe(): ThemeRecipeId {
   if (typeof window === 'undefined') return 'ledger-default'
   const stored = window.localStorage.getItem(THEME_RECIPE_STORAGE_KEY)
+    ?? window.localStorage.getItem(LEGACY_THEME_RECIPE_STORAGE_KEY)
   return isThemeRecipeId(stored) ? stored : 'ledger-default'
 }
 

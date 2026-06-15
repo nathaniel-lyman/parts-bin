@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { fmtCurrency, fmtPercent, fmtNum, fmtDelta } from './format'
+import { fmtCurrency, fmtPercent, fmtNum, fmtDelta, formatCompactKValue, formatCurrencyK } from './format'
 
 test('fmtCurrency adds $ and thousands separators, no decimals', () => {
   expect(fmtCurrency(78300)).toBe('$78,300')
@@ -23,4 +23,14 @@ test('fmtCurrency rounds to whole dollars', () => {
 })
 test('fmtCurrency renders negatives', () => {
   expect(fmtCurrency(-5000)).toBe('$-5,000')
+})
+test('formatCompactKValue keeps compact thousands labels', () => {
+  expect(formatCompactKValue(7.1)).toBe('7.1')
+  expect(formatCompactKValue(12.25)).toBe('12')
+  expect(formatCompactKValue(-3)).toBe('3')
+})
+test('formatCurrencyK renders signed $k values', () => {
+  expect(formatCurrencyK(7.1)).toBe('$7.1k')
+  expect(formatCurrencyK(12.25)).toBe('$12k')
+  expect(formatCurrencyK(-3)).toBe('-$3k')
 })

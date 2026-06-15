@@ -67,7 +67,7 @@ export function CommandPaletteDemo() {
       id: 'navigation',
       label: 'Navigation',
       items: [
-        { id: 'dashboard', label: 'Open dashboard', description: 'Go to the account book', onSelect: () => setCommandResult('Dashboard command') },
+        { id: 'dashboard', label: 'Open sample dashboard', description: 'Go to the sample component assembly', onSelect: () => setCommandResult('Dashboard command') },
         { id: 'catalog', label: 'Open component catalog', description: 'Stay on this reference', onSelect: () => setCommandResult('Catalog command') },
       ],
     },

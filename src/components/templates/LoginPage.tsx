@@ -13,9 +13,9 @@ import { BrandLockup } from '../shell'
 
 /** Marketing proof points shown on the brand panel — pure demo copy. */
 const proofStats: { value: string; label: string }[] = [
-  { value: '$2.4M', label: 'MRR tracked' },
-  { value: '1,280', label: 'active accounts' },
-  { value: '99.98%', label: 'uptime' },
+  { value: '12', label: 'example templates' },
+  { value: '~100', label: 'component surfaces' },
+  { value: '1', label: 'theme folder' },
 ]
 
 /**
@@ -46,14 +46,14 @@ export function LoginPage() {
     <div className="grid min-h-screen grid-cols-1 bg-bg text-ink md:grid-cols-2">
       {/* Brand panel — hidden on small screens to keep the form front-and-center. */}
       <aside className="hidden flex-col justify-between border-r border-line bg-surface p-10 md:flex">
-        <BrandLockup mark="#" href={appHref('/')}>Ledger</BrandLockup>
+        <BrandLockup mark="#" href={appHref('/')}>parts-kit</BrandLockup>
         <div className="grid gap-3">
           <p className="display m-0 text-[32px] font-semibold leading-tight text-ink">
-            Data-first dashboards,<br />ready to ship.
+            Example app surfaces,<br />ready to adapt.
           </p>
           <p className="m-0 max-w-sm text-[14px] text-muted">
-            A swappable theme and ~100 token-only components. Clone it, re-skin it from one folder,
-            and start from real pages instead of a blank canvas.
+            parts-kit gives you token-only components and template screens. Clone it, re-skin it from
+            one folder, and replace the example copy with your product language.
           </p>
         </div>
         <dl className="m-0 grid grid-cols-3 gap-4 border-t border-line pt-6">
@@ -79,12 +79,12 @@ export function LoginPage() {
 
         <div className="w-full max-w-[360px]">
           <div className="mb-6 grid gap-1 md:hidden">
-            <BrandLockup mark="#" href={appHref('/')}>Ledger</BrandLockup>
+            <BrandLockup mark="#" href={appHref('/')}>parts-kit</BrandLockup>
           </div>
 
           <div className="mb-6 grid gap-1">
             <PageTitle>Sign in</PageTitle>
-            <p className="m-0 text-[13px] text-muted">Welcome back. Enter your details to continue.</p>
+            <p className="m-0 text-[13px] text-muted">Example pre-auth screen; wire it to your own auth flow.</p>
           </div>
 
           {error && (

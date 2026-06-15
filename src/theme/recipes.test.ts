@@ -31,3 +31,8 @@ test('installStoredThemeRecipe ignores unknown stored values', () => {
   expect(document.documentElement.hasAttribute('data-theme-recipe')).toBe(false)
   expect(readStoredThemeRecipe()).toBe('ledger-default')
 })
+
+test('reads the legacy ledger recipe key during migration', () => {
+  window.localStorage.setItem('ledger.theme.recipe', 'ops-green')
+  expect(readStoredThemeRecipe()).toBe('ops-green')
+})

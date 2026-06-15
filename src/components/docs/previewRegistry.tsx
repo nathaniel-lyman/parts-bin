@@ -10,7 +10,7 @@ import {
   Skeleton, Slider, Spinner, StatusBadge, Stepper, Switch, Table, Tabs, Tag, Textarea,
   Timeline, Toolbar,
 } from '../ui'
-import { ChartEmptyState, ChartLegend, ChartTooltipContent } from '../charts'
+import { ChartCard, ChartEmptyState, ChartLegend, ChartTooltipContent } from '../charts'
 import { NotificationBadge } from '../shell'
 import { KpiCard } from '../KpiCard'
 import { Sparkline } from '../Sparkline'
@@ -218,6 +218,13 @@ export const previews: Partial<Record<string, ReactNode>> = {
     </div>
   ),
   // charts (lightweight only — Recharts charts stay placeholder)
+  ChartCard: (
+    <div className="w-64">
+      <ChartCard title="Line chart example" metric="+18%" description="Sample rows; replace with your data.">
+        <div className="h-16 border border-line bg-surface-2" />
+      </ChartCard>
+    </div>
+  ),
   ChartLegend: <ChartLegend items={[{ id: 'new', label: 'New', colorClassName: 'bg-pos' }, { id: 'churn', label: 'Churned', colorClassName: 'bg-neg' }]} />,
   ChartTooltipContent: <ChartTooltipContent label="Jan" rows={[{ label: 'MRR', value: '$78k' }]} />,
   ChartEmptyState: <ChartEmptyState title="No data" description="Adjust filters." />,

@@ -1,6 +1,13 @@
 export * from './types'
 export { useChat, type ChatController, type ChatStatus } from './useChat'
 export {
+  buildAssistantDashboardEvidence,
+  buildRevenueMovementEvidence,
+  type AssistantDashboardEvidence,
+  type RevenueMovementEvidence,
+  type RevenueMovementEvidencePoint,
+} from './dashboardEvidence'
+export {
   createDemoAdapter,
   contextualAssistantSuggestions,
   DEMO_SUGGESTIONS,

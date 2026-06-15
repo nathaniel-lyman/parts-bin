@@ -43,4 +43,19 @@ test.describe('command shortcuts', () => {
     await page.keyboard.press('r')
     await expect(page.getByText(/At-risk focus/)).toBeVisible()
   })
+
+  test('movement shortcut opens evidence-backed assistant answer', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/')
+
+    await page.keyboard.press('m')
+
+    await expect(page.getByRole('dialog', { name: 'Assistant' })).toBeVisible()
+    await expect(page.getByText(/Revenue movement is net positive/)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Evidence used')).toBeVisible()
+    await expect(page.getByText(/Chart: Revenue movement \(\$k\), 10 monthly rows/)).toBeVisible()
+    await expect(page.getByText(/Separation: chart evidence uses dashboard monthly movement data/)).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Command palette' })).toHaveCount(0)
+  })
 })

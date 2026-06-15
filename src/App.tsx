@@ -2,8 +2,8 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useServerData } from './hooks/useServerData'
-import { totalMrr, activeCount, atRiskCount, avgGrowth } from './selectors/metrics'
-import { fmtCurrency, fmtPercent } from './lib/format'
+import { totalMrr, activeCount, atRiskCount, avgGrowth, segmentShares } from './selectors/metrics'
+import { fmtCurrency, fmtPercent, formatCompactKValue, formatCurrencyK } from './lib/format'
 import { KpiCard, KpiSummaryRow } from './components/KpiCard'
 import {
   DataGrid,
@@ -21,13 +21,14 @@ import {
   MrrShareDonut,
   RevenueMovementChart,
   WaterfallChart,
+  ChartCard,
+  buildWaterfallData,
   DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH,
   REVENUE_MOVEMENT_BAR_WIDTH_RANGE,
 } from './components/charts'
 import {
   addDays,
   Button,
-  Card,
   CommandPalette,
   DateRangePicker,
   formatDateRangeLabel,
@@ -40,9 +41,11 @@ import {
 } from './components/ui'
 import {
   AssistantPanel,
+  buildAssistantDashboardEvidence,
   contextualAssistantSuggestions,
   createDemoAdapter,
   useChat,
+  type AssistantDashboardEvidence,
   type AssistantActions,
   type AssistantGridContext,
   type AssistantRouteKind,
@@ -61,7 +64,7 @@ import {
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
 import { AppComposerPage, CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './components/templates'
-import { revenueWaterfallSeries, sparks } from './data/accounts'
+import { monthlySeries, movementSeries, revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
 import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 import type { LedgerGridColumn } from './components/DataGrid'
@@ -86,15 +89,6 @@ function makeTrailingRange(days: number): DateRange {
 
 function dateRangesEqual(a: DateRange, b: DateRange) {
   return a.start === b.start && a.end === b.end
-}
-
-function formatCompactKValue(value: number) {
-  const absolute = Math.abs(value)
-  return absolute >= 10 || Number.isInteger(absolute) ? absolute.toFixed(0) : absolute.toFixed(1)
-}
-
-function formatCurrencyK(value: number) {
-  return `${value < 0 ? '-' : ''}$${formatCompactKValue(value)}k`
 }
 
 function filterValueLabel(value: unknown): string {
@@ -132,6 +126,48 @@ function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGri
   return actions ? [...base, ...wide, actions] : [...base, ...wide]
 }
 
+function formatSignedCurrencyK(value: number) {
+  if (value === 0) return formatCurrencyK(0)
+  return `${value > 0 ? '+' : '-'}${formatCurrencyK(Math.abs(value))}`
+}
+
+function rowTotal(row: Record<string, unknown>, keys: readonly string[]) {
+  return keys.reduce((sum, key) => {
+    const value = row[key]
+    return sum + (typeof value === 'number' ? value : 0)
+  }, 0)
+}
+
+const mrrTrendInsight = (() => {
+  const series = ['Enterprise', 'Mid-market', 'Startup'] as const
+  const first = monthlySeries[0] as unknown as Record<string, unknown>
+  const last = monthlySeries[monthlySeries.length - 1] as unknown as Record<string, unknown>
+  const lift = rowTotal(last, series) - rowTotal(first, series)
+  return {
+    title: 'Line chart example: segmented trend',
+    metric: formatSignedCurrencyK(lift),
+    description: 'MrrTrendChart in a ChartCard with sample data; replace `data`, `series`, and `xKey` for your domain.',
+  }
+})()
+
+const movementInsight = (() => {
+  const totalNet = movementSeries.reduce((sum, row) => sum + row.New + row.Expansion + row.Churn, 0)
+  return {
+    title: 'Stacked bar example: signed movement',
+    metric: formatSignedCurrencyK(totalNet),
+    description: 'RevenueMovementChart with adjustable bar width and labels; sample rows show New, Expansion, and Churn series.',
+  }
+})()
+
+const waterfallInsight = (() => {
+  const { summary } = buildWaterfallData(revenueWaterfallSeries)
+  return {
+    title: 'Waterfall example: start to net bridge',
+    metric: formatCurrencyK(summary.end),
+    description: `WaterfallChart turns sequential deltas into a bridge; this sample offsets ${formatCurrencyK(summary.decrease)} in deductions.`,
+  }
+})()
+
 interface DashboardPageProps {
   accountsApi: ReturnType<typeof useAccounts>
   globalSearch: string
@@ -141,6 +177,7 @@ interface DashboardPageProps {
     context: AssistantGridContext,
     actions: DataGridContextSnapshot<Account>['actions'],
   ) => void
+  onAssistantDashboardEvidenceChange?: (evidence: AssistantDashboardEvidence) => void
 }
 
 function DashboardPage({
@@ -149,6 +186,7 @@ function DashboardPage({
   atRiskOnly,
   timePeriodLabel,
   onAssistantGridContextChange,
+  onAssistantDashboardEvidenceChange,
 }: DashboardPageProps) {
   const { accounts, create, update, remove } = accountsApi
   const toast = useToast()
@@ -166,6 +204,23 @@ function DashboardPage({
     if (atRiskOnly) next = next.filter((account) => account.status !== 'Active')
     return next
   }, [accounts, atRiskOnly, generatedAccounts, globalSearch])
+  const shareInsight = useMemo(() => {
+    const shares = segmentShares(visibleAccounts)
+    const total = shares.reduce((sum, share) => sum + share.value, 0)
+    if (total <= 0) {
+      return {
+        title: 'Donut example: share breakdown',
+        metric: fmtCurrency(0),
+        description: 'MrrShareDonut reads the visible sample accounts; replace the account data pipeline when copying.',
+      }
+    }
+    const leader = shares.reduce((best, share) => (share.value > best.value ? share : best))
+    return {
+      title: 'Donut example: share breakdown',
+      metric: fmtCurrency(leader.value),
+      description: `${leader.segment} leads this sample slice. MrrShareDonut reads visible accounts and excludes Churned rows.`,
+    }
+  }, [visibleAccounts])
   const gridInitialState = useMemo(
     () => (generatedAccounts ? { ...DEFAULT_STATE, sorting: [] } : DEFAULT_STATE),
     [generatedAccounts],
@@ -177,8 +232,17 @@ function DashboardPage({
   const [serverMode, setServerMode] = useState(params.get('server') === '1')
   const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(DEFAULT_STATE))
   const [movementBarWidth, setMovementBarWidth] = useState(DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH)
-  const [movementLabels, setMovementLabels] = useState(false)
-  const [waterfallLabels, setWaterfallLabels] = useState(false)
+  const [movementLabels, setMovementLabels] = useState(true)
+  const [waterfallLabels, setWaterfallLabels] = useState(true)
+  const dashboardEvidence = useMemo(() => buildAssistantDashboardEvidence({
+    revenueMovementData: movementSeries,
+    sourceTitle: 'Revenue movement ($k)',
+    timePeriodLabel,
+    barWidth: movementBarWidth,
+    labelsVisible: movementLabels,
+  }), [movementBarWidth, movementLabels, timePeriodLabel])
+  const dashboardEvidenceReportKey = useMemo(() => JSON.stringify(dashboardEvidence), [dashboardEvidence])
+  const lastDashboardEvidenceReportKeyRef = useRef('')
   const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
   const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
   const gridColumns = useMemo(() => {
@@ -208,14 +272,19 @@ function DashboardPage({
     },
     [atRiskOnly, globalSearch, onAssistantGridContextChange, timePeriodLabel],
   )
+  useLayoutEffect(() => {
+    if (dashboardEvidenceReportKey === lastDashboardEvidenceReportKeyRef.current) return
+    lastDashboardEvidenceReportKeyRef.current = dashboardEvidenceReportKey
+    onAssistantDashboardEvidenceChange?.(dashboardEvidence)
+  }, [dashboardEvidence, dashboardEvidenceReportKey, onAssistantDashboardEvidenceChange])
 
   return (
     <>
       <main className="w-full px-6 py-6">
         <PageHeader
-          eyebrow="Revenue / Accounts"
-          title="Account book"
-          description={`${timePeriodLabel}${atRiskOnly ? ' · At-risk focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
+          eyebrow="parts-kit sample dashboard"
+          title="Accounts dashboard demo"
+          description={`A working sample assembled from parts-kit components: KpiCard, ChartCard, DataGrid, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · At-risk focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
           actions={
             <span className="num text-[13px] text-muted">
               {activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} accounts · {fmtCurrency(totalMrr(visibleAccounts))} MRR
@@ -230,13 +299,33 @@ function DashboardPage({
           <KpiCard label="At risk / churned" value={String(atRiskCount(visibleAccounts))} delta={-12.5} spark={sparks.churn} negSpark />
         </KpiSummaryRow>
 
+        <section aria-labelledby="chart-examples-title" className="mb-3 grid gap-1">
+          <h2 id="chart-examples-title" className="m-0 text-[15px] font-semibold text-ink">Reusable chart examples</h2>
+          <p className="m-0 text-[13px] text-muted">
+            These panels demonstrate the chart exports in <code className="num text-ink">src/components/charts</code> using sample account data.
+          </p>
+        </section>
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card title="MRR trend ($k)"><MrrTrendChart /></Card>
-          <Card title="MRR share — live"><MrrShareDonut accounts={visibleAccounts} /></Card>
+          <ChartCard
+            title={mrrTrendInsight.title}
+            description={mrrTrendInsight.description}
+            metric={mrrTrendInsight.metric}
+          >
+            <MrrTrendChart showEndLabels />
+          </ChartCard>
+          <ChartCard
+            title={shareInsight.title}
+            description={shareInsight.description}
+            metric={shareInsight.metric}
+          >
+            <MrrShareDonut accounts={visibleAccounts} />
+          </ChartCard>
         </div>
         <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(360px,2fr)]">
-          <Card
-            title="Revenue movement ($k)"
+          <ChartCard
+            title={movementInsight.title}
+            description={movementInsight.description}
+            metric={movementInsight.metric}
             actions={
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <label className="micro flex items-center gap-2 text-muted">
@@ -261,10 +350,12 @@ function DashboardPage({
               </div>
             }
           >
-            <RevenueMovementChart barWidth={movementBarWidth} showLabels={movementLabels} />
-          </Card>
-          <Card
-            title="MRR bridge ($k)"
+            <RevenueMovementChart data={movementSeries} barWidth={movementBarWidth} showLabels={movementLabels} />
+          </ChartCard>
+          <ChartCard
+            title={waterfallInsight.title}
+            description={waterfallInsight.description}
+            metric={waterfallInsight.metric}
             actions={
               <Switch
                 label={<span className="micro text-muted">Bridge labels</span>}
@@ -280,7 +371,7 @@ function DashboardPage({
               valueFormatter={formatCurrencyK}
               tickFormatter={formatCompactKValue}
             />
-          </Card>
+          </ChartCard>
         </div>
 
         <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">
@@ -366,6 +457,7 @@ export default function App() {
   useLayoutEffect(() => { accountsRef.current = accountsApi.accounts })
   const [assistantOpen, setAssistantOpen] = useState(false)
   const assistantGridContextRef = useRef<AssistantGridContext | undefined>(undefined)
+  const assistantDashboardEvidenceRef = useRef<AssistantDashboardEvidence | undefined>(undefined)
   const gridAssistantActionsRef = useRef<DataGridContextSnapshot<Account>['actions'] | null>(null)
   const [customerAssistantDraft, setCustomerAssistantDraft] = useState<{ id: number } | undefined>()
   const [recommendationAssistantFeedback, setRecommendationAssistantFeedback] = useState<{
@@ -429,6 +521,9 @@ export default function App() {
   ) => {
     gridAssistantActionsRef.current = actions
     assistantGridContextRef.current = context
+  }, [])
+  const handleAssistantDashboardEvidenceChange = useCallback((evidence: AssistantDashboardEvidence) => {
+    assistantDashboardEvidenceRef.current = evidence
   }, [])
   const assistantShellContext = useMemo<AssistantScreenContext>(() => ({
     route: pathname,
@@ -504,6 +599,7 @@ export default function App() {
       return {
         ...shell,
         grid: shell.routeKind === 'accounts' ? assistantGridContextRef.current : undefined,
+        dashboardEvidence: shell.routeKind === 'accounts' ? assistantDashboardEvidenceRef.current : undefined,
       }
     },
     actions: assistantActions,
@@ -567,22 +663,22 @@ export default function App() {
       items: [
         {
           id: 'dashboard',
-          label: 'Open dashboard',
-          description: 'Revenue account dashboard',
+          label: 'Open sample dashboard',
+          description: 'Demo assembly of KPI, chart, DataGrid, and assistant components',
           shortcut: 'G D',
           onSelect: () => { navigate('/') },
         },
         {
           id: 'components',
           label: 'Open component catalog',
-          description: 'Live Ledger UI reference',
+          description: 'Live parts-kit component reference',
           shortcut: 'G C',
           onSelect: () => { navigate('/docs') },
         },
         {
           id: 'composer',
           label: 'Open app composer',
-          description: 'Build a routed Ledger admin screen',
+          description: 'Build a routed parts-kit admin screen',
           shortcut: 'G A',
           onSelect: () => { navigate('/compose') },
         },
@@ -669,7 +765,7 @@ export default function App() {
         {
           id: 'theme',
           label: mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode',
-          description: 'Toggle the Ledger color mode',
+          description: 'Toggle the parts-kit color mode',
           shortcut: 'T',
           onSelect: toggle,
         },
@@ -758,13 +854,13 @@ export default function App() {
 
   const sidebar = (
     <LeftNavigationDrawer
-      brand="Ledger"
+      brand="parts-kit"
       brandHref={appHref('/')}
-      brandMark="#"
+      brandMark="pk"
       collapsed={sidebarCollapsed}
       onCollapsedChange={setSidebarCollapsed}
       items={[
-        { label: 'Accounts', href: appHref('/'), active: !kitActive && !templateActive && !settingsActive },
+        { label: 'Sample dashboard', href: appHref('/'), active: !kitActive && !templateActive && !settingsActive, meta: 'demo' },
         { label: 'Customer success', href: appHref('/templates/customer-success'), active: customerTemplateActive, meta: 'app' },
         { label: 'Review queue', href: appHref('/templates/recommendation-review'), active: recommendationTemplateActive, meta: 'app' },
         { label: 'Compose', href: appHref('/compose'), active: composerActive, meta: 'start' },
@@ -773,14 +869,14 @@ export default function App() {
       adminItems={[
         { label: 'Settings', href: appHref('/settings'), active: settingsActive },
       ]}
-      footer={<span className="num text-[12px] text-muted">demo · v1.0</span>}
+      footer={<span className="num text-[12px] text-muted">component demo · v1.0</span>}
     />
   )
 
   const topNav = (
     <TopNav
       breadcrumbs={[
-        { label: 'Ledger', href: appHref('/') },
+        { label: 'parts-kit', href: appHref('/') },
         { label: routeLabel },
       ]}
       title={routeLabel}
@@ -875,6 +971,7 @@ export default function App() {
           atRiskOnly={atRiskOnly}
           timePeriodLabel={dashboardPeriodLabel}
           onAssistantGridContextChange={handleAssistantGridContextChange}
+          onAssistantDashboardEvidenceChange={handleAssistantDashboardEvidenceChange}
         />
       )}
       {assistantOpen && (

@@ -1,19 +1,19 @@
-# Ledger — a swappable dashboard theme (React + Tailwind v4)
+# parts-kit — a swappable component demo dashboard (React + Tailwind v4)
 
 [![CI](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml/badge.svg)](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A runnable dashboard starter implementing the **Ledger** design system: sharp, technical,
-data-first. Clone it, run it, customize it — or lift the `src/theme/` folder into your own app.
+A runnable dashboard starter demonstrating the **parts-kit** component system: sharp, technical,
+data-first. Clone it, run it, customize it — or lift the `src/theme/` and `src/components/` folders into your own app.
 
 **[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/compose`, `/docs`, `/login`, `/settings`, and the workflow starters under `/templates/*`.
 
-![Ledger dashboard, dark mode](docs/screenshots/dashboard-dark.png)
+![parts-kit sample dashboard, dark mode](docs/screenshots/dashboard-dark.png)
 
 **The whole skin lives in one folder.** Change `src/theme/tokens.css` (or apply a shipped
 recipe) and every component, chart, and page re-skins — zero component edits, enforced by lint:
 
-| Ledger default | `ops-green` recipe — same app, one folder changed |
+| parts-kit default | `ops-green` recipe — same app, one folder changed |
 |---|---|
 | ![Default theme](docs/screenshots/dashboard-dark.png) | ![Ops green recipe](docs/screenshots/dashboard-ops-green.png) |
 
@@ -29,7 +29,7 @@ recipe) and every component, chart, and page re-skins — zero component edits, 
   sign-in, component catalog, and workflow starter pages are already built; `/compose` walks you
   through assembling your own.
 
-The demo domain is SaaS accounts and MRR, but nothing about the framework is SaaS-specific —
+The sample dashboard domain is SaaS accounts and MRR, but nothing about the component kit is SaaS-specific —
 see [the domain mapping below](#your-first-30-minutes) for what the same dashboard looks like
 as grocery store performance or a supplier scorecard.
 
@@ -79,13 +79,13 @@ order — are written down in [`skills/swap-data-domain/SKILL.md`](skills/swap-d
 
 ## Pages out of the box
 
-The starter surfaces are already built from the kit's own primitives. Start at
+The sample surfaces are already built from the kit's own primitives. Start at
 **`/compose`** — the guided composer that assembles routes, imports, data mapping, and theme snippets:
 
 | | |
 |---|---|
 | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — appearance, profile, notifications |
-| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live gallery/reference for 110 cataloged components | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — KPI + charts + DataGrid, light mode |
+| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live gallery/reference for 110 cataloged components | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — sample KPI + charts + DataGrid dashboard, light mode |
 
 Workflow starter routes are included too: **`/templates/customer-success`** for an account-health console and
 **`/templates/recommendation-review`** for a queue/detail review surface.
@@ -100,7 +100,7 @@ Workflow starter routes are included too: **`/templates/customer-success`** for 
   empty/loading states, spinners, pagination, and toasts.
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
-- **`src/components/`** — dashboard components (KPI cards, DataGrid with sorting, filtering,
+- **`src/components/`** — reusable components (KPI cards, DataGrid with sorting, filtering,
   selection, saved views, grouping, editing, export, virtualization, charts, and forms). No raw
   colors; enforced by `npm run lint:theme`.
 - **`src/components/chat/`** — a composable assistant panel with markdown messages, prompt chips,
@@ -143,7 +143,7 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 | `npm run lint:theme` | fail if raw colors leak outside `src/theme/` |
 | `npm run test:e2e` | run Playwright checks for layout-sensitive flows |
 
-## Use Ledger in an existing app
+## Use parts-kit in an existing app
 Copy-paste checklist (clone what you need, in order):
 - [ ] **Composer** — open `/compose` to choose a use case, layout, theme recipe, and data mapping, then use the generated route/import snippets.
 - [ ] **Theme** — copy `src/theme/` and import `theme/theme.css` at your root. Re-skin via `tokens.css` only.
@@ -162,7 +162,7 @@ of them as one aggregate import root. Import from a barrel, not a deep file path
 import { Button, DataGrid, WaterfallChart, KpiCard } from './components'
 ```
 
-Ledger is intentionally a copy-paste kit first, not an npm package. Let the public API harden
+parts-kit is intentionally a copy-paste kit first, not an npm package. Let the public API harden
 across real cloned apps before packaging it.
 
 ## Theme recipes

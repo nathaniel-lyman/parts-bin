@@ -567,7 +567,7 @@ function UseCaseStep({ config, setConfig }: { config: ComposerConfig; setConfig:
         }))}
       />
       <InlineAlert title="Starting point">
-        The composer will keep the selected route tied to Ledger barrels, token recipes, and a typed data shape.
+        The composer keeps this example route tied to parts-kit barrels, token recipes, and a typed data shape.
       </InlineAlert>
     </div>
   )
@@ -731,9 +731,9 @@ export function AppComposerPage() {
   return (
     <main className="w-full px-6 py-6">
       <PageHeader
-        eyebrow="Ledger starter"
+        eyebrow="parts-kit starter"
         title="App composer"
-        description="Pick an admin use case, route layout, theme recipe, and data shape. Ledger returns the imports, route branch, screen shell, and typed mapping."
+        description="Pick an example admin use case, route layout, theme recipe, and data shape. parts-kit returns template imports, a route branch, a screen shell, and a typed mapping to adapt."
         actions={<Button variant="secondary" onClick={() => { navigate('/docs') }}>Component catalog</Button>}
       />
 
@@ -742,7 +742,7 @@ export function AppComposerPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 border border-line bg-surface px-4 py-3">
             <div className="grid gap-1">
               <h2 className="micro m-0">Guided build</h2>
-              <p className="m-0 text-[12px] text-muted">Each choice updates the preview and generated implementation.</p>
+              <p className="m-0 text-[12px] text-muted">Each choice updates an example preview and generated template code.</p>
             </div>
             <Button variant="primary" onClick={() => setCurrentStepId('generate')}>Generate screen</Button>
           </div>

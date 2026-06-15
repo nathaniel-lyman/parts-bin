@@ -1,4 +1,4 @@
-import { Line, LineChart, Tooltip } from 'recharts'
+import { LabelList, Legend, Line, LineChart, Tooltip } from 'recharts'
 import { isValidElement, type ReactElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { monthlySeries } from '../../data/accounts'
@@ -35,5 +35,12 @@ describe('MrrTrendChart', () => {
     expect((findAllByType(chart, LineChart)[0]!.props as { data?: unknown }).data).toBe(rows)
     const keys = findAllByType(chart, Line).map((line) => (line.props as { dataKey?: string }).dataKey)
     expect(keys).toEqual(['Alpha', 'Beta'])
+  })
+
+  it('can directly label line ends instead of rendering a detached legend', () => {
+    const chart = MrrTrendChart({ showEndLabels: true })
+    expect(findAllByType(chart, LabelList)).toHaveLength(3)
+    expect(findAllByType(chart, Legend)).toHaveLength(0)
+    expect((findAllByType(chart, LineChart)[0]!.props as { margin?: { right?: number } }).margin?.right).toBeGreaterThan(8)
   })
 })
