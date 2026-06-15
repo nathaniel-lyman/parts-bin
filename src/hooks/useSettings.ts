@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
  * Workspace/user preferences for the Settings starter page. Like {@link useTheme},
  * this hook is the *sole* writer of its localStorage key. Color mode and theme
  * recipe are deliberately NOT stored here — those have their own owners
- * (`useTheme` → `parts-kit.theme`, `recipes.ts` → `parts-kit.theme.recipe`) and the
+ * (`useTheme` → `parts-bin.theme`, `recipes.ts` → `parts-bin.theme.recipe`) and the
  * Appearance section composes all three. `density`/`reduceMotion` are applied as
  * `data-*` attributes on <html> (the same imperative idiom as `applyThemeRecipe`)
  * so CSS can consume them; see `src/theme/base.css` for the `data-density` hook.

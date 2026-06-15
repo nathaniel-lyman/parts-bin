@@ -22,7 +22,7 @@ function expectTextContent(fragment: string) {
 test('renders dashboard with KPIs and table (light)', () => {
   render(<ToastProvider><App /></ToastProvider>)
   expect(screen.getByText('Accounts dashboard demo')).toBeInTheDocument()
-  expect(screen.getByText(/A working sample assembled from parts-kit components/)).toBeInTheDocument()
+  expect(screen.getByText(/A working sample assembled from parts-bin components/)).toBeInTheDocument()
   expect(screen.getByText('Total MRR')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
   expect(screen.getByRole('figure', { name: /MRR bridge in thousands/i })).toBeInTheDocument()
@@ -62,7 +62,7 @@ test('Dark toggle switches to dark mode', async () => {
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('button', { name: /Dark/ }))
   expect(document.documentElement.classList.contains('dark')).toBe(true)
-  expect(localStorage.getItem('parts-kit.theme')).toBe('dark')
+  expect(localStorage.getItem('parts-bin.theme')).toBe('dark')
   // app still renders its content in dark mode
   expect(screen.getByText('Accounts dashboard demo')).toBeInTheDocument()
 })

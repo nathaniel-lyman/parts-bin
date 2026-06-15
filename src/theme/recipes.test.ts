@@ -36,3 +36,8 @@ test('reads the legacy ledger recipe key during migration', () => {
   window.localStorage.setItem('ledger.theme.recipe', 'ops-green')
   expect(readStoredThemeRecipe()).toBe('ops-green')
 })
+
+test('reads the previous parts-kit recipe key during migration', () => {
+  window.localStorage.setItem('parts-kit.theme.recipe', 'ops-green')
+  expect(readStoredThemeRecipe()).toBe('ops-green')
+})

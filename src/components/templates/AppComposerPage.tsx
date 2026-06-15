@@ -567,7 +567,7 @@ function UseCaseStep({ config, setConfig }: { config: ComposerConfig; setConfig:
         }))}
       />
       <InlineAlert title="Starting point">
-        The composer keeps this example route tied to parts-kit barrels, token recipes, and a typed data shape.
+        The composer keeps this example route tied to parts-bin barrels, token recipes, and a typed data shape.
       </InlineAlert>
     </div>
   )
@@ -731,9 +731,9 @@ export function AppComposerPage() {
   return (
     <main className="w-full px-6 py-6">
       <PageHeader
-        eyebrow="parts-kit starter"
+        eyebrow="parts-bin starter"
         title="App composer"
-        description="Pick an example admin use case, route layout, theme recipe, and data shape. parts-kit returns template imports, a route branch, a screen shell, and a typed mapping to adapt."
+        description="Pick an example admin use case, route layout, theme recipe, and data shape. parts-bin returns template imports, a route branch, a screen shell, and a typed mapping to adapt."
         actions={<Button variant="secondary" onClick={() => { navigate('/docs') }}>Component catalog</Button>}
       />
 

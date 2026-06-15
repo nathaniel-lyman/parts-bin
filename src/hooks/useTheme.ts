@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 
 type Mode = 'light' | 'dark'
-const KEY = 'parts-kit.theme'
+const KEY = 'parts-bin.theme'
+const LEGACY_PARTS_KIT_KEY = 'parts-kit.theme'
 const LEGACY_KEY = 'ledger.theme'
 
 function load(): Mode {
   const saved = (() => {
     try {
-      return localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY)
+      return localStorage.getItem(KEY)
+        ?? localStorage.getItem(LEGACY_PARTS_KIT_KEY)
+        ?? localStorage.getItem(LEGACY_KEY)
     } catch {
       return null
     }

@@ -282,9 +282,9 @@ function DashboardPage({
     <>
       <main className="w-full px-6 py-6">
         <PageHeader
-          eyebrow="parts-kit sample dashboard"
+          eyebrow="parts-bin sample dashboard"
           title="Accounts dashboard demo"
-          description={`A working sample assembled from parts-kit components: KpiCard, ChartCard, DataGrid, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · At-risk focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
+          description={`A working sample assembled from parts-bin components: KpiCard, ChartCard, DataGrid, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · At-risk focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
           actions={
             <span className="num text-[13px] text-muted">
               {activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} accounts · {fmtCurrency(totalMrr(visibleAccounts))} MRR
@@ -671,14 +671,14 @@ export default function App() {
         {
           id: 'components',
           label: 'Open component catalog',
-          description: 'Live parts-kit component reference',
+          description: 'Live parts-bin component reference',
           shortcut: 'G C',
           onSelect: () => { navigate('/docs') },
         },
         {
           id: 'composer',
           label: 'Open app composer',
-          description: 'Build a routed parts-kit admin screen',
+          description: 'Build a routed parts-bin admin screen',
           shortcut: 'G A',
           onSelect: () => { navigate('/compose') },
         },
@@ -765,7 +765,7 @@ export default function App() {
         {
           id: 'theme',
           label: mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode',
-          description: 'Toggle the parts-kit color mode',
+          description: 'Toggle the parts-bin color mode',
           shortcut: 'T',
           onSelect: toggle,
         },
@@ -854,7 +854,7 @@ export default function App() {
 
   const sidebar = (
     <LeftNavigationDrawer
-      brand="parts-kit"
+      brand="parts-bin"
       brandHref={appHref('/')}
       brandMark="pk"
       collapsed={sidebarCollapsed}
@@ -876,7 +876,7 @@ export default function App() {
   const topNav = (
     <TopNav
       breadcrumbs={[
-        { label: 'parts-kit', href: appHref('/') },
+        { label: 'parts-bin', href: appHref('/') },
         { label: routeLabel },
       ]}
       title={routeLabel}

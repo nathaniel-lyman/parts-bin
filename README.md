@@ -1,19 +1,19 @@
-# parts-kit — a swappable component demo dashboard (React + Tailwind v4)
+# parts-bin — a swappable component demo dashboard (React + Tailwind v4)
 
 [![CI](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml/badge.svg)](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A runnable dashboard starter demonstrating the **parts-kit** component system: sharp, technical,
+A runnable dashboard starter demonstrating the **parts-bin** component system: sharp, technical,
 data-first. Clone it, run it, customize it — or lift the `src/theme/` and `src/components/` folders into your own app.
 
 **[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/compose`, `/docs`, `/login`, `/settings`, and the workflow starters under `/templates/*`.
 
-![parts-kit sample dashboard, dark mode](docs/screenshots/dashboard-dark.png)
+![parts-bin sample dashboard, dark mode](docs/screenshots/dashboard-dark.png)
 
 **The whole skin lives in one folder.** Change `src/theme/tokens.css` (or apply a shipped
 recipe) and every component, chart, and page re-skins — zero component edits, enforced by lint:
 
-| parts-kit default | `ops-green` recipe — same app, one folder changed |
+| parts-bin default | `ops-green` recipe — same app, one folder changed |
 |---|---|
 | ![Default theme](docs/screenshots/dashboard-dark.png) | ![Ops green recipe](docs/screenshots/dashboard-ops-green.png) |
 
@@ -143,7 +143,7 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 | `npm run lint:theme` | fail if raw colors leak outside `src/theme/` |
 | `npm run test:e2e` | run Playwright checks for layout-sensitive flows |
 
-## Use parts-kit in an existing app
+## Use parts-bin in an existing app
 Copy-paste checklist (clone what you need, in order):
 - [ ] **Composer** — open `/compose` to choose a use case, layout, theme recipe, and data mapping, then use the generated route/import snippets.
 - [ ] **Theme** — copy `src/theme/` and import `theme/theme.css` at your root. Re-skin via `tokens.css` only.
@@ -162,7 +162,7 @@ of them as one aggregate import root. Import from a barrel, not a deep file path
 import { Button, DataGrid, WaterfallChart, KpiCard } from './components'
 ```
 
-parts-kit is intentionally a copy-paste kit first, not an npm package. Let the public API harden
+parts-bin is intentionally a copy-paste kit first, not an npm package. Let the public API harden
 across real cloned apps before packaging it.
 
 ## Theme recipes

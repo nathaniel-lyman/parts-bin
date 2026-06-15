@@ -1098,7 +1098,7 @@ export const CATALOG: ComponentEntry[] = [
   defineComponent(AppComposerPage, {
     name: 'AppComposerPage', import: './components/templates', category: 'starter',
     purpose: 'Guided app composer that turns a use case, layout, theme, and data mapping into route/component snippets.',
-    use_when: 'Starting a new admin app route from parts-kit instead of browsing isolated catalog parts.',
+    use_when: 'Starting a new admin app route from parts-bin instead of browsing isolated catalog parts.',
     props: [],
     related: ['CustomerSuccessTemplate', 'RecommendationReviewTemplate', 'SettingsPage', 'DataGrid'],
     snippet: `<AppComposerPage />`,

@@ -46,13 +46,13 @@ export function LoginPage() {
     <div className="grid min-h-screen grid-cols-1 bg-bg text-ink md:grid-cols-2">
       {/* Brand panel — hidden on small screens to keep the form front-and-center. */}
       <aside className="hidden flex-col justify-between border-r border-line bg-surface p-10 md:flex">
-        <BrandLockup mark="#" href={appHref('/')}>parts-kit</BrandLockup>
+        <BrandLockup mark="#" href={appHref('/')}>parts-bin</BrandLockup>
         <div className="grid gap-3">
           <p className="display m-0 text-[32px] font-semibold leading-tight text-ink">
             Example app surfaces,<br />ready to adapt.
           </p>
           <p className="m-0 max-w-sm text-[14px] text-muted">
-            parts-kit gives you token-only components and template screens. Clone it, re-skin it from
+            parts-bin gives you token-only components and template screens. Clone it, re-skin it from
             one folder, and replace the example copy with your product language.
           </p>
         </div>
@@ -79,7 +79,7 @@ export function LoginPage() {
 
         <div className="w-full max-w-[360px]">
           <div className="mb-6 grid gap-1 md:hidden">
-            <BrandLockup mark="#" href={appHref('/')}>parts-kit</BrandLockup>
+            <BrandLockup mark="#" href={appHref('/')}>parts-bin</BrandLockup>
           </div>
 
           <div className="mb-6 grid gap-1">

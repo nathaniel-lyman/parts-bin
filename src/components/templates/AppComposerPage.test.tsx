@@ -5,7 +5,7 @@ import { AppComposerPage } from './AppComposerPage'
 test('generates default imports, route branch, data mapping, and theme setup', () => {
   render(<AppComposerPage />)
 
-  expect(screen.getByText(/parts-kit starter/i)).toBeInTheDocument()
+  expect(screen.getByText(/parts-bin starter/i)).toBeInTheDocument()
   expect(screen.getByText(/generated template code/i)).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Generate screen' }))
 

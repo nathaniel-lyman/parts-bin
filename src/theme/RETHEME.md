@@ -1,4 +1,4 @@
-# Re-skinning parts-kit
+# Re-skinning parts-bin
 
 The entire look lives in `src/theme/`. To change it, you edit this folder — nothing in
 `src/components/` should ever need to change.
@@ -37,7 +37,7 @@ Also set `--radius: 8px` under `@theme inline` in `theme.css`. Reload — every 
 
 ## Theme recipes
 
-parts-kit ships optional recipes in `recipes.css`:
+parts-bin ships optional recipes in `recipes.css`:
 
 - `finance-cobalt` keeps the default cobalt feel with cooler finance surfaces.
 - `ops-green` shifts interaction and success language toward operational green.
@@ -52,7 +52,7 @@ applyThemeRecipe('ops-green')
 ```
 
 This writes `data-theme-recipe="ops-green"` on `<html>` and stores the choice in
-`parts-kit.theme.recipe`. Light/dark mode remains separate and uses `parts-kit.theme`.
+`parts-bin.theme.recipe`. Light/dark mode remains separate and uses `parts-bin.theme`.
 Older `ledger.*` keys are still read during migration.
 
 To add a recipe, add variable overrides in `recipes.css` and a metadata entry in `recipes.ts`.
@@ -61,8 +61,8 @@ Do not edit component files for re-theming.
 ## Appearance preferences (Settings page)
 
 The `SettingsPage` starter (`src/components/templates/`) wires its Appearance section to the
-three appearance owners: color mode (`useTheme` → `parts-kit.theme`), theme recipe
-(`recipes.ts` → `parts-kit.theme.recipe`), and two preference flags persisted by `useSettings`
+three appearance owners: color mode (`useTheme` → `parts-bin.theme`), theme recipe
+(`recipes.ts` → `parts-bin.theme.recipe`), and two preference flags persisted by `useSettings`
 (`ledger.user.settings`). The flags are applied as data attributes on `<html>`:
 
 - `data-density="compact"` — exposes the compact `--row-h` / `--cell-pad` tokens at the root
