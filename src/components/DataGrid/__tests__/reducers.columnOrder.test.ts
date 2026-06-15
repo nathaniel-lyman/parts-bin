@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { columnOrderReducer } from '../reducers'
 
 const ORDER = ['account', 'owner', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions']
+const COLUMNS = ORDER.map((id) => ({ id, header: id }))
 
 describe('columnOrderReducer', () => {
   it('moves a movable column before another and re-normalizes', () => {
@@ -32,7 +33,6 @@ describe('columnOrderReducer', () => {
 
   it('RESET_COLUMNS restores the default order', () => {
     const scrambled = ['since', 'arr', 'owner', 'account', 'segment', 'mrr', 'growth', 'status', 'actions']
-    expect(columnOrderReducer(scrambled, { type: 'RESET_COLUMNS' })).toEqual(ORDER)
+    expect(columnOrderReducer(scrambled, { type: 'RESET_COLUMNS' }, COLUMNS)).toEqual(ORDER)
   })
 })
-

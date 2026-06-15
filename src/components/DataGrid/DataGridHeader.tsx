@@ -92,7 +92,7 @@ function SortableHeader<TData>({
     position: pinnedSide ? 'sticky' : 'relative',
     ...(pinnedSide === 'left' ? { left: pinnedOffset } : {}),
     ...(pinnedSide === 'right' ? { right: pinnedOffset } : {}),
-    zIndex: isDragging && !dragPreview ? 1 : undefined,
+    zIndex: pinnedSide ? 30 : isDragging && !dragPreview ? 1 : undefined,
     boxSizing: isActions ? 'border-box' : undefined,
   }
 
@@ -174,7 +174,7 @@ export function DataGridHeader<TData>({
   dispatch,
   columnSizing = {},
   columns = [],
-  columnPinning = { left: [], right: ['actions'] },
+  columnPinning = { left: [], right: [] },
   columnFilters = [],
   enableHeaderFilters = false,
   enableRowSelection = false,

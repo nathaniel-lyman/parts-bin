@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { gridReducer } from '../reducers'
 import { DEFAULT_STATE } from '../state'
 
+const accountColumns = ['account', 'owner', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions']
+  .map((id) => ({ id, header: id }))
+
 describe('gridReducer - sorting slice', () => {
   it('SET_SORTING replaces the sorting slice', () => {
     const next = gridReducer(DEFAULT_STATE, { type: 'SET_SORTING', sorting: [{ id: 'growth', desc: false }] })
@@ -29,7 +32,7 @@ describe('gridReducer - columnVisibility slice (re-normalized)', () => {
     const next = gridReducer(DEFAULT_STATE, {
       type: 'SET_COLUMN_VISIBILITY',
       columnVisibility: { ...DEFAULT_STATE.columnVisibility, actions: false },
-    })
+    }, accountColumns)
     expect(next.columnVisibility.actions).toBe(true)
   })
 })
@@ -39,7 +42,7 @@ describe('gridReducer - columnOrder slice (re-normalized)', () => {
     const next = gridReducer(DEFAULT_STATE, {
       type: 'SET_COLUMN_ORDER',
       columnOrder: ['owner', 'account', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions'],
-    })
+    }, accountColumns)
     expect(next.columnOrder.slice(0, 2)).toEqual(['owner', 'account'])
   })
 
@@ -47,7 +50,7 @@ describe('gridReducer - columnOrder slice (re-normalized)', () => {
     const next = gridReducer(DEFAULT_STATE, {
       type: 'SET_COLUMN_ORDER',
       columnOrder: ['actions', 'owner', 'account', 'segment', 'mrr', 'growth', 'status', 'arr', 'since'],
-    })
+    }, accountColumns)
     expect(next.columnOrder[next.columnOrder.length - 1]).toBe('actions')
     expect(next.columnOrder).toEqual(['owner', 'account', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions'])
   })

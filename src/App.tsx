@@ -10,7 +10,6 @@ import {
   createMockServerAdapter,
   generateAccounts,
   toGridQuery,
-  DEFAULT_STATE,
   type DataGridContextSnapshot,
   type GridQuery,
 } from './components/DataGrid'
@@ -66,7 +65,7 @@ import { DocsPage } from './components/docs/DocsPage'
 import { AppComposerPage, CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './components/templates'
 import { monthlySeries, movementSeries, revenueWaterfallSeries, sparks } from './data/accounts'
 import type { Account } from './data/types'
-import { accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
+import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
 import type { LedgerGridColumn } from './components/DataGrid'
 import { appHref, appPath, navigate } from './lib/routes'
 
@@ -222,7 +221,7 @@ function DashboardPage({
     }
   }, [visibleAccounts])
   const gridInitialState = useMemo(
-    () => (generatedAccounts ? { ...DEFAULT_STATE, sorting: [] } : DEFAULT_STATE),
+    () => (generatedAccounts ? { ...ACCOUNT_GRID_INITIAL_STATE, sorting: [] } : ACCOUNT_GRID_INITIAL_STATE),
     [generatedAccounts],
   )
 
@@ -230,7 +229,7 @@ function DashboardPage({
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<Account | null>(null)
   const [serverMode, setServerMode] = useState(params.get('server') === '1')
-  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(DEFAULT_STATE))
+  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(ACCOUNT_GRID_INITIAL_STATE))
   const [movementBarWidth, setMovementBarWidth] = useState(DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH)
   const [movementLabels, setMovementLabels] = useState(true)
   const [waterfallLabels, setWaterfallLabels] = useState(true)

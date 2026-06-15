@@ -59,6 +59,24 @@ export function hydrateView(view: Partial<PersistedGridView>, initialState?: Par
 
 const LEGACY_COLS_KEY = 'ledger.cols'
 const LEGACY_ORDER_KEY = 'ledger.colOrder'
+const LEGACY_ACCOUNT_COLUMN_ORDER = [
+  'account',
+  'owner',
+  'segment',
+  'mrr',
+  'growth',
+  'status',
+  'arr',
+  'since',
+  'actions',
+]
+const LEGACY_ACCOUNT_DEFAULT_STATE: LedgerGridState = {
+  ...DEFAULT_STATE,
+  sorting: [{ id: 'mrr', desc: true }],
+  columnVisibility: { account: true, arr: false, since: false },
+  columnOrder: LEGACY_ACCOUNT_COLUMN_ORDER,
+  columnPinning: { left: [], right: ['actions'] },
+}
 
 function readLegacy<T>(key: string): T | undefined {
   try {
@@ -70,9 +88,9 @@ function readLegacy<T>(key: string): T | undefined {
 }
 
 export function migrateLegacy(): PersistedGridView {
-  const base = project(DEFAULT_STATE)
+  const base = project(LEGACY_ACCOUNT_DEFAULT_STATE)
   const legacyCols = readLegacy<Partial<Record<'name' | 'arr' | 'since', boolean>>>(LEGACY_COLS_KEY)
-  const columnVisibility = { ...DEFAULT_STATE.columnVisibility }
+  const columnVisibility = { ...LEGACY_ACCOUNT_DEFAULT_STATE.columnVisibility }
 
   if (legacyCols) {
     if (typeof legacyCols.name === 'boolean') columnVisibility.account = legacyCols.name
@@ -81,7 +99,7 @@ export function migrateLegacy(): PersistedGridView {
   }
 
   const legacyOrder = readLegacy<unknown>(LEGACY_ORDER_KEY)
-  const columnOrder = legacyOrder !== undefined ? normalizeColumnOrder(legacyOrder) : base.columnOrder
+  const columnOrder = legacyOrder !== undefined ? normalizeColumnOrder(legacyOrder, LEGACY_ACCOUNT_COLUMN_ORDER) : base.columnOrder
 
   return { ...base, columnVisibility, columnOrder }
 }

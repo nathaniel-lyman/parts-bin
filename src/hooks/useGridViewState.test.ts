@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_STATE } from '../components/DataGrid/state'
 import { useGridViewState } from './useGridViewState'
 
+const accountColumns = ['account', 'owner', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions']
+  .map((id) => ({ id, header: id }))
+
 describe('useGridViewState (uncontrolled live state)', () => {
   it('initializes from the provided seed', () => {
     const { result } = renderHook(() => useGridViewState(DEFAULT_STATE))
@@ -16,7 +19,7 @@ describe('useGridViewState (uncontrolled live state)', () => {
   })
 
   it('a violating columnOrder dispatch is a no-op (normalize forces actions last)', () => {
-    const { result } = renderHook(() => useGridViewState(DEFAULT_STATE))
+    const { result } = renderHook(() => useGridViewState(DEFAULT_STATE, accountColumns))
     act(() =>
       result.current.dispatch({
         type: 'SET_COLUMN_ORDER',
@@ -26,4 +29,3 @@ describe('useGridViewState (uncontrolled live state)', () => {
     expect(result.current.state.columnOrder[result.current.state.columnOrder.length - 1]).toBe('actions')
   })
 })
-

@@ -2,7 +2,6 @@ import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import { arrayMove } from '@dnd-kit/sortable'
 import {
   ACTIONS_COLUMN_ID,
-  DEFAULT_COLUMN_ORDER,
   normalizeColumnOrder,
   normalizePinning,
   normalizeSorting,
@@ -64,7 +63,7 @@ export function columnOrderReducer<TData>(
       const { activeId, overId } = action
       if (activeId === overId) return slice
       if (activeId === ACTIONS_COLUMN_ID || overId === ACTIONS_COLUMN_ID) return slice
-      const knownIds = columnIds.length ? columnIds : DEFAULT_COLUMN_ORDER
+      const knownIds = columnIds.length ? columnIds : slice
       if (!knownIds.includes(activeId) || !knownIds.includes(overId)) return slice
       const normalized = normalizeColumnOrder(slice, knownIds)
       const oldIndex = normalized.indexOf(activeId)

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   ACTIONS_COLUMN_ID,
-  DEFAULT_COLUMN_ORDER,
   MOVABLE_COLUMN_IDS,
   canExportColumn,
   canHideColumn,
@@ -16,7 +15,7 @@ import type { LedgerGridState } from '../types'
 
 describe('normalizeColumnOrder (ported verbatim)', () => {
   it('golden case: dedupes, drops unknowns, appends missing, forces actions last', () => {
-    expect(normalizeColumnOrder(['actions', 'owner', 'ghost', 'owner', 'account'])).toEqual([
+    expect(normalizeColumnOrder(['actions', 'owner', 'ghost', 'owner', 'account'], accountOrder)).toEqual([
       'owner',
       'account',
       'segment',
@@ -29,20 +28,22 @@ describe('normalizeColumnOrder (ported verbatim)', () => {
     ])
   })
 
-  it('non-array input returns the default order', () => {
-    expect(normalizeColumnOrder(undefined)).toEqual([...DEFAULT_COLUMN_ORDER])
-    expect(normalizeColumnOrder(null)).toEqual([...DEFAULT_COLUMN_ORDER])
-    expect(normalizeColumnOrder('account')).toEqual([...DEFAULT_COLUMN_ORDER])
+  it('non-array input returns the provided column order without demo account columns', () => {
+    expect(normalizeColumnOrder(undefined)).toEqual([])
+    expect(normalizeColumnOrder(null)).toEqual([])
+    expect(normalizeColumnOrder('account')).toEqual([])
+    expect(normalizeColumnOrder(undefined, ['name', 'score', 'actions'])).toEqual(['name', 'score', 'actions'])
   })
 
-  it('empty array yields canonical default order', () => {
-    expect(normalizeColumnOrder([])).toEqual([...DEFAULT_COLUMN_ORDER])
+  it('empty array yields the current columns when provided', () => {
+    expect(normalizeColumnOrder([])).toEqual([])
+    expect(normalizeColumnOrder([], ['name', 'score'])).toEqual(['name', 'score'])
   })
 
-  it('isMovableColumnId excludes actions, includes the movable ids', () => {
+  it('isMovableColumnId excludes actions and allows arbitrary clone columns', () => {
     expect(isMovableColumnId('actions')).toBe(false)
     expect(isMovableColumnId('account')).toBe(true)
-    expect(isMovableColumnId('unknown')).toBe(false)
+    expect(isMovableColumnId('custom-domain-column')).toBe(true)
     expect(MOVABLE_COLUMN_IDS).not.toContain(ACTIONS_COLUMN_ID)
   })
 })
@@ -62,14 +63,19 @@ const base: LedgerGridState = {
   grouping: [],
   expanded: {},
 }
+const accountOrder = ['account', 'owner', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions']
 
-describe('normalizeColumnPinning (actions always right, never left/absent)', () => {
+describe('normalizeColumnPinning (actions locked right when present)', () => {
   it('keeps actions pinned right when already correct', () => {
     expect(normalizeColumnPinning({ left: [], right: ['actions'] })).toEqual({ left: [], right: ['actions'] })
   })
 
-  it('adds actions to right when absent', () => {
-    expect(normalizeColumnPinning({ left: [], right: [] })).toEqual({ left: [], right: ['actions'] })
+  it('does not inject actions into generic grids that do not have an actions column', () => {
+    expect(normalizeColumnPinning({ left: [], right: [] })).toEqual({ left: [], right: [] })
+  })
+
+  it('adds actions to right when the current columns include actions', () => {
+    expect(normalizeColumnPinning({ left: [], right: [] }, accountOrder)).toEqual({ left: [], right: ['actions'] })
   })
 
   it('removes actions from left and forces it into right', () => {
@@ -106,7 +112,7 @@ describe('normalizeState composes order + pinning', () => {
       ...base,
       columnOrder: ['actions', 'owner', 'ghost', 'account'],
       columnPinning: { left: ['actions'], right: [] },
-    })
+    }, accountOrder)
     expect(out.columnOrder).toEqual(['owner', 'account', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions'])
     expect(out.columnPinning).toEqual({ left: [], right: ['actions'] })
   })
@@ -120,4 +126,3 @@ describe('normalizeState composes order + pinning', () => {
     expect(normalizeState(base)).toEqual(base)
   })
 })
-

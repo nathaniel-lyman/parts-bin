@@ -1,8 +1,29 @@
 import type { Account, Status } from '../data/types'
 import { fmtCurrency, fmtDelta } from '../lib/format'
 import { ACTIONS_COLUMN_ID } from './DataGrid/normalize'
-import type { LedgerGridColumn } from './DataGrid/types'
+import { DEFAULT_STATE } from './DataGrid/state'
+import type { LedgerGridColumn, LedgerGridState } from './DataGrid/types'
 import { StatusBadge } from './ui/Badge'
+
+export const ACCOUNT_GRID_COLUMN_ORDER = [
+  'account',
+  'owner',
+  'segment',
+  'mrr',
+  'growth',
+  'status',
+  'arr',
+  'since',
+  ACTIONS_COLUMN_ID,
+]
+
+export const ACCOUNT_GRID_INITIAL_STATE: LedgerGridState = {
+  ...DEFAULT_STATE,
+  sorting: [{ id: 'mrr', desc: true }],
+  columnVisibility: { account: true, arr: false, since: false },
+  columnOrder: [...ACCOUNT_GRID_COLUMN_ORDER],
+  columnPinning: { left: [], right: [ACTIONS_COLUMN_ID] },
+}
 
 function withMeta(column: LedgerGridColumn<Account>): LedgerGridColumn<Account> {
   const align = column.align ?? 'left'

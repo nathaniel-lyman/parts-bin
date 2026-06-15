@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { accountGlobalFilter, buildAccountGridColumns } from '../../accountGridColumns'
+import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, buildAccountGridColumns } from '../../accountGridColumns'
 import { DataGrid } from '../DataGrid'
 import { DEFAULT_STATE } from '../state'
-import type { LedgerGridState } from '../types'
+import type { LedgerGridColumn, LedgerGridState } from '../types'
 import type { Account } from '../../../data/types'
 
 const accounts: Account[] = [
@@ -22,8 +22,48 @@ const common = {
 }
 
 describe('DataGrid (uncontrolled, account table)', () => {
+  it('preserves TanStack default cell rendering when no custom cell renderer is provided', () => {
+    interface Row { id: string; name: string }
+    const rows: Row[] = [{ id: '1', name: 'Default renderer value' }]
+    const columns: LedgerGridColumn<Row>[] = [
+      { id: 'name', accessorKey: 'name', header: 'Name' },
+    ]
+
+    render(
+      <DataGrid<Row>
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        initialState={{
+          ...DEFAULT_STATE,
+          sorting: [],
+          columnOrder: ['name'],
+          columnVisibility: {},
+          columnPinning: { left: [], right: [] },
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Default renderer value')).toBeInTheDocument()
+  })
+
+  it('layers pinned headers above pinned body cells', () => {
+    render(
+      <DataGrid<Account>
+        {...common}
+        initialState={{
+          ...DEFAULT_STATE,
+          columnPinning: { left: ['account'], right: ['actions'] },
+        }}
+      />,
+    )
+
+    expect(screen.getByTestId('col-header-account').style.zIndex).toBe('30')
+    expect(screen.getByTestId('col-header-actions').style.zIndex).toBe('30')
+  })
+
   it('renders the default visible columns and hides arr/since by default', () => {
-    render(<DataGrid<Account> {...common} initialState={DEFAULT_STATE} />)
+    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} />)
     expect(screen.getByRole('columnheader', { name: /Account/ })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /MRR/ })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: 'ARR' })).toBeNull()
@@ -31,7 +71,7 @@ describe('DataGrid (uncontrolled, account table)', () => {
   })
 
   it('renders rows sorted by mrr desc by default', () => {
-    render(<DataGrid<Account> {...common} initialState={DEFAULT_STATE} />)
+    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} />)
     const rows = screen.getAllByRole('row').slice(1)
     expect(within(rows[0]).getByText('Acme')).toBeInTheDocument()
     expect(within(rows[2]).getByText('Beta')).toBeInTheDocument()
@@ -41,7 +81,7 @@ describe('DataGrid (uncontrolled, account table)', () => {
     render(
       <DataGrid<Account>
         {...common}
-        initialState={{ ...DEFAULT_STATE, columnVisibility: { account: true, arr: true, since: true } }}
+        initialState={{ ...ACCOUNT_GRID_INITIAL_STATE, columnVisibility: { account: true, arr: true, since: true } }}
       />,
     )
     expect(screen.getByRole('columnheader', { name: /ARR/ })).toBeInTheDocument()
@@ -49,17 +89,17 @@ describe('DataGrid (uncontrolled, account table)', () => {
   })
 
   it('shows the empty state when no rows match the quick filter', () => {
-    render(<DataGrid<Account> {...common} initialState={{ ...DEFAULT_STATE, globalFilter: 'zzzzz' }} />)
+    render(<DataGrid<Account> {...common} initialState={{ ...ACCOUNT_GRID_INITIAL_STATE, globalFilter: 'zzzzz' }} />)
     expect(screen.getByText(/no results/i)).toBeInTheDocument()
   })
 
   it('renders the loading component when loading prop is set', () => {
-    render(<DataGrid<Account> {...common} initialState={DEFAULT_STATE} loading />)
+    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} loading />)
     expect(screen.getByText(/loading/i)).toBeInTheDocument()
   })
 
   it('renders the error component when error prop is set', () => {
-    render(<DataGrid<Account> {...common} initialState={DEFAULT_STATE} error={new Error('fetch failed')} />)
+    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} error={new Error('fetch failed')} />)
     expect(screen.getByText(/fetch failed/)).toBeInTheDocument()
   })
 })
@@ -70,13 +110,13 @@ describe('DataGrid (controlled override)', () => {
 
     function Controlled() {
       const [state, setState] = useState<LedgerGridState>({
-        ...DEFAULT_STATE,
+        ...ACCOUNT_GRID_INITIAL_STATE,
         columnVisibility: { account: true, arr: true, since: false },
       })
       return (
         <DataGrid<Account>
           {...common}
-          initialState={{ ...DEFAULT_STATE, columnVisibility: { account: true, arr: false, since: false } }}
+          initialState={{ ...ACCOUNT_GRID_INITIAL_STATE, columnVisibility: { account: true, arr: false, since: false } }}
           state={state}
           onStateChange={setState}
         />

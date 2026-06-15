@@ -1,25 +1,15 @@
-import { DEFAULT_COLUMN_ORDER, normalizeState } from './normalize'
 import type { LedgerGridState } from './types'
 
-export const DEFAULT_COLUMN_VISIBILITY: Record<string, boolean> = {
-  account: true,
-  owner: true,
-  segment: true,
-  mrr: true,
-  growth: true,
-  status: true,
-  arr: false,
-  since: false,
-}
+export const DEFAULT_COLUMN_VISIBILITY: Record<string, boolean> = {}
 
 export const DEFAULT_STATE: LedgerGridState = {
-  sorting: [{ id: 'mrr', desc: true }],
+  sorting: [],
   columnFilters: [],
   globalFilter: '',
-  columnVisibility: { account: true, arr: false, since: false },
-  columnOrder: [...DEFAULT_COLUMN_ORDER],
+  columnVisibility: {},
+  columnOrder: [],
   columnSizing: {},
-  columnPinning: { left: [], right: ['actions'] },
+  columnPinning: { left: [], right: [] },
   rowSelection: {},
   rowPinning: { top: [], bottom: [] },
   pagination: { pageIndex: 0, pageSize: 25 },

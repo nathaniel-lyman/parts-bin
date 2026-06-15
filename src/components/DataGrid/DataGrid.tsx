@@ -29,7 +29,7 @@ import {
 import { useGridViewState } from '../../hooks/useGridViewState'
 import { bootGridSeed, useGridPersistence } from '../../hooks/useGridPersistence'
 import { useSavedViews } from '../../hooks/useSavedViews'
-import { canHideColumn, canSortColumn, isMovableColumnId } from './normalize'
+import { ACTIONS_COLUMN_ID, canHideColumn, canSortColumn, isMovableColumnId } from './normalize'
 import { gridReducer } from './reducers'
 import { densityClass, pinnedLeafGroups, pinnedOffsets, rowHeightForDensity, selectAllState, selectionCount, type PinnedOffsets } from './selectors'
 import { hydrate } from './state'
@@ -139,9 +139,9 @@ function toColumnDef<TData>(column: LedgerGridColumn<TData>): ColumnDef<TData> {
     minSize: column.minWidth,
     maxSize: column.maxWidth,
     enableGrouping: column.groupable === true,
-    cell: column.cell
-      ? (ctx) => column.cell!({ value: ctx.getValue(), row: ctx.row.original, rowId: ctx.row.id })
-      : undefined,
+  }
+  if (column.cell) {
+    base.cell = (ctx) => column.cell!({ value: ctx.getValue(), row: ctx.row.original, rowId: ctx.row.id })
   }
 
   if (column.accessorFn) return { ...base, accessorFn: column.accessorFn }
@@ -240,11 +240,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const effectiveColumnOrder = useMemo(
     () => {
       const ids = columns.map((column) => column.id)
-      const ordered = state.columnOrder.filter((id) => ids.includes(id) && id !== 'actions')
+      const ordered = state.columnOrder.filter((id) => ids.includes(id) && id !== ACTIONS_COLUMN_ID)
       for (const id of ids) {
-        if (id !== 'actions' && !ordered.includes(id)) ordered.push(id)
+        if (id !== ACTIONS_COLUMN_ID && !ordered.includes(id)) ordered.push(id)
       }
-      return [...ordered, 'actions'].filter((id) => ids.includes(id))
+      return [...ordered, ACTIONS_COLUMN_ID].filter((id) => ids.includes(id))
     },
     [columns, state.columnOrder],
   )

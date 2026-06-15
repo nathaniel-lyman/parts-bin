@@ -41,7 +41,7 @@ describe('project (LedgerGridState -> PersistedGridView)', () => {
 describe('hydrateView (PersistedGridView -> LedgerGridState)', () => {
   it('merges a partial payload over defaults and seeds runtime fields', () => {
     const state = hydrateView({ density: 'comfortable', columnVisibility: { arr: true } })
-    expect(state.columnVisibility).toEqual({ account: true, arr: true, since: false })
+    expect(state.columnVisibility).toEqual({ arr: true })
     expect(state.density).toBe('comfortable')
     expect(state.globalFilter).toBe('')
     expect(state.rowSelection).toEqual({})
