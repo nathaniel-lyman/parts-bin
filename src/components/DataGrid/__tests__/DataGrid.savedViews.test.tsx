@@ -38,7 +38,7 @@ describe('DataGrid saved views', () => {
     expect(stored[0].name).toBe('Snapshot')
     expect(stored[0].view.columnVisibility.arr).toBe(true)
 
-    await userEvent.click(screen.getByRole('button', { name: /views/i }))
+    await userEvent.click(screen.getByRole('button', { name: /columns/i }))
     await userEvent.click(screen.getByRole('button', { name: /reset to default/i }))
     expect(arrVisible()).toBe(false)
 
