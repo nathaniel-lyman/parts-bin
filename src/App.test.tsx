@@ -79,8 +79,8 @@ test('manual date ranges update the dashboard period label dynamically', async (
   await user.click(screen.getByRole('button', { name: 'Apply' }))
 
   expect(screen.getByLabelText('Time period')).toHaveValue('custom')
-  expect(screen.getByText('Custom range · Jun 9, 2025 - Jan 6, 2026')).toBeInTheDocument()
-  expect(screen.queryByText('Last 90 days · Jun 9, 2025 - Jan 6, 2026')).not.toBeInTheDocument()
+  expectTextContent('Custom range · Jun 9, 2025 - Jan 6, 2026')
+  expect(document.body).not.toHaveTextContent('Last 90 days · Jun 9, 2025 - Jan 6, 2026')
 
   await user.selectOptions(screen.getByLabelText('Time period'), '30d')
   expect(screen.getByLabelText('Time period')).toHaveValue('30d')
