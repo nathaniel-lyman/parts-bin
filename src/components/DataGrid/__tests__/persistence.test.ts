@@ -11,6 +11,7 @@ describe('project (LedgerGridState -> PersistedGridView)', () => {
     pagination: { pageIndex: 4, pageSize: 50 },
     density: 'standard' as const,
     columnVisibility: { account: true, arr: true, since: false },
+    sorting: [{ id: 'mrr', desc: true }],
   }
 
   it('stamps the current version', () => {

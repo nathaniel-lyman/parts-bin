@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { columnVisibilityReducer, densityReducer } from '../reducers'
 
-const DEFAULT_VIS = { account: true, owner: true, segment: true, mrr: true, growth: true, status: true, arr: false, since: false }
-
 describe('columnVisibilityReducer', () => {
   it('toggles a hideable column off then on', () => {
     const off = columnVisibilityReducer({ arr: true }, { type: 'TOGGLE_COLUMN_VISIBILITY', id: 'arr' })
@@ -26,7 +24,7 @@ describe('columnVisibilityReducer', () => {
   })
 
   it('RESET_COLUMNS restores default visibility', () => {
-    expect(columnVisibilityReducer({ arr: true, since: true }, { type: 'RESET_COLUMNS' })).toEqual(DEFAULT_VIS)
+    expect(columnVisibilityReducer({ arr: true, since: true }, { type: 'RESET_COLUMNS' })).toEqual({})
   })
 })
 
@@ -43,4 +41,3 @@ describe('densityReducer', () => {
     expect(densityReducer('standard', { type: 'TOGGLE_COLUMN_VISIBILITY', id: 'arr' })).toBe('standard')
   })
 })
-

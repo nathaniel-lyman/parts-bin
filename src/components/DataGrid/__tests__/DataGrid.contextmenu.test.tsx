@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { Account } from '../../../data/types'
-import { accountGlobalFilter, accountGridColumns } from '../../accountGridColumns'
+import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, accountGridColumns } from '../../accountGridColumns'
 import { DataGrid } from '../DataGrid'
 
 const rows: Account[] = [
@@ -25,6 +25,7 @@ function renderGrid() {
       getRowId={(row) => row.id}
       globalFilterFn={accountGlobalFilter}
       enableRowSelection
+      initialState={ACCOUNT_GRID_INITIAL_STATE}
     />,
   )
 }

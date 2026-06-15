@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { seedAccounts } from '../../../data/accounts'
-import { accountGridColumns } from '../../accountGridColumns'
+import { ACCOUNT_GRID_INITIAL_STATE, accountGridColumns } from '../../accountGridColumns'
 import { SAVED_VIEWS_KEY } from '../../../hooks/useSavedViews'
 import { DataGrid } from '../DataGrid'
 
@@ -13,6 +13,7 @@ function renderGrid() {
       columns={accountGridColumns({ onEdit: vi.fn(), onDelete: vi.fn() })}
       getRowId={(row) => row.id}
       persistenceKey="ledger.accounts.grid"
+      initialState={ACCOUNT_GRID_INITIAL_STATE}
     />,
   )
 }
