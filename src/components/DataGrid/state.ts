@@ -1,4 +1,5 @@
 import type { LedgerGridState } from './types'
+import { normalizeState } from './normalize'
 
 export const DEFAULT_COLUMN_VISIBILITY: Record<string, boolean> = {}
 
