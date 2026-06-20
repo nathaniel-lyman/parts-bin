@@ -11,3 +11,8 @@ docs/superpowers/
 
 # local Claude Code settings (the .claude/skills/ wrappers ARE tracked)
 .claude/settings.local.json
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

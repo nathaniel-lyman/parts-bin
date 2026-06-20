@@ -1,4 +1,321 @@
 {
   "projectId": "507b3afb-02c4-4bb9-ae7d-91137f6dbaec",
-  "shape": "package"
+  "shape": "package",
+  "pkg": "parts-bin",
+  "globalName": "PartsBin",
+  "srcDir": "src",
+  "tsconfig": "tsconfig.app.json",
+  "cssEntry": ".design-sync/.cache/ds-styles.css",
+  "docsDir": ".design-sync/catalog-docs",
+  "readmeHeader": ".design-sync/conventions.md",
+  "dtsPropsFor": {
+    "Modal": "title: string; onClose: () => void; children: React.ReactNode; footer?: React.ReactNode",
+    "ConfirmDialog": "title: string; message: string; confirmLabel?: string; onCancel: () => void; onConfirm: () => void",
+    "KpiCard": "label: string; value: string; delta?: number; spark?: number[]; negSpark?: boolean",
+    "Sparkline": "data: number[]; neg?: boolean; width?: number; height?: number",
+    "ToastProvider": "children: React.ReactNode",
+    "LoadingBars": "label?: string; className?: string",
+    "LoadingSparkline": "label?: string; className?: string",
+    "LoadingDots": "label?: string; className?: string",
+    "LoadingKpiSkeleton": "label?: string; className?: string",
+    "LoadingConcentricArcs": "label?: string; className?: string",
+    "LoadingChartDrawIn": "label?: string; className?: string; tone?: 'accent' | 'pos' | 'intel' | 'warn' | 'neg' | 'muted'",
+    "LoadingDonut": "label?: string; className?: string; tone?: 'accent' | 'pos' | 'intel' | 'warn' | 'neg' | 'muted'",
+    "LineTrendChart": "data?: readonly object[]; series?: readonly string[]; xKey?: string; showEndLabels?: boolean",
+    "SignedMovementChart": "data?: readonly object[]; barWidth?: number; showLabels?: boolean"
+  },
+  "overrides": {
+    "ChartCard": {
+      "cardMode": "column"
+    },
+    "ChartEmptyState": {
+      "cardMode": "column"
+    },
+    "ChartLegend": {
+      "cardMode": "column"
+    },
+    "LineTrendChart": {
+      "cardMode": "column"
+    },
+    "SignedMovementChart": {
+      "cardMode": "column"
+    },
+    "AssistantPanel": {
+      "cardMode": "single",
+      "primaryStory": "EmptyStateWithSuggestions"
+    },
+    "ChatComposer": {
+      "cardMode": "column"
+    },
+    "ChatMarkdown": {
+      "cardMode": "column"
+    },
+    "ChatMessageBubble": {
+      "cardMode": "column"
+    },
+    "CodeBlock": {
+      "cardMode": "column"
+    },
+    "MessageActions": {
+      "cardMode": "column"
+    },
+    "Accordion": {
+      "cardMode": "column"
+    },
+    "ActivityFeed": {
+      "cardMode": "column"
+    },
+    "AppliedFiltersBar": {
+      "cardMode": "column"
+    },
+    "AssigneeChip": {
+      "cardMode": "column"
+    },
+    "AttachmentList": {
+      "cardMode": "column"
+    },
+    "AuditLogItem": {
+      "cardMode": "column"
+    },
+    "Avatar": {
+      "cardMode": "column"
+    },
+    "AvatarGroup": {
+      "cardMode": "column"
+    },
+    "DescriptionList": {
+      "cardMode": "column"
+    },
+    "DetailHeader": {
+      "cardMode": "column"
+    },
+    "FacetedFilter": {
+      "cardMode": "column"
+    },
+    "KeyValueList": {
+      "cardMode": "column"
+    },
+    "MetadataPanel": {
+      "cardMode": "column"
+    },
+    "Metric": {
+      "cardMode": "column"
+    },
+    "Pagination": {
+      "cardMode": "column"
+    },
+    "PropertyGrid": {
+      "cardMode": "column"
+    },
+    "Tabs": {
+      "cardMode": "column"
+    },
+    "Timeline": {
+      "cardMode": "column"
+    },
+    "Toolbar": {
+      "cardMode": "column"
+    },
+    "DataGrid": {
+      "cardMode": "column"
+    },
+    "Banner": {
+      "cardMode": "column"
+    },
+    "EmptyState": {
+      "cardMode": "column"
+    },
+    "ImportProgress": {
+      "cardMode": "column"
+    },
+    "InlineAlert": {
+      "cardMode": "column"
+    },
+    "ToastProvider": {
+      "cardMode": "single"
+    },
+    "Dropzone": {
+      "cardMode": "column"
+    },
+    "Field": {
+      "cardMode": "column"
+    },
+    "FileUpload": {
+      "cardMode": "column"
+    },
+    "RadioGroup": {
+      "cardMode": "column"
+    },
+    "SegmentedControl": {
+      "cardMode": "column"
+    },
+    "Slider": {
+      "cardMode": "column"
+    },
+    "Stepper": {
+      "cardMode": "column"
+    },
+    "Textarea": {
+      "cardMode": "column"
+    },
+    "WizardLayout": {
+      "cardMode": "column"
+    },
+    "BubbleMap": {
+      "cardMode": "column"
+    },
+    "GeoDrilldown": {
+      "cardMode": "column"
+    },
+    "RegionChoropleth": {
+      "cardMode": "column"
+    },
+    "CommandPalette": {
+      "cardMode": "single"
+    },
+    "ConfirmDialog": {
+      "cardMode": "single"
+    },
+    "Drawer": {
+      "cardMode": "single"
+    },
+    "Modal": {
+      "cardMode": "single"
+    },
+    "Card": {
+      "cardMode": "column"
+    },
+    "PageHeader": {
+      "cardMode": "column"
+    },
+    "AppShell": {
+      "cardMode": "single",
+      "viewport": "1340x820"
+    },
+    "Breadcrumbs": {
+      "cardMode": "column"
+    },
+    "FilterBar": {
+      "cardMode": "column"
+    },
+    "SectionHeader": {
+      "cardMode": "column"
+    },
+    "SettingsPanel": {
+      "cardMode": "column"
+    },
+    "Sidebar": {
+      "cardMode": "single",
+      "viewport": "1320x720"
+    },
+    "TopNav": {
+      "cardMode": "column"
+    }
+  },
+  "componentSrcMap": {
+    "Button": "src/components/ui/Button.tsx",
+    "IconButton": "src/components/ui/IconButton.tsx",
+    "Card": "src/components/ui/Card.tsx",
+    "StatusBadge": "src/components/ui/Badge.tsx",
+    "Tag": "src/components/ui/Tag.tsx",
+    "Kbd": "src/components/ui/Kbd.tsx",
+    "Link": "src/components/ui/Link.tsx",
+    "Separator": "src/components/ui/Separator.tsx",
+    "PageHeader": "src/components/ui/PageHeader.tsx",
+    "Input": "src/components/ui/Input.tsx",
+    "Textarea": "src/components/ui/Textarea.tsx",
+    "Select": "src/components/ui/Select.tsx",
+    "Combobox": "src/components/ui/Combobox.tsx",
+    "MultiSelect": "src/components/ui/MultiSelect.tsx",
+    "Checkbox": "src/components/ui/Checkbox.tsx",
+    "RadioGroup": "src/components/ui/RadioGroup.tsx",
+    "Switch": "src/components/ui/Switch.tsx",
+    "SegmentedControl": "src/components/ui/SegmentedControl.tsx",
+    "Slider": "src/components/ui/Slider.tsx",
+    "Field": "src/components/ui/Field.tsx",
+    "DatePicker": "src/components/ui/DatePicker.tsx",
+    "DateRangePicker": "src/components/ui/DatePicker.tsx",
+    "Dropzone": "src/components/ui/FileUpload.tsx",
+    "FileUpload": "src/components/ui/FileUpload.tsx",
+    "Stepper": "src/components/ui/Stepper.tsx",
+    "WizardLayout": "src/components/ui/Stepper.tsx",
+    "Modal": "src/components/ui/Modal.tsx",
+    "Drawer": "src/components/ui/Drawer.tsx",
+    "Popover": "src/components/ui/Popover.tsx",
+    "Tooltip": "src/components/ui/Tooltip.tsx",
+    "DropdownMenu": "src/components/ui/DropdownMenu.tsx",
+    "ContextMenu": "src/components/ui/ContextMenu.tsx",
+    "CommandPalette": "src/components/ui/CommandPalette.tsx",
+    "InlineAlert": "src/components/ui/InlineAlert.tsx",
+    "Banner": "src/components/ui/Banner.tsx",
+    "Toast": "src/components/ui/Toast.tsx",
+    "ToastProvider": "src/components/ui/ToastProvider.tsx",
+    "Spinner": "src/components/ui/Spinner.tsx",
+    "Skeleton": "src/components/ui/Skeleton.tsx",
+    "EmptyState": "src/components/ui/EmptyState.tsx",
+    "Progress": "src/components/ui/Progress.tsx",
+    "ImportProgress": "src/components/ui/FileUpload.tsx",
+    "LoadingBars": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingChartDrawIn": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingConcentricArcs": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingCountingMetric": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingDonut": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingDots": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingKpiSkeleton": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingProgress": "src/components/ui/LoadingAnimations.tsx",
+    "LoadingSparkline": "src/components/ui/LoadingAnimations.tsx",
+    "Avatar": "src/components/ui/Avatar.tsx",
+    "AvatarGroup": "src/components/ui/Avatar.tsx",
+    "AssigneeChip": "src/components/ui/Avatar.tsx",
+    "ActivityFeed": "src/components/ui/Activity.tsx",
+    "Timeline": "src/components/ui/Activity.tsx",
+    "AuditLogItem": "src/components/ui/Activity.tsx",
+    "DetailHeader": "src/components/ui/Detail.tsx",
+    "KeyValueList": "src/components/ui/Detail.tsx",
+    "DescriptionList": "src/components/ui/Detail.tsx",
+    "PropertyGrid": "src/components/ui/Detail.tsx",
+    "MetadataPanel": "src/components/ui/Detail.tsx",
+    "Table": "src/components/ui/Table.tsx",
+    "Accordion": "src/components/ui/Accordion.tsx",
+    "Tabs": "src/components/ui/Tabs.tsx",
+    "Pagination": "src/components/ui/Pagination.tsx",
+    "Toolbar": "src/components/ui/Toolbar.tsx",
+    "AppliedFiltersBar": "src/components/ui/AppliedFilters.tsx",
+    "FacetedFilter": "src/components/ui/AppliedFilters.tsx",
+    "AttachmentList": "src/components/ui/FileUpload.tsx",
+    "Metric": "src/components/ui/Metric.tsx",
+    "WaterfallChart": "src/components/charts/WaterfallChart.tsx",
+    "SignedMovementChart": "src/components/charts/RevenueMovementChart.tsx",
+    "ShareDonutChart": null,
+    "LineTrendChart": "src/components/charts/MrrTrendChart.tsx",
+    "ChartCard": "src/components/charts/ChartScaffold.tsx",
+    "ChartLegend": "src/components/charts/ChartScaffold.tsx",
+    "ChartTooltipContent": "src/components/charts/ChartScaffold.tsx",
+    "ChartEmptyState": "src/components/charts/ChartScaffold.tsx",
+    "RegionChoropleth": "src/components/maps/RegionChoropleth.tsx",
+    "BubbleMap": "src/components/maps/BubbleMap.tsx",
+    "FlowMap": "src/components/maps/FlowMap.tsx",
+    "GeoDrilldown": "src/components/maps/GeoDrilldown.tsx",
+    "DataGrid": "src/components/DataGrid/DataGrid.tsx",
+    "AssistantPanel": "src/components/chat/AssistantPanel.tsx",
+    "ChatMessageList": "src/components/chat/ChatMessageList.tsx",
+    "ChatMessageBubble": "src/components/chat/ChatMessageBubble.tsx",
+    "ChatComposer": "src/components/chat/ChatComposer.tsx",
+    "ChatMarkdown": "src/components/chat/ChatMarkdown.tsx",
+    "CodeBlock": "src/components/chat/CodeBlock.tsx",
+    "MessageActions": "src/components/chat/MessageActions.tsx",
+    "SuggestedPrompts": "src/components/chat/SuggestedPrompts.tsx",
+    "AppShell": "src/components/shell/AppShell.tsx",
+    "Sidebar": "src/components/shell/Sidebar.tsx",
+    "TopNav": "src/components/shell/TopNav.tsx",
+    "Breadcrumbs": "src/components/shell/Breadcrumbs.tsx",
+    "FilterBar": "src/components/shell/FilterBar.tsx",
+    "SectionHeader": "src/components/shell/SectionHeader.tsx",
+    "SettingsPanel": "src/components/shell/SettingsPanel.tsx",
+    "NotificationBadge": "src/components/shell/GlobalControls.tsx",
+    "KpiCard": "src/components/KpiCard.tsx",
+    "KpiSummaryRow": "src/components/KpiCard.tsx",
+    "Sparkline": "src/components/Sparkline.tsx",
+    "ConfirmDialog": "src/components/ConfirmDialog.tsx"
+  }
 }
