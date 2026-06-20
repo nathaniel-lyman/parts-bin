@@ -32,7 +32,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
   ),
   IconButton: <IconButton aria-label="Edit">✎</IconButton>,
   Card: <Card title="Overview" description="Quarterly summary">Body content</Card>,
-  StatusBadge: <StatusBadge status="Active" />,
+  StatusBadge: <StatusBadge status="Active" tone="pos" />,
   Tag: <Tag tone="accent" label="Beta" />,
   Kbd: <Kbd keys={['Ctrl', 'K']} />,
   // forms
@@ -150,7 +150,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
   ),
   DetailHeader: (
     <div className="w-64">
-      <DetailHeader title="Acme Corp" subtitle="Enterprise" status={<StatusBadge status="Active" />} />
+      <DetailHeader title="Acme Corp" subtitle="Enterprise" status={<StatusBadge status="Active" tone="pos" />} />
     </div>
   ),
   DescriptionList: (

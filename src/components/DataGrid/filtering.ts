@@ -1,5 +1,4 @@
-import type { Cell, FilterFn, Row } from '@tanstack/react-table'
-import type { Account } from '../../data/types'
+import type { Cell, Row } from '@tanstack/react-table'
 
 export const FILTER_COLUMN_TYPES = ['text', 'number', 'currency', 'percent', 'date', 'status', 'enum'] as const
 export type FilterColumnType = (typeof FILTER_COLUMN_TYPES)[number]
@@ -130,13 +129,17 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
   }
 }
 
-export const ledgerFilterFn: FilterFn<Account> = (
-  row: Row<Account>,
+/**
+ * Schema-agnostic column filter. Operates structurally on `cell.getValue()`, so
+ * it works for any row shape — no dependency on the demo `Account` type.
+ */
+export function ledgerFilterFn<TData>(
+  row: Row<TData>,
   columnId: string,
   filterValue: FilterValue,
-): boolean => {
+): boolean {
   if (!filterValue || typeof filterValue !== 'object') return true
-  const cell = row.getAllCells().find((candidate: Cell<Account, unknown>) => candidate.column.id === columnId)
+  const cell = row.getAllCells().find((candidate: Cell<TData, unknown>) => candidate.column.id === columnId)
   if (!cell) return true
   const colType = cell.column.columnDef.meta?.type ?? 'text'
   return makeFilterFn(colType, filterValue.operator, filterValue.value)(cell.getValue())

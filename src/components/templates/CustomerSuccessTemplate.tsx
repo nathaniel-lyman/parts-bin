@@ -23,6 +23,7 @@ import {
   type ActivityEvent,
 } from '../ui'
 import { FilterBar, SettingsPanel } from '../shell'
+import { statusTone } from '../accountGridColumns'
 import { fmtCurrency, fmtPercent } from '../../lib/format'
 import { activeCount, atRiskCount, avgGrowth, totalMrr } from '../../selectors/metrics'
 import { useAccounts } from '../../hooks/useAccounts'
@@ -307,7 +308,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
           {selectedAccount && (
             <Card
               title="Selected account"
-              actions={<StatusBadge status={selectedAccount.status} />}
+              actions={<StatusBadge status={selectedAccount.status} tone={statusTone(selectedAccount.status)} />}
             >
               <div className="grid gap-4">
                 <DetailHeader
@@ -373,7 +374,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
           )}
         >
           <div className="grid gap-4">
-            <Toolbar leading={<span className="micro">Account</span>} trailing={<StatusBadge status={selectedAccount.status} />}>
+            <Toolbar leading={<span className="micro">Account</span>} trailing={<StatusBadge status={selectedAccount.status} tone={statusTone(selectedAccount.status)} />}>
               <span className="text-[13px] text-ink">{selectedAccount.name}</span>
             </Toolbar>
             <Field label="Title" required>

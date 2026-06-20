@@ -104,6 +104,99 @@ describe('DataGrid (uncontrolled, account table)', () => {
   })
 })
 
+// Adoption contract: the generic grid must work for a schema that shares NOTHING
+// with the demo Account model — no account/owner/mrr ids and no custom cell
+// renderers. Guards against demoware (hardcoded movable ids, `cell: undefined`
+// clobbering the default renderer, pinned-header z-index) creeping back into the
+// engine. See the 2026-06 partner-feedback triage.
+describe('DataGrid (foreign schema contract)', () => {
+  interface Product {
+    id: string
+    title: string
+    sku: string
+    price: number
+  }
+  const products: Product[] = [
+    { id: 'p1', title: 'Widget', sku: 'WDG-1', price: 30 },
+    { id: 'p2', title: 'Gadget', sku: 'GDG-2', price: 10 },
+    { id: 'p3', title: 'Gizmo', sku: 'GZM-3', price: 20 },
+  ]
+  const productColumns: LedgerGridColumn<Product>[] = [
+    { id: 'title', accessorKey: 'title', header: 'Title' },
+    { id: 'sku', accessorKey: 'sku', header: 'SKU' },
+    { id: 'price', accessorKey: 'price', header: 'Price', meta: { type: 'number' } },
+  ]
+  const foreignState = (overrides: Partial<LedgerGridState> = {}): LedgerGridState => ({
+    ...DEFAULT_STATE,
+    sorting: [],
+    columnOrder: ['title', 'sku', 'price'],
+    columnVisibility: {},
+    columnPinning: { left: [], right: [] },
+    ...overrides,
+  })
+  const headerIndex = (label: string) =>
+    screen.getAllByRole('columnheader').findIndex((th) => th.textContent?.includes(label))
+
+  it('renders every cell with the default renderer — no blank cells', () => {
+    render(
+      <DataGrid<Product>
+        rows={products}
+        columns={productColumns}
+        getRowId={(row) => row.id}
+        initialState={foreignState()}
+      />,
+    )
+    for (const text of ['Widget', 'WDG-1', 'Gadget', 'GDG-2', 'Gizmo', 'GZM-3']) {
+      expect(screen.getByText(text)).toBeInTheDocument()
+    }
+    // numeric column also uses the default renderer; scope to a row so the
+    // footer's page-size options (10 / 20 / …) can't collide.
+    const widgetRow = screen.getByText('Widget').closest('[role="row"]') as HTMLElement
+    expect(within(widgetRow).getByText('30')).toBeInTheDocument()
+  })
+
+  it('honors a custom column order for non-demo ids (reorder is not a silent no-op)', () => {
+    render(
+      <DataGrid<Product>
+        rows={products}
+        columns={productColumns}
+        getRowId={(row) => row.id}
+        initialState={foreignState({ columnOrder: ['price', 'title', 'sku'] })}
+      />,
+    )
+    expect(headerIndex('Price')).toBeLessThan(headerIndex('Title'))
+    expect(headerIndex('Title')).toBeLessThan(headerIndex('SKU'))
+  })
+
+  it('sorts a foreign column on header click', async () => {
+    const user = userEvent.setup()
+    render(
+      <DataGrid<Product>
+        rows={products}
+        columns={productColumns}
+        getRowId={(row) => row.id}
+        initialState={foreignState()}
+      />,
+    )
+    const price = screen.getByRole('columnheader', { name: /Price/ })
+    expect(price.getAttribute('aria-sort') ?? 'none').toBe('none')
+    await user.click(price)
+    expect(['ascending', 'descending']).toContain(price.getAttribute('aria-sort'))
+  })
+
+  it('pins a foreign column with the expected sticky z-index', () => {
+    render(
+      <DataGrid<Product>
+        rows={products}
+        columns={productColumns}
+        getRowId={(row) => row.id}
+        initialState={foreignState({ columnPinning: { left: ['title'], right: [] } })}
+      />,
+    )
+    expect(screen.getByTestId('col-header-title').style.zIndex).toBe('30')
+  })
+})
+
 describe('DataGrid (controlled override)', () => {
   it('controlled state wins and routes transitions through onStateChange', async () => {
     const user = userEvent.setup()

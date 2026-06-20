@@ -270,7 +270,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       expanded: groupingActive ? state.expanded : {},
     },
     defaultColumn: {
-      filterFn: ledgerFilterFn as unknown as FilterFn<TData>,
+      filterFn: ledgerFilterFn as FilterFn<TData>,
     },
     onSortingChange: (updater) => {
       const next = typeof updater === 'function' ? updater(state.sorting) : updater

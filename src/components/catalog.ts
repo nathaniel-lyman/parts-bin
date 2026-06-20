@@ -162,12 +162,13 @@ export const CATALOG: ComponentEntry[] = [
   }),
   defineComponent(StatusBadge, {
     name: 'StatusBadge', import: './components/ui', category: 'primitive',
-    purpose: 'Tone-coded label with a status dot (Active / At risk / Churned).',
-    use_when: 'Showing the lifecycle state of an account or record.',
+    purpose: 'Tone-coded label with a status dot; schema-agnostic (any status string + a tone).',
+    use_when: 'Showing the lifecycle state of a record. Map your domain status → tone at the call site.',
     prefer_over: { NotificationBadge: 'Use NotificationBadge for an unread/overflow count, not a status tone.' },
-    props: ['status'],
-    related: ['NotificationBadge', 'Metric'],
-    snippet: `<StatusBadge status="Active" />`,
+    props: ['status', 'tone', 'className'],
+    variants: { tone: ['neutral', 'accent', 'pos', 'warn', 'neg'] },
+    related: ['NotificationBadge', 'Metric', 'Tag'],
+    snippet: `<StatusBadge status="Active" tone="pos" />`,
   }),
   defineComponent(Tag, {
     name: 'Tag', import: './components/ui', category: 'primitive',
@@ -667,7 +668,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Top of a single-record detail page or drawer.',
     props: ['title', 'subtitle', 'meta', 'status', 'actions'],
     related: ['PageHeader', 'KeyValueList'],
-    snippet: `<DetailHeader title="Acme Corp" subtitle="Enterprise" status={<StatusBadge status="Active" />} />`,
+    snippet: `<DetailHeader title="Acme Corp" subtitle="Enterprise" status={<StatusBadge status="Active" tone="pos" />} />`,
   }),
   defineComponent(KeyValueList, {
     name: 'KeyValueList', import: './components/ui', category: 'data-display',

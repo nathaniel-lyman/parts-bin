@@ -3,7 +3,14 @@ import { fmtCurrency, fmtDelta } from '../lib/format'
 import { ACTIONS_COLUMN_ID } from './DataGrid/normalize'
 import { DEFAULT_STATE } from './DataGrid/state'
 import type { LedgerGridColumn, LedgerGridState } from './DataGrid/types'
-import { StatusBadge } from './ui/Badge'
+import { StatusBadge, type BadgeTone } from './ui/Badge'
+
+/**
+ * Demo mapping: Account lifecycle `Status` → `StatusBadge` tone. Lives in the
+ * demo layer on purpose so the generic `StatusBadge` carries no status vocabulary.
+ */
+export const statusTone = (status: Status): BadgeTone =>
+  status === 'Active' ? 'pos' : status === 'At risk' ? 'warn' : 'neg'
 
 export const ACCOUNT_GRID_COLUMN_ORDER = [
   'account',
@@ -109,7 +116,7 @@ export function buildAccountGridColumns(
       type: 'status',
       editable: true,
       groupable: true,
-      cell: (ctx) => <StatusBadge status={ctx.value as Status} />,
+      cell: (ctx) => <StatusBadge status={ctx.value as Status} tone={statusTone(ctx.value as Status)} />,
     },
     {
       id: 'arr',
