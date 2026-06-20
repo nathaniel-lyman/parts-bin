@@ -3,7 +3,6 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ToastProvider } from '../ui'
 import { SETTINGS_STORAGE_KEY } from '../../hooks/useSettings'
-import { THEME_RECIPE_STORAGE_KEY } from '../../theme/recipes'
 import { SettingsPage } from './SettingsPage'
 
 function renderPage() {
@@ -38,12 +37,9 @@ test('color mode segment toggles the theme live', async () => {
   expect(document.documentElement.classList.contains('dark')).toBe(true)
 })
 
-test('selecting a theme recipe applies it live and persists', async () => {
-  const user = userEvent.setup()
+test('the theme recipe picker shows the default recipe selected', () => {
   renderPage()
-  await user.click(screen.getByRole('radio', { name: /finance cobalt/i }))
-  expect(document.documentElement.dataset.themeRecipe).toBe('finance-cobalt')
-  expect(localStorage.getItem(THEME_RECIPE_STORAGE_KEY)).toBe('finance-cobalt')
+  expect(screen.getByRole('radio', { name: /parts-bin default/i })).toBeChecked()
 })
 
 test('density segment applies a data attribute live', async () => {

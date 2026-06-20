@@ -807,7 +807,7 @@ export const CATALOG: ComponentEntry[] = [
     purpose: 'Waterfall chart of cumulative start → increases/decreases → total.',
     use_when: 'Explaining how any total is built up from sequential deltas; pass sample or real step data.',
     props: ['data', 'showLabels', 'height', 'barWidth', 'valueFormatter'],
-    related: ['RevenueMovementChart', 'ChartCard'],
+    related: ['SignedMovementChart', 'ChartCard'],
     snippet: `<WaterfallChart data={bridgeSteps} showLabels valueFormatter={formatValue} />`,
   }),
   defineComponent(SignedMovementChart, {

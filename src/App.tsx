@@ -476,7 +476,6 @@ export default function App() {
   const assemblyActive = pathname === '/examples/dashboard' || pathname === '/demo'
   const customerTemplateActive = pathname === '/templates/customer-success'
   const recommendationTemplateActive = pathname === '/templates/recommendation-review'
-  const templateActive = customerTemplateActive || recommendationTemplateActive
   const kitActive = docsActive || composerActive
   const accountsActive = assemblyActive
   const routeKind: AssistantRouteKind = settingsActive

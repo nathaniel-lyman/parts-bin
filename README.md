@@ -11,12 +11,12 @@ and chat primitives. The local Vite app exists to browse docs and examples.
 
 ![parts-bin component catalog](docs/screenshots/components-light.png)
 
-**The whole skin lives in one folder.** Change `src/theme/tokens.css` (or apply a shipped
-recipe) and every component, chart, and page re-skins — zero component edits, enforced by lint:
+**The whole skin lives in one folder.** Change `src/theme/tokens.css` and every component,
+chart, and page re-skins — zero component edits, enforced by lint:
 
-| parts-bin default | `ops-green` recipe — same app, one folder changed |
+| parts-bin default | the same app after editing `src/theme/tokens.css` |
 |---|---|
-| ![Default theme](docs/screenshots/dashboard-dark.png) | ![Ops green recipe](docs/screenshots/dashboard-ops-green.png) |
+| ![Default theme](docs/screenshots/dashboard-dark.png) | ![Re-skinned via tokens.css](docs/screenshots/dashboard-ops-green.png) |
 
 ## Who is this for?
 
@@ -157,8 +157,9 @@ parts-bin is intentionally a copy-paste kit first, not an npm package. Let the p
 across real cloned apps before packaging it.
 
 ## Theme recipes
-Open `/docs` to preview and apply `finance-cobalt`, `ops-green`, and `enterprise-neutral`.
-Recipes live in `src/theme/recipes.css`; the helper API lives in `src/theme/recipes.ts`.
+parts-bin ships a single recipe — `parts-bin-default` — previewable in `/docs`. Recipes are
+optional named token presets: variable overrides live in `src/theme/recipes.css` with metadata
+in `src/theme/recipes.ts`. Add a `data-theme-recipe` block plus a matching entry to ship more.
 The default theme maps primary action, recommendation intelligence, success, review, and
 reject/blocker states to `--accent`, `--intel`, `--pos`, `--warn`, and `--neg`.
 

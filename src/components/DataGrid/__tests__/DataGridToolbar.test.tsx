@@ -29,7 +29,7 @@ function setup() {
 describe('DataGridToolbar', () => {
   it('quick filter dispatches SET_GLOBAL_FILTER', () => {
     const { dispatch } = setup()
-    fireEvent.change(screen.getByPlaceholderText(/search accounts or owners/i), { target: { value: 'acme' } })
+    fireEvent.change(screen.getByPlaceholderText(/search rows/i), { target: { value: 'acme' } })
     expect(dispatch).toHaveBeenCalledWith({ type: 'SET_GLOBAL_FILTER', value: 'acme' })
   })
 

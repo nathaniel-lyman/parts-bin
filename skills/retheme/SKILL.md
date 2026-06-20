@@ -44,7 +44,7 @@ canonical reference; this is the working checklist.
 6. **Optional — ship it as a recipe instead.** To keep the default and add
    the brand as a switchable preset, add variable overrides in
    `src/theme/recipes.css` and a metadata entry in `src/theme/recipes.ts`
-   (existing examples: `finance-cobalt`, `ops-green`, `enterprise-neutral`).
+   (the shipped `parts-bin-default` recipe shows the structure to mirror).
    Note: an applied recipe (`data-theme-recipe` on `<html>`, persisted under
    `ledger.theme.recipe`) overrides `tokens.css` values — if your edits seem
    to do nothing, check that no recipe is active.

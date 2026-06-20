@@ -35,11 +35,11 @@ describe('column-menu per-column filter', () => {
     const user = userEvent.setup()
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
 
-    await user.click(screen.getByRole('button', { name: /mrr column menu/i }))
-    await user.click(within(screen.getByRole('menu', { name: /mrr column menu/i })).getByRole('menuitem', { name: 'Filter' }))
-    const dialog = screen.getByRole('dialog', { name: /mrr filter/i })
-    await user.selectOptions(within(dialog).getByLabelText(/mrr filter operator/i), 'greaterThan')
-    await user.type(within(dialog).getByLabelText(/mrr filter value/i), '20000')
+    await user.click(screen.getByRole('button', { name: /value column menu/i }))
+    await user.click(within(screen.getByRole('menu', { name: /value column menu/i })).getByRole('menuitem', { name: 'Filter' }))
+    const dialog = screen.getByRole('dialog', { name: /value filter/i })
+    await user.selectOptions(within(dialog).getByLabelText(/value filter operator/i), 'greaterThan')
+    await user.type(within(dialog).getByLabelText(/value filter value/i), '20000')
 
     expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
     expect(screen.queryByText('Meridian Corp')).toBeNull()

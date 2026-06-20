@@ -23,10 +23,10 @@ describe('multi-sort header interaction', () => {
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
 
     await user.click(screen.getByRole('columnheader', { name: /segment/i }))
-    fireEvent.click(screen.getByRole('columnheader', { name: /mrr/i }), { shiftKey: true })
+    fireEvent.click(screen.getByRole('columnheader', { name: /value/i }), { shiftKey: true })
 
     expect(screen.getByRole('columnheader', { name: /segment/i })).toHaveAttribute('aria-sort', 'ascending')
-    expect(screen.getByRole('columnheader', { name: /mrr/i })).toHaveAttribute('aria-sort', 'ascending')
+    expect(screen.getByRole('columnheader', { name: /value/i })).toHaveAttribute('aria-sort', 'ascending')
   })
 
   it('shows 1-based sort priority badges when multiple columns are sorted', async () => {
@@ -34,10 +34,10 @@ describe('multi-sort header interaction', () => {
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
 
     await user.click(screen.getByRole('columnheader', { name: /segment/i }))
-    fireEvent.click(screen.getByRole('columnheader', { name: /mrr/i }), { shiftKey: true })
+    fireEvent.click(screen.getByRole('columnheader', { name: /value/i }), { shiftKey: true })
 
     expect(within(screen.getByRole('columnheader', { name: /segment/i })).getByTestId('sort-priority')).toHaveTextContent('1')
-    expect(within(screen.getByRole('columnheader', { name: /mrr/i })).getByTestId('sort-priority')).toHaveTextContent('2')
+    expect(within(screen.getByRole('columnheader', { name: /value/i })).getByTestId('sort-priority')).toHaveTextContent('2')
   })
 
   it('shows no priority badge when only one column is sorted', async () => {

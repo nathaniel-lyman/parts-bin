@@ -1,4 +1,4 @@
-export type ThemeRecipeId = 'parts-bin-default' | 'finance-cobalt' | 'ops-green' | 'enterprise-neutral'
+export type ThemeRecipeId = 'parts-bin-default'
 
 export interface ThemeRecipe {
   id: ThemeRecipeId
@@ -13,24 +13,6 @@ export const THEME_RECIPES: ThemeRecipe[] = [
     name: 'parts-bin default',
     description: 'Slate surfaces, blue actions, purple intelligence, and explicit review states.',
     bestFor: 'Component libraries, admin tools, review queues, and data-dense workspaces.',
-  },
-  {
-    id: 'finance-cobalt',
-    name: 'Finance cobalt',
-    description: 'A slightly cooler finance palette that keeps the cobalt interaction model.',
-    bestFor: 'Analytical dashboards, forecasting views, and portfolio-style workspaces.',
-  },
-  {
-    id: 'ops-green',
-    name: 'Ops green',
-    description: 'Operational green accents with calm surfaces and status-forward semantics.',
-    bestFor: 'Queues, fulfillment, support, observability, and workflow tools.',
-  },
-  {
-    id: 'enterprise-neutral',
-    name: 'Enterprise neutral',
-    description: 'Quiet monochrome chrome with color reserved almost entirely for data meaning.',
-    bestFor: 'Admin consoles, governance screens, and conservative internal systems.',
   },
 ]
 

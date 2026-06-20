@@ -13,7 +13,7 @@ describe('DataGridToolbar quick filter', () => {
     const user = userEvent.setup()
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
 
-    await user.type(screen.getByPlaceholderText(/search accounts or owners/i), 'rivera')
+    await user.type(screen.getByPlaceholderText(/search rows/i), 'rivera')
 
     expect(screen.getByText('Foxglove Labs')).toBeInTheDocument()
     expect(screen.getByText('Quill Analytics')).toBeInTheDocument()

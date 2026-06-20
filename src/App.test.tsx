@@ -27,7 +27,7 @@ function openAssemblyRoute() {
 
 test('root route renders the component catalog first', () => {
   render(<ToastProvider><App /></ToastProvider>)
-  expect(screen.getByText('Components')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Components' })).toBeInTheDocument()
   expect(screen.getByText(/catalog is the primary product surface/i)).toBeInTheDocument()
   expect(screen.queryByText('Component assembly demo')).not.toBeInTheDocument()
 })
@@ -79,7 +79,7 @@ test('Dark toggle switches to dark mode', async () => {
   expect(document.documentElement.classList.contains('dark')).toBe(true)
   expect(localStorage.getItem('parts-bin.theme')).toBe('dark')
   // app still renders its content in dark mode
-  expect(screen.getByText('Components')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Components' })).toBeInTheDocument()
 })
 
 test('manual date ranges update the assembly period label dynamically', async () => {
@@ -181,11 +181,11 @@ test('components route drops assembly-only header controls and wires global sear
   window.history.pushState({}, '', '/docs')
   render(<ToastProvider><App /></ToastProvider>)
 
-  expect(screen.getByText('Components')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Components' })).toBeInTheDocument()
   // Assembly-only controls have no function on the docs page.
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /review/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Review' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /notifications/i })).not.toBeInTheDocument()
   // shell-wide controls stay
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
@@ -205,7 +205,7 @@ test('composer route renders a guided starter and hides assembly-only controls',
   expect(screen.getByRole('button', { name: 'Generate screen' })).toBeInTheDocument()
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /review/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Review' })).not.toBeInTheDocument()
 })
 
 test('docs start alias renders the app composer', () => {

@@ -18,17 +18,18 @@ function renderGrid() {
   )
 }
 
-const arrVisible = () => screen.queryByRole('columnheader', { name: /arr/i }) != null
+const ownerVisible = () => screen.queryByRole('columnheader', { name: /owner/i }) != null
 
 describe('DataGrid saved views', () => {
   it('saves a mutated layout, resets, and reapplies it', async () => {
     renderGrid()
-    expect(arrVisible()).toBe(false)
+    // Owner is visible by default; hide it to create a non-default layout.
+    expect(ownerVisible()).toBe(true)
 
     await userEvent.click(screen.getByRole('button', { name: /columns/i }))
-    await userEvent.click(screen.getByRole('checkbox', { name: /^arr$/i }))
+    await userEvent.click(screen.getByRole('checkbox', { name: /^owner$/i }))
     await userEvent.keyboard('{Escape}')
-    expect(arrVisible()).toBe(true)
+    expect(ownerVisible()).toBe(false)
 
     await userEvent.click(screen.getByRole('button', { name: /views/i }))
     await userEvent.type(screen.getByPlaceholderText(/view name/i), 'Snapshot')
@@ -36,14 +37,16 @@ describe('DataGrid saved views', () => {
 
     const stored = JSON.parse(localStorage.getItem(savedViewsKeyForGrid('ledger.accounts.grid'))!)
     expect(stored[0].name).toBe('Snapshot')
-    expect(stored[0].view.columnVisibility.arr).toBe(true)
+    expect(stored[0].view.columnVisibility.owner).toBe(false)
 
+    // Reset restores the grid's built-in defaults (all columns visible).
     await userEvent.click(screen.getByRole('button', { name: /columns/i }))
     await userEvent.click(screen.getByRole('button', { name: /reset to default/i }))
-    expect(arrVisible()).toBe(false)
+    expect(ownerVisible()).toBe(true)
 
+    // Reapplying the saved view restores the hidden column.
     await userEvent.click(screen.getByRole('button', { name: /views/i }))
     await userEvent.click(screen.getByRole('button', { name: /apply snapshot/i }))
-    expect(arrVisible()).toBe(true)
+    expect(ownerVisible()).toBe(false)
   })
 })

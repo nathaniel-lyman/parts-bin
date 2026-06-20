@@ -24,7 +24,7 @@ describe('DataGrid manual server modes', () => {
       />,
     )
 
-    await user.type(screen.getByPlaceholderText(/search accounts or owners/i), 'cobalt')
+    await user.type(screen.getByPlaceholderText(/search rows/i), 'cobalt')
 
     expect(screen.getByText('Meridian Corp')).toBeInTheDocument()
   })
@@ -48,7 +48,7 @@ describe('DataGrid manual server modes', () => {
 
     expect(screen.getByRole('checkbox', { name: /select all loaded/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /select all 9999/i })).toBeNull()
-    await user.type(screen.getByPlaceholderText(/search accounts or owners/i), 'park')
+    await user.type(screen.getByPlaceholderText(/search rows/i), 'park')
     await waitFor(() => expect(onQueryChange).toHaveBeenLastCalledWith(expect.objectContaining({ globalFilter: 'park' })))
   })
 })

@@ -37,23 +37,20 @@ Also set `--radius: 8px` under `@theme inline` in `theme.css`. Reload — every 
 
 ## Theme recipes
 
-parts-bin ships optional recipes in `recipes.css`:
-
-- `finance-cobalt` keeps the default cobalt feel with cooler finance surfaces.
-- `ops-green` shifts interaction and success language toward operational green.
-- `enterprise-neutral` removes most brand color from chrome and reserves color for data meaning.
+parts-bin ships a single recipe — `parts-bin-default` — in `recipes.css`. Recipes are
+optional named token presets you can switch at runtime; the default mirrors `tokens.css`.
 
 Use the helper from `recipes.ts` when you want a clone to offer theme switching:
 
 ```ts
 import { applyThemeRecipe } from './theme/recipes'
 
-applyThemeRecipe('ops-green')
+applyThemeRecipe('parts-bin-default')
 ```
 
-This writes `data-theme-recipe="ops-green"` on `<html>` and stores the choice in
-`parts-bin.theme.recipe`. Light/dark mode remains separate and uses `parts-bin.theme`.
-Older `ledger.*` keys are still read during migration.
+Applying a non-default recipe writes `data-theme-recipe` on `<html>` (the default clears it)
+and stores the choice in `parts-bin.theme.recipe`. Light/dark mode remains separate and uses
+`parts-bin.theme`. Older `ledger.*` keys are still read during migration.
 
 To add a recipe, add variable overrides in `recipes.css` and a metadata entry in `recipes.ts`.
 Do not edit component files for re-theming.
