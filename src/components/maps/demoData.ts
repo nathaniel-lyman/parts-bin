@@ -13,7 +13,7 @@ export const ledgerRegions: MapRegion[] = [
     metrics: [
       { label: 'Value', value: '$42.4k', tone: 'accent' },
       { label: 'Growth', value: '+7.8%', tone: 'positive' },
-      { label: 'Risk', value: '3 accounts', tone: 'warning' },
+      { label: 'Review', value: '3 records', tone: 'warning' },
     ],
   }),
   withRegionPath({
@@ -25,7 +25,7 @@ export const ledgerRegions: MapRegion[] = [
     metrics: [
       { label: 'Value', value: '$28.1k', tone: 'accent' },
       { label: 'Growth', value: '+3.1%', tone: 'positive' },
-      { label: 'Risk', value: '5 accounts', tone: 'warning' },
+      { label: 'Review', value: '5 records', tone: 'warning' },
     ],
   }),
   withRegionPath({
@@ -37,7 +37,7 @@ export const ledgerRegions: MapRegion[] = [
     metrics: [
       { label: 'Value', value: '$34.2k', tone: 'accent' },
       { label: 'Growth', value: '+4.4%', tone: 'positive' },
-      { label: 'Risk', value: '6 accounts', tone: 'warning' },
+      { label: 'Review', value: '6 records', tone: 'warning' },
     ],
   }),
   withRegionPath({
@@ -49,18 +49,18 @@ export const ledgerRegions: MapRegion[] = [
     metrics: [
       { label: 'Value', value: '$25.0k', tone: 'accent' },
       { label: 'Growth', value: '-1.2%', tone: 'negative' },
-      { label: 'Risk', value: '8 accounts', tone: 'warning' },
+      { label: 'Review', value: '8 records', tone: 'warning' },
     ],
   }),
 ]
 
 export const ledgerPoints: MapPoint[] = [
-  { id: 'seattle', label: 'Seattle', value: 18, detail: '18 accounts', ...point(projectLngLat(-122.3321, 47.6062)) },
-  { id: 'san-francisco', label: 'San Francisco', value: 32, detail: '32 accounts', ...point(projectLngLat(-122.4194, 37.7749)) },
-  { id: 'denver', label: 'Denver', value: 24, detail: '24 accounts', ...point(projectLngLat(-104.9903, 39.7392)) },
-  { id: 'austin', label: 'Austin', value: 28, detail: '28 accounts', ...point(projectLngLat(-97.7431, 30.2672)) },
-  { id: 'atlanta', label: 'Atlanta', value: 21, detail: '21 accounts', ...point(projectLngLat(-84.388, 33.749)) },
-  { id: 'new-york', label: 'New York', value: 27, detail: '27 accounts', ...point(projectLngLat(-74.006, 40.7128)) },
+  { id: 'seattle', label: 'Seattle', value: 18, detail: '18 records', ...point(projectLngLat(-122.3321, 47.6062)) },
+  { id: 'san-francisco', label: 'San Francisco', value: 32, detail: '32 records', ...point(projectLngLat(-122.4194, 37.7749)) },
+  { id: 'denver', label: 'Denver', value: 24, detail: '24 records', ...point(projectLngLat(-104.9903, 39.7392)) },
+  { id: 'austin', label: 'Austin', value: 28, detail: '28 records', ...point(projectLngLat(-97.7431, 30.2672)) },
+  { id: 'atlanta', label: 'Atlanta', value: 21, detail: '21 records', ...point(projectLngLat(-84.388, 33.749)) },
+  { id: 'new-york', label: 'New York', value: 27, detail: '27 records', ...point(projectLngLat(-74.006, 40.7128)) },
 ]
 
 export const ledgerFlows: MapFlow[] = [

@@ -37,7 +37,7 @@ test('BubbleMap and FlowMap call selection handlers', async () => {
     </div>,
   )
 
-  await user.click(screen.getByRole('button', { name: /san francisco: 32 accounts/i }))
+  await user.click(screen.getByRole('button', { name: /san francisco: 32 records/i }))
   expect(onPoint).toHaveBeenCalledWith(expect.objectContaining({ id: 'san-francisco' }))
 
   await user.click(screen.getByRole('button', { name: /west to midwest: 18 movement/i }))

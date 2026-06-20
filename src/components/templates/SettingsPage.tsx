@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTheme } from '../../hooks/useTheme'
-import { useSettings, type LedgerSettings } from '../../hooks/useSettings'
+import { useSettings, type WorkspaceSettings } from '../../hooks/useSettings'
 import { applyThemeRecipe, readStoredThemeRecipe, THEME_RECIPES, type ThemeRecipeId } from '../../theme/recipes'
 import {
   Button,
@@ -20,11 +20,11 @@ import { ConfirmDialog } from '../ConfirmDialog'
 
 /** Fields edited through the staged save bar (appearance applies live instead). */
 type StagedSettings = Pick<
-  LedgerSettings,
+  WorkspaceSettings,
   'fullName' | 'email' | 'role' | 'timezone' | 'emailDigest' | 'mentions' | 'weeklyReport' | 'channels' | 'landingPage' | 'numberFormat'
 >
 
-function pickStaged(settings: LedgerSettings): StagedSettings {
+function pickStaged(settings: WorkspaceSettings): StagedSettings {
   const { fullName, email, role, timezone, emailDigest, mentions, weeklyReport, channels, landingPage, numberFormat } = settings
   return { fullName, email, role, timezone, emailDigest, mentions, weeklyReport, channels, landingPage, numberFormat }
 }
@@ -59,7 +59,7 @@ const channelOptions = [
   { value: 'sms', label: 'SMS' },
 ]
 
-const landingOptions: { value: LedgerSettings['landingPage']; label: string }[] = [
+const landingOptions: { value: WorkspaceSettings['landingPage']; label: string }[] = [
   { value: '/docs', label: 'Components' },
   { value: '/examples/dashboard', label: 'Assembly demo' },
   { value: '/templates/customer-success', label: 'Customer success' },
@@ -160,7 +160,7 @@ export function SettingsPage() {
                   <SegmentedControl
                     label="Density"
                     value={settings.density}
-                    onValueChange={(value) => update({ density: value as LedgerSettings['density'] })}
+                    onValueChange={(value) => update({ density: value as WorkspaceSettings['density'] })}
                     options={[
                       { value: 'comfortable', label: 'Comfortable' },
                       { value: 'compact', label: 'Compact' },
@@ -242,7 +242,7 @@ export function SettingsPage() {
                 <Field label="Default landing page">
                   <Select
                     value={draft.landingPage}
-                    onChange={(event) => patch({ landingPage: event.target.value as LedgerSettings['landingPage'] })}
+                    onChange={(event) => patch({ landingPage: event.target.value as WorkspaceSettings['landingPage'] })}
                   >
                     {landingOptions.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -253,7 +253,7 @@ export function SettingsPage() {
                   <SegmentedControl
                     label="Number format"
                     value={draft.numberFormat}
-                    onValueChange={(value) => patch({ numberFormat: value as LedgerSettings['numberFormat'] })}
+                    onValueChange={(value) => patch({ numberFormat: value as WorkspaceSettings['numberFormat'] })}
                     options={[
                       { value: 'full', label: 'Full' },
                       { value: 'compact', label: 'Compact' },

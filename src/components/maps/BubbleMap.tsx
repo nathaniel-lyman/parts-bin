@@ -25,8 +25,8 @@ export function BubbleMap({
   outlinePath = ledgerNationPath,
   viewport = ledgerMapViewport,
   selectedPointId,
-  ariaLabel = 'Account concentration map',
-  valueLabel = 'accounts',
+  ariaLabel = 'Record concentration map',
+  valueLabel = 'records',
   onPointSelect,
   className,
 }: BubbleMapProps) {
