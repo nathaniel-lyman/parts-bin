@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Agent guidance for this repo. **Read [CLAUDE.md](./CLAUDE.md) first** — it is the canonical source for the project overview, commands, the swappable-theme boundary, data flow, persistence ownership, and gotchas. This file adds only the agent-specific rules not covered there.
+Agent guidance for this repo. **Read [CLAUDE.md](./CLAUDE.md) first** — it is the canonical source for the project overview, commands, the design-system boundary, example data flow, persistence ownership, and gotchas. This file adds only the agent-specific rules not covered there.
 
 ## Skills
 
@@ -9,7 +9,7 @@ Step-by-step workflows for the most common tasks live in `skills/` (open Agent S
 | Skill | Use when | File |
 |---|---|---|
 | `retheme` | Re-skinning to a new brand: colors, dark mode, radii, fonts, chart palette | [skills/retheme/SKILL.md](./skills/retheme/SKILL.md) |
-| `swap-data-domain` | Replacing the demo accounts/MRR data with your own domain | [skills/swap-data-domain/SKILL.md](./skills/swap-data-domain/SKILL.md) |
+| `swap-data-domain` | Optional example-dashboard workflow: replacing the demo accounts/MRR data with another domain | [skills/swap-data-domain/SKILL.md](./skills/swap-data-domain/SKILL.md) |
 | `add-component` | Adding or substantially modifying any UI component | [skills/add-component/SKILL.md](./skills/add-component/SKILL.md) |
 | `verify-changes` | Before claiming any change is done, fixed, or passing | [skills/verify-changes/SKILL.md](./skills/verify-changes/SKILL.md) |
 
@@ -17,7 +17,7 @@ Step-by-step workflows for the most common tasks live in `skills/` (open Agent S
 
 ## Building UI
 
-Read `src/components/catalog.ts` before adding UI (see CLAUDE.md → "Component catalog"). Don't add a component without a `CATALOG` entry — `npm run build` and `src/components/catalog.test.ts` enforce it.
+Read `src/components/catalog.ts` before adding public UI (see CLAUDE.md -> "Component catalog"). `/docs` is the primary product surface. Do not add a root-exported component without a `CATALOG` entry — `npm run build` and `src/components/catalog.test.ts` enforce it. Dashboard/account/template code is example code unless it is explicitly exported from the design-system barrels.
 
 ## DataGrid UI rules
 

@@ -1,6 +1,6 @@
 {
   "name": "parts-bin",
-  "description": "parts-bin — a swappable component demo dashboard: React, TypeScript, Tailwind v4, ~100 token-only components, re-skinnable from one folder.",
+  "description": "parts-bin — a reusable React design system and component library with token-only theming, docs, examples, DataGrid, charts, maps, and chat primitives.",
   "license": "MIT",
   "private": true,
   "version": "0.0.0",

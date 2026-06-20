@@ -15,7 +15,6 @@ const CATEGORY_LABELS: Record<Category, string> = {
   map: 'Maps',
   chat: 'AI chat',
   shell: 'Shell',
-  starter: 'Starters & templates',
 }
 
 function PlaceholderTile({ entry }: { entry: ComponentEntry }) {

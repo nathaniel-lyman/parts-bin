@@ -15,24 +15,23 @@ import { ComponentDetailDrawer } from './ComponentDetailDrawer'
 const usageSnippet = `import { Button, Card, Field, Input } from './components/ui'
 import { AppShell, Sidebar, TopNav } from './components/shell'
 
-export function SampleAccountsScreen() {
+export function ProjectDetailsScreen() {
   return (
-    <Card title="Account details">
+    <Card title="Project details">
       <Field label="Name" required>
-        <Input placeholder="Cobalt Freight" />
+        <Input placeholder="Launch plan" />
       </Field>
     </Card>
   )
 }`
 
 const copyChecklist: Array<[string, string]> = [
-  ['Composer', 'Open /compose to select an admin use case, layout, theme recipe, and data mapping before copying code.'],
-  ['Template', 'Start from /templates/customer-success or /templates/recommendation-review when you want a complete internal app screen instead of isolated primitives.'],
   ['Theme', 'Copy src/theme/ and import theme/theme.css at your root. Re-skin via tokens.css only.'],
   ['Primitives', 'Copy src/components/ui/ and import from the ./ui barrel (Button, Field, Drawer, IconButton, InlineAlert, SegmentedControl, …).'],
   ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
   ['Charts', 'Copy src/components/charts/ for token-styled Recharts wrappers and ChartCard examples; import from the ./charts barrel.'],
   ['Maps & DataGrid', 'Copy src/components/maps/ and src/components/DataGrid/ for geographic views and the headless-table-backed grid.'],
+  ['Examples', 'Use /, /compose, and /templates/* as examples that import from the design system, not as the public component API.'],
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
 ]
 
@@ -56,13 +55,13 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
   return (
     <main className="mx-auto max-w-[1180px] px-6 py-6">
       <PageHeader
-        eyebrow="parts-bin component kit"
-        title="Components and sample dashboard"
-        description="parts-bin is a working dashboard that demonstrates the components cataloged in src/components/catalog.ts. Click any card for import, props, near-twins, and a copy-paste snippet."
+        eyebrow="parts-bin design system"
+        title="Components"
+        description="parts-bin is a reusable React design system. This catalog is the primary product surface: click any card for import paths, props, near-twins, and a copy-paste snippet."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="primary" onClick={() => { navigate('/compose') }}>Open composer</Button>
-            <Button variant="secondary" onClick={() => { navigate('/') }}>Open sample dashboard</Button>
+            <Button variant="primary" onClick={() => { navigate('/docs') }}>Browse components</Button>
+            <Button variant="secondary" onClick={() => { navigate('/') }}>View examples</Button>
           </div>
         }
       />
@@ -72,15 +71,16 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
           <ComponentGallery onSelect={setSelected} externalQuery={globalSearch} />
         </Card>
 
-        <Card title="Copy parts-bin into your app" description="parts-bin is a clone-and-customize component kit, not an npm package. The dashboard is only a sample assembly; copy the theme, primitives, shell, charts, and DataGrid into the app you are building.">
+        <Card title="Use parts-bin in your app" description="Copy the design-system source first. The dashboard, composer, and templates are example assemblies that prove the parts work together.">
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
-                <h2 className="m-0 text-[15px] font-semibold text-ink">Start with a real app template</h2>
-                <p className="m-0 text-[13px] text-muted">Use the composer for a routed screen plan, or jump straight into a clone-ready workflow surface.</p>
+                <h2 className="m-0 text-[15px] font-semibold text-ink">Examples are secondary</h2>
+                <p className="m-0 text-[13px] text-muted">Use the sample dashboard, composer, and templates as reference implementations after choosing components from the catalog.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="primary" onClick={() => { navigate('/compose') }}>App composer</Button>
+                <Button variant="primary" onClick={() => { navigate('/') }}>Sample dashboard</Button>
+                <Button variant="secondary" onClick={() => { navigate('/compose') }}>App composer</Button>
                 <Button variant="secondary" onClick={() => { navigate('/templates/customer-success') }}>Customer success</Button>
                 <Button variant="secondary" onClick={() => { navigate('/templates/recommendation-review') }}>Recommendation review</Button>
               </div>
@@ -122,7 +122,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
                   </div>
                   <div className="grid gap-2 border border-line bg-surface p-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="micro">MRR</span>
+                      <span className="micro">Revenue</span>
                       <span className="num text-pos">+4.6%</span>
                     </div>
                     <div className="display text-[22px] font-semibold text-ink">$84.2k</div>

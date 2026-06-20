@@ -67,16 +67,16 @@ import {
   type GridEditingApi,
 } from './editing'
 import { DataGridAggregationFooter } from './DataGridAggregationFooter'
-import type { ColumnVirtualWindow, GridAction, LedgerGridColumn, LedgerGridState } from './types'
+import type { ColumnVirtualWindow, DataGridColumn, DataGridState, GridAction } from './types'
 
 export interface DataGridProps<TData> {
   rows: TData[]
-  columns: LedgerGridColumn<TData>[]
+  columns: DataGridColumn<TData>[]
   getRowId: (row: TData) => string
-  initialState?: Partial<LedgerGridState>
+  initialState?: Partial<DataGridState>
   globalFilterFn?: (row: TData, value: string) => boolean
-  state?: LedgerGridState
-  onStateChange?: (next: LedgerGridState) => void
+  state?: DataGridState
+  onStateChange?: (next: DataGridState) => void
   loading?: boolean
   error?: unknown
   enableHeaderFilters?: boolean
@@ -86,6 +86,7 @@ export interface DataGridProps<TData> {
   manualPagination?: boolean
   enablePagination?: boolean
   enableExport?: boolean
+  exportFilename?: string
   enableSavedViews?: boolean
   persistenceKey?: string
   totalRowCount?: number
@@ -111,8 +112,8 @@ export interface DataGridContextSnapshot<TData> {
   visibleRows: TData[]
   selectedRows: TData[]
   globalFilter: string
-  columnFilters: LedgerGridState['columnFilters']
-  sorting: LedgerGridState['sorting']
+  columnFilters: DataGridState['columnFilters']
+  sorting: DataGridState['sorting']
   savedViews: { id: string; name: string }[]
   currentSavedView?: { id: string; name: string }
   actions: {
@@ -123,7 +124,7 @@ export interface DataGridContextSnapshot<TData> {
   }
 }
 
-function toColumnDef<TData>(column: LedgerGridColumn<TData>): ColumnDef<TData> {
+function toColumnDef<TData>(column: DataGridColumn<TData>): ColumnDef<TData> {
   const base: ColumnDef<TData> = {
     id: column.id,
     header: typeof column.header === 'string' ? column.header : () => column.header,
@@ -176,6 +177,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     manualPagination,
     enablePagination = true,
     enableExport,
+    exportFilename = 'data-grid.csv',
     enableSavedViews,
     persistenceKey,
     totalRowCount,
@@ -191,7 +193,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const groupingActive = Boolean(enableGrouping) && !isServerMode
   const editingEnabled = onRowUpdate !== undefined && !isServerMode
   const persistenceEnabled = !isControlled && persistenceKey !== undefined
-  const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState) : hydrate({ initialState: props.initialState }))
+  const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState, persistenceKey) : hydrate({ initialState: props.initialState }))
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const [scrollMetrics, setScrollMetrics] = useState({ left: 0, width: 1024 })
@@ -206,7 +208,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     remove: removeSavedView,
     apply: applySavedView,
     reset: resetSavedView,
-  } = useSavedViews()
+  } = useSavedViews(persistenceKey ? `${persistenceKey}.views` : undefined)
   const toast = useToast()
   const state = isControlled ? props.state! : view.state
   const paginationEnabled = enablePagination || manualPagination
@@ -217,7 +219,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     else view.dispatch(action)
   }
 
-  useGridPersistence(state, persistenceEnabled)
+  useGridPersistence(state, persistenceEnabled, persistenceKey)
 
   const columnDefs = useMemo(() => columns.map(toColumnDef), [columns])
   const serializedQuery = serializeGridQuery(toGridQuery(state))
@@ -669,13 +671,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   }, [columns, copyWithFeedback, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection, visibleData])
 
   const exportCsv = useCallback(() => {
-    downloadCSV('ledger-accounts.csv', serializeCSV(exportData, columns, {
+    downloadCSV(exportFilename, serializeCSV(exportData, columns, {
       getRowId,
       columnOrder: state.columnOrder,
       columnVisibility: state.columnVisibility,
       rowSelection: state.rowSelection,
     }))
-  }, [columns, exportData, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
+  }, [columns, exportData, exportFilename, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
 
   useEffect(() => {
     if (!scrollElement) return

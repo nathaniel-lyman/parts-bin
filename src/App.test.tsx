@@ -3,7 +3,9 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { ToastProvider } from './components/ui/ToastProvider'
-import { SAVED_VIEWS_KEY } from './hooks/useSavedViews'
+import { savedViewsKeyForGrid } from './hooks/useSavedViews'
+
+const ACCOUNT_GRID_VIEWS_KEY = savedViewsKeyForGrid('ledger.accounts.grid')
 
 afterEach(() => {
   window.history.pushState({}, '', '/')
@@ -164,7 +166,7 @@ test('components route drops dashboard-only header controls and wires global sea
   window.history.pushState({}, '', '/docs')
   render(<ToastProvider><App /></ToastProvider>)
 
-  expect(screen.getByText('Components and sample dashboard')).toBeInTheDocument()
+  expect(screen.getByText('Components')).toBeInTheDocument()
   // dashboard-only controls have no function on the docs page
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
@@ -277,7 +279,7 @@ test('assistant creates a saved view from the current grid context', async () =>
   await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Create a saved view for this screen{Enter}')
 
   await waitFor(() => {
-    const saved = JSON.parse(localStorage.getItem(SAVED_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
+    const saved = JSON.parse(localStorage.getItem(ACCOUNT_GRID_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
     expect(saved.some((view) => view.name === 'Current accounts')).toBe(true)
   }, { timeout: 10000 })
   await waitFor(() => expect(screen.getAllByText((_content, node) => (
@@ -304,7 +306,7 @@ test('command shortcuts save and reset the current account grid view', async () 
   fireEvent.keyDown(document, { key: 's' })
 
   await waitFor(() => {
-    const saved = JSON.parse(localStorage.getItem(SAVED_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
+    const saved = JSON.parse(localStorage.getItem(ACCOUNT_GRID_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
     expect(saved.some((view) => view.name === 'Current accounts')).toBe(true)
   })
   expect(screen.getByText('Saved view Current accounts')).toBeInTheDocument()

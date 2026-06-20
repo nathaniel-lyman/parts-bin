@@ -20,7 +20,7 @@ import {
   Table, Accordion,
 } from './ui'
 import {
-  WaterfallChart, RevenueMovementChart, MrrShareDonut, MrrTrendChart,
+  WaterfallChart, SignedMovementChart, ShareDonutChart, LineTrendChart,
   ChartCard, ChartLegend, ChartTooltipContent, ChartEmptyState,
 } from './charts'
 import { RegionChoropleth, BubbleMap, FlowMap, GeoDrilldown } from './maps'
@@ -29,11 +29,9 @@ import {
   AppShell, Sidebar, TopNav, Breadcrumbs, FilterBar, SectionHeader, SettingsPanel,
   NotificationBadge,
 } from './shell'
-import { AppComposerPage, CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './templates'
 import { KpiCard, KpiSummaryRow } from './KpiCard'
 import { Sparkline } from './Sparkline'
 import { ConfirmDialog } from './ConfirmDialog'
-import { AccountFormModal } from './AccountFormModal'
 import {
   AssistantPanel, ChatComposer, ChatMarkdown, ChatMessageBubble, ChatMessageList,
   CodeBlock, MessageActions, SuggestedPrompts,
@@ -41,7 +39,7 @@ import {
 
 export const CATEGORIES = [
   'primitive', 'form', 'overlay', 'feedback',
-  'data-display', 'chart', 'datagrid', 'map', 'chat', 'shell', 'starter',
+  'data-display', 'chart', 'datagrid', 'map', 'chat', 'shell',
 ] as const
 export type Category = (typeof CATEGORIES)[number]
 
@@ -126,6 +124,10 @@ export const INTERNAL = new Map<string, string>([
   ['CalendarIconButton', 'Composed by GlobalControls'],
   // chat composition pieces:
   ['TypingIndicator', 'Rendered by ChatMessageBubble while the assistant is thinking'],
+  // chart compatibility names — prefer the neutral aliases in new code:
+  ['RevenueMovementChart', 'Compatibility export; use SignedMovementChart for new code'],
+  ['MrrShareDonut', 'Compatibility export; use ShareDonutChart for new code'],
+  ['MrrTrendChart', 'Compatibility export; use LineTrendChart for new code'],
 ])
 
 /** Capitalized function exports that are NOT components (currently none). */
@@ -213,7 +215,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Top of a full page or route to establish title and primary actions.',
     props: ['eyebrow', 'title', 'description', 'actions'],
     related: ['SectionHeader', 'DetailHeader'],
-    snippet: `<PageHeader title="Accounts" description="All customers" actions={<Button>New</Button>} />`,
+    snippet: `<PageHeader title="Projects" description="Track active work" actions={<Button>New</Button>} />`,
   }),
 
   // ── ui form controls ──────────────────────────────────────────────────────
@@ -511,7 +513,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'A list, table, or panel has no data to show.',
     props: ['title', 'description', 'action', 'glyph'],
     related: ['ChartEmptyState', 'InlineAlert'],
-    snippet: `<EmptyState title="No accounts" description="Add your first account." action={<Button>New</Button>} />`,
+    snippet: `<EmptyState title="No projects" description="Create your first project." action={<Button>New</Button>} />`,
   }),
   defineComponent(Progress, {
     name: 'Progress', import: './components/ui', category: 'feedback',
@@ -564,7 +566,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Placeholder for a single KPI/metric that animates toward its value.',
     props: ['target', 'metricLabel', 'formatValue', 'label', 'className'],
     related: ['LoadingKpiSkeleton', 'LoadingProgress'],
-    snippet: `<LoadingCountingMetric metricLabel="Total MRR" target={78300} />`,
+    snippet: `<LoadingCountingMetric metricLabel="Total revenue" target={78300} />`,
   }),
   defineComponent(LoadingDonut, {
     name: 'LoadingDonut', import: './components/ui', category: 'feedback',
@@ -598,7 +600,7 @@ export const CATALOG: ComponentEntry[] = [
     prefer_over: { ImportProgress: 'Use ImportProgress when you have a measurable percentage.' },
     props: ['label', 'detail', 'className'],
     related: ['ImportProgress', 'LoadingCountingMetric'],
-    snippet: `<LoadingProgress label="Syncing" detail="Syncing accounts" />`,
+    snippet: `<LoadingProgress label="Syncing" detail="Syncing records" />`,
   }),
   defineComponent(LoadingSparkline, {
     name: 'LoadingSparkline', import: './components/ui', category: 'feedback',
@@ -660,7 +662,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Rendering one entry of an audit/change log.',
     props: ['resource', 'meta', 'title', 'timestamp', 'actor'],
     related: ['ActivityFeed', 'Timeline'],
-    snippet: `<AuditLogItem id="e1" title="Updated MRR" resource="Acme" actor="Avery" timestamp="2m ago" />`,
+    snippet: `<AuditLogItem id="e1" title="Updated priority" resource="Project Alpha" actor="Avery" timestamp="2m ago" />`,
   }),
   defineComponent(DetailHeader, {
     name: 'DetailHeader', import: './components/ui', category: 'data-display',
@@ -729,7 +731,7 @@ export const CATALOG: ComponentEntry[] = [
     prefer_over: { DataGrid: 'Use DataGrid when the data needs sorting, filtering, selection, or column management.' },
     props: ['columns', 'rows', 'rowKey', 'caption', 'emptyMessage', 'className'],
     related: ['DataGrid', 'KeyValueList', 'DescriptionList'],
-    snippet: `<Table caption="Top accounts" columns={[{ key: 'name', header: 'Account' }, { key: 'mrr', header: 'MRR', numeric: true }]} rows={rows} rowKey={(r) => r.id} />`,
+    snippet: `<Table caption="Open projects" columns={[{ key: 'name', header: 'Project' }, { key: 'score', header: 'Score', numeric: true }]} rows={rows} rowKey={(r) => r.id} />`,
   }),
   defineComponent(Accordion, {
     name: 'Accordion', import: './components/ui', category: 'data-display',
@@ -808,29 +810,29 @@ export const CATALOG: ComponentEntry[] = [
     related: ['RevenueMovementChart', 'ChartCard'],
     snippet: `<WaterfallChart data={bridgeSteps} showLabels valueFormatter={formatValue} />`,
   }),
-  defineComponent(RevenueMovementChart, {
-    name: 'RevenueMovementChart', import: './components/charts', category: 'chart',
-    purpose: 'Stacked monthly movement bars; token-colored signed segments with optional labels.',
-    use_when: 'Any signed movement breakdown that fits the { month, New, Expansion, Churn } row shape; pass `data` to replace the demo rows.',
+  defineComponent(SignedMovementChart, {
+    name: 'SignedMovementChart', import: './components/charts', category: 'chart',
+    purpose: 'Stacked movement bars for positive and negative contribution categories.',
+    use_when: 'Any signed movement breakdown that fits the { month, New, Expansion, Churn } compatibility row shape; pass `data` for your own rows.',
     props: ['data', 'barWidth', 'showLabels'],
-    related: ['WaterfallChart', 'MrrTrendChart'],
-    snippet: `<RevenueMovementChart data={movementRows} barWidth={28} showLabels />`,
+    related: ['WaterfallChart', 'LineTrendChart'],
+    snippet: `<SignedMovementChart data={movementRows} barWidth={28} showLabels />`,
   }),
-  defineComponent(MrrShareDonut, {
-    name: 'MrrShareDonut', import: './components/charts', category: 'chart',
-    purpose: 'Donut chart example derived from account-like rows and the shared chart legend.',
-    use_when: 'Showing how an account/MRR sample splits across segments; use it as a reference for share-donut components in other domains.',
+  defineComponent(ShareDonutChart, {
+    name: 'ShareDonutChart', import: './components/charts', category: 'chart',
+    purpose: 'Donut chart compatibility wrapper for segmented share data and the shared chart legend.',
+    use_when: 'Showing how a sample dataset splits across segments; treat this as a compatibility wrapper while using generic chart rows elsewhere.',
     props: ['accounts'],
-    related: ['MrrTrendChart', 'ChartLegend'],
-    snippet: `<MrrShareDonut accounts={sampleAccounts} />`,
+    related: ['LineTrendChart', 'ChartLegend'],
+    snippet: `<ShareDonutChart accounts={sampleRows} />`,
   }),
-  defineComponent(MrrTrendChart, {
-    name: 'MrrTrendChart', import: './components/charts', category: 'chart',
-    purpose: 'Multi-series line chart themed from the SERIES palette; sample MRR data by default.',
+  defineComponent(LineTrendChart, {
+    name: 'LineTrendChart', import: './components/charts', category: 'chart',
+    purpose: 'Multi-series line chart themed from the SERIES palette; sample trend data by default.',
     use_when: 'Any value-over-time lines — pass `data` rows and the `series` keys to plot.',
     props: ['data', 'series', 'xKey', 'showEndLabels'],
-    related: ['MrrShareDonut', 'RevenueMovementChart'],
-    snippet: `<MrrTrendChart data={rows} series={['Plan A', 'Plan B']} xKey="period" showEndLabels />`,
+    related: ['ShareDonutChart', 'SignedMovementChart'],
+    snippet: `<LineTrendChart data={rows} series={['Plan A', 'Plan B']} xKey="period" showEndLabels />`,
   }),
   defineComponent(ChartCard, {
     name: 'ChartCard', import: './components/charts', category: 'chart',
@@ -838,7 +840,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Wrapping any chart in the standard chart panel; use either an example label in demos or an insight claim in product dashboards.',
     props: ['title', 'description', 'metric', 'actions', 'children'],
     related: ['Card', 'ChartLegend', 'ChartEmptyState'],
-    snippet: `<ChartCard title="Line chart example" metric="+18%" description="Sample rows; replace with your data."><MrrTrendChart showEndLabels /></ChartCard>`,
+    snippet: `<ChartCard title="Line chart example" metric="+18%" description="Sample rows; replace with your data."><LineTrendChart showEndLabels /></ChartCard>`,
   }),
   defineComponent(ChartLegend, {
     name: 'ChartLegend', import: './components/charts', category: 'chart',
@@ -854,7 +856,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Rendering a custom chart tooltip via Recharts content prop.',
     props: ['label', 'rows', 'footer'],
     related: ['ChartLegend', 'ChartCard'],
-    snippet: `<ChartTooltipContent label="Jan" rows={[{ label: 'MRR', value: '$78k' }]} />`,
+    snippet: `<ChartTooltipContent label="Jan" rows={[{ label: 'Revenue', value: '$78k' }]} />`,
   }),
   defineComponent(ChartEmptyState, {
     name: 'ChartEmptyState', import: './components/charts', category: 'chart',
@@ -905,20 +907,20 @@ export const CATALOG: ComponentEntry[] = [
     name: 'DataGrid', import: './components/DataGrid', category: 'datagrid',
     purpose: 'Headless-table-backed data grid: sort, filter, select, paginate, export, saved views, inline editing, grouping, aggregation.',
     use_when: 'Displaying tabular records with interaction; the rows prop takes the data. Mark columns editable/groupable/aggregate to light up editing, grouping chips, and the totals footer.',
-    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport', 'onContextChange', 'quickFilterPlaceholder', 'enableGrouping', 'onRowUpdate', 'editMode'],
+    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport', 'exportFilename', 'persistenceKey', 'onContextChange', 'quickFilterPlaceholder', 'enableGrouping', 'onRowUpdate', 'editMode'],
     related: ['Pagination', 'FacetedFilter', 'AppliedFiltersBar'],
-    snippet: `<DataGrid rows={accounts} columns={cols} getRowId={(r) => r.id} enableRowSelection enableGrouping onRowUpdate={(id, patch) => update(id, patch)} />`,
+    snippet: `<DataGrid rows={records} columns={cols} getRowId={(r) => r.id} enableRowSelection enableGrouping onRowUpdate={(id, patch) => update(id, patch)} />`,
   }),
 
   // ── chat ──────────────────────────────────────────────────────────────────
   defineComponent(AssistantPanel, {
     name: 'AssistantPanel', import: './components/chat', category: 'chat',
     purpose: 'Slide-over AI chat: empty state, streaming messages, composer — wired to any ChatAdapter.',
-    use_when: 'An embedded AI assistant surface. Demo runs on createDemoAdapter; go live by passing an adapter that streams from a real LLM API.',
+    use_when: 'An embedded AI assistant surface. Pass an adapter that streams from your product API.',
     prefer_over: { Drawer: 'Use Drawer for generic side panels; AssistantPanel for conversational AI surfaces.' },
     props: ['adapter', 'onClose', 'title', 'suggestions', 'chat'],
     related: ['ChatComposer', 'ChatMessageList'],
-    snippet: `{open && <AssistantPanel adapter={createDemoAdapter(() => accounts)} suggestions={DEMO_SUGGESTIONS} onClose={close} />}`,
+    snippet: `{open && <AssistantPanel adapter={adapter} suggestions={suggestions} onClose={close} />}`,
   }),
   defineComponent(ChatMessageList, {
     name: 'ChatMessageList', import: './components/chat', category: 'chat',
@@ -982,7 +984,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'The outermost application chrome around routed pages.',
     props: ['sidebar', 'topNav', 'children'],
     related: ['Sidebar', 'TopNav'],
-    snippet: `<AppShell sidebar={<Sidebar brand={brand} items={nav} />} topNav={<TopNav title="Accounts" />}>{page}</AppShell>`,
+    snippet: `<AppShell sidebar={<Sidebar brand={brand} items={nav} />} topNav={<TopNav title="Projects" />}>{page}</AppShell>`,
   }),
   defineComponent(Sidebar, {
     name: 'Sidebar', import: './components/shell', category: 'shell',
@@ -990,7 +992,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'The app-level navigation rail inside AppShell.',
     props: ['brand', 'items', 'footer'],
     related: ['AppShell', 'TopNav', 'Breadcrumbs'],
-    snippet: `<Sidebar brand={<Logo />} items={[{ label: 'Accounts', href: '/accounts', active: true }]} />`,
+    snippet: `<Sidebar brand={<Logo />} items={[{ label: 'Projects', href: '/projects', active: true }]} />`,
   }),
   defineComponent(TopNav, {
     name: 'TopNav', import: './components/shell', category: 'shell',
@@ -998,7 +1000,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'The header band above page content inside AppShell.',
     props: ['breadcrumbs', 'title', 'actions'],
     related: ['AppShell', 'Breadcrumbs', 'Sidebar'],
-    snippet: `<TopNav title="Accounts" actions={<Button>New</Button>} />`,
+    snippet: `<TopNav title="Projects" actions={<Button>New</Button>} />`,
   }),
   defineComponent(Breadcrumbs, {
     name: 'Breadcrumbs', import: './components/shell', category: 'shell',
@@ -1006,7 +1008,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Showing the user where they are in a nested navigation hierarchy.',
     props: ['items'],
     related: ['TopNav'],
-    snippet: `<Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Accounts' }]} />`,
+    snippet: `<Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Projects' }]} />`,
   }),
   defineComponent(FilterBar, {
     name: 'FilterBar', import: './components/shell', category: 'shell',
@@ -1022,7 +1024,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Introducing a section within a page (below PageHeader).',
     props: ['title', 'description', 'actions'],
     related: ['PageHeader', 'Card'],
-    snippet: `<SectionHeader title="At-risk accounts" actions={<Button>Export</Button>} />`,
+    snippet: `<SectionHeader title="Open requests" actions={<Button>Export</Button>} />`,
   }),
   defineComponent(SettingsPanel, {
     name: 'SettingsPanel', import: './components/shell', category: 'shell',
@@ -1046,16 +1048,16 @@ export const CATALOG: ComponentEntry[] = [
   defineComponent(KpiCard, {
     name: 'KpiCard', import: './components', category: 'data-display',
     purpose: 'Headline KPI tile: label, value, delta, and an inline sparkline.',
-    use_when: 'A top-of-dashboard metric tile.',
+    use_when: 'A top-level metric tile for dashboards, reports, or operational summaries.',
     prefer_over: { Metric: 'Use Metric for a compact inline stat without a sparkline.' },
     props: ['label', 'value', 'delta', 'spark', 'negSpark'],
     related: ['KpiSummaryRow', 'Metric', 'Sparkline'],
-    snippet: `<KpiCard label="Total MRR" value="$78.3k" delta={4.2} spark={series} />`,
+    snippet: `<KpiCard label="Revenue" value="$78.3k" delta={4.2} spark={series} />`,
   }),
   defineComponent(KpiSummaryRow, {
     name: 'KpiSummaryRow', import: './components', category: 'data-display',
     purpose: 'Responsive row container that lays out a set of KpiCards.',
-    use_when: 'Arranging the dashboard KPI tiles across the top.',
+    use_when: 'Arranging KPI tiles across the top of a report or dashboard.',
     props: ['children', 'className'],
     related: ['KpiCard'],
     snippet: `<KpiSummaryRow><KpiCard {...a} /><KpiCard {...b} /></KpiSummaryRow>`,
@@ -1075,57 +1077,6 @@ export const CATALOG: ComponentEntry[] = [
     prefer_over: { Modal: 'Use Modal directly for non-confirm dialogs or richer content.' },
     props: ['title', 'message', 'confirmLabel', 'onCancel', 'onConfirm'],
     related: ['Modal'],
-    snippet: `<ConfirmDialog title="Delete account?" message="This cannot be undone." onCancel={close} onConfirm={del} />`,
-  }),
-  defineComponent(AccountFormModal, {
-    name: 'AccountFormModal', import: './components', category: 'overlay',
-    purpose: 'Modal form to create or edit an account, validating before submit.',
-    use_when: 'Adding a new account or editing an existing one.',
-    prefer_over: { Modal: 'Use Modal directly to build a different form.' },
-    props: ['account', 'onClose', 'onSubmit', 'onInvalid'],
-    related: ['Modal', 'DataGrid'],
-    snippet: `<AccountFormModal account={editing} onClose={close} onSubmit={save} />`,
-  }),
-
-  // ── templates ─────────────────────────────────────────────────────────────
-  defineComponent(CustomerSuccessTemplate, {
-    name: 'CustomerSuccessTemplate', import: './components/templates', category: 'starter',
-    purpose: 'Full customer-success dashboard page wired to accounts data.',
-    use_when: 'Starting from a complete page rather than assembling primitives.',
-    props: ['globalSearch', 'atRiskOnly', 'timePeriodLabel'],
-    related: ['DataGrid', 'KpiCard', 'AppShell'],
-    snippet: `<CustomerSuccessTemplate globalSearch="" atRiskOnly={false} timePeriodLabel="Last 30 days" />`,
-  }),
-  defineComponent(AppComposerPage, {
-    name: 'AppComposerPage', import: './components/templates', category: 'starter',
-    purpose: 'Guided app composer that turns a use case, layout, theme, and data mapping into route/component snippets.',
-    use_when: 'Starting a new admin app route from parts-bin instead of browsing isolated catalog parts.',
-    props: [],
-    related: ['CustomerSuccessTemplate', 'RecommendationReviewTemplate', 'SettingsPage', 'DataGrid'],
-    snippet: `<AppComposerPage />`,
-  }),
-  defineComponent(RecommendationReviewTemplate, {
-    name: 'RecommendationReviewTemplate', import: './components/templates', category: 'starter',
-    purpose: 'Full recommendation-review console with a custom queue, detail panel, and structured feedback.',
-    use_when: 'Starting from a workflow where ranked recommendations need review, decisioning, and operator feedback.',
-    props: ['globalSearch', 'timePeriodLabel'],
-    related: ['PageHeader', 'SegmentedControl', 'ActivityFeed'],
-    snippet: `<RecommendationReviewTemplate globalSearch="" timePeriodLabel="Last 30 days" />`,
-  }),
-  defineComponent(LoginPage, {
-    name: 'LoginPage', import: './components/templates', category: 'starter',
-    purpose: 'Full-bleed split brand-panel sign-in page (no app shell).',
-    use_when: 'You need a pre-auth front door — render it before the AppShell. Presentational demo; wire to real auth as needed.',
-    props: [],
-    related: ['Field', 'Input', 'Button', 'InlineAlert'],
-    snippet: `<LoginPage />`,
-  }),
-  defineComponent(SettingsPage, {
-    name: 'SettingsPage', import: './components/templates', category: 'starter',
-    purpose: 'Section-scroll settings page: appearance, profile, notifications, preferences, and a danger zone.',
-    use_when: 'Starting from a complete settings surface; Appearance composes color mode, theme recipe, and density.',
-    props: [],
-    related: ['SettingsPanel', 'SegmentedControl', 'RadioGroup', 'Switch'],
-    snippet: `<SettingsPage />`,
+    snippet: `<ConfirmDialog title="Delete project?" message="This cannot be undone." onCancel={close} onConfirm={del} />`,
   }),
 ]

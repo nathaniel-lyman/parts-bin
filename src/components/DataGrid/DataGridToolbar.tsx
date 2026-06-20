@@ -30,7 +30,7 @@ export function DataGridToolbar<TData>({
   columns,
   columnVisibility,
   globalFilter,
-  quickFilterPlaceholder = 'Search accounts or owners...',
+  quickFilterPlaceholder = 'Search rows...',
   density,
   grouping = [],
   enableGrouping,

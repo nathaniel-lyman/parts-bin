@@ -59,4 +59,23 @@ describe('DataGrid persistence integration', () => {
     expect(saved.version).toBe(GRID_VIEW_VERSION)
     expect(saved.density).toBe('comfortable')
   })
+
+  it('writes the grid projection to the provided persistence key', () => {
+    vi.useFakeTimers()
+    render(
+      <DataGrid
+        rows={seedAccounts}
+        columns={accountGridColumns({ onEdit: vi.fn(), onDelete: vi.fn() })}
+        getRowId={(row) => row.id}
+        initialState={{ density: 'comfortable' }}
+        persistenceKey="workspace.grid"
+      />,
+    )
+
+    act(() => vi.advanceTimersByTime(500))
+    expect(localStorage.getItem(GRID_STORAGE_KEY)).toBeNull()
+    const saved = JSON.parse(localStorage.getItem('workspace.grid')!)
+    expect(saved.version).toBe(GRID_VIEW_VERSION)
+    expect(saved.density).toBe('comfortable')
+  })
 })

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { seedAccounts } from '../../../data/accounts'
 import { ACCOUNT_GRID_INITIAL_STATE, accountGridColumns } from '../../accountGridColumns'
-import { SAVED_VIEWS_KEY } from '../../../hooks/useSavedViews'
+import { savedViewsKeyForGrid } from '../../../hooks/useSavedViews'
 import { DataGrid } from '../DataGrid'
 
 function renderGrid() {
@@ -34,7 +34,7 @@ describe('DataGrid saved views', () => {
     await userEvent.type(screen.getByPlaceholderText(/view name/i), 'Snapshot')
     await userEvent.click(screen.getByRole('button', { name: /save current/i }))
 
-    const stored = JSON.parse(localStorage.getItem(SAVED_VIEWS_KEY)!)
+    const stored = JSON.parse(localStorage.getItem(savedViewsKeyForGrid('ledger.accounts.grid'))!)
     expect(stored[0].name).toBe('Snapshot')
     expect(stored[0].view.columnVisibility.arr).toBe(true)
 

@@ -15,6 +15,22 @@ describe('bootGridSeed', () => {
     expect(seed.columnVisibility.arr).toBe(true)
   })
 
+  it('reads the provided grid key instead of the legacy account key', () => {
+    localStorage.setItem(
+      'workspace.grid',
+      JSON.stringify({ version: GRID_VIEW_VERSION, density: 'comfortable', columnVisibility: { score: true } }),
+    )
+    localStorage.setItem(
+      GRID_STORAGE_KEY,
+      JSON.stringify({ version: GRID_VIEW_VERSION, density: 'compact', columnVisibility: { arr: true } }),
+    )
+
+    const seed = bootGridSeed(undefined, 'workspace.grid')
+    expect(seed.density).toBe('comfortable')
+    expect(seed.columnVisibility.score).toBe(true)
+    expect(seed.columnVisibility.arr).toBeUndefined()
+  })
+
   it('runs migration (via legacy keys) when the grid key is absent', () => {
     localStorage.setItem('ledger.cols', JSON.stringify({ name: false }))
     const seed = bootGridSeed()
@@ -42,6 +58,16 @@ describe('useGridPersistence (debounced write of projection)', () => {
     expect('globalFilter' in written).toBe(false)
   })
 
+  it('writes to the provided grid key after the debounce', () => {
+    const state = { ...DEFAULT_STATE, density: 'comfortable' as const }
+    renderHook(() => useGridPersistence(state, true, 'workspace.grid'))
+    act(() => vi.advanceTimersByTime(500))
+    expect(localStorage.getItem(GRID_STORAGE_KEY)).toBeNull()
+    const written = JSON.parse(localStorage.getItem('workspace.grid')!)
+    expect(written.version).toBe(GRID_VIEW_VERSION)
+    expect(written.density).toBe('comfortable')
+  })
+
   it('does not write when disabled (controlled mode)', () => {
     const state = { ...DEFAULT_STATE, density: 'comfortable' as const }
     renderHook(() => useGridPersistence(state, false))
@@ -49,4 +75,3 @@ describe('useGridPersistence (debounced write of projection)', () => {
     expect(localStorage.getItem(GRID_STORAGE_KEY)).toBeNull()
   })
 })
-

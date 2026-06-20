@@ -29,6 +29,8 @@ export interface LedgerCellContext<TData, TValue = unknown> {
   rowId: string
 }
 
+export type DataGridCellContext<TData, TValue = unknown> = LedgerCellContext<TData, TValue>
+
 export interface LedgerGridColumn<TData, TValue = unknown> {
   id: string
   accessorKey?: keyof TData
@@ -65,6 +67,8 @@ export interface LedgerGridColumn<TData, TValue = unknown> {
   aggregatedCell?: (ctx: { value: unknown }) => ReactNode
 }
 
+export type DataGridColumn<TData, TValue = unknown> = LedgerGridColumn<TData, TValue>
+
 export interface LedgerGridState {
   sorting: SortingState
   columnFilters: ColumnFiltersState
@@ -80,6 +84,8 @@ export interface LedgerGridState {
   grouping: string[]
   expanded: GridExpandedState
 }
+
+export type DataGridState = LedgerGridState
 
 export interface ColumnPinning {
   left: string[]

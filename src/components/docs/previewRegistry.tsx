@@ -36,7 +36,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
   Tag: <Tag tone="accent" label="Beta" />,
   Kbd: <Kbd keys={['Ctrl', 'K']} />,
   // forms
-  Input: <Input placeholder="Acme Corp" readOnly />,
+  Input: <Input placeholder="Project name" readOnly />,
   Textarea: <Textarea placeholder="Add a note…" rows={2} readOnly />,
   Select: (
     <Select defaultValue="smb" onChange={noop}>
@@ -77,7 +77,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
     </div>
   ),
   Progress: <div className="w-40"><Progress value={62} label="Storage" showValue /></div>,
-  EmptyState: <EmptyState title="No accounts" description="Add your first account." />,
+  EmptyState: <EmptyState title="No projects" description="Create your first project." />,
   // data display
   Avatar: <Avatar name="Avery Cohen" status="online" />,
   Metric: <Metric label="Churn" value="2.1%" delta="-0.3" status="positive" />,
@@ -138,19 +138,19 @@ export const previews: Partial<Record<string, ReactNode>> = {
   LoadingDonut: <LoadingDonut label="Loading donut chart" tone="accent" />,
   LoadingDots: <LoadingDots label="Loading" />,
   LoadingKpiSkeleton: <LoadingKpiSkeleton label="Loading KPI" />,
-  LoadingProgress: <div className="w-56"><LoadingProgress label="Syncing" detail="Syncing accounts" /></div>,
+  LoadingProgress: <div className="w-56"><LoadingProgress label="Syncing" detail="Syncing records" /></div>,
   LoadingSparkline: <LoadingSparkline label="Loading sparkline" />,
   // data display (batch 2)
   AvatarGroup: <AvatarGroup users={[{ name: 'Avery Cohen' }, { name: 'Blair Nakamura' }, { name: 'Devin Okafor' }]} max={3} />,
   AssigneeChip: <AssigneeChip name="Avery Cohen" />,
   AuditLogItem: (
     <div className="w-64">
-      <AuditLogItem id="e1" title="Updated MRR" resource="Acme" actor="Avery" timestamp="2m ago" />
+      <AuditLogItem id="e1" title="Updated priority" resource="Project Alpha" actor="Avery" timestamp="2m ago" />
     </div>
   ),
   DetailHeader: (
     <div className="w-64">
-      <DetailHeader title="Acme Corp" subtitle="Enterprise" status={<StatusBadge status="Active" tone="pos" />} />
+      <DetailHeader title="Project Alpha" subtitle="Operations" status={<StatusBadge status="Active" tone="pos" />} />
     </div>
   ),
   DescriptionList: (
@@ -171,9 +171,9 @@ export const previews: Partial<Record<string, ReactNode>> = {
   Table: (
     <div className="w-64">
       <Table
-        caption="Top accounts"
-        columns={[{ key: 'name', header: 'Account' }, { key: 'mrr', header: 'MRR', numeric: true }]}
-        rows={[{ id: 'a', name: 'Northwind', mrr: '$8.2k' }, { id: 'b', name: 'Globex', mrr: '$6.4k' }]}
+        caption="Open projects"
+        columns={[{ key: 'name', header: 'Project' }, { key: 'score', header: 'Score', numeric: true }]}
+        rows={[{ id: 'a', name: 'Launch plan', score: '82' }, { id: 'b', name: 'Vendor review', score: '64' }]}
         rowKey={(r) => r.id}
       />
     </div>
@@ -214,7 +214,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
   NotificationBadge: <NotificationBadge count={12} />,
   KpiCard: (
     <div className="w-48">
-      <KpiCard label="Total MRR" value="$78.3k" delta={4.2} spark={[62, 65, 64, 70, 74, 78]} />
+      <KpiCard label="Revenue" value="$78.3k" delta={4.2} spark={[62, 65, 64, 70, 74, 78]} />
     </div>
   ),
   // charts (lightweight only — Recharts charts stay placeholder)
@@ -226,6 +226,6 @@ export const previews: Partial<Record<string, ReactNode>> = {
     </div>
   ),
   ChartLegend: <ChartLegend items={[{ id: 'new', label: 'New', colorClassName: 'bg-pos' }, { id: 'churn', label: 'Churned', colorClassName: 'bg-neg' }]} />,
-  ChartTooltipContent: <ChartTooltipContent label="Jan" rows={[{ label: 'MRR', value: '$78k' }]} />,
+  ChartTooltipContent: <ChartTooltipContent label="Jan" rows={[{ label: 'Revenue', value: '$78k' }]} />,
   ChartEmptyState: <ChartEmptyState title="No data" description="Adjust filters." />,
 }

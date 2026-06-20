@@ -670,7 +670,7 @@ export default function App() {
         {
           id: 'components',
           label: 'Open component catalog',
-          description: 'Live parts-bin component reference',
+          description: 'Primary parts-bin design-system reference',
           shortcut: 'G C',
           onSelect: () => { navigate('/docs') },
         },
@@ -854,16 +854,16 @@ export default function App() {
   const sidebar = (
     <LeftNavigationDrawer
       brand="parts-bin"
-      brandHref={appHref('/')}
+      brandHref={appHref('/docs')}
       brandMark="pk"
       collapsed={sidebarCollapsed}
       onCollapsedChange={setSidebarCollapsed}
       items={[
+        { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
         { label: 'Sample dashboard', href: appHref('/'), active: !kitActive && !templateActive && !settingsActive, meta: 'demo' },
         { label: 'Customer success', href: appHref('/templates/customer-success'), active: customerTemplateActive, meta: 'app' },
         { label: 'Review queue', href: appHref('/templates/recommendation-review'), active: recommendationTemplateActive, meta: 'app' },
         { label: 'Compose', href: appHref('/compose'), active: composerActive, meta: 'start' },
-        { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
       ]}
       adminItems={[
         { label: 'Settings', href: appHref('/settings'), active: settingsActive },

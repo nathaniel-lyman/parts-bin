@@ -10,6 +10,9 @@ test('charts barrel exposes the public chart surface', () => {
   expect(typeof charts.ChartLegend).toBe('function')
   expect(typeof charts.ChartTooltipContent).toBe('function')
   expect(typeof charts.ChartEmptyState).toBe('function')
+  expect(typeof charts.SignedMovementChart).toBe('function')
+  expect(typeof charts.ShareDonutChart).toBe('function')
+  expect(typeof charts.LineTrendChart).toBe('function')
   expect(typeof charts.RevenueMovementChart).toBe('function')
   expect(typeof charts.MrrShareDonut).toBe('function')
   expect(typeof charts.MrrTrendChart).toBe('function')
@@ -27,7 +30,7 @@ test('DataGrid barrel exposes the component, state, query, and helpers', () => {
   expect(dataGrid.DEFAULT_STATE).toBeDefined()
 })
 
-test('maps barrel exposes spatial analytics components and demo data', () => {
+test('maps barrel exposes spatial analytics components and compatibility demo data', () => {
   expect(typeof maps.RegionChoropleth).toBe('function')
   expect(typeof maps.BubbleMap).toBe('function')
   expect(typeof maps.FlowMap).toBe('function')
@@ -37,7 +40,7 @@ test('maps barrel exposes spatial analytics components and demo data', () => {
   expect(maps.ledgerFlows.length).toBeGreaterThan(0)
 })
 
-test('root barrel aggregates ui, shell, charts, DataGrid, and dashboard components', () => {
+test('root barrel aggregates reusable design-system components only', () => {
   expect(typeof components.Button).toBe('function') // ui
   expect(typeof components.IconButton).toBe('function') // new ui primitive
   expect(typeof components.FilterChip).toBe('function')
@@ -48,12 +51,12 @@ test('root barrel aggregates ui, shell, charts, DataGrid, and dashboard componen
   expect(typeof components.Avatar).toBe('function')
   expect(typeof components.ChartCard).toBe('function')
   expect(typeof components.GeoDrilldown).toBe('function') // maps
-  expect(typeof components.AppComposerPage).toBe('function')
   expect(typeof components.DataGrid).toBe('function') // DataGrid
   expect(typeof components.WaterfallChart).toBe('function') // charts
-  expect(typeof components.KpiCard).toBe('function') // dashboard
+  expect(typeof components.KpiCard).toBe('function') // generic metric display
   expect(typeof components.Sparkline).toBe('function')
   expect(typeof components.ConfirmDialog).toBe('function')
-  expect(typeof components.AccountFormModal).toBe('function')
-  expect(typeof components.accountGridColumns).toBe('function')
+  expect('AppComposerPage' in components).toBe(false)
+  expect('AccountFormModal' in components).toBe(false)
+  expect('accountGridColumns' in components).toBe(false)
 })

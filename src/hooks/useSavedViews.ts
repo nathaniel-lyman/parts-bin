@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { DEFAULT_PERSISTED_VIEW } from '../components/DataGrid/persistence'
 import type { PersistedGridView } from '../components/DataGrid/persistence'
 
-export const SAVED_VIEWS_KEY = 'ledger.accounts.views'
+export const LEGACY_SAVED_VIEWS_KEY = 'ledger.accounts.views'
+export const SAVED_VIEWS_KEY = 'parts-bin.datagrid.views'
 
 export interface SavedView {
   id: string
@@ -10,9 +11,17 @@ export interface SavedView {
   view: PersistedGridView
 }
 
-function readSavedViews(): SavedView[] {
+export function savedViewsKeyForGrid(persistenceKey: string): string {
+  return `${persistenceKey}.views`
+}
+
+function readSavedViews(storageKey: string): SavedView[] {
   try {
-    const raw = localStorage.getItem(SAVED_VIEWS_KEY)
+    const raw = localStorage.getItem(storageKey) ?? (
+      storageKey === savedViewsKeyForGrid('ledger.accounts.grid')
+        ? localStorage.getItem(LEGACY_SAVED_VIEWS_KEY)
+        : null
+    )
     const parsed = raw ? JSON.parse(raw) : []
     return Array.isArray(parsed) ? parsed as SavedView[] : []
   } catch {
@@ -24,16 +33,16 @@ function makeId(): string {
   return `view-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-export function useSavedViews() {
-  const [views, setViews] = useState<SavedView[]>(readSavedViews)
+export function useSavedViews(storageKey = SAVED_VIEWS_KEY) {
+  const [views, setViews] = useState<SavedView[]>(() => readSavedViews(storageKey))
 
   useEffect(() => {
     try {
-      localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(views))
+      localStorage.setItem(storageKey, JSON.stringify(views))
     } catch {
       /* ignore storage errors */
     }
-  }, [views])
+  }, [storageKey, views])
 
   const create = useCallback((name: string, view: PersistedGridView) => {
     const saved: SavedView = { id: makeId(), name, view }

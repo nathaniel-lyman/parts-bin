@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_PERSISTED_VIEW } from '../components/DataGrid/persistence'
-import { SAVED_VIEWS_KEY, exportViewsJson, importViewsJson, useSavedViews } from './useSavedViews'
+import { LEGACY_SAVED_VIEWS_KEY, SAVED_VIEWS_KEY, exportViewsJson, importViewsJson, savedViewsKeyForGrid, useSavedViews } from './useSavedViews'
 
 describe('useSavedViews', () => {
   it('creates, renames, removes, and persists named views', () => {
@@ -17,6 +17,17 @@ describe('useSavedViews', () => {
 
     act(() => result.current.remove(id))
     expect(result.current.views).toEqual([])
+  })
+
+  it('persists views under the provided grid namespace', () => {
+    const storageKey = savedViewsKeyForGrid('workspace.grid')
+    const { result } = renderHook(() => useSavedViews(storageKey))
+
+    act(() => { result.current.create('Operations', DEFAULT_PERSISTED_VIEW) })
+
+    expect(JSON.parse(localStorage.getItem(storageKey)!)[0].name).toBe('Operations')
+    expect(localStorage.getItem(SAVED_VIEWS_KEY)).toBeNull()
+    expect(localStorage.getItem(LEGACY_SAVED_VIEWS_KEY)).toBeNull()
   })
 
   it('applies stored views and resets without writing the grid key directly', () => {

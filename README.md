@@ -1,12 +1,13 @@
-# parts-bin — a swappable component demo dashboard (React + Tailwind v4)
+# parts-bin — React design system and component library
 
 [![CI](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml/badge.svg)](https://github.com/nathaniel-lyman/parts-bin/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A runnable dashboard starter demonstrating the **parts-bin** component system: sharp, technical,
-data-first. Clone it, run it, customize it — or lift the `src/theme/` and `src/components/` folders into your own app.
+A reusable React + TypeScript design system with token-only theming, UI primitives,
+forms, overlays, feedback states, data display, DataGrid, charts, maps, shell/layout,
+and chat primitives. The local Vite app exists to browse docs and examples.
 
-**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · explore `/compose`, `/docs`, `/login`, `/settings`, and the workflow starters under `/templates/*`.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · start with `/docs` for the component catalog, then explore the example dashboard, `/compose`, `/login`, `/settings`, and `/templates/*`.
 
 ![parts-bin sample dashboard, dark mode](docs/screenshots/dashboard-dark.png)
 
@@ -19,19 +20,12 @@ recipe) and every component, chart, and page re-skins — zero component edits, 
 
 ## Who is this for?
 
-- **Developers** building an internal tool or SaaS dashboard — clone it, re-skin it, swap the
-  demo data for your domain, ship.
-- **Data analysts** with a reporting need — hand this repo to your AI coding agent (or a
-  developer) with your brand colors and KPIs, and you get a branded, interactive dashboard
-  instead of another static spreadsheet. The [agent skills](#agent-skills) make that a guided,
-  verified procedure, not a hope.
-- **Founders and PMs** who need a credible product demo fast — the core dashboard, settings,
-  sign-in, component catalog, and workflow starter pages are already built; `/compose` walks you
-  through assembling your own.
+- **Product engineers** who need a copyable internal-app design system with a real public API.
+- **Teams standardizing UI** across dashboards, admin tools, AI surfaces, and workflow apps.
+- **Developers building examples fast** — the dashboard, composer, settings, sign-in, and template routes are proof surfaces built from the same components.
 
-The sample dashboard domain is SaaS accounts and MRR, but nothing about the component kit is SaaS-specific —
-see [the domain mapping below](#your-first-30-minutes) for what the same dashboard looks like
-as grocery store performance or a supplier scorecard.
+The account/MRR dashboard is intentionally demoted to example code. It demonstrates composition,
+data derivation, and persistence, but it does not define the public component API.
 
 ## Quickstart
 ```bash
@@ -42,23 +36,19 @@ npm run dev
 Starting a new project from this repo? Use GitHub's **"Use this template"** button (or clone and
 delete `.git`) so you begin with a clean history.
 
-**First stop after the dev server starts: open [`/compose`](http://localhost:5173/compose).**
-The guided App composer is the front door to the kit — pick a use case, layout, theme recipe,
-and data mapping, and it generates the route, import, and theme snippets to build from.
+**Primary surface: open [`/docs`](http://localhost:5173/docs).**
+The docs catalog shows component purpose, imports, props, near-twin guidance, and snippets. Use
+the dashboard, composer, and templates only as examples after selecting components.
 
 ## Your first 30 minutes
 
-The fastest path from clone to *your* dashboard is three steps, and an AI coding agent can run
-all of them via the checked-in [agent skills](#agent-skills). Suppose you're an analyst at a
-grocery chain like Aldi:
+The fastest path from clone to using the design system:
 
-1. **Re-skin** — *"run the `retheme` skill: accent Aldi blue `#00005F`, secondary cyan
-   `#25C5E8`, warm orange highlights, slightly rounder corners."* Every component, chart, and
-   page re-skins from `src/theme/` alone.
-2. **Swap the data** — *"run the `swap-data-domain` skill: the entity is Store, KPIs are total
-   weekly sales, open stores, stores below target, and comp sales growth."* The KPI cards,
-   charts, and data grid all derive from one pipeline, so they follow automatically.
-3. **Verify** — *"run the `verify-changes` skill."* Build, tests, and the theme-boundary lint.
+1. **Browse `/docs`** and pick components from the catalog rather than deep files.
+2. **Copy the design-system layers** you need: `src/theme/`, `src/components/ui/`, `shell/`, `DataGrid/`, `charts/`, `maps/`, and `chat/`.
+3. **Re-skin through tokens** in `src/theme/tokens.css`; do not hardcode colors in components.
+4. **Use examples as references**: `/` for a dashboard composition, `/compose` for a generated route plan, and `/templates/*` for full-page workflow examples.
+5. **Verify** with `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
 
 Nothing in the framework is tied to the SaaS demo domain — it's one mapping away from yours:
 
@@ -70,22 +60,22 @@ Nothing in the framework is tied to the SaaS demo domain — it's one mapping aw
 | Status: Active / At risk / Churned | On-target / Below target / Remodel | Compliant / Watch / Suspended |
 | Growth % | Comp sales growth | Fill-rate trend |
 
-Both alternate domains exist as typechecked reference files —
+For the optional account-dashboard example, alternate domains exist as typechecked reference files —
 [`src/data/examples/grocery-stores.ts`](src/data/examples/grocery-stores.ts) and
 [`src/data/examples/supplier-scorecard.ts`](src/data/examples/supplier-scorecard.ts) — showing
-the demo's types, seed rows, and chart series remapped, plus the selector semantics you'd need
+the example's types, seed rows, and chart series remapped, plus the selector semantics you'd need
 to decide. The mechanics of the swap — types, seed data, selectors, grid columns, in dependency
 order — are written down in [`skills/swap-data-domain/SKILL.md`](skills/swap-data-domain/SKILL.md).
 
 ## Pages out of the box
 
-The sample surfaces are already built from the kit's own primitives. Start at
-**`/compose`** — the guided composer that assembles routes, imports, data mapping, and theme snippets:
+The sample surfaces are built from the design system and live in the docs/examples app. Start at
+**`/docs`** for the library reference:
 
 | | |
 |---|---|
-| ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — appearance, profile, notifications |
-| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live gallery/reference for 110 cataloged components | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — sample KPI + charts + DataGrid dashboard, light mode |
+| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — example KPI + charts + DataGrid dashboard |
+| ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — example appearance/profile/preferences page |
 
 Workflow starter routes are included too: **`/templates/customer-success`** for an account-health console and
 **`/templates/recommendation-review`** for a queue/detail review surface.
@@ -100,19 +90,19 @@ Workflow starter routes are included too: **`/templates/customer-success`** for 
   empty/loading states, spinners, pagination, and toasts.
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
-- **`src/components/`** — reusable components (KPI cards, DataGrid with sorting, filtering,
-  selection, saved views, grouping, editing, export, virtualization, charts, and forms). No raw
-  colors; enforced by `npm run lint:theme`.
+- **`src/components/`** — public design-system components and barrels: UI, shell, charts, maps,
+  DataGrid, chat, KPI cards, sparkline, and confirm dialog. Demo-only account/template code is
+  not exported from the aggregate component API.
 - **`src/components/chat/`** — a composable assistant panel with markdown messages, prompt chips,
   streaming state, and a demo adapter that can read the current screen context.
-- **`src/components/templates/`** — full-page starters you can route to directly: a guided
+- **`src/components/templates/`** — example full-page starters you can route to directly: a guided
   **App composer** (`/compose`), a dashboard, two workflow consoles, plus a split brand-panel
   **Login** (`/login`) and a section-scroll **Settings** (`/settings`) page. The starter pages
   are presentational demos — Settings' Appearance section is the live home for color mode,
   theme recipe, and density.
 - **`src/hooks/`, `src/selectors/`, `src/data/`** — client-side state, derived metrics, seed data.
-- **`/compose`** — guided admin-app composer that generates route, import, data-mapping, and theme snippets.
 - **`/docs`** — live component catalog with examples, prop guidance, and copy-paste usage snippets.
+- **`/compose`** — example admin-app composer that generates route, import, data-mapping, and theme snippets.
 - **`skills/`** — agent skills: step-by-step workflows for re-theming, swapping the data domain,
   adding components, and verifying changes. See [Agent skills](#agent-skills).
 - **`THEME-SPEC.md`** — the canonical design reference.
@@ -126,7 +116,7 @@ data with my domain"* — and it follows a checked-in, verified procedure instea
 | Skill | What your agent can do with it |
 |---|---|
 | [`retheme`](skills/retheme/SKILL.md) | Re-skin to a new brand — colors, dark mode, radii, fonts, chart palette |
-| [`swap-data-domain`](skills/swap-data-domain/SKILL.md) | Replace the demo accounts/MRR data with your domain, end to end |
+| [`swap-data-domain`](skills/swap-data-domain/SKILL.md) | Optional example-dashboard workflow: replace the demo accounts/MRR data with another domain |
 | [`add-component`](skills/add-component/SKILL.md) | Add UI the right way: catalog-first, token-only styling |
 | [`verify-changes`](skills/verify-changes/SKILL.md) | Run the full done-checklist, including the failures tests alone miss |
 
@@ -145,19 +135,20 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 
 ## Use parts-bin in an existing app
 Copy-paste checklist (clone what you need, in order):
-- [ ] **Composer** — open `/compose` to choose a use case, layout, theme recipe, and data mapping, then use the generated route/import snippets.
 - [ ] **Theme** — copy `src/theme/` and import `theme/theme.css` at your root. Re-skin via `tokens.css` only.
 - [ ] **Primitives** — copy `src/components/ui/`; import from the `ui` barrel (`Button`, `Field`, `Drawer`,
   `IconButton`, `InlineAlert`, `SegmentedControl`, modals, tabs, toasts, …).
 - [ ] **Shell** — copy `src/components/shell/` for the app shell, sidebar, top nav, and filter bars.
 - [ ] **Charts & DataGrid** *(optional)* — copy `src/components/charts/` and `src/components/DataGrid/`;
   import from the `charts` and `DataGrid` barrels.
+- [ ] **Examples** — consult `/`, `/compose`, and `/templates/*` only as reference assemblies.
 - [ ] **Boundary** — copy `scripts/lint-theme.mjs` and wire `npm run lint:theme` so raw colors never leak
   outside `src/theme/`.
 - [ ] **Reference** — see `src/theme/RETHEME.md` to re-skin and `THEME-SPEC.md` for the canonical design spec.
 
-Every subsystem now has a barrel (`ui`, `shell`, `charts`, `DataGrid`), and `src/components` re-exports all
-of them as one aggregate import root. Import from a barrel, not a deep file path:
+Every design-system subsystem has a barrel (`ui`, `shell`, `charts`, `maps`, `DataGrid`, `chat`),
+and `src/components` re-exports the reusable public surface as one aggregate import root. Import
+from a barrel, not a deep file path:
 ```ts
 import { Button, DataGrid, WaterfallChart, KpiCard } from './components'
 ```

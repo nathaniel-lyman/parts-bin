@@ -27,8 +27,8 @@ test('every demo key is a cataloged component name', () => {
 
 test('keeps the onboarding and theme sections below the gallery', () => {
   render(<DocsPage />)
-  expect(screen.getByRole('button', { name: 'Open composer' })).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Copy parts-bin into your app' })).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Start with a real app template' })).toBeInTheDocument()
-  expect(screen.getByText(/Open \/compose/)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Browse components' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Use parts-bin in your app' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Examples are secondary' })).toBeInTheDocument()
+  expect(screen.getByText(/Use \/, \/compose, and \/templates\/\*/)).toBeInTheDocument()
 })
