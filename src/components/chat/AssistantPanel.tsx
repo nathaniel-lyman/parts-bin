@@ -35,7 +35,7 @@ export function AssistantPanel({ adapter, onClose, title = 'Assistant', suggesti
         <div className="flex min-h-0 flex-1 flex-col justify-center gap-4 overflow-y-auto px-4 py-6">
           <EmptyState
             glyph="✳"
-            title="Ask about your accounts"
+            title="Ask about this screen"
             description="The assistant reads the active screen, selected rows, filters, saved views, and route context."
           />
           {suggestions.length > 0 && <SuggestedPrompts prompts={suggestions} onSelect={send} />}

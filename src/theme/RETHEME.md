@@ -63,7 +63,7 @@ Do not edit component files for re-theming.
 The `SettingsPage` starter (`src/components/templates/`) wires its Appearance section to the
 three appearance owners: color mode (`useTheme` → `parts-bin.theme`), theme recipe
 (`recipes.ts` → `parts-bin.theme.recipe`), and two preference flags persisted by `useSettings`
-(`ledger.user.settings`). The flags are applied as data attributes on `<html>`:
+(`parts-bin.user.settings`, with legacy reads from `ledger.user.settings`). The flags are applied as data attributes on `<html>`:
 
 - `data-density="compact"` — exposes the compact `--row-h` / `--cell-pad` tokens at the root
   (see `base.css`). The DataGrid keeps its own per-grid density; this is an **extension hook**

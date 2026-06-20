@@ -61,7 +61,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="primary" onClick={() => { navigate('/docs') }}>Browse components</Button>
-            <Button variant="secondary" onClick={() => { navigate('/') }}>View examples</Button>
+            <Button variant="secondary" onClick={() => { navigate('/examples/dashboard') }}>View examples</Button>
           </div>
         }
       />
@@ -71,7 +71,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
           <ComponentGallery onSelect={setSelected} externalQuery={globalSearch} />
         </Card>
 
-        <Card title="Use parts-bin in your app" description="Copy the design-system source first. The dashboard, composer, and templates are example assemblies that prove the parts work together.">
+        <Card title="Use parts-bin in your app" description="Copy the design-system source first. The assembly demo, composer, and templates are example screens that prove the parts work together.">
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
@@ -79,7 +79,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
                 <p className="m-0 text-[13px] text-muted">Use the assembly demo, composer, and templates as reference implementations after choosing components from the catalog.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="primary" onClick={() => { navigate('/') }}>Assembly demo</Button>
+                <Button variant="primary" onClick={() => { navigate('/examples/dashboard') }}>Assembly demo</Button>
                 <Button variant="secondary" onClick={() => { navigate('/compose') }}>App composer</Button>
                 <Button variant="secondary" onClick={() => { navigate('/templates/customer-success') }}>Customer success</Button>
                 <Button variant="secondary" onClick={() => { navigate('/templates/recommendation-review') }}>Recommendation review</Button>

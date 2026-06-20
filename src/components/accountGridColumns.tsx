@@ -86,12 +86,12 @@ export function buildAccountGridColumns(
     {
       id: 'mrr',
       accessorKey: 'mrr',
-      header: 'MRR',
+      header: 'Value',
       align: 'right',
       type: 'currency',
       editable: true,
       aggregate: 'sum',
-      validate: (value) => (Number(value) < 0 ? 'MRR cannot be negative' : null),
+      validate: (value) => (Number(value) < 0 ? 'Value cannot be negative' : null),
       cell: (ctx) => <span className="num text-ink">{fmtCurrency(Number(ctx.value))}</span>,
     },
     {

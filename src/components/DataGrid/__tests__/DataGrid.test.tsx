@@ -65,7 +65,7 @@ describe('DataGrid (uncontrolled, account table)', () => {
   it('renders the default visible columns and hides arr/since by default', () => {
     render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} />)
     expect(screen.getByRole('columnheader', { name: /Account/ })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: /MRR/ })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /Value/ })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: 'ARR' })).toBeNull()
     expect(screen.queryByRole('columnheader', { name: 'Since' })).toBeNull()
   })
@@ -218,8 +218,8 @@ describe('DataGrid (controlled override)', () => {
 
     render(<Controlled />)
     expect(screen.getByRole('columnheader', { name: /ARR/ })).toBeInTheDocument()
-    await user.click(screen.getByRole('columnheader', { name: /MRR/ }))
-    const mrr = screen.getByRole('columnheader', { name: /MRR/ })
+    await user.click(screen.getByRole('columnheader', { name: /Value/ }))
+    const mrr = screen.getByRole('columnheader', { name: /Value/ })
     expect(['ascending', 'descending']).toContain(mrr.getAttribute('aria-sort'))
   })
 })

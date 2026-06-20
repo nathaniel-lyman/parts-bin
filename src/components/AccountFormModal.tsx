@@ -72,7 +72,7 @@ export function AccountFormModal({ account, onClose, onSubmit, onInvalid }: Prop
         <div className="col-span-2"><Field label="Account name"><Input autoFocus value={form.name} onChange={(e) => set('name', e.target.value)} /></Field></div>
         <Field label="Owner"><Input value={form.owner} onChange={(e) => set('owner', e.target.value)} /></Field>
         <Field label="Segment"><Select value={form.segment} onChange={(e) => set('segment', e.target.value as Segment)}>{SEGMENTS.map((s) => <option key={s}>{s}</option>)}</Select></Field>
-        <Field label="MRR ($)"><Input type="number" value={form.mrr} onChange={(e) => set('mrr', e.target.value)} /></Field>
+        <Field label="Value ($)"><Input type="number" value={form.mrr} onChange={(e) => set('mrr', e.target.value)} /></Field>
         <Field label="Growth (%)"><Input type="number" step="0.1" value={form.growth} onChange={(e) => set('growth', e.target.value)} /></Field>
         <div className="col-span-2"><Field label="Status"><Select value={form.status} onChange={(e) => set('status', e.target.value as Status)}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</Select></Field></div>
       </div>

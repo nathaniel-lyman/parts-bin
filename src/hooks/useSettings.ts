@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react'
  * `data-*` attributes on <html> (the same imperative idiom as `applyThemeRecipe`)
  * so CSS can consume them; see `src/theme/base.css` for the `data-density` hook.
  */
-export interface LedgerSettings {
+export interface WorkspaceSettings {
   // Appearance
   density: 'comfortable' | 'compact'
   reduceMotion: boolean
@@ -24,32 +24,35 @@ export interface LedgerSettings {
   weeklyReport: boolean
   channels: string[]
   // Preferences
-  landingPage: '/' | '/templates/customer-success' | '/templates/recommendation-review' | '/docs'
+  landingPage: '/docs' | '/examples/dashboard' | '/templates/customer-success' | '/templates/recommendation-review'
   numberFormat: 'compact' | 'full'
 }
 
-export const SETTINGS_STORAGE_KEY = 'ledger.user.settings'
+export type LedgerSettings = WorkspaceSettings
 
-export const DEFAULT_SETTINGS: LedgerSettings = {
+export const SETTINGS_STORAGE_KEY = 'parts-bin.user.settings'
+const LEGACY_SETTINGS_STORAGE_KEY = 'ledger.user.settings'
+
+export const DEFAULT_SETTINGS: WorkspaceSettings = {
   density: 'comfortable',
   reduceMotion: false,
   fullName: 'Morgan Operator',
-  email: 'morgan@ledger.demo',
+  email: 'morgan@parts-bin.demo',
   role: 'admin',
   timezone: 'America/New_York',
   emailDigest: true,
   mentions: true,
   weeklyReport: false,
   channels: ['in-app', 'email'],
-  landingPage: '/',
+  landingPage: '/docs',
   numberFormat: 'full',
 }
 
-function load(): LedgerSettings {
+function load(): WorkspaceSettings {
   try {
-    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY)
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY) ?? localStorage.getItem(LEGACY_SETTINGS_STORAGE_KEY)
     if (!raw) return DEFAULT_SETTINGS
-    const parsed = JSON.parse(raw) as Partial<LedgerSettings>
+    const parsed = JSON.parse(raw) as Partial<WorkspaceSettings>
     // Merge over defaults so a partial/older payload never yields undefined fields.
     return { ...DEFAULT_SETTINGS, ...parsed }
   } catch {
@@ -57,7 +60,7 @@ function load(): LedgerSettings {
   }
 }
 
-function applyToDocument(settings: LedgerSettings) {
+function applyToDocument(settings: WorkspaceSettings) {
   if (typeof document === 'undefined') return
   const root = document.documentElement
   if (settings.density === 'compact') root.dataset.density = 'compact'
@@ -67,14 +70,14 @@ function applyToDocument(settings: LedgerSettings) {
 }
 
 export function useSettings() {
-  const [settings, setSettings] = useState<LedgerSettings>(load)
+  const [settings, setSettings] = useState<WorkspaceSettings>(load)
 
   useEffect(() => {
     applyToDocument(settings)
     try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings)) } catch { /* ignore */ }
   }, [settings])
 
-  const update = useCallback((patch: Partial<LedgerSettings>) => {
+  const update = useCallback((patch: Partial<WorkspaceSettings>) => {
     setSettings((current) => ({ ...current, ...patch }))
   }, [])
 

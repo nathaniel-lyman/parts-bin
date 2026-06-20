@@ -19,7 +19,7 @@ export const seedAccounts: Account[] = [
   { id: 'a8', name: 'Quill Analytics', owner: 'A. Rivera', segment: 'Startup',    mrr:  1400, growth: -8.6, status: 'At risk',  arr:  16800, since: '2024-03-01' },
 ]
 
-// Monthly MRR by segment ($k) — Jan..Oct, matching the demo's trend chart shape.
+// Monthly sample value by segment ($k) — Jan..Oct, matching the demo's trend chart shape.
 export const monthlySeries: MonthlyPoint[] = [
   { month: 'Jan', Enterprise: 38, 'Mid-market': 18, Startup: 2 },
   { month: 'Feb', Enterprise: 41, 'Mid-market': 18, Startup: 2 },
@@ -33,7 +33,7 @@ export const monthlySeries: MonthlyPoint[] = [
   { month: 'Oct', Enterprise: 55, 'Mid-market': 24, Startup: 4 },
 ]
 
-// Revenue movement ($k) — New/Expansion positive, Churn negative.
+// Sample movement ($k) — New/Expansion positive, Churn negative.
 export const movementSeries: MovementPoint[] = [
   { month: 'Jan', New: 4.0, Expansion: 3.0, Churn: -1.5 },
   { month: 'Feb', New: 5.5, Expansion: 2.6, Churn: -1.8 },
@@ -48,10 +48,10 @@ export const movementSeries: MovementPoint[] = [
 ]
 
 export const revenueWaterfallSeries = [
-  { label: 'Opening', kind: 'start', value: 72.8, note: 'Starting MRR' },
+  { label: 'Opening', kind: 'start', value: 72.8, note: 'Starting value' },
   { label: 'New', kind: 'increase', value: 7.1 },
   { label: 'Expansion', kind: 'increase', value: 4.0 },
   { label: 'Contraction', kind: 'decrease', value: 1.1 },
   { label: 'Churn', kind: 'decrease', value: 0.5 },
-  { label: 'Closing', kind: 'total', note: 'Ending MRR' },
+  { label: 'Closing', kind: 'total', note: 'Ending value' },
 ] as const

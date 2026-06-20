@@ -114,7 +114,7 @@ function accountActivity(account: Account, appended: ActivityEvent[]): ActivityE
     {
       id: `${account.id}-note`,
       title: 'Account plan updated',
-      description: `${account.segment} playbook refreshed with the latest MRR and growth context.`,
+      description: `${account.segment} playbook refreshed with the latest value and growth context.`,
       actor: 'Revenue ops',
       timestamp: 'Yesterday',
       tone: 'accent',
@@ -221,7 +221,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
       />
 
       <KpiSummaryRow>
-        <KpiCard label="Managed MRR" value={fmtCurrency(openMrr)} delta={4.6} spark={[22, 24, 27, 29, 31, 33, 34, 36, 35, 38, 41, 44]} />
+        <KpiCard label="Managed value" value={fmtCurrency(openMrr)} delta={4.6} spark={[22, 24, 27, 29, 31, 33, 34, 36, 35, 38, 41, 44]} />
         <KpiCard label="Active accounts" value={String(active)} delta={2.4} spark={[11, 11, 12, 13, 13, 14, 15, 15, 16, 16, 17, 18]} />
         <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(filteredAccounts))} delta={1.1} spark={[1, 2, 2, 3, 4, 5, 4, 6, 7, 7, 8, 9]} />
         <KpiCard label="Open risks" value={String(risk)} delta={-12.5} spark={[9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3]} negSpark />
@@ -290,7 +290,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
 
           <Card
             title="Account portfolio"
-            description="The same Ledger grid, dropped into a fuller app screen with column filters, selection, and export."
+            description="The same DataGrid dropped into a fuller app screen with column filters, selection, and export."
           >
             <DataGrid
               rows={filteredAccounts}
@@ -314,7 +314,7 @@ export function CustomerSuccessTemplate({ globalSearch, atRiskOnly, timePeriodLa
                 <DetailHeader
                   title={selectedAccount.name}
                   subtitle={`${selectedAccount.segment} · ${selectedAccount.owner}`}
-                  meta={`${fmtCurrency(selectedAccount.mrr)} MRR · ${fmtPercent(selectedAccount.growth)} growth`}
+                  meta={`${fmtCurrency(selectedAccount.mrr)} value · ${fmtPercent(selectedAccount.growth)} growth`}
                   actions={<Button size="compact" onClick={() => setDrawerOpen(true)}>Log note</Button>}
                   className="border border-line"
                 />

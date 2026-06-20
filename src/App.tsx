@@ -453,7 +453,7 @@ function DashboardPage({
 export default function App() {
   const { mode, toggle } = useTheme()
   const toast = useToast()
-  // Shared instance for the dashboard AND the assistant adapter, so the demo
+  // Shared instance for the assembly demo AND the assistant adapter, so the demo
   // answers track live CRUD edits. (CustomerSuccessTemplate intentionally keeps
   // its own read-only useAccounts instance.)
   const accountsApi = useAccounts()
@@ -471,13 +471,14 @@ export default function App() {
   const pathname = appPath()
   const loginActive = pathname === '/login'
   const settingsActive = pathname === '/settings'
-  const docsActive = pathname === '/docs'
+  const docsActive = pathname === '/' || pathname === '/docs'
   const composerActive = pathname === '/compose' || pathname === '/docs/start'
-  const customerTemplateActive = pathname === '/templates/customer-success' || pathname === '/examples'
+  const assemblyActive = pathname === '/examples/dashboard' || pathname === '/demo'
+  const customerTemplateActive = pathname === '/templates/customer-success'
   const recommendationTemplateActive = pathname === '/templates/recommendation-review'
   const templateActive = customerTemplateActive || recommendationTemplateActive
   const kitActive = docsActive || composerActive
-  const accountsActive = !loginActive && !kitActive && !templateActive && !settingsActive
+  const accountsActive = assemblyActive
   const routeKind: AssistantRouteKind = settingsActive
     ? 'settings'
     : composerActive
@@ -666,18 +667,18 @@ export default function App() {
       label: 'Navigation',
       items: [
         {
-          id: 'dashboard',
-          label: 'Open component assembly',
-          description: 'Demo assembly of KPI, chart, DataGrid, and assistant components',
-          shortcut: 'G D',
-          onSelect: () => { navigate('/') },
-        },
-        {
           id: 'components',
           label: 'Open component catalog',
           description: 'Primary parts-bin design-system reference',
           shortcut: 'G C',
           onSelect: () => { navigate('/docs') },
+        },
+        {
+          id: 'assembly',
+          label: 'Open component assembly',
+          description: 'Example assembly of KPI, chart, DataGrid, and assistant components',
+          shortcut: 'G D',
+          onSelect: () => { navigate('/examples/dashboard') },
         },
         {
           id: 'composer',
@@ -865,7 +866,7 @@ export default function App() {
       onCollapsedChange={setSidebarCollapsed}
       items={[
         { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
-        { label: 'Assembly demo', href: appHref('/'), active: !kitActive && !templateActive && !settingsActive, meta: 'demo' },
+        { label: 'Assembly demo', href: appHref('/examples/dashboard'), active: assemblyActive, meta: 'demo' },
         { label: 'Customer success', href: appHref('/templates/customer-success'), active: customerTemplateActive, meta: 'app' },
         { label: 'Review queue', href: appHref('/templates/recommendation-review'), active: recommendationTemplateActive, meta: 'app' },
         { label: 'Compose', href: appHref('/compose'), active: composerActive, meta: 'start' },
@@ -955,6 +956,15 @@ export default function App() {
         <AppComposerPage />
       ) : docsActive ? (
         <DocsPage globalSearch={globalSearch} />
+      ) : assemblyActive ? (
+        <DashboardPage
+          accountsApi={accountsApi}
+          globalSearch={globalSearch}
+          atRiskOnly={atRiskOnly}
+          timePeriodLabel={dashboardPeriodLabel}
+          onAssistantGridContextChange={handleAssistantGridContextChange}
+          onAssistantDashboardEvidenceChange={handleAssistantDashboardEvidenceChange}
+        />
       ) : customerTemplateActive ? (
         <CustomerSuccessTemplate
           globalSearch={globalSearch}
@@ -969,14 +979,7 @@ export default function App() {
           assistantFeedback={recommendationAssistantFeedback}
         />
       ) : (
-        <DashboardPage
-          accountsApi={accountsApi}
-          globalSearch={globalSearch}
-          atRiskOnly={atRiskOnly}
-          timePeriodLabel={dashboardPeriodLabel}
-          onAssistantGridContextChange={handleAssistantGridContextChange}
-          onAssistantDashboardEvidenceChange={handleAssistantDashboardEvidenceChange}
-        />
+        <DocsPage globalSearch={globalSearch} />
       )}
       {assistantOpen && (
         <AssistantPanel

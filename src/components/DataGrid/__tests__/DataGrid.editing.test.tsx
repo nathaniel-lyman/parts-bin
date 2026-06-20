@@ -79,7 +79,7 @@ describe('DataGrid inline editing', () => {
     await userEvent.type(input, '-50{Enter}')
 
     expect(onRowUpdate).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert')).toHaveTextContent('MRR cannot be negative')
+    expect(screen.getByRole('alert')).toHaveTextContent('Value cannot be negative')
     // Editor stays open so the value can be fixed.
     expect(screen.getByRole('spinbutton', { name: 'Edit mrr' })).toBeInTheDocument()
   })

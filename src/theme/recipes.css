@@ -1,5 +1,5 @@
 /* Optional token recipes. Components still consume the same CSS variables. */
-[data-theme-preview='ledger-default'] {
+[data-theme-preview='parts-bin-default'] {
   --bg: #f8fafc;          --surface: #ffffff;     --surface-2: #f1f5f9;
   --line: #e2e8f0;        --ink: #0f172a;         --muted: #475569;
   --faint: #94a3b8;       --accent: #2563eb;      --accent-soft: #dbeafe;
@@ -12,7 +12,7 @@
   --reject: var(--neg);  --reject-soft: var(--neg-soft);
 }
 
-.dark [data-theme-preview='ledger-default'] {
+.dark [data-theme-preview='parts-bin-default'] {
   --bg: #020617;          --surface: #0f172a;     --surface-2: #1e293b;
   --line: #334155;        --ink: #f8fafc;         --muted: #cbd5e1;
   --faint: #64748b;       --accent: #60a5fa;      --accent-soft: #172554;

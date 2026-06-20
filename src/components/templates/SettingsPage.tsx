@@ -60,10 +60,10 @@ const channelOptions = [
 ]
 
 const landingOptions: { value: LedgerSettings['landingPage']; label: string }[] = [
-  { value: '/', label: 'Accounts' },
+  { value: '/docs', label: 'Components' },
+  { value: '/examples/dashboard', label: 'Assembly demo' },
   { value: '/templates/customer-success', label: 'Customer success' },
   { value: '/templates/recommendation-review', label: 'Review queue' },
-  { value: '/docs', label: 'Components' },
 ]
 
 const recipeOptions = THEME_RECIPES.map((recipe) => ({

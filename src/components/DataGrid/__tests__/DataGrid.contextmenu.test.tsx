@@ -59,7 +59,7 @@ describe('DataGrid context menu + copy', () => {
     renderGrid()
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select Beta' }))
     fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
-    expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tMRR\tGrowth\tStatus\nBeta\tLee\tStartup\t300\t-2\tAt risk')
+    expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tValue\tGrowth\tStatus\nBeta\tLee\tStartup\t300\t-2\tAt risk')
 
     writeText.mockClear()
     const search = screen.getByRole('searchbox', { name: /quick filter/i })

@@ -30,7 +30,7 @@ describe('DataGrid ARIA', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: /Select Cobalt Freight/ }))
     expect(row).toHaveAttribute('aria-selected', 'true')
 
-    const trigger = screen.getByRole('button', { name: /MRR column menu/ })
+    const trigger = screen.getByRole('button', { name: /Value column menu/ })
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await userEvent.click(trigger)
     expect(trigger).toHaveAttribute('aria-expanded', 'true')

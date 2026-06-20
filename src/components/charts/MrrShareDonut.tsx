@@ -1,6 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import type { Account } from '../../data/types'
-import { segmentShares, totalMrr } from '../../selectors/metrics'
+import { segmentShares } from '../../selectors/metrics'
 import { SERIES, tooltipProps } from '../../theme/chart-theme'
 import { fmtCurrency } from '../../lib/format'
 import { ChartLegend } from './ChartScaffold'

@@ -7,7 +7,7 @@ A reusable React + TypeScript design system with token-only theming, UI primitiv
 forms, overlays, feedback states, data display, DataGrid, charts, maps, shell/layout,
 and chat primitives. The local Vite app exists to browse docs and examples.
 
-**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · start with `/docs` for the component catalog, then explore the example dashboard, `/compose`, `/login`, `/settings`, and `/templates/*`.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · the root route opens the component catalog; then explore `/examples/dashboard`, `/compose`, `/login`, `/settings`, and `/templates/*`.
 
 ![parts-bin component catalog](docs/screenshots/components-light.png)
 
@@ -22,7 +22,7 @@ recipe) and every component, chart, and page re-skins — zero component edits, 
 
 - **Product engineers** who need a copyable internal-app design system with a real public API.
 - **Teams standardizing UI** across dashboards, admin tools, AI surfaces, and workflow apps.
-- **Developers building examples fast** — the dashboard, composer, settings, sign-in, and template routes are proof surfaces built from the same components.
+- **Developers building examples fast** — the assembly demo, composer, settings, sign-in, and template routes are proof surfaces built from the same components.
 
 The assembly demo is intentionally demoted to example code. It demonstrates composition,
 data derivation, and persistence, but it does not define the public component API.
@@ -38,7 +38,7 @@ delete `.git`) so you begin with a clean history.
 
 **Primary surface: open [`/docs`](http://localhost:5173/docs).**
 The docs catalog shows component purpose, imports, props, near-twin guidance, and snippets. Use
-the dashboard, composer, and templates only as examples after selecting components.
+the assembly demo, composer, and templates only as examples after selecting components.
 
 ## Your first 30 minutes
 
@@ -47,7 +47,7 @@ The fastest path from clone to using the design system:
 1. **Browse `/docs`** and pick components from the catalog rather than deep files.
 2. **Copy the design-system layers** you need: `src/theme/`, `src/components/ui/`, `shell/`, `DataGrid/`, `charts/`, `maps/`, and `chat/`.
 3. **Re-skin through tokens** in `src/theme/tokens.css`; do not hardcode colors in components.
-4. **Use examples as references**: `/` for a dashboard composition, `/compose` for a generated route plan, and `/templates/*` for full-page workflow examples.
+4. **Use examples as references**: `/examples/dashboard` for a component assembly, `/compose` for a generated route plan, and `/templates/*` for full-page workflow examples.
 5. **Verify** with `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
 
 Nothing in the framework is tied to the bundled sample dataset — map the generic parts to your domain:
@@ -60,7 +60,7 @@ Nothing in the framework is tied to the bundled sample dataset — map the gener
 | Status: Active / Review / Blocked | On-target / Below target / Remodel | Compliant / Watch / Suspended |
 | Change % | Comp sales growth | Fill-rate trend |
 
-For the optional sample-dashboard data swap, alternate domains exist as typechecked reference files —
+For the optional sample assembly data swap, alternate domains exist as typechecked reference files —
 [`src/data/examples/grocery-stores.ts`](src/data/examples/grocery-stores.ts) and
 [`src/data/examples/supplier-scorecard.ts`](src/data/examples/supplier-scorecard.ts) — showing
 the example's types, seed rows, and chart series remapped, plus the selector semantics you'd need
@@ -74,7 +74,7 @@ The sample surfaces are built from the design system and live in the docs/exampl
 
 | | |
 |---|---|
-| ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — example KPI + charts + DataGrid dashboard |
+| ![Component catalog](docs/screenshots/components-light.png) **`/` or `/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/examples/dashboard`** — example KPI + charts + DataGrid assembly |
 | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — example appearance/profile/preferences page |
 
 Workflow starter routes are included too: **`/templates/customer-success`** for a customer-operations console and
@@ -91,12 +91,12 @@ Workflow starter routes are included too: **`/templates/customer-success`** for 
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
 - **`src/components/`** — public design-system components and barrels: UI, shell, charts, maps,
-  DataGrid, chat, KPI cards, sparkline, and confirm dialog. Demo-only account/template code is
+  DataGrid, chat, KPI cards, sparkline, and confirm dialog. Demo-only example/template code is
   not exported from the aggregate component API.
 - **`src/components/chat/`** — a composable assistant panel with markdown messages, prompt chips,
   streaming state, and a demo adapter that can read the current screen context.
 - **`src/components/templates/`** — example full-page starters you can route to directly: a guided
-  **App composer** (`/compose`), a dashboard, two workflow consoles, plus a split brand-panel
+  **App composer** (`/compose`), a component assembly dashboard (`/examples/dashboard`), two workflow consoles, plus a split brand-panel
   **Login** (`/login`) and a section-scroll **Settings** (`/settings`) page. The starter pages
   are presentational demos — Settings' Appearance section is the live home for color mode,
   theme recipe, and density.
@@ -116,7 +116,7 @@ data with my domain"* — and it follows a checked-in, verified procedure instea
 | Skill | What your agent can do with it |
 |---|---|
 | [`retheme`](skills/retheme/SKILL.md) | Re-skin to a new brand — colors, dark mode, radii, fonts, chart palette |
-| [`swap-data-domain`](skills/swap-data-domain/SKILL.md) | Optional example-dashboard workflow: replace the bundled sample data with another domain |
+| [`swap-data-domain`](skills/swap-data-domain/SKILL.md) | Optional example assembly workflow: replace the bundled sample data with another domain |
 | [`add-component`](skills/add-component/SKILL.md) | Add UI the right way: catalog-first, token-only styling |
 | [`verify-changes`](skills/verify-changes/SKILL.md) | Run the full done-checklist, including the failures tests alone miss |
 

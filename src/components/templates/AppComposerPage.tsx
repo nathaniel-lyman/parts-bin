@@ -222,9 +222,9 @@ const tokenTweaks: Record<TokenTweak, { label: string; description: string; patc
 }
 
 const defaultConfig: ComposerConfig = {
-  useCaseId: 'revenue-ops',
+  useCaseId: 'project-ops',
   layoutId: 'metrics-datagrid',
-  recipeId: 'ledger-default',
+  recipeId: 'parts-bin-default',
   density: 'standard',
   tokenTweak: 'default',
   data: useCases[0].data,

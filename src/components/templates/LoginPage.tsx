@@ -21,7 +21,7 @@ const proofStats: { value: string; label: string }[] = [
 /**
  * Split brand-panel sign-in — the kit's "front door". Rendered full-bleed
  * (no AppShell) by App when the route is `/login`. Presentational demo only:
- * any non-empty credentials route to the dashboard; there is no real auth.
+ * any non-empty credentials route to the component catalog; there is no real auth.
  */
 export function LoginPage() {
   const { mode, toggle } = useTheme()
@@ -39,14 +39,14 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     // Simulate an async sign-in, then enter the app. Demo only — no backend.
-    window.setTimeout(() => { navigate('/') }, 600)
+    window.setTimeout(() => { navigate('/docs') }, 600)
   }
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-bg text-ink md:grid-cols-2">
       {/* Brand panel — hidden on small screens to keep the form front-and-center. */}
       <aside className="hidden flex-col justify-between border-r border-line bg-surface p-10 md:flex">
-        <BrandLockup mark="#" href={appHref('/')}>parts-bin</BrandLockup>
+        <BrandLockup mark="#" href={appHref('/docs')}>parts-bin</BrandLockup>
         <div className="grid gap-3">
           <p className="display m-0 text-[32px] font-semibold leading-tight text-ink">
             Example app surfaces,<br />ready to adapt.
@@ -79,7 +79,7 @@ export function LoginPage() {
 
         <div className="w-full max-w-[360px]">
           <div className="mb-6 grid gap-1 md:hidden">
-            <BrandLockup mark="#" href={appHref('/')}>parts-bin</BrandLockup>
+            <BrandLockup mark="#" href={appHref('/docs')}>parts-bin</BrandLockup>
           </div>
 
           <div className="mb-6 grid gap-1">
@@ -133,7 +133,7 @@ export function LoginPage() {
               <span className="h-px flex-1 bg-line" />
             </div>
 
-            <Button type="button" variant="secondary" onClick={() => { navigate('/') }}>
+            <Button type="button" variant="secondary" onClick={() => { navigate('/docs') }}>
               Continue with SSO
             </Button>
           </form>

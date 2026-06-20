@@ -21,7 +21,19 @@ function expectTextContent(fragment: string) {
   expect(matches.length, `Expected to find "${fragment}" in text: ${dialogText}`).toBeGreaterThan(0)
 }
 
-test('renders dashboard with KPIs and table (light)', () => {
+function openAssemblyRoute() {
+  window.history.pushState({}, '', '/examples/dashboard')
+}
+
+test('root route renders the component catalog first', () => {
+  render(<ToastProvider><App /></ToastProvider>)
+  expect(screen.getByText('Components')).toBeInTheDocument()
+  expect(screen.getByText(/catalog is the primary product surface/i)).toBeInTheDocument()
+  expect(screen.queryByText('Component assembly demo')).not.toBeInTheDocument()
+})
+
+test('example assembly renders KPIs and table (light)', () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
   expect(screen.getByText('Component assembly demo')).toBeInTheDocument()
   expect(screen.getByText(/A working sample assembled from parts-bin components/)).toBeInTheDocument()
@@ -54,7 +66,8 @@ test('settings route renders inside the shell with dashboard-only controls hidde
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
 })
 
-test('dashboard DataGrid selection is visible without server mode', async () => {
+test('assembly DataGrid selection is visible without server mode', async () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
   expect(screen.getByText('1 selected')).toBeInTheDocument()
@@ -66,11 +79,12 @@ test('Dark toggle switches to dark mode', async () => {
   expect(document.documentElement.classList.contains('dark')).toBe(true)
   expect(localStorage.getItem('parts-bin.theme')).toBe('dark')
   // app still renders its content in dark mode
-  expect(screen.getByText('Component assembly demo')).toBeInTheDocument()
+  expect(screen.getByText('Components')).toBeInTheDocument()
 })
 
-test('manual date ranges update the dashboard period label dynamically', async () => {
+test('manual date ranges update the assembly period label dynamically', async () => {
   const user = userEvent.setup()
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.click(screen.getByRole('button', { name: /dates/i }))
@@ -90,6 +104,7 @@ test('manual date ranges update the dashboard period label dynamically', async (
 })
 
 test('server mode toggle exercises the DataGrid mock server path', async () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('switch', { name: /server mode/i }))
   expect(screen.getByText(/loading server rows/i)).toBeInTheDocument()
@@ -161,16 +176,16 @@ test('recommendation review feedback drawer updates status and history', async (
   expect(screen.getAllByText('Rejected').length).toBeGreaterThan(0)
 })
 
-test('components route drops dashboard-only header controls and wires global search to the gallery', async () => {
+test('components route drops assembly-only header controls and wires global search to the gallery', async () => {
   const user = userEvent.setup()
   window.history.pushState({}, '', '/docs')
   render(<ToastProvider><App /></ToastProvider>)
 
   expect(screen.getByText('Components')).toBeInTheDocument()
-  // dashboard-only controls have no function on the docs page
+  // Assembly-only controls have no function on the docs page.
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /risks/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /review/i })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /notifications/i })).not.toBeInTheDocument()
   // shell-wide controls stay
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
@@ -181,7 +196,7 @@ test('components route drops dashboard-only header controls and wires global sea
   expect(screen.queryByRole('heading', { name: 'Button' })).not.toBeInTheDocument()
 })
 
-test('composer route renders a guided starter and hides dashboard-only controls', () => {
+test('composer route renders a guided starter and hides assembly-only controls', () => {
   window.history.pushState({}, '', '/compose')
   render(<ToastProvider><App /></ToastProvider>)
 
@@ -190,7 +205,7 @@ test('composer route renders a guided starter and hides dashboard-only controls'
   expect(screen.getByRole('button', { name: 'Generate screen' })).toBeInTheDocument()
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /risks/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /review/i })).not.toBeInTheDocument()
 })
 
 test('docs start alias renders the app composer', () => {
@@ -202,6 +217,7 @@ test('docs start alias renders the app composer', () => {
 })
 
 test('signed movement chart exposes bar width and label controls', async () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
   const widthControl = screen.getByRole('slider', { name: /signed movement bar width/i })
   const labelControl = screen.getByRole('switch', { name: /movement labels/i })
@@ -217,6 +233,7 @@ test('signed movement chart exposes bar width and label controls', async () => {
 })
 
 test('waterfall chart labels can be toggled', async () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
   const labelControl = screen.getByRole('switch', { name: /bridge labels/i })
 
@@ -227,6 +244,7 @@ test('waterfall chart labels can be toggled', async () => {
 
 test('assistant opens from the top nav and answers with live sample value', async () => {
   const user = userEvent.setup()
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
   expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument()
@@ -241,6 +259,7 @@ test('assistant opens from the top nav and answers with live sample value', asyn
 
 test('assistant summarizes selected rows from the current grid context', async () => {
   const user = userEvent.setup()
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
@@ -255,6 +274,7 @@ test('assistant summarizes selected rows from the current grid context', async (
 
 test('assistant explains signed movement with chart and filtered grid evidence', async () => {
   const user = userEvent.setup()
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.type(screen.getByRole('searchbox', { name: /global search/i }), 'cobalt')
@@ -273,6 +293,7 @@ test('assistant explains signed movement with chart and filtered grid evidence',
 
 test('assistant creates a saved view from the current grid context', async () => {
   const user = userEvent.setup()
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
@@ -288,6 +309,7 @@ test('assistant creates a saved view from the current grid context', async () =>
 })
 
 test('command shortcuts run workspace actions without opening the palette', () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   expect(document.documentElement.classList.contains('dark')).toBe(false)
@@ -300,6 +322,7 @@ test('command shortcuts run workspace actions without opening the palette', () =
 })
 
 test('command shortcuts save and reset the current account grid view', async () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   fireEvent.keyDown(document, { key: 'v' })
@@ -318,6 +341,7 @@ test('command shortcuts save and reset the current account grid view', async () 
 
 test('command shortcuts clear selected grid rows', async () => {
   const user = userEvent.setup()
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
@@ -331,6 +355,7 @@ test('command shortcuts clear selected grid rows', async () => {
 })
 
 test('command shortcuts can ask the assistant from the current screen', async () => {
+  openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   fireEvent.keyDown(document, { key: 's' })

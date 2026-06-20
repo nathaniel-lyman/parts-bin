@@ -14,7 +14,7 @@ test('generates default imports, route branch, data mapping, and theme setup', (
   expect(screen.getByText(/const projectsActive = pathname === '\/projects'/)).toBeInTheDocument()
   expect(screen.getByText(/export interface ProjectRow/)).toBeInTheDocument()
   expect(screen.getByText(/persistenceKey="parts-bin.projects.grid"/)).toBeInTheDocument()
-  expect(screen.getByText(/applyThemeRecipe\('ledger-default'\)/)).toBeInTheDocument()
+  expect(screen.getByText(/applyThemeRecipe\('parts-bin-default'\)/)).toBeInTheDocument()
 })
 
 test('switches use case defaults to the review queue template', () => {
