@@ -34,7 +34,7 @@ const screenContext: AssistantScreenContext = {
       { month: 'Feb', New: 5, Expansion: 2, Churn: -1 },
       { month: 'Mar', New: 1.5, Expansion: 1.5, Churn: -0.5 },
     ],
-    sourceTitle: 'Revenue movement ($k)',
+    sourceTitle: 'Signed movement ($k)',
     timePeriodLabel: 'Last 90 days',
     barWidth: 22,
     labelsVisible: false,
@@ -66,14 +66,14 @@ async function collect(adapter: ChatAdapter, text: string): Promise<string> {
 describe('createDemoAdapter', () => {
   const adapter = createDemoAdapter(() => fixture, { delayMs: 0 })
 
-  test('mrr route streams the real total and a segment share table', async () => {
-    const out = await collect(adapter, 'How is MRR looking?')
+  test('value route streams the real total and a segment share table', async () => {
+    const out = await collect(adapter, 'Summarize sample value')
     expect(out).toContain(fmtCurrency(totalMrr(fixture))) // $1,200 — Churned excluded
-    expect(out).toContain('| Segment | MRR | Share |')
+    expect(out).toContain('| Segment | Value | Share |')
     expect(out).toContain('Enterprise')
     expect(out).toContain('83.3%') // 1000/1200
     expect(out).toContain('Evidence used')
-    expect(out).toContain('active MRR excludes Churned accounts')
+    expect(out).toContain('active sample value excludes archived rows')
   })
 
   test('risk route lists non-Active accounts', async () => {
@@ -83,7 +83,7 @@ describe('createDemoAdapter', () => {
     expect(out).toContain('Initech')
     expect(out).not.toContain('Acme')
     expect(out).toContain('Evidence used')
-    expect(out).toContain('At risk and Churned statuses')
+    expect(out).toContain('At risk and Churned demo statuses')
   })
 
   test('growth route sign-prefixes a negative average', async () => {
@@ -91,7 +91,7 @@ describe('createDemoAdapter', () => {
     // avgGrowth = (10 - 30 - 40) / 3 = -20 ; fmtPercent abs()'s, adapter restores the sign
     expect(out).toContain('-20.0%')
     expect(out).toContain('Evidence used')
-    expect(out).toContain('average growth includes all scoped accounts')
+    expect(out).toContain('average change includes all scoped rows')
   })
 
   test('integrate route emits a fenced code block', async () => {
@@ -128,23 +128,23 @@ describe('createDemoAdapter', () => {
   test('summarizes selected accounts from screen context', async () => {
     const contextualAdapter = createDemoAdapter(() => fixture, { delayMs: 0, getContext: () => screenContext })
     const out = await collect(contextualAdapter, 'summarize selected accounts')
-    expect(out).toContain('You selected **1** account')
+    expect(out).toContain('You selected **1** row')
     expect(out).toContain('Globex')
     expect(out).not.toContain('Acme')
     expect(out).toContain('Evidence used')
     expect(out).toContain('Selection source: DataGrid selected rows')
   })
 
-  test('explains revenue movement with chart and grid evidence separated', async () => {
+  test('explains signed movement with chart and grid evidence separated', async () => {
     const contextualAdapter = createDemoAdapter(() => fixture, { delayMs: 0, getContext: () => screenContext })
-    const out = await collect(contextualAdapter, 'Explain this revenue movement')
+    const out = await collect(contextualAdapter, 'Explain this signed movement')
 
-    expect(out).toContain('Revenue movement is **net positive**')
+    expect(out).toContain('Signed movement is **net positive**')
     expect(out).toContain('$7.5k net')
     expect(out).toContain('Latest visible month: **Mar**')
-    expect(out).toContain('Chart: Revenue movement ($k), 3 monthly rows, Last 90 days')
+    expect(out).toContain('Chart: Signed movement ($k), 3 monthly rows, Last 90 days')
     expect(out).toContain('Grid scope: 2 of 3 rows visible, 1 row selected')
-    expect(out).toContain('Separation: chart evidence uses dashboard monthly movement data; grid evidence uses currently visible account rows.')
+    expect(out).toContain('Separation: chart evidence uses monthly movement rows; grid evidence uses currently visible sample rows.')
   })
 
   test('screen summary exposes missing evidence when no context is available', async () => {
@@ -174,7 +174,7 @@ describe('createDemoAdapter', () => {
   })
 
   test('contextual suggestions reflect selected grid rows', () => {
-    expect(contextualAssistantSuggestions(screenContext)[0]).toBe('Summarize 1 selected account')
+    expect(contextualAssistantSuggestions(screenContext)[0]).toBe('Summarize 1 selected row')
   })
 
   test('exports one suggestion per route', () => {

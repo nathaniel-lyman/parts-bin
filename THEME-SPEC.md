@@ -1,4 +1,4 @@
-# Ledger — a dashboard theme for React
+# parts-bin — a dashboard-ready design system for React
 
 **Sharp & technical. Corporate polish with personality.** Built for data-heavy dashboards with simple CRUD. Targets Tailwind CSS + shadcn/ui.
 
@@ -207,7 +207,7 @@ const gridProps = { stroke: 'var(--line)', strokeDasharray: '3 3', vertical: fal
 
 **Buttons.** Primary = accent fill; Secondary = surface + line border; Ghost = text-only; Destructive = neg outline → neg fill on confirm step. Heights: 32px default, 28px compact (in-table). All 2px radius, 13px/500.
 
-**Badges/status.** Soft-tint background + strong-color text + 6px status dot, micro-label type. e.g. `Active` = pos-soft/pos · `At risk` = warn-soft/warn · `Churned` = neg-soft/neg.
+**Badges/status.** Soft-tint background + strong-color text + 6px status dot, micro-label type. e.g. `Active` = pos-soft/pos · `Review` = warn-soft/warn · `Blocked` = neg-soft/neg.
 
 **Toasts.** Bottom-right, surface + border + dropdown shadow, 4px accent (or semantic) left edge, auto-dismiss 4s.
 
@@ -217,7 +217,7 @@ const gridProps = { stroke: 'var(--line)', strokeDasharray: '3 3', vertical: fal
 
 ## 7. Voice (microcopy)
 
-Terse, lowercase-comfortable, numerate: "12 accounts · $84.2k MRR", "Saved 2s ago", "No results for 'acme' — clear filter". Confirmations state consequences plainly: "Delete Meridian Corp? This removes 14 months of history."
+Terse, lowercase-comfortable, numerate: "12 rows · $84.2k value", "Saved 2s ago", "No results for 'acme' — clear filter". Confirmations state consequences plainly: "Delete Meridian Corp? This removes 14 months of history."
 
 ---
 

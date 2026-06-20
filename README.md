@@ -9,7 +9,7 @@ and chat primitives. The local Vite app exists to browse docs and examples.
 
 **[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · start with `/docs` for the component catalog, then explore the example dashboard, `/compose`, `/login`, `/settings`, and `/templates/*`.
 
-![parts-bin sample dashboard, dark mode](docs/screenshots/dashboard-dark.png)
+![parts-bin component catalog](docs/screenshots/components-light.png)
 
 **The whole skin lives in one folder.** Change `src/theme/tokens.css` (or apply a shipped
 recipe) and every component, chart, and page re-skins — zero component edits, enforced by lint:
@@ -24,7 +24,7 @@ recipe) and every component, chart, and page re-skins — zero component edits, 
 - **Teams standardizing UI** across dashboards, admin tools, AI surfaces, and workflow apps.
 - **Developers building examples fast** — the dashboard, composer, settings, sign-in, and template routes are proof surfaces built from the same components.
 
-The account/MRR dashboard is intentionally demoted to example code. It demonstrates composition,
+The assembly demo is intentionally demoted to example code. It demonstrates composition,
 data derivation, and persistence, but it does not define the public component API.
 
 ## Quickstart
@@ -50,17 +50,17 @@ The fastest path from clone to using the design system:
 4. **Use examples as references**: `/` for a dashboard composition, `/compose` for a generated route plan, and `/templates/*` for full-page workflow examples.
 5. **Verify** with `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
 
-Nothing in the framework is tied to the SaaS demo domain — it's one mapping away from yours:
+Nothing in the framework is tied to the bundled sample dataset — map the generic parts to your domain:
 
-| Shipped SaaS demo | Grocery store performance | Supplier scorecard |
+| Sample assembly | Grocery store performance | Supplier scorecard |
 |---|---|---|
-| Account — name, owner | Store — number, district manager | Supplier — vendor, buyer |
-| MRR | Weekly net sales | On-time fill rate (%) |
-| Segment: Enterprise / Mid-market / Startup | Division or store format | Category: produce / dairy / dry goods |
-| Status: Active / At risk / Churned | On-target / Below target / Remodel | Compliant / Watch / Suspended |
-| Growth % | Comp sales growth | Fill-rate trend |
+| Record — title, owner | Store — number, district manager | Supplier — vendor, buyer |
+| Value | Weekly net sales | On-time fill rate (%) |
+| Category | Division or store format | Category: produce / dairy / dry goods |
+| Status: Active / Review / Blocked | On-target / Below target / Remodel | Compliant / Watch / Suspended |
+| Change % | Comp sales growth | Fill-rate trend |
 
-For the optional account-dashboard example, alternate domains exist as typechecked reference files —
+For the optional sample-dashboard data swap, alternate domains exist as typechecked reference files —
 [`src/data/examples/grocery-stores.ts`](src/data/examples/grocery-stores.ts) and
 [`src/data/examples/supplier-scorecard.ts`](src/data/examples/supplier-scorecard.ts) — showing
 the example's types, seed rows, and chart series remapped, plus the selector semantics you'd need
@@ -77,7 +77,7 @@ The sample surfaces are built from the design system and live in the docs/exampl
 | ![Component catalog](docs/screenshots/components-light.png) **`/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/`** — example KPI + charts + DataGrid dashboard |
 | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — example appearance/profile/preferences page |
 
-Workflow starter routes are included too: **`/templates/customer-success`** for an account-health console and
+Workflow starter routes are included too: **`/templates/customer-success`** for a customer-operations console and
 **`/templates/recommendation-review`** for a queue/detail review surface.
 
 ## What's inside
@@ -116,7 +116,7 @@ data with my domain"* — and it follows a checked-in, verified procedure instea
 | Skill | What your agent can do with it |
 |---|---|
 | [`retheme`](skills/retheme/SKILL.md) | Re-skin to a new brand — colors, dark mode, radii, fonts, chart palette |
-| [`swap-data-domain`](skills/swap-data-domain/SKILL.md) | Optional example-dashboard workflow: replace the demo accounts/MRR data with another domain |
+| [`swap-data-domain`](skills/swap-data-domain/SKILL.md) | Optional example-dashboard workflow: replace the bundled sample data with another domain |
 | [`add-component`](skills/add-component/SKILL.md) | Add UI the right way: catalog-first, token-only styling |
 | [`verify-changes`](skills/verify-changes/SKILL.md) | Run the full done-checklist, including the failures tests alone miss |
 

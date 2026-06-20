@@ -10,7 +10,7 @@ const groups = [
     id: 'nav',
     label: 'Navigation',
     items: [
-      { id: 'dashboard', label: 'Open dashboard', description: 'Revenue account dashboard' },
+      { id: 'assembly', label: 'Open assembly demo', description: 'Component assembly reference' },
       { id: 'docs', label: 'Open component catalog', description: 'Live UI reference' },
     ],
   },
@@ -32,7 +32,7 @@ test('opens from the trigger, filters commands, and selects with Enter', async (
       id: 'actions',
       label: 'Actions',
       items: [
-        { id: 'risk', label: 'Show risk focus', description: 'At-risk accounts', onSelect },
+        { id: 'review', label: 'Show review focus', description: 'Rows that need review', onSelect },
         { id: 'theme', label: 'Switch theme' },
       ],
     },
@@ -43,8 +43,8 @@ test('opens from the trigger, filters commands, and selects with Enter', async (
 
   const input = screen.getByRole('combobox', { name: /search commands/i })
   expect(input).toHaveFocus()
-  await user.type(input, 'risk')
-  expect(screen.getByRole('option', { name: /show risk focus/i })).toBeInTheDocument()
+  await user.type(input, 'review')
+  expect(screen.getByRole('option', { name: /show review focus/i })).toBeInTheDocument()
   expect(screen.queryByRole('option', { name: /switch theme/i })).not.toBeInTheDocument()
 
   await user.keyboard('{Enter}')

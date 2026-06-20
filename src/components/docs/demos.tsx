@@ -43,15 +43,15 @@ const ownerOptions = [
 ]
 
 const planOptions = [
-  { value: 'starter', label: 'Starter', description: 'Up to 3 seats and the core dashboards.' },
+  { value: 'starter', label: 'Starter', description: 'Core workflow screens and local state.' },
   { value: 'pro', label: 'Pro', description: 'Saved views, export, and server-mode data.' },
   { value: 'enterprise', label: 'Enterprise', description: 'SSO, audit log, and priority support.' },
 ]
 
-const segmentFilterOptions = [
-  { value: 'enterprise', label: 'Enterprise', count: 12 },
-  { value: 'midmarket', label: 'Mid-market', count: 24 },
-  { value: 'startup', label: 'Startup', count: 31 },
+const categoryFilterOptions = [
+  { value: 'design', label: 'Design', count: 12 },
+  { value: 'engineering', label: 'Engineering', count: 24 },
+  { value: 'operations', label: 'Operations', count: 31 },
 ]
 
 const importWizardSteps = [
@@ -67,15 +67,15 @@ export function CommandPaletteDemo() {
       id: 'navigation',
       label: 'Navigation',
       items: [
-        { id: 'dashboard', label: 'Open sample dashboard', description: 'Go to the sample component assembly', onSelect: () => setCommandResult('Dashboard command') },
         { id: 'catalog', label: 'Open component catalog', description: 'Stay on this reference', onSelect: () => setCommandResult('Catalog command') },
+        { id: 'assembly', label: 'Open assembly demo', description: 'Go to the sample component assembly', onSelect: () => setCommandResult('Assembly command') },
       ],
     },
     {
       id: 'actions',
       label: 'Actions',
       items: [
-        { id: 'risk', label: 'Show risk focus', description: 'Filter the workspace to risk signals', shortcut: 'R', onSelect: () => setCommandResult('Risk command') },
+        { id: 'review', label: 'Show review focus', description: 'Filter the workspace to rows needing review', shortcut: 'R', onSelect: () => setCommandResult('Review command') },
       ],
     },
   ], [])
@@ -106,24 +106,24 @@ export function DateRangePickerDemo() {
 }
 
 export function FacetedFilterDemo() {
-  const [selectedSegments, setSelectedSegments] = useState(['enterprise'])
-  const appliedFilters = selectedSegments.map((segment) => ({
-    id: segment,
-    label: 'Segment',
-    value: segmentFilterOptions.find((option) => option.value === segment)?.label ?? segment,
-    onRemove: () => setSelectedSegments((current) => current.filter((value) => value !== segment)),
+  const [selectedCategories, setSelectedCategories] = useState(['design'])
+  const appliedFilters = selectedCategories.map((category) => ({
+    id: category,
+    label: 'Category',
+    value: categoryFilterOptions.find((option) => option.value === category)?.label ?? category,
+    onRemove: () => setSelectedCategories((current) => current.filter((value) => value !== category)),
   }))
   return (
     <div className="flex flex-wrap items-center gap-2">
       <FacetedFilter
-        label="Segment"
-        options={segmentFilterOptions}
-        selectedValues={selectedSegments}
-        onSelectedValuesChange={setSelectedSegments}
+        label="Category"
+        options={categoryFilterOptions}
+        selectedValues={selectedCategories}
+        onSelectedValuesChange={setSelectedCategories}
       />
       <AppliedFiltersBar
         filters={appliedFilters}
-        onClearAll={() => setSelectedSegments([])}
+        onClearAll={() => setSelectedCategories([])}
         className="flex-1"
       />
     </div>
@@ -134,7 +134,7 @@ export function ComboboxDemo() {
   const [owner, setOwner] = useState('')
   return (
     <div className="grid gap-2">
-      <Field label="Account owner" hint="Type to filter, then pick from the list.">
+      <Field label="Record owner" hint="Type to filter, then pick from the list.">
         <Combobox options={ownerOptions} value={owner} onValueChange={setOwner} placeholder="Search owners…" />
       </Field>
       <p className="m-0 text-[13px] text-muted">Owner: <code className="num text-ink">{owner || '—'}</code></p>
@@ -158,7 +158,7 @@ export function CheckboxDemo() {
     <Checkbox
       checked={checked}
       onChange={(event) => setChecked(event.target.checked)}
-      label="Include churned accounts"
+      label="Include archived rows"
       hint="Good for reporting screens."
     />
   )
@@ -223,7 +223,7 @@ export function DrawerDemo() {
         >
           <div className="grid gap-3 text-[13px] text-muted">
             <p className="m-0">Drawers reuse the Modal focus trap: Escape closes, Tab cycles inside, and focus returns to the opener.</p>
-            <Field label="View name"><Input placeholder="At-risk enterprise" /></Field>
+            <Field label="View name"><Input placeholder="Review queue" /></Field>
           </div>
         </Drawer>
       )}
@@ -271,7 +271,7 @@ export function DropzoneDemo() {
       <AttachmentList
         attachments={uploadedFiles.length > 0
           ? uploadedFiles.map((file) => ({ id: file.name, name: file.name, size: file.size }))
-          : [{ id: 'sample', name: 'accounts-import.csv', size: 14336, status: 'Ready' }]}
+          : [{ id: 'sample', name: 'records-import.csv', size: 14336, status: 'Ready' }]}
       />
     </div>
   )
@@ -286,7 +286,7 @@ export function BubbleMapDemo() {
         regions={ledgerRegions}
         selectedPointId={selectedPoint.id}
         onPointSelect={setSelectedPoint}
-        valueLabel="accounts"
+        valueLabel="records"
       />
       <p className="m-0 text-[13px] text-muted">Selected: <code className="num text-ink">{selectedPoint.label} · {selectedPoint.value}</code></p>
     </div>
@@ -312,16 +312,16 @@ export function FlowMapDemo() {
 export function TableDemo() {
   return (
     <Table
-      caption="Top accounts by MRR"
+      caption="Top projects by score"
       columns={[
-        { key: 'name', header: 'Account' },
+        { key: 'name', header: 'Project' },
         { key: 'owner', header: 'Owner' },
-        { key: 'mrr', header: 'MRR', numeric: true, render: (row: { mrr: number }) => `$${row.mrr.toLocaleString()}` },
+        { key: 'score', header: 'Score', numeric: true },
       ]}
       rows={[
-        { id: 'a', name: 'Northwind Atlas', owner: 'Avery Cohen', mrr: 8200 },
-        { id: 'b', name: 'Globex Industrial', owner: 'Blair Nakamura', mrr: 6450 },
-        { id: 'c', name: 'Initech Cloud', owner: 'Devin Okafor', mrr: 5100 },
+        { id: 'a', name: 'Launch plan', owner: 'Avery Cohen', score: 82 },
+        { id: 'b', name: 'Vendor review', owner: 'Blair Nakamura', score: 64 },
+        { id: 'c', name: 'Policy rollout', owner: 'Devin Okafor', score: 51 },
       ]}
       rowKey={(row) => row.id}
     />
@@ -367,15 +367,15 @@ export function TagDemo() {
 }
 
 export function MultiSelectDemo() {
-  const [segments, setSegments] = useState(['enterprise'])
+  const [segments, setSegments] = useState(['design'])
   return (
     <div className="grid gap-2">
-      <Field label="Segments" hint="Type to filter; Backspace removes the last token.">
+      <Field label="Categories" hint="Type to filter; Backspace removes the last token.">
         <MultiSelect
-          options={segmentFilterOptions}
+          options={categoryFilterOptions}
           values={segments}
           onValuesChange={setSegments}
-          placeholder="Add segments…"
+          placeholder="Add categories…"
         />
       </Field>
       <p className="m-0 text-[13px] text-muted">Selected: <code className="num text-ink">{segments.join(', ') || '—'}</code></p>
@@ -401,7 +401,7 @@ export function ContextMenuDemo() {
     <div className="grid gap-2">
       <ContextMenu
         items={[
-          { id: 'open', label: 'Open account', onSelect: () => setLastAction('Open account') },
+          { id: 'open', label: 'Open record', onSelect: () => setLastAction('Open record') },
           { id: 'rename', label: 'Rename', onSelect: () => setLastAction('Rename') },
           { id: 'archive', label: 'Archive', disabled: true },
           { id: 'delete', label: 'Delete', destructive: true, onSelect: () => setLastAction('Delete') },
@@ -420,8 +420,8 @@ export function SliderDemo() {
   const [threshold, setThreshold] = useState(60)
   return (
     <div className="grid max-w-72 gap-2">
-      <Slider label="Risk threshold" min={0} max={100} step={5} value={threshold} onValueChange={setThreshold} showValue formatValue={(v) => `${v}%`} />
-      <p className="m-0 text-[13px] text-muted">Accounts above <code className="num text-ink">{threshold}%</code> are flagged.</p>
+      <Slider label="Review threshold" min={0} max={100} step={5} value={threshold} onValueChange={setThreshold} showValue formatValue={(v) => `${v}%`} />
+      <p className="m-0 text-[13px] text-muted">Rows above <code className="num text-ink">{threshold}%</code> are flagged.</p>
     </div>
   )
 }

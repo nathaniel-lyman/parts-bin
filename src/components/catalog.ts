@@ -176,7 +176,7 @@ export const CATALOG: ComponentEntry[] = [
     name: 'Tag', import: './components/ui', category: 'primitive',
     purpose: 'General-purpose label chip with tone variants and optional remove button.',
     use_when: 'Tagging records with categories, topics, or token values.',
-    prefer_over: { StatusBadge: 'Use StatusBadge for lifecycle status (Active / At risk / Churned), not free-form labels.' },
+    prefer_over: { StatusBadge: 'Use StatusBadge for lifecycle status (Open / Review / Blocked), not free-form labels.' },
     props: ['label', 'tone', 'onRemove', 'className'],
     variants: { tone: ['neutral', 'accent', 'pos', 'warn', 'neg'] },
     related: ['StatusBadge', 'AppliedFiltersBar'],
@@ -312,7 +312,7 @@ export const CATALOG: ComponentEntry[] = [
     prefer_over: { Input: 'Use Input type="number" when the exact value matters and must be typed.' },
     props: ['value', 'defaultValue', 'onValueChange', 'min', 'max', 'step', 'label', 'showValue', 'formatValue', 'disabled'],
     related: ['Input', 'Field'],
-    snippet: `<Slider label="Risk threshold" min={0} max={100} defaultValue={60} showValue formatValue={(v) => v + '%'} onValueChange={setThreshold} />`,
+    snippet: `<Slider label="Review threshold" min={0} max={100} defaultValue={60} showValue formatValue={(v) => v + '%'} onValueChange={setThreshold} />`,
   }),
   defineComponent(Field, {
     name: 'Field', import: './components/ui', category: 'form',
@@ -437,7 +437,7 @@ export const CATALOG: ComponentEntry[] = [
     prefer_over: { DropdownMenu: 'Use DropdownMenu when actions hang off a visible trigger button.' },
     props: ['items', 'children', 'className'],
     related: ['DropdownMenu'],
-    snippet: `<ContextMenu items={[{ id: 'del', label: 'Delete', destructive: true, onSelect: del }]}><AccountRow /></ContextMenu>`,
+    snippet: `<ContextMenu items={[{ id: 'del', label: 'Delete', destructive: true, onSelect: del }]}><RecordRow /></ContextMenu>`,
   }),
   defineComponent(CommandPalette, {
     name: 'CommandPalette', import: './components/ui', category: 'overlay',
@@ -480,7 +480,7 @@ export const CATALOG: ComponentEntry[] = [
     props: ['tone', 'title', 'action', 'onDismiss', 'children'],
     variants: { tone: ['accent', 'pos', 'neg', 'warn'] },
     related: ['ToastProvider', 'InlineAlert'],
-    snippet: `toast('Account deleted', { tone: 'neg', title: 'Deleted', action: { label: 'Undo', onClick: undo } })`,
+    snippet: `toast('Record deleted', { tone: 'neg', title: 'Deleted', action: { label: 'Undo', onClick: undo } })`,
   }),
   defineComponent(ToastProvider, {
     name: 'ToastProvider', import: './components/ui', category: 'feedback',
@@ -566,7 +566,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Placeholder for a single KPI/metric that animates toward its value.',
     props: ['target', 'metricLabel', 'formatValue', 'label', 'className'],
     related: ['LoadingKpiSkeleton', 'LoadingProgress'],
-    snippet: `<LoadingCountingMetric metricLabel="Total revenue" target={78300} />`,
+    snippet: `<LoadingCountingMetric metricLabel="Total value" target={78300} />`,
   }),
   defineComponent(LoadingDonut, {
     name: 'LoadingDonut', import: './components/ui', category: 'feedback',
@@ -798,7 +798,7 @@ export const CATALOG: ComponentEntry[] = [
     props: ['label', 'value', 'delta', 'status'],
     variants: { status: ['positive', 'negative', 'warning', 'neutral', 'intelligence', 'review', 'reject'] },
     related: ['KpiCard', 'StatusBadge'],
-    snippet: `<Metric label="Churn" value="2.1%" delta="-0.3" status="positive" />`,
+    snippet: `<Metric label="Error rate" value="2.1%" delta="-0.3" status="positive" />`,
   }),
 
   // ── charts ────────────────────────────────────────────────────────────────
@@ -813,18 +813,18 @@ export const CATALOG: ComponentEntry[] = [
   defineComponent(SignedMovementChart, {
     name: 'SignedMovementChart', import: './components/charts', category: 'chart',
     purpose: 'Stacked movement bars for positive and negative contribution categories.',
-    use_when: 'Any signed movement breakdown that fits the { month, New, Expansion, Churn } compatibility row shape; pass `data` for your own rows.',
+    use_when: 'Any signed movement breakdown that fits the { month, New, Expansion, Churn } compatibility row shape; pass `data` for your own rows. Use the Churn key as the negative bucket label required by the compatibility wrapper.',
     props: ['data', 'barWidth', 'showLabels'],
     related: ['WaterfallChart', 'LineTrendChart'],
     snippet: `<SignedMovementChart data={movementRows} barWidth={28} showLabels />`,
   }),
   defineComponent(ShareDonutChart, {
     name: 'ShareDonutChart', import: './components/charts', category: 'chart',
-    purpose: 'Donut chart compatibility wrapper for segmented share data and the shared chart legend.',
-    use_when: 'Showing how a sample dataset splits across segments; treat this as a compatibility wrapper while using generic chart rows elsewhere.',
-    props: ['accounts'],
+    purpose: 'Donut chart for generic share-of-total rows with the shared chart legend.',
+    use_when: 'Showing how any total splits across categories; pass rows shaped as { id, label, value }.',
+    props: ['data', 'totalLabel', 'valueFormatter'],
     related: ['LineTrendChart', 'ChartLegend'],
-    snippet: `<ShareDonutChart accounts={sampleRows} />`,
+    snippet: `<ShareDonutChart data={shareRows} totalLabel="Total" valueFormatter={formatValue} />`,
   }),
   defineComponent(LineTrendChart, {
     name: 'LineTrendChart', import: './components/charts', category: 'chart',
@@ -856,7 +856,7 @@ export const CATALOG: ComponentEntry[] = [
     use_when: 'Rendering a custom chart tooltip via Recharts content prop.',
     props: ['label', 'rows', 'footer'],
     related: ['ChartLegend', 'ChartCard'],
-    snippet: `<ChartTooltipContent label="Jan" rows={[{ label: 'Revenue', value: '$78k' }]} />`,
+    snippet: `<ChartTooltipContent label="Jan" rows={[{ label: 'Value', value: '$78k' }]} />`,
   }),
   defineComponent(ChartEmptyState, {
     name: 'ChartEmptyState', import: './components/charts', category: 'chart',
@@ -1052,7 +1052,7 @@ export const CATALOG: ComponentEntry[] = [
     prefer_over: { Metric: 'Use Metric for a compact inline stat without a sparkline.' },
     props: ['label', 'value', 'delta', 'spark', 'negSpark'],
     related: ['KpiSummaryRow', 'Metric', 'Sparkline'],
-    snippet: `<KpiCard label="Revenue" value="$78.3k" delta={4.2} spark={series} />`,
+    snippet: `<KpiCard label="Total value" value="$78.3k" delta={4.2} spark={series} />`,
   }),
   defineComponent(KpiSummaryRow, {
     name: 'KpiSummaryRow', import: './components', category: 'data-display',

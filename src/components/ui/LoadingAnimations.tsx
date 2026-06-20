@@ -145,7 +145,7 @@ export interface LoadingProgressProps extends LoadingAnimationProps {
   detail?: string
 }
 
-export function LoadingProgress({ label = 'Loading', detail = 'Syncing accounts', className }: LoadingProgressProps) {
+export function LoadingProgress({ label = 'Loading', detail = 'Syncing records', className }: LoadingProgressProps) {
   return (
     <LoadingStatus label={label} className={cx('grid w-full max-w-sm gap-3', className)}>
       <div className="micro flex items-center justify-between gap-3">
@@ -165,7 +165,7 @@ export interface LoadingCountingMetricProps extends LoadingAnimationProps {
 
 export function LoadingCountingMetric({
   label = 'Loading metric',
-  metricLabel = 'Total MRR',
+  metricLabel = 'Total value',
   target = 78300,
   formatValue = (value) => `$${Math.round(value).toLocaleString()}`,
   className,

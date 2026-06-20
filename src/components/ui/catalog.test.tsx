@@ -189,9 +189,9 @@ test('barrel exports the form primitives (RadioGroup, Combobox, Spinner)', async
 })
 
 test('barrel exports loading animation primitives', () => {
-  render(<LoadingProgress label="Loading account rows" detail="Syncing accounts" />)
-  expect(screen.getByRole('status', { name: 'Loading account rows' })).toBeInTheDocument()
-  expect(screen.getByText('Syncing accounts')).toBeInTheDocument()
+  render(<LoadingProgress label="Loading rows" detail="Syncing records" />)
+  expect(screen.getByRole('status', { name: 'Loading rows' })).toBeInTheDocument()
+  expect(screen.getByText('Syncing records')).toBeInTheDocument()
 })
 
 test('filter primitives expose applied filters and faceted selection', async () => {

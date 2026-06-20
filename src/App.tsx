@@ -16,9 +16,9 @@ import {
 import { AccountFormModal } from './components/AccountFormModal'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import {
-  MrrTrendChart,
-  MrrShareDonut,
-  RevenueMovementChart,
+  LineTrendChart,
+  ShareDonutChart,
+  SignedMovementChart,
   WaterfallChart,
   ChartCard,
   buildWaterfallData,
@@ -98,12 +98,12 @@ function filterValueLabel(value: unknown): string {
 }
 
 function commandSavedViewName(grid: AssistantGridContext | undefined): string {
-  if (!grid) return 'Command palette view'
+  if (!grid) return 'Current grid'
   const bits: string[] = []
-  if (grid.atRiskOnly) bits.push('Risk focus')
+  if (grid.atRiskOnly) bits.push('Review focus')
   if (grid.quickFilter.trim()) bits.push(`Quick filter ${grid.quickFilter.trim()}`)
   if (grid.globalSearch.trim()) bits.push(`Search ${grid.globalSearch.trim()}`)
-  return bits.length ? bits.join(' - ') : 'Current accounts'
+  return bits.length ? bits.join(' - ') : 'Current grid'
 }
 
 function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGridColumn<Account>[] {
@@ -137,7 +137,7 @@ function rowTotal(row: Record<string, unknown>, keys: readonly string[]) {
   }, 0)
 }
 
-const mrrTrendInsight = (() => {
+const trendInsight = (() => {
   const series = ['Enterprise', 'Mid-market', 'Startup'] as const
   const first = monthlySeries[0] as unknown as Record<string, unknown>
   const last = monthlySeries[monthlySeries.length - 1] as unknown as Record<string, unknown>
@@ -145,7 +145,7 @@ const mrrTrendInsight = (() => {
   return {
     title: 'Line chart example: segmented trend',
     metric: formatSignedCurrencyK(lift),
-    description: 'MrrTrendChart in a ChartCard with sample data; replace `data`, `series`, and `xKey` for your domain.',
+    description: 'LineTrendChart in a ChartCard with sample rows; replace `data`, `series`, and `xKey` for your domain.',
   }
 })()
 
@@ -154,7 +154,7 @@ const movementInsight = (() => {
   return {
     title: 'Stacked bar example: signed movement',
     metric: formatSignedCurrencyK(totalNet),
-    description: 'RevenueMovementChart with adjustable bar width and labels; sample rows show New, Expansion, and Churn series.',
+    description: 'SignedMovementChart with adjustable bar width and labels; sample rows show positive and negative movement.',
   }
 })()
 
@@ -210,16 +210,21 @@ function DashboardPage({
       return {
         title: 'Donut example: share breakdown',
         metric: fmtCurrency(0),
-        description: 'MrrShareDonut reads the visible sample accounts; replace the account data pipeline when copying.',
+        description: 'ShareDonutChart reads the visible sample rows; replace the data pipeline when copying.',
       }
     }
     const leader = shares.reduce((best, share) => (share.value > best.value ? share : best))
     return {
       title: 'Donut example: share breakdown',
       metric: fmtCurrency(leader.value),
-      description: `${leader.segment} leads this sample slice. MrrShareDonut reads visible accounts and excludes Churned rows.`,
+      description: `${leader.segment} leads this sample slice. ShareDonutChart reads visible rows and excludes archived sample rows.`,
     }
   }, [visibleAccounts])
+  const shareRows = useMemo(() => segmentShares(visibleAccounts).map((share) => ({
+    id: share.segment,
+    label: share.segment,
+    value: share.value,
+  })), [visibleAccounts])
   const gridInitialState = useMemo(
     () => (generatedAccounts ? { ...ACCOUNT_GRID_INITIAL_STATE, sorting: [] } : ACCOUNT_GRID_INITIAL_STATE),
     [generatedAccounts],
@@ -235,7 +240,7 @@ function DashboardPage({
   const [waterfallLabels, setWaterfallLabels] = useState(true)
   const dashboardEvidence = useMemo(() => buildAssistantDashboardEvidence({
     revenueMovementData: movementSeries,
-    sourceTitle: 'Revenue movement ($k)',
+    sourceTitle: 'Signed movement ($k)',
     timePeriodLabel,
     barWidth: movementBarWidth,
     labelsVisible: movementLabels,
@@ -281,43 +286,43 @@ function DashboardPage({
     <>
       <main className="w-full px-6 py-6">
         <PageHeader
-          eyebrow="parts-bin sample dashboard"
-          title="Accounts dashboard demo"
-          description={`A working sample assembled from parts-bin components: KpiCard, ChartCard, DataGrid, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · At-risk focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
+          eyebrow="parts-bin component assembly"
+          title="Component assembly demo"
+          description={`A working sample assembled from parts-bin components: KpiCard, ChartCard, DataGrid, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
           actions={
             <span className="num text-[13px] text-muted">
-              {activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} accounts · {fmtCurrency(totalMrr(visibleAccounts))} MRR
+              {activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} rows · {fmtCurrency(totalMrr(visibleAccounts))} sample value
             </span>
           }
         />
 
         <KpiSummaryRow>
-          <KpiCard label="Total MRR" value={fmtCurrency(totalMrr(visibleAccounts))} delta={4.6} spark={sparks.mrr} />
-          <KpiCard label="Active accounts" value={String(activeCount(visibleAccounts))} delta={2.4} spark={sparks.accts} />
-          <KpiCard label="Avg growth" value={fmtPercent(avgGrowth(visibleAccounts))} delta={1.1} spark={sparks.growth} />
-          <KpiCard label="At risk / churned" value={String(atRiskCount(visibleAccounts))} delta={-12.5} spark={sparks.churn} negSpark />
+          <KpiCard label="Total value" value={fmtCurrency(totalMrr(visibleAccounts))} delta={4.6} spark={sparks.mrr} />
+          <KpiCard label="Active rows" value={String(activeCount(visibleAccounts))} delta={2.4} spark={sparks.accts} />
+          <KpiCard label="Avg change" value={fmtPercent(avgGrowth(visibleAccounts))} delta={1.1} spark={sparks.growth} />
+          <KpiCard label="Needs review" value={String(atRiskCount(visibleAccounts))} delta={-12.5} spark={sparks.churn} negSpark />
         </KpiSummaryRow>
 
         <section aria-labelledby="chart-examples-title" className="mb-3 grid gap-1">
           <h2 id="chart-examples-title" className="m-0 text-[15px] font-semibold text-ink">Reusable chart examples</h2>
           <p className="m-0 text-[13px] text-muted">
-            These panels demonstrate the chart exports in <code className="num text-ink">src/components/charts</code> using sample account data.
+            These panels demonstrate the chart exports in <code className="num text-ink">src/components/charts</code> using generic sample records.
           </p>
         </section>
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <ChartCard
-            title={mrrTrendInsight.title}
-            description={mrrTrendInsight.description}
-            metric={mrrTrendInsight.metric}
+            title={trendInsight.title}
+            description={trendInsight.description}
+            metric={trendInsight.metric}
           >
-            <MrrTrendChart showEndLabels />
+            <LineTrendChart showEndLabels />
           </ChartCard>
           <ChartCard
             title={shareInsight.title}
             description={shareInsight.description}
             metric={shareInsight.metric}
           >
-            <MrrShareDonut accounts={visibleAccounts} />
+            <ShareDonutChart data={shareRows} totalLabel="Active value" valueFormatter={fmtCurrency} />
           </ChartCard>
         </div>
         <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(360px,2fr)]">
@@ -335,7 +340,7 @@ function DashboardPage({
                     max={REVENUE_MOVEMENT_BAR_WIDTH_RANGE.max}
                     step={REVENUE_MOVEMENT_BAR_WIDTH_RANGE.step}
                     value={movementBarWidth}
-                    aria-label="Revenue movement bar width"
+                    aria-label="Signed movement bar width"
                     className="h-8 w-24 accent-accent"
                     onChange={(event) => setMovementBarWidth(Number(event.target.value))}
                   />
@@ -349,7 +354,7 @@ function DashboardPage({
               </div>
             }
           >
-            <RevenueMovementChart data={movementSeries} barWidth={movementBarWidth} showLabels={movementLabels} />
+            <SignedMovementChart data={movementSeries} barWidth={movementBarWidth} showLabels={movementLabels} />
           </ChartCard>
           <ChartCard
             title={waterfallInsight.title}
@@ -365,7 +370,7 @@ function DashboardPage({
           >
             <WaterfallChart
               data={revenueWaterfallSeries}
-              ariaLabel="MRR bridge in thousands"
+              ariaLabel="Sample bridge in thousands"
               showLabels={waterfallLabels}
               valueFormatter={formatCurrencyK}
               tickFormatter={formatCompactKValue}
@@ -380,7 +385,7 @@ function DashboardPage({
             onChange={(event) => setServerMode(event.target.checked)}
           />
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="primary" onClick={() => setCreating(true)}>+ New account</Button>
+            <Button variant="primary" onClick={() => setCreating(true)}>+ New row</Button>
           </div>
           {serverMode && (
             <span className="num text-[12px] text-muted">
@@ -409,7 +414,7 @@ function DashboardPage({
             onContextChange={handleAssistantGridContextChange}
             enableGrouping={!serverMode}
             onRowUpdate={serverMode ? undefined : (id, patch, row) => {
-              // ARR is derived: keep it in sync when MRR is edited inline.
+              // The demo's derived annualized value stays in sync when its base value is edited inline.
               const next = patch.mrr !== undefined ? { ...patch, arr: Number(patch.mrr) * 12 } : patch
               update(id, next)
               toast(`Saved ${row.name}`, 'accent')
@@ -435,8 +440,8 @@ function DashboardPage({
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete account"
-          message={`Delete ${deleting.name}? This removes ${fmtCurrency(deleting.mrr)} of tracked MRR and its full history.`}
+          title="Delete row"
+          message={`Delete ${deleting.name}? This removes ${fmtCurrency(deleting.mrr)} of sample value and its history.`}
           onCancel={() => setDeleting(null)}
           onConfirm={() => { remove(deleting.id); toast(`Deleted ${deleting.name}`, 'neg'); setDeleting(null) }}
         />
@@ -496,7 +501,7 @@ export default function App() {
           ? 'Recommendation review'
           : customerTemplateActive
             ? 'Customer success'
-            : 'Accounts'
+            : 'Component assembly'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
@@ -558,13 +563,13 @@ export default function App() {
       if (!viewId) {
         return {
           title: 'No grid view saved',
-          body: 'Open the account grid first so I can save its current filters, columns, sort, density, and page size.',
+          body: 'Open the sample grid first so I can save its current filters, columns, sort, density, and page size.',
         }
       }
       toast(`Saved view ${trimmedName}`, 'pos')
       return {
         title: 'Saved view created',
-        body: `Saved **${trimmedName}** from the current account grid. You can apply it from the grid Views menu.`,
+        body: `Saved **${trimmedName}** from the current sample grid. You can apply it from the grid Views menu.`,
       }
     },
     draftTouchpointNote: () => {
@@ -612,7 +617,7 @@ export default function App() {
   }, [sendAssistantMessage])
   const saveCurrentGridView = useCallback(() => {
     if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
-      toast('Open the account grid before saving a view', 'warn')
+      toast('Open the sample grid before saving a view', 'warn')
       return
     }
     const name = commandSavedViewName(assistantGridContextRef.current)
@@ -621,15 +626,15 @@ export default function App() {
   }, [routeKind, toast])
   const resetAccountGridView = useCallback(() => {
     if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
-      toast('Open the account grid before resetting the view', 'warn')
+      toast('Open the sample grid before resetting the view', 'warn')
       return
     }
     gridAssistantActionsRef.current.resetView()
-    toast('Reset account grid layout', 'accent')
+    toast('Reset sample grid layout', 'accent')
   }, [routeKind, toast])
   const clearSelectedGridRows = useCallback(() => {
     if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
-      toast('Open the account grid before clearing selection', 'warn')
+      toast('Open the sample grid before clearing selection', 'warn')
       return
     }
     const selected = assistantGridContextRef.current?.selectedRowCount ?? 0
@@ -662,7 +667,7 @@ export default function App() {
       items: [
         {
           id: 'dashboard',
-          label: 'Open sample dashboard',
+          label: 'Open component assembly',
           description: 'Demo assembly of KPI, chart, DataGrid, and assistant components',
           shortcut: 'G D',
           onSelect: () => { navigate('/') },
@@ -724,22 +729,22 @@ export default function App() {
           onSelect: () => sendAssistantCommand('Summarize the current screen'),
         },
         {
-          id: 'assistant-revenue-movement',
-          label: 'Explain revenue movement',
-          description: assistantBusy ? 'Assistant is already responding' : 'Ask from the current visible account scope',
+          id: 'assistant-signed-movement',
+          label: 'Explain signed movement',
+          description: assistantBusy ? 'Assistant is already responding' : 'Ask from the current visible row scope',
           shortcut: 'M',
           disabled: assistantBusy,
-          keywords: ['assistant', 'mrr', 'bridge', 'movement'],
-          onSelect: () => sendAssistantCommand('Explain this revenue movement'),
+          keywords: ['assistant', 'bridge', 'movement'],
+          onSelect: () => sendAssistantCommand('Explain this signed movement'),
         },
         {
-          id: 'assistant-selected-accounts',
-          label: 'Summarize selected accounts',
-          description: assistantBusy ? 'Assistant is already responding' : 'Uses the current account grid selection',
+          id: 'assistant-selected-rows',
+          label: 'Summarize selected rows',
+          description: assistantBusy ? 'Assistant is already responding' : 'Uses the current grid selection',
           shortcut: 'X',
           disabled: assistantBusy,
           keywords: ['assistant', 'selected', 'rows'],
-          onSelect: () => sendAssistantCommand('Summarize selected accounts'),
+          onSelect: () => sendAssistantCommand('Summarize selected rows'),
         },
       ],
     },
@@ -749,15 +754,15 @@ export default function App() {
       items: [
         {
           id: 'risk-focus',
-          label: atRiskOnly ? 'Show all accounts' : 'Show risk focus',
-          description: 'Toggle at-risk and churned account focus',
+          label: atRiskOnly ? 'Show all rows' : 'Show review focus',
+          description: 'Toggle rows that need review',
           shortcut: 'R',
           onSelect: () => setAtRiskOnly((value) => !value),
         },
         {
           id: 'clear-workspace-filters',
           label: 'Clear workspace filters',
-          description: globalSearch.trim() || atRiskOnly ? 'Clear search and risk focus' : 'Search and risk focus are already clear',
+          description: globalSearch.trim() || atRiskOnly ? 'Clear search and review focus' : 'Search and review focus are already clear',
           shortcut: 'C F',
           onSelect: clearWorkspaceFilters,
         },
@@ -770,10 +775,10 @@ export default function App() {
         },
         {
           id: 'alerts',
-          label: 'Show revenue alerts',
+          label: 'Show review alerts',
           description: 'Preview the current notification state',
           shortcut: 'N',
-          onSelect: () => toast('3 revenue alerts', 'warn'),
+          onSelect: () => toast('3 review alerts', 'warn'),
         },
         {
           id: 'assistant',
@@ -785,13 +790,13 @@ export default function App() {
       ],
     },
     {
-      id: 'account-grid',
-      label: 'Account grid',
+      id: 'sample-grid',
+      label: 'Sample grid',
       items: [
         {
           id: 'save-grid-view',
           label: 'Save current grid view',
-          description: routeKind === 'accounts' ? 'Persist filters, columns, sort, density, and page size' : 'Available on the account grid',
+          description: routeKind === 'accounts' ? 'Persist filters, columns, sort, density, and page size' : 'Available on the sample grid',
           shortcut: 'V S',
           disabled: routeKind !== 'accounts',
           keywords: ['saved view', 'view', 'grid'],
@@ -800,7 +805,7 @@ export default function App() {
         {
           id: 'reset-grid-view',
           label: 'Reset grid layout',
-          description: routeKind === 'accounts' ? 'Restore the default account grid layout' : 'Available on the account grid',
+          description: routeKind === 'accounts' ? 'Restore the default sample grid layout' : 'Available on the sample grid',
           shortcut: 'V R',
           disabled: routeKind !== 'accounts',
           keywords: ['view', 'columns', 'grid'],
@@ -809,7 +814,7 @@ export default function App() {
         {
           id: 'clear-grid-selection',
           label: 'Clear selected rows',
-          description: routeKind === 'accounts' ? 'Deselect all selected account rows' : 'Available on the account grid',
+          description: routeKind === 'accounts' ? 'Deselect all selected rows' : 'Available on the sample grid',
           shortcut: 'V C',
           disabled: routeKind !== 'accounts',
           keywords: ['selection', 'selected', 'rows'],
@@ -860,7 +865,7 @@ export default function App() {
       onCollapsedChange={setSidebarCollapsed}
       items={[
         { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
-        { label: 'Sample dashboard', href: appHref('/'), active: !kitActive && !templateActive && !settingsActive, meta: 'demo' },
+        { label: 'Assembly demo', href: appHref('/'), active: !kitActive && !templateActive && !settingsActive, meta: 'demo' },
         { label: 'Customer success', href: appHref('/templates/customer-success'), active: customerTemplateActive, meta: 'app' },
         { label: 'Review queue', href: appHref('/templates/recommendation-review'), active: recommendationTemplateActive, meta: 'app' },
         { label: 'Compose', href: appHref('/compose'), active: composerActive, meta: 'start' },
@@ -875,7 +880,7 @@ export default function App() {
   const topNav = (
     <TopNav
       breadcrumbs={[
-        { label: 'parts-bin', href: appHref('/') },
+        { label: 'parts-bin', href: appHref('/docs') },
         { label: routeLabel },
       ]}
       title={routeLabel}
@@ -909,9 +914,9 @@ export default function App() {
                 />
               </div>
               <div className="hidden 2xl:block">
-                <FilterButton label="Risks" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
+                <FilterButton label="Review" pressed={atRiskOnly} onClick={() => setAtRiskOnly((value) => !value)} />
               </div>
-              <NotificationButton count={3} onClick={() => toast('3 revenue alerts', 'warn')} />
+              <NotificationButton count={3} onClick={() => toast('3 review alerts', 'warn')} />
             </>
           )}
           <IconButton aria-label="Open assistant" onClick={() => setAssistantOpen(true)}>✦</IconButton>

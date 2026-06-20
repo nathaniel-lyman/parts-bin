@@ -6,9 +6,9 @@ import type { ChatAdapter } from './types'
 
 /** One prompt per demo route; the panel renders these as suggestion chips. */
 export const DEMO_SUGGESTIONS = [
-  'How is MRR looking?',
-  'Which accounts are at risk?',
-  'What is our average growth?',
+  'Summarize sample value',
+  'Which rows need review?',
+  'What is our average change?',
   'How do I integrate a real model?',
 ]
 
@@ -98,7 +98,7 @@ function filterEvidence(context: AssistantScreenContext | undefined): string {
   const globalSearch = context?.globalSearch?.trim() || grid?.globalSearch.trim() || ''
   if (globalSearch) filters.push(`global search "${globalSearch}"`)
   if (grid?.quickFilter.trim()) filters.push(`quick filter "${grid.quickFilter.trim()}"`)
-  if (grid?.atRiskOnly || context?.atRiskOnly) filters.push('risk focus')
+  if (grid?.atRiskOnly || context?.atRiskOnly) filters.push('review focus')
   if (grid?.columnFilters.length) {
     filters.push(`column filters ${grid.columnFilters.map((filter) => `${filter.id}=${filter.value}`).join(', ')}`)
   }
@@ -107,7 +107,7 @@ function filterEvidence(context: AssistantScreenContext | undefined): string {
 
 function gridEvidenceLine(context: AssistantScreenContext | undefined, accounts: Account[]): string {
   const grid = context?.grid
-  if (!grid) return `Grid scope: full account book (${accounts.length} rows) because no screen context is available.`
+  if (!grid) return `Grid scope: full sample dataset (${accounts.length} rows) because no screen context is available.`
   const selected = grid.selectedRowCount === 1 ? '1 row selected' : `${grid.selectedRowCount} rows selected`
   return `Grid scope: ${grid.visibleRowCount} of ${grid.totalRowCount} rows visible, ${selected}. ${filterEvidence(context)}`
 }
@@ -127,15 +127,15 @@ function mrrAnswer(accounts: Account[], context: AssistantScreenContext | undefi
     (s) => `| ${s.segment} | ${fmtCurrency(s.value)} | ${total ? ((s.value / total) * 100).toFixed(1) : '0.0'}% |`,
   )
   return [
-    `Total active MRR is **${fmtCurrency(totalMrr(scoped))}** for the current account scope.`,
+    `Total active sample value is **${fmtCurrency(totalMrr(scoped))}** for the current row scope.`,
     '',
-    '| Segment | MRR | Share |',
+    '| Segment | Value | Share |',
     '| --- | --- | --- |',
     ...rows,
     '',
     ...evidenceSection([
       gridEvidenceLine(context, accounts),
-      'Metric rule: active MRR excludes Churned accounts, matching the dashboard KPIs.',
+      'Metric rule: active sample value excludes archived rows, matching the component assembly KPIs.',
     ]),
   ].join('\n')
 }
@@ -145,22 +145,22 @@ function riskAnswer(accounts: Account[], context: AssistantScreenContext | undef
   const atRisk = scoped.filter((a) => a.status !== 'Active')
   if (!atRisk.length) {
     return [
-      'No accounts are currently at risk — every account in scope is **Active**.',
+      'No rows currently need review — every row in scope is **Active**.',
       '',
       ...evidenceSection([
         gridEvidenceLine(context, accounts),
-        'Risk rule: At risk and Churned statuses count as needing attention.',
+        'Review rule: At risk and Churned demo statuses count as needing attention.',
       ]),
     ].join('\n')
   }
   return [
-    `**${atRiskCount(scoped)}** of ${scoped.length} accounts in scope need attention:`,
+    `**${atRiskCount(scoped)}** of ${scoped.length} rows in scope need attention:`,
     '',
-    ...atRisk.map((a) => `- **${a.name}** — ${a.status}, ${fmtCurrency(a.mrr)} MRR`),
+    ...atRisk.map((a) => `- **${a.name}** — ${a.status}, ${fmtCurrency(a.mrr)} sample value`),
     '',
     ...evidenceSection([
       gridEvidenceLine(context, accounts),
-      'Risk rule: At risk and Churned statuses count as needing attention.',
+      'Review rule: At risk and Churned demo statuses count as needing attention.',
     ]),
   ].join('\n')
 }
@@ -169,14 +169,14 @@ function growthAnswer(accounts: Account[], context: AssistantScreenContext | und
   const scoped = scopedAccounts(accounts, context)
   const top = [...scoped].sort((a, b) => b.growth - a.growth).slice(0, 3)
   return [
-    `Average growth across the current account scope is **${signedPercent(avgGrowth(scoped))}**.`,
+    `Average change across the current row scope is **${signedPercent(avgGrowth(scoped))}**.`,
     '',
-    'Top growers:',
+    'Largest positive changes:',
     ...top.map((a) => `- **${a.name}** — ${signedPercent(a.growth)}`),
     '',
     ...evidenceSection([
       gridEvidenceLine(context, accounts),
-      'Growth rule: average growth includes all scoped accounts, including churned rows.',
+      'Change rule: average change includes all scoped rows, including archived rows.',
     ]),
   ].join('\n')
 }
@@ -187,14 +187,14 @@ function actionAnswer(result: AssistantActionResult): string {
 
 function compactAccountList(accounts: Account[]): string[] {
   return accounts.map((account) => (
-    `- **${account.name}** - ${account.status}, ${fmtCurrency(account.mrr)} MRR, ${signedPercent(account.growth)} growth, owner ${account.owner}`
+    `- **${account.name}** - ${account.status}, ${fmtCurrency(account.mrr)} value, ${signedPercent(account.growth)} change, owner ${account.owner}`
   ))
 }
 
 function screenAnswer(context: AssistantScreenContext | undefined): string {
   if (!context) {
     return [
-      'I do not have screen context yet. Open the assistant from inside the Ledger app shell so I can read the active route and grid state.',
+      'I do not have screen context yet. Open the assistant from inside the parts-bin app shell so I can read the active route and grid state.',
       '',
       ...evidenceSection(['No route, chart, or grid evidence is available in this adapter context yet.']),
     ].join('\n')
@@ -205,7 +205,7 @@ function screenAnswer(context: AssistantScreenContext | undefined): string {
   if (context.activeTemplate) lines.push(`Active template: **${context.activeTemplate}**.`)
   if (context.timePeriodLabel) lines.push(`Time period: **${context.timePeriodLabel}**.`)
   if (context.globalSearch?.trim()) lines.push(`Global search: **${context.globalSearch.trim()}**.`)
-  if (context.atRiskOnly) lines.push('Risk focus is enabled.')
+  if (context.atRiskOnly) lines.push('Review focus is enabled.')
   if (context.grid) {
     const grid = context.grid
     lines.push(`${grid.visibleRowCount} of ${grid.totalRowCount} grid rows are visible, with ${grid.selectedRowCount} selected.`)
@@ -228,14 +228,14 @@ function selectedAccountsAnswer(context: AssistantScreenContext | undefined): st
   const selected = context?.grid?.selectedAccounts ?? []
   if (!context?.grid) {
     return [
-      'Open the account grid first, then select rows and ask me to summarize them.',
+      'Open the sample grid first, then select rows and ask me to summarize them.',
       '',
       ...evidenceSection(['No grid selection context is available yet.']),
     ].join('\n')
   }
   if (!selected.length) {
     return [
-      'No account rows are selected. Select one or more accounts in the grid and I will summarize just those rows.',
+      'No rows are selected. Select one or more rows in the grid and I will summarize just those rows.',
       '',
       ...evidenceSection([
         gridEvidenceLine(context, context.grid.visibleAccounts),
@@ -245,33 +245,33 @@ function selectedAccountsAnswer(context: AssistantScreenContext | undefined): st
   }
   const selectedMrr = totalMrr(selected)
   return [
-    `You selected **${selected.length}** account${selected.length === 1 ? '' : 's'} totaling **${fmtCurrency(selectedMrr)}** active MRR.`,
+    `You selected **${selected.length}** row${selected.length === 1 ? '' : 's'} totaling **${fmtCurrency(selectedMrr)}** active sample value.`,
     '',
     ...compactAccountList(selected),
     '',
     ...evidenceSection([
       gridEvidenceLine(context, context.grid.visibleAccounts),
       'Selection source: DataGrid selected rows.',
-      'Metric rule: selected active MRR excludes Churned accounts.',
+      'Metric rule: selected active sample value excludes archived rows.',
     ]),
   ].join('\n')
 }
 
 function movementPointLine(label: string, point: RevenueMovementEvidencePoint | undefined): string | undefined {
   if (!point) return undefined
-  return `${label}: ${point.month} at ${formatCurrencyK(point.net)} net (${formatCurrencyK(point.newMrr)} new + ${formatCurrencyK(point.expansion)} expansion - ${formatCurrencyK(point.churnLoss)} churn).`
+  return `${label}: ${point.month} at ${formatCurrencyK(point.net)} net (${formatCurrencyK(point.newMrr)} new + ${formatCurrencyK(point.expansion)} expansion - ${formatCurrencyK(point.churnLoss)} decrease).`
 }
 
 function revenueMovementEvidenceLines(evidence: RevenueMovementEvidence): string[] {
   const lines = [
     `Chart: ${evidence.sourceTitle}, ${evidence.rowCount} monthly rows, ${evidence.timePeriodLabel}.`,
-    `Totals: ${formatCurrencyK(evidence.totalNew)} new + ${formatCurrencyK(evidence.totalExpansion)} expansion - ${formatCurrencyK(evidence.totalChurnLoss)} churn = ${formatCurrencyK(evidence.totalNet)} net.`,
+    `Totals: ${formatCurrencyK(evidence.totalNew)} new + ${formatCurrencyK(evidence.totalExpansion)} expansion - ${formatCurrencyK(evidence.totalChurnLoss)} decrease = ${formatCurrencyK(evidence.totalNet)} net.`,
     `Chart controls: labels ${evidence.labelsVisible ? 'shown' : 'hidden'}, bar width ${evidence.barWidth}px.`,
     movementPointLine('Latest visible month', evidence.latestMonth),
     movementPointLine('Strongest net month', evidence.strongestNetMonth),
     movementPointLine('Weakest net month', evidence.weakestNetMonth),
     evidence.largestChurnLossMonth
-      ? `Largest churn-loss month: ${evidence.largestChurnLossMonth.month} at ${formatCurrencyK(evidence.largestChurnLossMonth.churnLoss)} churn.`
+      ? `Largest decrease month: ${evidence.largestChurnLossMonth.month} at ${formatCurrencyK(evidence.largestChurnLossMonth.churnLoss)}.`
       : undefined,
   ]
   return lines.filter((line): line is string => Boolean(line))
@@ -292,22 +292,22 @@ function revenueMovementAnswer(accounts: Account[], context: AssistantScreenCont
 
   return [
     evidence && evidence.rowCount > 0
-      ? `Revenue movement is **${movementTone}** in the visible chart: ${formatCurrencyK(evidence.totalNet)} net over ${evidence.rowCount} monthly rows.`
-      : 'I do not have revenue movement chart evidence attached yet, so I can only explain the current account grid scope.',
+      ? `Signed movement is **${movementTone}** in the visible chart: ${formatCurrencyK(evidence.totalNet)} net over ${evidence.rowCount} monthly rows.`
+      : 'I do not have signed movement chart evidence attached yet, so I can only explain the current grid scope.',
     '',
     evidence?.latestMonth
       ? `Latest visible month: **${evidence.latestMonth.month}** ended at **${formatCurrencyK(evidence.latestMonth.net)} net**.`
       : 'Latest visible month: unavailable.',
     '',
-    `For the current grid scope, active MRR is **${fmtCurrency(totalMrr(scoped))}** across ${scoped.length} visible accounts.`,
+    `For the current grid scope, active sample value is **${fmtCurrency(totalMrr(scoped))}** across ${scoped.length} visible rows.`,
     '',
-    `Expansion signal: **${expansion.length}** accounts are growing; contraction signal: **${contraction.length}** accounts are negative or churned.`,
+    `Positive signal: **${expansion.length}** rows are increasing; negative signal: **${contraction.length}** rows are decreasing or archived.`,
     '',
-    'Largest visible MRR contributors:',
+    'Largest visible value contributors:',
     ...compactAccountList(sortedByMrr.slice(0, 3)),
     '',
     ...evidenceSection([
-      'Separation: chart evidence uses dashboard monthly movement data; grid evidence uses currently visible account rows.',
+      'Separation: chart evidence uses monthly movement rows; grid evidence uses currently visible sample rows.',
       gridEvidenceLine(context, accounts),
       ...chartLines,
     ]),
@@ -318,10 +318,10 @@ function savedViewName(context: AssistantScreenContext | undefined): string {
   const grid = context?.grid
   if (!grid) return 'Assistant view'
   const bits: string[] = []
-  if (grid.atRiskOnly) bits.push('Risk focus')
+  if (grid.atRiskOnly) bits.push('Review focus')
   if (grid.quickFilter.trim()) bits.push(`Quick filter ${grid.quickFilter.trim()}`)
   if (grid.globalSearch.trim()) bits.push(`Search ${grid.globalSearch.trim()}`)
-  if (!bits.length) bits.push('Current accounts')
+  if (!bits.length) bits.push('Current grid')
   return bits.join(' - ')
 }
 
@@ -337,7 +337,7 @@ function createSavedViewAnswer(
   context: AssistantScreenContext | undefined,
   actions: AssistantActions | undefined,
 ): string {
-  if (!context?.grid) return 'Open the account grid first and I can save the current columns, filters, sort, density, and page size as a view.'
+  if (!context?.grid) return 'Open the sample grid first and I can save the current columns, filters, sort, density, and page size as a view.'
   if (!actions?.createSavedView) return 'This assistant can describe the current grid, but no saved-view action is registered on this screen.'
   return actionAnswer(actions.createSavedView(extractNamedView(text) ?? savedViewName(context)))
 }
@@ -375,17 +375,17 @@ export function contextualAssistantSuggestions(context: AssistantScreenContext |
   if (context.routeKind === 'accounts') {
     const selected = context.grid?.selectedRowCount ?? 0
     return [
-      selected ? `Summarize ${selected} selected account${selected === 1 ? '' : 's'}` : 'Summarize selected accounts',
+      selected ? `Summarize ${selected} selected row${selected === 1 ? '' : 's'}` : 'Summarize selected rows',
       'Create a saved view for this screen',
-      'Explain this revenue movement',
-      'Which accounts are at risk?',
+      'Explain this signed movement',
+      'Which rows need review?',
     ]
   }
   if (context.routeKind === 'customer-success') {
     return [
       'Draft this touchpoint note',
       'Summarize the current screen',
-      'Which accounts are at risk?',
+      'Which rows need review?',
       'Create a saved view for this screen',
     ]
   }
@@ -394,14 +394,14 @@ export function contextualAssistantSuggestions(context: AssistantScreenContext |
       'Fill recommendation feedback',
       'Summarize the current screen',
       'How do I integrate a real model?',
-      'Explain this revenue movement',
+      'Explain this signed movement',
     ]
   }
   return [
     'Summarize the current screen',
     'How do I integrate a real model?',
-    'How is MRR looking?',
-    'Which accounts are at risk?',
+    'Summarize sample value',
+    'Which rows need review?',
   ]
 }
 
@@ -433,7 +433,7 @@ const INTEGRATE_ANSWER = [
 function fallbackAnswer(context: AssistantScreenContext | undefined): string {
   const suggestions = contextualAssistantSuggestions(context)
   return [
-    "I'm the Ledger demo assistant — I can answer from the live account book:",
+    "I'm the parts-bin demo assistant — I can answer from the live sample data:",
     '',
     ...suggestions.map((s) => `- ${s}`),
     '',
@@ -459,9 +459,9 @@ function route(
   if (/\bfeedback\b/.test(q) || /\brecommendation\b/.test(q)) return recommendationFeedbackAnswer(text, actions)
   if (/\b(current screen|screen context|where am i|summarize the current screen)\b/.test(q)) return screenAnswer(context)
   if (/\bmovement\b/.test(q) || /\bbridge\b/.test(q)) return revenueMovementAnswer(accounts, context)
-  if (/\bmrr/.test(q) || /\brevenue/.test(q)) return mrrAnswer(accounts, context)
-  if (/\brisk/.test(q) || /\bchurn/.test(q)) return riskAnswer(accounts, context)
-  if (/\bgrow/.test(q)) return growthAnswer(accounts, context)
+  if (/\bmrr/.test(q) || /\brevenue/.test(q) || /\bvalue\b/.test(q)) return mrrAnswer(accounts, context)
+  if (/\brisk/.test(q) || /\bchurn/.test(q) || /\breview\b/.test(q)) return riskAnswer(accounts, context)
+  if (/\bgrow/.test(q) || /\bchange\b/.test(q)) return growthAnswer(accounts, context)
   if (/\bintegrat/.test(q) || /\badapter/.test(q) || /\bapi\b/.test(q) || /\bcode\b/.test(q)) return INTEGRATE_ANSWER
   return fallbackAnswer(context)
 }

@@ -23,7 +23,7 @@ describe('AssistantPanel', () => {
   test('empty state shows suggestions; clicking one streams a data-aware answer', async () => {
     const user = userEvent.setup()
     renderPanel()
-    await user.click(screen.getByRole('button', { name: 'How is MRR looking?' }))
+    await user.click(screen.getByRole('button', { name: 'Summarize sample value' }))
     expect(await screen.findByText(new RegExp(fmtCurrency(totalMrr(fixture)).replace('$', '\\$')))).toBeInTheDocument()
     // Done message exposes actions:
     expect(await screen.findByRole('button', { name: 'Copy message' })).toBeInTheDocument()
@@ -33,7 +33,7 @@ describe('AssistantPanel', () => {
   test('typed question goes through the composer', async () => {
     const user = userEvent.setup()
     renderPanel()
-    await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'which accounts are at risk?{Enter}')
+    await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'which rows need review?{Enter}')
     expect(await screen.findByText(/Globex/)).toBeInTheDocument()
   })
 

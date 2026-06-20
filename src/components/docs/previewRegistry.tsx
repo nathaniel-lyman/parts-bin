@@ -61,7 +61,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
       onValueChange={noop}
     />
   ),
-  Slider: <Slider label="Risk threshold" min={0} max={100} defaultValue={60} showValue />,
+  Slider: <Slider label="Review threshold" min={0} max={100} defaultValue={60} showValue />,
   Field: (
     <Field label="Name" required>
       <Input placeholder="Cobalt Freight" readOnly />
@@ -80,7 +80,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
   EmptyState: <EmptyState title="No projects" description="Create your first project." />,
   // data display
   Avatar: <Avatar name="Avery Cohen" status="online" />,
-  Metric: <Metric label="Churn" value="2.1%" delta="-0.3" status="positive" />,
+  Metric: <Metric label="Error rate" value="2.1%" delta="-0.3" status="positive" />,
   Pagination: <Pagination page={2} pageSize={25} total={240} onPageChange={noop} />,
   Sparkline: <div className="w-32"><Sparkline data={[1, 3, 2, 5, 4, 6]} /></div>,
   KeyValueList: <KeyValueList items={[{ label: 'Owner', value: 'Avery Cohen' }, { label: 'Plan', value: 'Pro' }]} />,
@@ -116,7 +116,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
   Dropzone: <div className="w-56"><Dropzone multiple onFilesSelected={noop} /></div>,
   FileUpload: (
     <div className="w-56">
-      <FileUpload files={[new File(['ledger,accounts'], 'accounts-import.csv', { type: 'text/csv' })]} onFilesSelected={noop} />
+      <FileUpload files={[new File(['id,title,status'], 'records-import.csv', { type: 'text/csv' })]} onFilesSelected={noop} />
     </div>
   ),
   Stepper: (
@@ -214,7 +214,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
   NotificationBadge: <NotificationBadge count={12} />,
   KpiCard: (
     <div className="w-48">
-      <KpiCard label="Revenue" value="$78.3k" delta={4.2} spark={[62, 65, 64, 70, 74, 78]} />
+      <KpiCard label="Total value" value="$78.3k" delta={4.2} spark={[62, 65, 64, 70, 74, 78]} />
     </div>
   ),
   // charts (lightweight only — Recharts charts stay placeholder)
@@ -225,7 +225,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
       </ChartCard>
     </div>
   ),
-  ChartLegend: <ChartLegend items={[{ id: 'new', label: 'New', colorClassName: 'bg-pos' }, { id: 'churn', label: 'Churned', colorClassName: 'bg-neg' }]} />,
-  ChartTooltipContent: <ChartTooltipContent label="Jan" rows={[{ label: 'Revenue', value: '$78k' }]} />,
+  ChartLegend: <ChartLegend items={[{ id: 'new', label: 'New', colorClassName: 'bg-pos' }, { id: 'blocked', label: 'Blocked', colorClassName: 'bg-neg' }]} />,
+  ChartTooltipContent: <ChartTooltipContent label="Jan" rows={[{ label: 'Value', value: '$78k' }]} />,
   ChartEmptyState: <ChartEmptyState title="No data" description="Adjust filters." />,
 }

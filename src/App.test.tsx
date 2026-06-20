@@ -23,11 +23,11 @@ function expectTextContent(fragment: string) {
 
 test('renders dashboard with KPIs and table (light)', () => {
   render(<ToastProvider><App /></ToastProvider>)
-  expect(screen.getByText('Accounts dashboard demo')).toBeInTheDocument()
+  expect(screen.getByText('Component assembly demo')).toBeInTheDocument()
   expect(screen.getByText(/A working sample assembled from parts-bin components/)).toBeInTheDocument()
-  expect(screen.getByText('Total MRR')).toBeInTheDocument()
+  expect(screen.getByText('Total value')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
-  expect(screen.getByRole('figure', { name: /MRR bridge in thousands/i })).toBeInTheDocument()
+  expect(screen.getByRole('figure', { name: /Sample bridge in thousands/i })).toBeInTheDocument()
   expect(screen.queryByText('Pipeline by stage')).not.toBeInTheDocument()
   expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
   expect(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' })).toBeInTheDocument()
@@ -41,7 +41,7 @@ test('login route renders the sign-in page full-bleed, without the app shell', (
   expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   // No app shell chrome on the pre-auth surface.
   expect(screen.queryByRole('searchbox', { name: /global search/i })).not.toBeInTheDocument()
-  expect(screen.queryByText('Accounts dashboard demo')).not.toBeInTheDocument()
+  expect(screen.queryByText('Component assembly demo')).not.toBeInTheDocument()
 })
 
 test('settings route renders inside the shell with dashboard-only controls hidden', () => {
@@ -66,7 +66,7 @@ test('Dark toggle switches to dark mode', async () => {
   expect(document.documentElement.classList.contains('dark')).toBe(true)
   expect(localStorage.getItem('parts-bin.theme')).toBe('dark')
   // app still renders its content in dark mode
-  expect(screen.getByText('Accounts dashboard demo')).toBeInTheDocument()
+  expect(screen.getByText('Component assembly demo')).toBeInTheDocument()
 })
 
 test('manual date ranges update the dashboard period label dynamically', async () => {
@@ -201,9 +201,9 @@ test('docs start alias renders the app composer', () => {
   expect(screen.queryByText('Component imports')).not.toBeInTheDocument()
 })
 
-test('revenue movement chart exposes bar width and label controls', async () => {
+test('signed movement chart exposes bar width and label controls', async () => {
   render(<ToastProvider><App /></ToastProvider>)
-  const widthControl = screen.getByRole('slider', { name: /revenue movement bar width/i })
+  const widthControl = screen.getByRole('slider', { name: /signed movement bar width/i })
   const labelControl = screen.getByRole('switch', { name: /movement labels/i })
 
   expect(widthControl).toHaveValue('22')
@@ -225,18 +225,18 @@ test('waterfall chart labels can be toggled', async () => {
   expect(labelControl).not.toBeChecked()
 })
 
-test('assistant opens from the top nav and answers with live MRR', async () => {
+test('assistant opens from the top nav and answers with live sample value', async () => {
   const user = userEvent.setup()
   render(<ToastProvider><App /></ToastProvider>)
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
   expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument()
-  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'How is MRR looking?{Enter}')
+  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Summarize sample value{Enter}')
   // waitFor + getByText (not findByText): each streamed chunk re-renders the
   // markdown and replaces its DOM nodes, so a node captured by findByText can
   // detach before the assertion runs. Re-querying inside waitFor is race-free.
   // Generous timeout: the demo adapter streams ~40 jittered 24ms chunks, slow
   // under parallel-suite load.
-  await waitFor(() => expect(screen.getByText(/Total active MRR is/)).toBeInTheDocument(), { timeout: 10000 })
+  await waitFor(() => expect(screen.getByText(/Total active sample value is/)).toBeInTheDocument(), { timeout: 10000 })
 })
 
 test('assistant summarizes selected rows from the current grid context', async () => {
@@ -245,30 +245,30 @@ test('assistant summarizes selected rows from the current grid context', async (
 
   await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
-  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Summarize selected accounts{Enter}')
+  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Summarize selected rows{Enter}')
 
   await waitFor(() => expect(screen.getAllByText((_content, node) => (
-    node?.tagName === 'P' && (node.textContent?.includes('You selected 1 account') ?? false)
+    node?.tagName === 'P' && (node.textContent?.includes('You selected 1 row') ?? false)
   )).length).toBeGreaterThan(0), { timeout: 10000 })
   expect(screen.getAllByText(/Cobalt Freight/).length).toBeGreaterThan(0)
 })
 
-test('assistant explains revenue movement with chart and filtered grid evidence', async () => {
+test('assistant explains signed movement with chart and filtered grid evidence', async () => {
   const user = userEvent.setup()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.type(screen.getByRole('searchbox', { name: /global search/i }), 'cobalt')
   await waitFor(() => expect(screen.getByText(/Search: cobalt/)).toBeInTheDocument())
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
-  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Explain this revenue movement{Enter}')
+  await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Explain this signed movement{Enter}')
 
-  await waitFor(() => expectTextContent('Revenue movement is net positive'), { timeout: 10000 })
-  await waitFor(() => expectTextContent('Separation: chart evidence uses dashboard monthly movement data'), { timeout: 10000 })
-  await waitFor(() => expectTextContent('Chart: Revenue movement ($k), 10 monthly rows'), { timeout: 15000 })
+  await waitFor(() => expectTextContent('Signed movement is net positive'), { timeout: 10000 })
+  await waitFor(() => expectTextContent('Separation: chart evidence uses monthly movement rows'), { timeout: 10000 })
+  await waitFor(() => expectTextContent('Chart: Signed movement ($k), 10 monthly rows'), { timeout: 15000 })
   await waitFor(() => expectTextContent('Filters: global search "cobalt"'), { timeout: 15000 })
   expectTextContent('Evidence used')
   expectTextContent('Grid scope: 1 of 1 rows visible')
-  expectTextContent('Separation: chart evidence uses dashboard monthly movement data')
+  expectTextContent('Separation: chart evidence uses monthly movement rows')
 }, 30000)
 
 test('assistant creates a saved view from the current grid context', async () => {
@@ -280,7 +280,7 @@ test('assistant creates a saved view from the current grid context', async () =>
 
   await waitFor(() => {
     const saved = JSON.parse(localStorage.getItem(ACCOUNT_GRID_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
-    expect(saved.some((view) => view.name === 'Current accounts')).toBe(true)
+    expect(saved.some((view) => view.name === 'Current grid')).toBe(true)
   }, { timeout: 10000 })
   await waitFor(() => expect(screen.getAllByText((_content, node) => (
     node?.textContent?.includes('Saved view created') ?? false
@@ -295,7 +295,7 @@ test('command shortcuts run workspace actions without opening the palette', () =
   expect(document.documentElement.classList.contains('dark')).toBe(true)
 
   fireEvent.keyDown(document, { key: 'r' })
-  expect(screen.getByText(/At-risk focus/)).toBeInTheDocument()
+  expect(screen.getByText(/Review focus/)).toBeInTheDocument()
   expect(screen.queryByRole('dialog', { name: /command palette/i })).not.toBeInTheDocument()
 })
 
@@ -307,13 +307,13 @@ test('command shortcuts save and reset the current account grid view', async () 
 
   await waitFor(() => {
     const saved = JSON.parse(localStorage.getItem(ACCOUNT_GRID_VIEWS_KEY) ?? '[]') as Array<{ name: string }>
-    expect(saved.some((view) => view.name === 'Current accounts')).toBe(true)
+    expect(saved.some((view) => view.name === 'Current grid')).toBe(true)
   })
-  expect(screen.getByText('Saved view Current accounts')).toBeInTheDocument()
+  expect(screen.getByText('Saved view Current grid')).toBeInTheDocument()
 
   fireEvent.keyDown(document, { key: 'v' })
   fireEvent.keyDown(document, { key: 'r' })
-  expect(screen.getByText('Reset account grid layout')).toBeInTheDocument()
+  expect(screen.getByText('Reset sample grid layout')).toBeInTheDocument()
 })
 
 test('command shortcuts clear selected grid rows', async () => {
@@ -337,6 +337,6 @@ test('command shortcuts can ask the assistant from the current screen', async ()
 
   expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument()
   await waitFor(() => expect(screen.getAllByText((_content, node) => (
-    node?.textContent?.includes('You are on Accounts') ?? false
+    node?.textContent?.includes('You are on Component assembly') ?? false
   )).length).toBeGreaterThan(0), { timeout: 10000 })
 })

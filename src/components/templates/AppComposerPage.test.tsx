@@ -11,9 +11,9 @@ test('generates default imports, route branch, data mapping, and theme setup', (
 
   expect(screen.getByText('Component imports')).toBeInTheDocument()
   expect(screen.getByText(/import \{ PageHeader, KpiSummaryRow, KpiCard, DataGrid, StatusBadge/)).toBeInTheDocument()
-  expect(screen.getByText(/const accountsActive = pathname === '\/accounts'/)).toBeInTheDocument()
-  expect(screen.getByText(/export interface AccountRow/)).toBeInTheDocument()
-  expect(screen.getByText(/persistenceKey="ledger.accounts.grid"/)).toBeInTheDocument()
+  expect(screen.getByText(/const projectsActive = pathname === '\/projects'/)).toBeInTheDocument()
+  expect(screen.getByText(/export interface ProjectRow/)).toBeInTheDocument()
+  expect(screen.getByText(/persistenceKey="parts-bin.projects.grid"/)).toBeInTheDocument()
   expect(screen.getByText(/applyThemeRecipe\('ledger-default'\)/)).toBeInTheDocument()
 })
 
@@ -41,5 +41,5 @@ test('data mapping edits update generated identifiers', async () => {
 
   expect(screen.getByText(/const projectsActive = pathname === '\/projects'/)).toBeInTheDocument()
   expect(screen.getAllByText(/export function ProjectsRoute/).length).toBeGreaterThan(0)
-  expect(screen.getByText(/persistenceKey="ledger.projects.grid"/)).toBeInTheDocument()
+  expect(screen.getByText(/persistenceKey="parts-bin.projects.grid"/)).toBeInTheDocument()
 })

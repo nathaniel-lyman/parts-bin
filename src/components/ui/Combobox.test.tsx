@@ -55,13 +55,13 @@ test('Combobox shows an empty message when nothing matches', async () => {
 test('Combobox integrates with Field label and selects by click', async () => {
   const user = userEvent.setup()
   render(
-    <Field label="Owner" hint="Pick the account owner.">
+    <Field label="Owner" hint="Pick the record owner.">
       <Combobox options={[{ value: 'av', label: 'Avery' }]} />
     </Field>,
   )
 
   const input = screen.getByRole('combobox', { name: 'Owner' })
-  expect(input).toHaveAccessibleDescription('Pick the account owner.')
+  expect(input).toHaveAccessibleDescription('Pick the record owner.')
 
   await user.click(input)
   await user.click(screen.getByRole('option', { name: 'Avery' }))

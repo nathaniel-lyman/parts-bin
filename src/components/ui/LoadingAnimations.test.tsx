@@ -44,6 +44,6 @@ test('loading animations can be rendered as decorative UI', () => {
 })
 
 test('progress loader renders its visible detail text', () => {
-  render(<LoadingProgress label="Loading rows" detail="Syncing accounts" />)
-  expect(screen.getByText('Syncing accounts')).toBeInTheDocument()
+  render(<LoadingProgress label="Loading rows" detail="Syncing records" />)
+  expect(screen.getByText('Syncing records')).toBeInTheDocument()
 })

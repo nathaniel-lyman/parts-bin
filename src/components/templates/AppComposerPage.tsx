@@ -22,7 +22,7 @@ import {
 import { navigate } from '../../lib/routes'
 
 type StepId = 'use-case' | 'layout' | 'theme' | 'data' | 'generate'
-type UseCaseId = 'revenue-ops' | 'customer-success' | 'review-queue' | 'admin-settings'
+type UseCaseId = 'project-ops' | 'customer-success' | 'review-queue' | 'admin-settings'
 type LayoutId = 'metrics-datagrid' | 'customer-success-workspace' | 'review-queue-console' | 'settings-workspace'
 type DensityChoice = 'standard' | 'compact' | 'comfortable'
 type TokenTweak = 'default' | 'compact-radius' | 'risk-forward' | 'quiet-admin'
@@ -77,20 +77,20 @@ const stepLabels: Record<StepId, { label: string; description: string }> = {
 
 const useCases: UseCaseConfig[] = [
   {
-    id: 'revenue-ops',
-    label: 'Revenue operations',
-    description: 'KPIs, charts, customer records, saved grid views, and account actions.',
+    id: 'project-ops',
+    label: 'Project operations',
+    description: 'KPIs, charts, generic records, saved grid views, and row actions.',
     defaultLayoutId: 'metrics-datagrid',
-    routeVerb: 'Track',
+    routeVerb: 'Manage',
     data: {
-      entitySingular: 'Account',
-      entityPlural: 'Accounts',
-      routePath: '/accounts',
-      collectionName: 'accounts',
-      primaryField: 'name',
+      entitySingular: 'Project',
+      entityPlural: 'Projects',
+      routePath: '/projects',
+      collectionName: 'projects',
+      primaryField: 'title',
       statusField: 'status',
       ownerField: 'owner',
-      metricField: 'mrr',
+      metricField: 'score',
     },
   },
   {
@@ -377,7 +377,7 @@ export function ${toPascalCase(config.data.entityPlural, 'Records')}Route({ rows
       rows={rows}
       columns={${columns}}
       getRowId={(row) => row.id}
-      persistenceKey="ledger.${plural}.grid"
+      persistenceKey="parts-bin.${plural}.grid"
       enablePagination
       enableExport
     />

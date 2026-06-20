@@ -76,10 +76,10 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
                 <h2 className="m-0 text-[15px] font-semibold text-ink">Examples are secondary</h2>
-                <p className="m-0 text-[13px] text-muted">Use the sample dashboard, composer, and templates as reference implementations after choosing components from the catalog.</p>
+                <p className="m-0 text-[13px] text-muted">Use the assembly demo, composer, and templates as reference implementations after choosing components from the catalog.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="primary" onClick={() => { navigate('/') }}>Sample dashboard</Button>
+                <Button variant="primary" onClick={() => { navigate('/') }}>Assembly demo</Button>
                 <Button variant="secondary" onClick={() => { navigate('/compose') }}>App composer</Button>
                 <Button variant="secondary" onClick={() => { navigate('/templates/customer-success') }}>Customer success</Button>
                 <Button variant="secondary" onClick={() => { navigate('/templates/recommendation-review') }}>Recommendation review</Button>
@@ -122,7 +122,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
                   </div>
                   <div className="grid gap-2 border border-line bg-surface p-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="micro">Revenue</span>
+                      <span className="micro">Value</span>
                       <span className="num text-pos">+4.6%</span>
                     </div>
                     <div className="display text-[22px] font-semibold text-ink">$84.2k</div>
