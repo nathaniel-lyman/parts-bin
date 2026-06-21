@@ -67,7 +67,9 @@ describe('computeAggregates', () => {
     const result = computeAggregates(columns, rows)
     expect(Object.keys(result).sort()).toEqual(['growth', 'impact', 'mrr'])
     expect(result.mrr).toMatchObject({ kind: 'sum', label: 'Σ', value: 600, formatted: '$600' })
-    expect(result.growth).toMatchObject({ kind: 'avg', label: 'avg', value: 4, formatted: '4%' })
+    // Numeric footers honour the column number format, matching the cells above: a percent column
+    // renders one decimal, so the avg of 10/-4/6 (= 4) shows as '4.0%', not '4%'.
+    expect(result.growth).toMatchObject({ kind: 'avg', label: 'avg', value: 4, formatted: '4.0%' })
     expect(result.impact).toMatchObject({ kind: 'custom', label: 'fx', value: 8, formatted: '8' })
   })
 
@@ -75,5 +77,13 @@ describe('computeAggregates', () => {
     const result = computeAggregates(columns, [])
     expect(result.mrr.value).toBeNull()
     expect(result.mrr.formatted).toBe('—')
+  })
+
+  it('computes a count-weighted average over every row, not an average of subset averages', () => {
+    // Two lopsided "groups": {10,10,10,10} and {90}. The true mean is 130/5 = 26; an avg-of-group-
+    // averages would wrongly give (10 + 90) / 2 = 50. computeAggregates must take all rows at once.
+    const avgRows: Row[] = [10, 10, 10, 10, 90].map((mrr, index) => ({ id: String(index), mrr, growth: 0, name: 'x' }))
+    const avgColumns: DataGridColumn<Row>[] = [{ id: 'mrr', accessorKey: 'mrr', header: 'MRR', type: 'currency', aggregate: 'avg' }]
+    expect(computeAggregates(avgColumns, avgRows).mrr.value).toBe(26)
   })
 })

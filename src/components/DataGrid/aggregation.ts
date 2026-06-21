@@ -95,9 +95,15 @@ export function computeAggregates<TData>(
       kind: typeof column.aggregate === 'function' ? 'custom' : column.aggregate,
       label: aggregateLabel(column.aggregate),
       value,
-      formatted: isNumericColumnType(column.type)
-        ? formatDataGridNumber(value, column.type, column.numberFormat, numberFormats[column.id])
-        : formatAggregate(value, column.type),
+      // A null aggregate (empty set / no numeric values) must read as the em-dash placeholder, not
+      // the blank that formatDataGridNumber emits — otherwise an empty filtered grid shows a footer
+      // with no totals at all. Numeric columns otherwise honour their own number format so the
+      // footer total matches the precision/style of the cells above it.
+      formatted: value === null
+        ? formatAggregate(null, column.type)
+        : isNumericColumnType(column.type)
+          ? formatDataGridNumber(value, column.type, column.numberFormat, numberFormats[column.id])
+          : formatAggregate(value, column.type),
     }
   }
   return result
