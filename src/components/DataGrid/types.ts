@@ -21,6 +21,27 @@ export type GridColumnType =
 
 export type AggregateKind = 'sum' | 'avg' | 'min' | 'max' | 'count'
 
+export type DataGridNumberFormatStyle = 'number' | 'currency' | 'percent'
+export type DataGridNumberFormatNotation = 'standard' | 'compact'
+export type DataGridNumberFormatSignDisplay = 'auto' | 'always' | 'exceptZero' | 'never'
+export type DataGridCurrencySign = 'standard' | 'accounting'
+
+export interface DataGridNumberFormat {
+  style?: DataGridNumberFormatStyle
+  currency?: string
+  currencySign?: DataGridCurrencySign
+  minimumFractionDigits?: number
+  maximumFractionDigits?: number
+  notation?: DataGridNumberFormatNotation
+  signDisplay?: DataGridNumberFormatSignDisplay
+  useGrouping?: boolean
+  /**
+   * Multiplier applied before formatting. Percent columns default to 0.01 so stored values like
+   * `5` render as `5.0%`; set `scale: 1` when row values are already decimal ratios.
+   */
+  scale?: number
+}
+
 export interface AggregateContext<TData> {
   values: unknown[]
   rows: TData[]
@@ -34,6 +55,8 @@ export type GridExpandedState = true | Record<string, boolean>
 
 export interface DataGridCellContext<TData, TValue = unknown> {
   value: TValue
+  formattedValue: string
+  formatValue: (format?: DataGridNumberFormat) => string
   row: TData
   rowId: string
 }
@@ -58,6 +81,7 @@ export interface DataGridColumn<TData, TValue = unknown> {
     options?: string[]
   }
   type?: GridColumnType
+  numberFormat?: DataGridNumberFormat
   sortable?: boolean
   filterable?: boolean
   resizable?: boolean
@@ -100,6 +124,7 @@ export interface DataGridState {
   density: Density
   grouping: string[]
   expanded: GridExpandedState
+  numberFormats: Record<string, DataGridNumberFormat>
 }
 
 /** @deprecated Use DataGridState. */
@@ -153,6 +178,8 @@ export type GridAction =
   | { type: 'SET_GROUPING'; grouping: string[] }
   | { type: 'TOGGLE_GROUP_BY'; columnId: string }
   | { type: 'CLEAR_GROUPING' }
+  | { type: 'SET_COLUMN_NUMBER_FORMAT'; columnId: string; format: DataGridNumberFormat }
+  | { type: 'CLEAR_COLUMN_NUMBER_FORMAT'; columnId: string }
   | { type: 'EXPAND_ALL' }
   | { type: 'COLLAPSE_ALL' }
   | { type: 'SET_EXPANDED'; expanded: GridExpandedState }

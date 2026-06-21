@@ -77,3 +77,27 @@ describe('gridReducer - rowPinning slice', () => {
     expect(next.sorting).toEqual(DEFAULT_STATE.sorting)
   })
 })
+
+describe('gridReducer - numberFormats slice', () => {
+  it('sets and clears a column number format override', () => {
+    const formatted = gridReducer(DEFAULT_STATE, {
+      type: 'SET_COLUMN_NUMBER_FORMAT',
+      columnId: 'mrr',
+      format: { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 },
+    }, accountColumns)
+
+    expect(formatted.numberFormats.mrr).toEqual({ style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })
+
+    const cleared = gridReducer(formatted, { type: 'CLEAR_COLUMN_NUMBER_FORMAT', columnId: 'mrr' }, accountColumns)
+    expect(cleared.numberFormats.mrr).toBeUndefined()
+  })
+
+  it('RESET_COLUMNS clears number format overrides', () => {
+    const state = {
+      ...DEFAULT_STATE,
+      numberFormats: { mrr: { style: 'currency' as const, currency: 'EUR' } },
+    }
+    const next = gridReducer(state, { type: 'RESET_COLUMNS' }, accountColumns)
+    expect(next.numberFormats).toEqual({})
+  })
+})

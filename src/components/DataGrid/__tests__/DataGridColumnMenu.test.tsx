@@ -80,6 +80,32 @@ describe('DataGridColumnMenu shell', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'SET_COLUMN_FILTER', columnId: 'mrr', value: { operator: 'equals', value: '1000' } })
   })
 
+  it('opens a number format panel for numeric columns', () => {
+    open()
+    fireEvent.click(screen.getByRole('menuitem', { name: /number format/i }))
+    expect(screen.getByRole('dialog', { name: /mrr number format/i })).toBeInTheDocument()
+    expect(screen.getByText('$12,346')).toBeInTheDocument()
+  })
+
+  it('dispatches number format changes and reset', () => {
+    const dispatch = open()
+    fireEvent.click(screen.getByRole('menuitem', { name: /number format/i }))
+    fireEvent.change(screen.getByLabelText(/mrr number format currency/i), { target: { value: 'EUR' } })
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'SET_COLUMN_NUMBER_FORMAT',
+      columnId: 'mrr',
+      format: expect.objectContaining({ style: 'currency', currency: 'EUR' }),
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(dispatch).toHaveBeenCalledWith({ type: 'CLEAR_COLUMN_NUMBER_FORMAT', columnId: 'mrr' })
+  })
+
+  it('omits number format for non-numeric columns', () => {
+    open({ type: 'text' })
+    expect(screen.queryByRole('menuitem', { name: /number format/i })).toBeNull()
+  })
+
   it('omits Hide column for a non-hideable column', () => {
     open({ hideable: false })
     expect(screen.queryByRole('menuitem', { name: /hide column/i })).toBeNull()

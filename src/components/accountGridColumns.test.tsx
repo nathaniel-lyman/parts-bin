@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { Account } from '../data/types'
 import { accountGlobalFilter, buildAccountGridColumns } from './accountGridColumns'
+import type { DataGridCellContext } from './DataGrid/types'
 
 const acme: Account = {
   id: '1',
@@ -13,6 +14,17 @@ const acme: Account = {
   status: 'At risk',
   arr: 14400,
   since: '2023-01-01',
+}
+
+function cellContext(value: unknown): DataGridCellContext<Account> {
+  const formattedValue = String(value ?? '')
+  return {
+    value,
+    formattedValue,
+    formatValue: () => formattedValue,
+    row: acme,
+    rowId: acme.id,
+  }
 }
 
 describe('buildAccountGridColumns', () => {
@@ -66,7 +78,7 @@ describe('buildAccountGridColumns', () => {
 
   it('growth cell uses text-neg when negative', () => {
     const growth = buildAccountGridColumns(vi.fn(), vi.fn()).find((column) => column.id === 'growth')!
-    const { container } = render(<>{growth.cell!({ value: acme.growth, row: acme, rowId: acme.id })}</>)
+    const { container } = render(<>{growth.cell!(cellContext(acme.growth))}</>)
     expect(container.querySelector('.text-neg')).not.toBeNull()
   })
 
@@ -74,7 +86,7 @@ describe('buildAccountGridColumns', () => {
     const onEdit = vi.fn()
     const onDelete = vi.fn()
     const actions = buildAccountGridColumns(onEdit, onDelete).find((column) => column.id === 'actions')!
-    render(<>{actions.cell!({ value: undefined, row: acme, rowId: acme.id })}</>)
+    render(<>{actions.cell!(cellContext(undefined))}</>)
     screen.getByLabelText('Edit Acme').click()
     screen.getByLabelText('Delete Acme').click()
     expect(onEdit).toHaveBeenCalledWith(acme)
@@ -83,7 +95,7 @@ describe('buildAccountGridColumns', () => {
 
   it('actions cell buttons are type=button and reveal on keyboard focus', () => {
     const actions = buildAccountGridColumns(vi.fn(), vi.fn()).find((column) => column.id === 'actions')!
-    const { container } = render(<>{actions.cell!({ value: undefined, row: acme, rowId: acme.id })}</>)
+    const { container } = render(<>{actions.cell!(cellContext(undefined))}</>)
     const edit = screen.getByLabelText('Edit Acme')
     const del = screen.getByLabelText('Delete Acme')
     // default <button> type is "submit" — would submit an ancestor form before onClick
@@ -95,7 +107,7 @@ describe('buildAccountGridColumns', () => {
 
   it('status cell renders the StatusBadge', () => {
     const status = buildAccountGridColumns(vi.fn(), vi.fn()).find((column) => column.id === 'status')!
-    render(<>{status.cell!({ value: acme.status, row: acme, rowId: acme.id })}</>)
+    render(<>{status.cell!(cellContext(acme.status))}</>)
     expect(screen.getByText('At risk')).toBeInTheDocument()
   })
 

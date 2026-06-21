@@ -1,4 +1,6 @@
+import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
 import type { LedgerGridColumn } from './types'
+import type { DataGridNumberFormat } from './types'
 
 export interface SerializeTSVOptions<TData> {
   getRowId: (row: TData) => string
@@ -8,6 +10,7 @@ export interface SerializeTSVOptions<TData> {
   includeHeader?: boolean
   /** Apply each column's `exportValue` formatter (clipboard copy). File exports leave this off. */
   formatted?: boolean
+  numberFormats?: Record<string, DataGridNumberFormat>
 }
 
 function cleanCell(value: unknown): string {
@@ -23,9 +26,16 @@ function resolveValue<TData>(row: TData, column: LedgerGridColumn<TData>): unkno
 
 // Raw accessor value, or the column's formatted `exportValue` when `formatted` is set (clipboard
 // copy). Keeps file exports on the raw value so XLSX still writes real numbers, not "$24,600" text.
-function exportCellValue<TData>(row: TData, column: LedgerGridColumn<TData>, formatted?: boolean): unknown {
+function exportCellValue<TData>(
+  row: TData,
+  column: LedgerGridColumn<TData>,
+  opts: Pick<SerializeTSVOptions<TData>, 'formatted' | 'numberFormats'>,
+): unknown {
   const raw = resolveValue(row, column)
-  return formatted && column.exportValue ? column.exportValue(raw, row) : raw
+  if (opts.formatted && isNumericColumnType(column.type)) {
+    return formatDataGridNumber(raw, column.type, column.numberFormat, opts.numberFormats?.[column.id])
+  }
+  return opts.formatted && column.exportValue ? column.exportValue(raw, row) : raw
 }
 
 function orderedExportColumns<TData>(
@@ -71,7 +81,7 @@ export function serializeTSV<TData>(
     lines.push(cols.map((column) => cleanCell(typeof column.header === 'string' ? column.header : column.id)).join('\t'))
   }
   for (const row of dataRows) {
-    lines.push(cols.map((column) => cleanCell(exportCellValue(row, column, opts.formatted))).join('\t'))
+    lines.push(cols.map((column) => cleanCell(exportCellValue(row, column, opts))).join('\t'))
   }
   return lines.join('\n')
 }
@@ -98,7 +108,7 @@ export function serializeCSV<TData>(
     lines.push(cols.map((column) => escapeCsvCell(typeof column.header === 'string' ? column.header : column.id)).join(','))
   }
   for (const row of dataRows) {
-    lines.push(cols.map((column) => escapeCsvCell(exportCellValue(row, column, opts.formatted))).join(','))
+    lines.push(cols.map((column) => escapeCsvCell(exportCellValue(row, column, opts))).join(','))
   }
   return lines.join('\n')
 }
@@ -152,7 +162,7 @@ function worksheetXml<TData>(
   }
   const offset = opts.includeHeader === false ? 0 : 1
   dataRows.forEach((row, rowIndex) => {
-    sheetRows.push(`<row r="${rowIndex + offset + 1}">${cols.map((column, colIndex) => worksheetCell(exportCellValue(row, column, opts.formatted), rowIndex + offset, colIndex)).join('')}</row>`)
+    sheetRows.push(`<row r="${rowIndex + offset + 1}">${cols.map((column, colIndex) => worksheetCell(exportCellValue(row, column, opts), rowIndex + offset, colIndex)).join('')}</row>`)
   })
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${sheetRows.join('')}</sheetData></worksheet>`
 }

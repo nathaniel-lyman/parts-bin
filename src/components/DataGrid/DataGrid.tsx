@@ -53,6 +53,7 @@ import { DataGridToolbar } from './DataGridToolbar'
 import { projectColumnDrag, type ColumnDragPreviewState } from './dragPreview'
 import { fitColumnWidth, measureColumnContentWidths } from './autofit'
 import { computeAggregates, formatAggregate, resolveAggregate } from './aggregation'
+import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
 import {
   commitSession,
   editorTypeFor,
@@ -68,7 +69,7 @@ import {
   type GridEditingApi,
 } from './editing'
 import { DataGridAggregationFooter } from './DataGridAggregationFooter'
-import type { ColumnVirtualWindow, DataGridColumn, DataGridState, GridAction } from './types'
+import type { ColumnVirtualWindow, DataGridColumn, DataGridNumberFormat, DataGridState, GridAction } from './types'
 import {
   cellRangeBounds,
   isMultiCellRange,
@@ -155,7 +156,12 @@ export interface DataGridContextSnapshot<TData> {
   }
 }
 
-function toColumnDef<TData>(column: DataGridColumn<TData>): ColumnDef<TData> {
+function toColumnDef<TData>(
+  column: DataGridColumn<TData>,
+  numberFormat?: DataGridNumberFormat,
+): ColumnDef<TData> {
+  const formatValue = (value: unknown, override?: DataGridNumberFormat) =>
+    formatDataGridNumber(value, column.type, column.numberFormat, override ? { ...numberFormat, ...override } : numberFormat)
   const base: ColumnDef<TData> = {
     id: column.id,
     header: typeof column.header === 'string' ? column.header : () => column.header,
@@ -173,7 +179,15 @@ function toColumnDef<TData>(column: DataGridColumn<TData>): ColumnDef<TData> {
     enableGrouping: column.groupable === true,
   }
   if (column.cell) {
-    base.cell = (ctx) => column.cell!({ value: ctx.getValue(), row: ctx.row.original, rowId: ctx.row.id })
+    base.cell = (ctx) => column.cell!({
+      value: ctx.getValue(),
+      formattedValue: formatValue(ctx.getValue()),
+      formatValue: (format) => formatValue(ctx.getValue(), format),
+      row: ctx.row.original,
+      rowId: ctx.row.id,
+    })
+  } else if (isNumericColumnType(column.type)) {
+    base.cell = (ctx) => <span className="num text-ink">{formatValue(ctx.getValue())}</span>
   }
 
   if (column.accessorFn) return { ...base, accessorFn: column.accessorFn }
@@ -269,7 +283,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
 
   useGridPersistence(state, persistenceEnabled, persistenceKey)
 
-  const columnDefs = useMemo(() => columns.map(toColumnDef), [columns])
+  const columnDefs = useMemo(
+    () => columns.map((column) => toColumnDef(column, state.numberFormats[column.id])),
+    [columns, state.numberFormats],
+  )
   const pageQuery = useMemo(() => toGridQuery(state), [state])
   const allMatchingQuery = useMemo(() => toGridQuery(state, 'allMatching'), [state])
   const serializedQuery = serializeGridQuery(pageQuery)
@@ -667,13 +684,16 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       if (!column?.aggregate) return null
       const value = resolveAggregate(column, leafRows)
       if (column.aggregatedCell) return column.aggregatedCell({ value })
-      return <span className="num text-muted">{formatAggregate(value, column.type)}</span>
+      const formatted = isNumericColumnType(column.type)
+        ? formatDataGridNumber(value, column.type, column.numberFormat, state.numberFormats[column.id])
+        : formatAggregate(value, column.type)
+      return <span className="num text-muted">{formatted}</span>
     },
-    [columnsById],
+    [columnsById, state.numberFormats],
   )
 
   const hasAggregates = columns.some((column) => column.aggregate !== undefined)
-  const footerAggregates = hasAggregates ? computeAggregates(columns, exportData) : {}
+  const footerAggregates = hasAggregates ? computeAggregates(columns, exportData, state.numberFormats) : {}
 
   const visibleSelectedCountRef = useRef(visibleSelectedCount)
   const focusTargetRef = useRef<{ rowId: string; colId: string } | null>(null)
@@ -705,9 +725,12 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     (row: TData, columnId: string): unknown => {
       const raw = resolveCellValue(row, columnId)
       const column = columnsById.get(columnId)
+      if (column && isNumericColumnType(column.type)) {
+        return formatDataGridNumber(raw, column.type, column.numberFormat, state.numberFormats[columnId])
+      }
       return column?.exportValue ? column.exportValue(raw, row) : raw
     },
-    [columnsById, resolveCellValue],
+    [columnsById, resolveCellValue, state.numberFormats],
   )
 
   // Header label for the copied column range. Falls back to the id for non-string headers.
@@ -777,9 +800,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         columnVisibility: state.columnVisibility,
         includeHeader: false,
         formatted: true,
+        numberFormats: state.numberFormats,
       }), 'Copied row')
     },
-    [columns, copyWithFeedback, getRowId, rows, state.columnOrder, state.columnVisibility, visibleData],
+    [columns, copyWithFeedback, getRowId, rows, state.columnOrder, state.columnVisibility, state.numberFormats, visibleData],
   )
 
   const copySelection = useCallback(() => {
@@ -794,8 +818,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       columnVisibility: state.columnVisibility,
       rowSelection: state.rowSelection,
       formatted: true,
+      numberFormats: state.numberFormats,
     }), copiedCount === 1 ? 'Copied 1 row' : `Copied ${copiedCount} rows`)
-  }, [columns, copyWithFeedback, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection, visibleData])
+  }, [columns, copyWithFeedback, getRowId, state.columnOrder, state.columnVisibility, state.numberFormats, state.rowSelection, visibleData])
 
   const exportCsv = useCallback(() => {
     downloadCSV(exportFilename, serializeCSV(exportData, columns, {
@@ -1198,6 +1223,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
               pinnedOffsets={pinnedColumnOffsets}
               enableGrouping={groupingActive}
               grouping={state.grouping}
+              numberFormats={state.numberFormats}
             />
             {!loading && error === undefined && rowCount > 0 && (
               <DataGridBody

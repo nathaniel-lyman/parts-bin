@@ -12,6 +12,7 @@ describe('project (LedgerGridState -> PersistedGridView)', () => {
     density: 'standard' as const,
     columnVisibility: { account: true, arr: true, since: false },
     sorting: [{ id: 'mrr', desc: true }],
+    numberFormats: { mrr: { style: 'currency' as const, currency: 'EUR', maximumFractionDigits: 2 } },
   }
 
   it('stamps the current version', () => {
@@ -36,6 +37,7 @@ describe('project (LedgerGridState -> PersistedGridView)', () => {
     expect(view.density).toBe('standard')
     expect(view.columnVisibility).toEqual({ account: true, arr: true, since: false })
     expect(view.sorting).toEqual([{ id: 'mrr', desc: true }])
+    expect(view.numberFormats).toEqual({ mrr: { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 } })
   })
 })
 
@@ -48,6 +50,11 @@ describe('hydrateView (PersistedGridView -> LedgerGridState)', () => {
     expect(state.rowSelection).toEqual({})
     expect(state.rowPinning).toEqual({ top: [], bottom: [] })
     expect(state.pagination.pageIndex).toBe(0)
+  })
+
+  it('hydrates number format overrides', () => {
+    const state = hydrateView({ numberFormats: { growth: { style: 'percent', minimumFractionDigits: 2 } } })
+    expect(state.numberFormats.growth).toEqual({ style: 'percent', minimumFractionDigits: 2 })
   })
 
   it('persists pageSize through but resets pageIndex to 0', () => {
@@ -90,6 +97,7 @@ describe('migrateLegacy (non-destructive, builds a v1 view from legacy keys)', (
     expect(view.sorting).toEqual([{ id: 'mrr', desc: true }])
     expect(view.density).toBe('compact')
     expect(view.pagination).toEqual({ pageSize: 25 })
+    expect(view.numberFormats).toEqual({})
   })
 
   it('with no legacy keys, returns a defaults-only v1 view', () => {

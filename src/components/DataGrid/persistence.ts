@@ -1,7 +1,7 @@
 import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import { normalizeColumnOrder } from './normalize'
 import { DEFAULT_STATE, hydrate } from './state'
-import type { Density, LedgerGridState } from './types'
+import type { DataGridNumberFormat, Density, LedgerGridState } from './types'
 
 export const GRID_VIEW_VERSION = 1 as const
 export const GRID_STORAGE_KEY = 'parts-bin.datagrid'
@@ -19,6 +19,8 @@ export interface PersistedGridView {
   pagination: { pageSize: number }
   /** Optional for backwards compatibility with pre-grouping persisted blobs. */
   grouping?: string[]
+  /** Optional for backwards compatibility with pre-number-format persisted blobs. */
+  numberFormats?: Record<string, DataGridNumberFormat>
 }
 
 export const DEFAULT_PERSISTED_VIEW: PersistedGridView = project(DEFAULT_STATE)
@@ -35,6 +37,7 @@ export function project(state: LedgerGridState): PersistedGridView {
     sorting: state.sorting,
     pagination: { pageSize: state.pagination.pageSize },
     grouping: state.grouping,
+    numberFormats: state.numberFormats,
   }
 }
 
@@ -55,6 +58,7 @@ export function hydrateView(view: Partial<PersistedGridView>, initialState?: Par
     // Expansion state is ephemeral; a restored grouped view starts fully expanded.
     persisted.expanded = view.grouping.length > 0 ? true : {}
   }
+  if (view.numberFormats) persisted.numberFormats = view.numberFormats
   return hydrate({ initialState, persisted })
 }
 

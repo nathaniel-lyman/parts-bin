@@ -12,7 +12,7 @@ import { DataGridSelectAllCheckbox } from './DataGridSelectionCell'
 import type { FilterValue } from './filtering'
 import type { ColumnDragPreviewState } from './dragPreview'
 import type { GridFocus } from './keyboard'
-import type { ColumnPinning, ColumnVirtualWindow, GridAction, LedgerGridColumn } from './types'
+import type { ColumnPinning, ColumnVirtualWindow, DataGridNumberFormat, GridAction, LedgerGridColumn } from './types'
 
 const noopDispatch = () => {}
 const dragPreviewTransition = 'transform 160ms ease'
@@ -45,6 +45,7 @@ function SortableHeader<TData>({
   onAutofitColumn,
   enableGrouping,
   grouping = [],
+  numberFormats = {},
 }: {
   header: Header<TData, unknown>
   dispatch?: (action: GridAction) => void
@@ -61,6 +62,7 @@ function SortableHeader<TData>({
   onAutofitColumn?: (columnId: string) => void
   enableGrouping?: boolean
   grouping?: string[]
+  numberFormats?: Record<string, DataGridNumberFormat>
 }) {
   const sorted = header.column.getIsSorted()
   const multiSortActive = header.getContext().table.getState().sorting.length > 1
@@ -129,6 +131,8 @@ function SortableHeader<TData>({
               type={source?.type ?? 'text'}
               filterMeta={header.column.columnDef.meta}
               currentFilter={currentFilter}
+              columnNumberFormat={source?.numberFormat}
+              currentNumberFormat={numberFormats[header.column.id]}
               sortDirection={sorted}
               hideable={source?.hideable ?? true}
               canPin={source?.pinnable ?? true}
@@ -197,6 +201,7 @@ export function DataGridHeader<TData>({
   pinnedOffsets,
   enableGrouping = false,
   grouping = [],
+  numberFormats = {},
 }: {
   table: Table<TData>
   dispatch?: (action: GridAction) => void
@@ -219,6 +224,7 @@ export function DataGridHeader<TData>({
   pinnedOffsets?: PinnedOffsets
   enableGrouping?: boolean
   grouping?: string[]
+  numberFormats?: Record<string, DataGridNumberFormat>
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -273,6 +279,7 @@ export function DataGridHeader<TData>({
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
                       grouping={grouping}
+                      numberFormats={numberFormats}
                     />
                   )
                 })}
@@ -302,6 +309,7 @@ export function DataGridHeader<TData>({
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
                       grouping={grouping}
+                      numberFormats={numberFormats}
                     />
                   )
                 })}
@@ -330,6 +338,7 @@ export function DataGridHeader<TData>({
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
                       grouping={grouping}
+                      numberFormats={numberFormats}
                     />
                   )
                 })}

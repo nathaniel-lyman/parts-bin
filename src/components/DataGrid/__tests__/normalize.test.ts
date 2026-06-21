@@ -62,6 +62,7 @@ const base: LedgerGridState = {
   density: 'compact',
   grouping: [],
   expanded: {},
+  numberFormats: {},
 }
 const accountOrder = ['account', 'owner', 'segment', 'mrr', 'growth', 'status', 'arr', 'since', 'actions']
 
@@ -124,5 +125,16 @@ describe('normalizeState composes order + pinning', () => {
 
   it('is a no-op on already-normalized state', () => {
     expect(normalizeState(base)).toEqual(base)
+  })
+
+  it('drops number format overrides for unknown columns when current columns are provided', () => {
+    const out = normalizeState({
+      ...base,
+      numberFormats: {
+        mrr: { style: 'currency', currency: 'EUR' },
+        ghost: { style: 'number' },
+      },
+    }, accountOrder)
+    expect(out.numberFormats).toEqual({ mrr: { style: 'currency', currency: 'EUR' } })
   })
 })

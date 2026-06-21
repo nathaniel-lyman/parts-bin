@@ -45,6 +45,20 @@ describe('DataGrid context menu + copy', () => {
     expect(writeText).toHaveBeenCalledWith('Acme\tDana\tEnterprise\t$900\t5.0%\tActive')
   })
 
+  it('number format overrides update visible cells and copied rows', async () => {
+    renderGrid()
+    await userEvent.click(screen.getByRole('button', { name: /value column menu/i }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: /number format/i }))
+    fireEvent.change(screen.getByLabelText(/value number format minimum decimals/i), { target: { value: '2' } })
+
+    expect(await screen.findByText('$900.00')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /close value number format/i }))
+
+    fireEvent.contextMenu(screen.getByText('Acme'))
+    await userEvent.click(await screen.findByRole('menuitem', { name: /copy row/i }))
+    expect(writeText).toHaveBeenCalledWith('Acme\tDana\tEnterprise\t$900.00\t5.0%\tActive')
+  })
+
   it('Copy selection (N) shows the count of rows actually copied: selected AND visible', async () => {
     renderGrid()
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select Acme' }))

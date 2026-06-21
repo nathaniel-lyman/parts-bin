@@ -1,4 +1,5 @@
-import type { AggregateKind, AggregateSpec, GridColumnType, LedgerGridColumn } from './types'
+import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
+import type { AggregateKind, AggregateSpec, DataGridNumberFormat, GridColumnType, LedgerGridColumn } from './types'
 
 /** Numeric values only — non-numeric rows are skipped, not coerced to 0. */
 function numericValues(values: unknown[]): number[] {
@@ -83,6 +84,7 @@ export interface ColumnAggregate {
 export function computeAggregates<TData>(
   columns: LedgerGridColumn<TData>[],
   rows: TData[],
+  numberFormats: Record<string, DataGridNumberFormat> = {},
 ): Record<string, ColumnAggregate> {
   const result: Record<string, ColumnAggregate> = {}
   for (const column of columns) {
@@ -93,7 +95,9 @@ export function computeAggregates<TData>(
       kind: typeof column.aggregate === 'function' ? 'custom' : column.aggregate,
       label: aggregateLabel(column.aggregate),
       value,
-      formatted: formatAggregate(value, column.type),
+      formatted: isNumericColumnType(column.type)
+        ? formatDataGridNumber(value, column.type, column.numberFormat, numberFormats[column.id])
+        : formatAggregate(value, column.type),
     }
   }
   return result

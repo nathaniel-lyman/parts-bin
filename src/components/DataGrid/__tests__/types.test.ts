@@ -27,6 +27,7 @@ const BASE_STATE: DataGridState = {
   density: 'compact',
   grouping: [],
   expanded: {},
+  numberFormats: {},
 }
 
 describe('grid types', () => {
@@ -46,7 +47,8 @@ describe('grid types', () => {
       header: 'MRR',
       align: 'right',
       type: 'currency',
-      cell: (ctx: DataGridCellContext<Account, number>) => String(ctx.value),
+      numberFormat: { style: 'currency', currency: 'USD', maximumFractionDigits: 0 },
+      cell: (ctx: DataGridCellContext<Account, number>) => ctx.formattedValue || String(ctx.value),
     }
     expect(column.id).toBe('mrr')
   })

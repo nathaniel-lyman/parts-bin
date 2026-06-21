@@ -17,6 +17,7 @@ export const DEFAULT_STATE: LedgerGridState = {
   density: 'compact',
   grouping: [],
   expanded: {},
+  numberFormats: {},
 }
 
 export interface HydrateOptions {
@@ -42,6 +43,11 @@ function mergeLayers(
       ...DEFAULT_STATE.columnSizing,
       ...initialState.columnSizing,
       ...persisted.columnSizing,
+    },
+    numberFormats: {
+      ...DEFAULT_STATE.numberFormats,
+      ...initialState.numberFormats,
+      ...persisted.numberFormats,
     },
     columnPinning: {
       ...DEFAULT_STATE.columnPinning,

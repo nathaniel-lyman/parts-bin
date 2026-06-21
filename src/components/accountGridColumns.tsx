@@ -1,5 +1,4 @@
 import type { Account, Status } from '../data/types'
-import { fmtCurrency, fmtDelta, fmtPercentSigned } from '../lib/format'
 import { ACTIONS_COLUMN_ID } from './DataGrid/normalize'
 import { DEFAULT_STATE } from './DataGrid/state'
 import type { LedgerGridColumn, LedgerGridState } from './DataGrid/types'
@@ -92,8 +91,7 @@ export function buildAccountGridColumns(
       editable: true,
       aggregate: 'sum',
       validate: (value) => (Number(value) < 0 ? 'Value cannot be negative' : null),
-      exportValue: (value) => fmtCurrency(Number(value)),
-      cell: (ctx) => <span className="num text-ink">{fmtCurrency(Number(ctx.value))}</span>,
+      cell: (ctx) => <span className="num text-ink">{ctx.formattedValue}</span>,
     },
     {
       id: 'growth',
@@ -103,10 +101,9 @@ export function buildAccountGridColumns(
       type: 'percent',
       editable: true,
       aggregate: 'avg',
-      exportValue: (value) => fmtPercentSigned(Number(value)),
       cell: (ctx) => (
         <span className={`num ${Number(ctx.value) < 0 ? 'text-neg' : 'text-pos'}`}>
-          {fmtDelta(Number(ctx.value))}
+          {ctx.formattedValue}
         </span>
       ),
     },
@@ -127,8 +124,7 @@ export function buildAccountGridColumns(
       align: 'right',
       type: 'currency',
       aggregate: 'sum',
-      exportValue: (value) => fmtCurrency(Number(value)),
-      cell: (ctx) => <span className="num text-ink">{fmtCurrency(Number(ctx.value))}</span>,
+      cell: (ctx) => <span className="num text-ink">{ctx.formattedValue}</span>,
     },
     {
       id: 'since',

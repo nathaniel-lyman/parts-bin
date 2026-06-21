@@ -79,6 +79,15 @@ export function normalizeGrouping(value: unknown, columnIds?: readonly string[])
   return grouping
 }
 
+export function normalizeNumberFormats(
+  value: LedgerGridState['numberFormats'],
+  columnIds?: readonly string[],
+): LedgerGridState['numberFormats'] {
+  if (!columnIds?.length) return value
+  const known = new Set(columnIds)
+  return Object.fromEntries(Object.entries(value).filter(([id]) => known.has(id)))
+}
+
 export function normalizeState(state: LedgerGridState, columnIds?: readonly string[]): LedgerGridState {
   const columnOrder = normalizeColumnOrder(state.columnOrder, columnIds)
   const inferredColumnIds = columnIds?.length ? columnIds : columnOrder
@@ -94,5 +103,6 @@ export function normalizeState(state: LedgerGridState, columnIds?: readonly stri
       ? { ...state.columnVisibility, [ACTIONS_COLUMN_ID]: true }
       : state.columnVisibility
   const grouping = normalizeGrouping(state.grouping, columnIds)
-  return { ...state, columnOrder, columnPinning, columnVisibility, grouping }
+  const numberFormats = normalizeNumberFormats(state.numberFormats, columnIds)
+  return { ...state, columnOrder, columnPinning, columnVisibility, grouping, numberFormats }
 }

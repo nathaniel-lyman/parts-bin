@@ -214,6 +214,26 @@ export function groupingReducer(slice: string[], action: GridAction): string[] {
   }
 }
 
+export function numberFormatsReducer(
+  slice: LedgerGridState['numberFormats'],
+  action: GridAction,
+): LedgerGridState['numberFormats'] {
+  switch (action.type) {
+    case 'SET_COLUMN_NUMBER_FORMAT':
+      return { ...slice, [action.columnId]: action.format }
+    case 'CLEAR_COLUMN_NUMBER_FORMAT': {
+      if (!(action.columnId in slice)) return slice
+      const next = { ...slice }
+      delete next[action.columnId]
+      return next
+    }
+    case 'RESET_COLUMNS':
+      return {}
+    default:
+      return slice
+  }
+}
+
 export function expandedReducer(
   slice: LedgerGridState['expanded'],
   action: GridAction,
@@ -313,6 +333,7 @@ export function gridReducer<TData>(
         columnPinning: columnPinningReducer(state.columnPinning, action),
         density: densityReducer(state.density, action),
         grouping: groupingReducer(state.grouping, action),
+        numberFormats: numberFormatsReducer(state.numberFormats, action),
         expanded: action.type === 'RESET_COLUMNS' ? {} : state.expanded,
       }, columnIds)
     case 'SET_GROUPING':
@@ -343,6 +364,12 @@ export function gridReducer<TData>(
     case 'PIN_ROW_BOTTOM':
     case 'UNPIN_ROW':
       return { ...state, rowPinning: rowPinningReducer(state.rowPinning, action) }
+    case 'SET_COLUMN_NUMBER_FORMAT':
+    case 'CLEAR_COLUMN_NUMBER_FORMAT':
+      return normalizeState({
+        ...state,
+        numberFormats: numberFormatsReducer(state.numberFormats, action),
+      }, columnIds)
     case 'SET_PAGE_INDEX':
     case 'SET_PAGE_SIZE':
       return { ...state, pagination: paginationReducer(state.pagination, action) }

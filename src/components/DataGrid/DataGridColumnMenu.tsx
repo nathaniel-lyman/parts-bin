@@ -5,10 +5,20 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { FILTER_OPERATORS, type FilterColumnType, type FilterValue } from './filtering'
-import type { GridAction, LedgerGridColumn } from './types'
+import {
+  NUMBER_FORMAT_CURRENCIES,
+  NUMBER_FORMAT_NOTATIONS,
+  NUMBER_FORMAT_SIGN_DISPLAYS,
+  NUMBER_FORMAT_STYLES,
+  formatDataGridNumber,
+  isNumericColumnType,
+  resolveNumberFormat,
+} from './numberFormat'
+import type { DataGridNumberFormat, GridAction, LedgerGridColumn } from './types'
 
 const MENU_WIDTH = 208
 const FILTER_PANEL_WIDTH = 720
+const FORMAT_PANEL_WIDTH = 560
 const VIEWPORT_GAP = 8
 const numericTypes = new Set<FilterColumnType>(['number', 'currency', 'percent'])
 
@@ -26,12 +36,41 @@ const operatorLabels: Record<string, string> = {
   isAnyOf: 'Is any of',
 }
 
+const formatStyleLabels: Record<NonNullable<DataGridNumberFormat['style']>, string> = {
+  number: 'Number',
+  currency: 'Currency',
+  percent: 'Percent',
+}
+
+const signDisplayLabels: Record<NonNullable<DataGridNumberFormat['signDisplay']>, string> = {
+  auto: 'Auto',
+  always: 'Always',
+  exceptZero: 'Except zero',
+  never: 'Never',
+}
+
+function coerceFraction(value: string): number | undefined {
+  if (value === '') return undefined
+  const number = Number(value)
+  if (!Number.isFinite(number)) return undefined
+  return Math.max(0, Math.min(20, Math.trunc(number)))
+}
+
+function coerceScale(value: string): number | undefined {
+  if (value === '') return undefined
+  const number = Number(value)
+  if (!Number.isFinite(number)) return undefined
+  return number
+}
+
 interface Props {
   columnId: string
   header: string
   type: NonNullable<LedgerGridColumn<unknown>['type']>
   filterMeta?: { type?: FilterColumnType; options?: string[] }
   currentFilter?: FilterValue
+  columnNumberFormat?: DataGridNumberFormat
+  currentNumberFormat?: DataGridNumberFormat
   sortDirection: 'asc' | 'desc' | false
   hideable: boolean
   canPin: boolean
@@ -48,6 +87,8 @@ export function DataGridColumnMenu({
   type,
   filterMeta,
   currentFilter,
+  columnNumberFormat,
+  currentNumberFormat,
   sortDirection,
   hideable,
   canPin,
@@ -59,16 +100,20 @@ export function DataGridColumnMenu({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
+  const [formatOpen, setFormatOpen] = useState(false)
   const [draftOperator, setDraftOperator] = useState<string>('')
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: VIEWPORT_GAP })
   const [filterPosition, setFilterPosition] = useState({ top: 0, left: VIEWPORT_GAP, width: FILTER_PANEL_WIDTH })
+  const [formatPosition, setFormatPosition] = useState({ top: 0, left: VIEWPORT_GAP, width: FORMAT_PANEL_WIDTH })
   const triggerRef = useRef<HTMLDivElement | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const filterPanelRef = useRef<HTMLDivElement | null>(null)
+  const formatPanelRef = useRef<HTMLDivElement | null>(null)
   const portalRoot = typeof document === 'undefined' ? null : document.body
   const close = () => {
     setOpen(false)
     setFilterOpen(false)
+    setFormatOpen(false)
   }
   const item = 'flex w-full items-center gap-2 px-3 py-1 text-left text-[13px] text-ink hover:bg-surface-2 disabled:text-faint'
   const label = header || columnId
@@ -84,6 +129,18 @@ export function DataGridColumnMenu({
       : 'text'
   const isBetween = operator === 'between'
   const rangeValue = Array.isArray(value) ? value : ['', '']
+  const canFormatNumber = isNumericColumnType(type)
+  const effectiveNumberFormat = canFormatNumber
+    ? resolveNumberFormat(type, columnNumberFormat, currentNumberFormat)
+    : undefined
+  const setNumberFormat = (patch: DataGridNumberFormat) => {
+    if (!effectiveNumberFormat) return
+    const next = { ...effectiveNumberFormat, ...patch }
+    if (next.minimumFractionDigits !== undefined && next.maximumFractionDigits !== undefined && next.minimumFractionDigits > next.maximumFractionDigits) {
+      next.maximumFractionDigits = next.minimumFractionDigits
+    }
+    dispatch({ type: 'SET_COLUMN_NUMBER_FORMAT', columnId, format: next })
+  }
 
   const setFilter = (nextOperator: string, nextValue: unknown) => {
     const emptyRange = Array.isArray(nextValue) && nextValue.every((item) => item === '' || item === null || item === undefined)
@@ -102,16 +159,17 @@ export function DataGridColumnMenu({
   }
 
   useEffect(() => {
-    if (!open && !filterOpen) return
+    if (!open && !filterOpen && !formatOpen) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setOpen(false)
         setFilterOpen(false)
+        setFormatOpen(false)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [filterOpen, open])
+  }, [filterOpen, formatOpen, open])
 
   useEffect(() => {
     if (!filterOpen) return
@@ -119,8 +177,14 @@ export function DataGridColumnMenu({
     target?.focus()
   }, [filterOpen])
 
+  useEffect(() => {
+    if (!formatOpen) return
+    const target = formatPanelRef.current?.querySelector<HTMLElement>('select:not(:disabled), input:not(:disabled), button:not(:disabled)')
+    target?.focus()
+  }, [formatOpen])
+
   useLayoutEffect(() => {
-    if (!open && !filterOpen) return
+    if (!open && !filterOpen && !formatOpen) return
     const updatePosition = () => {
       const rect = triggerRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -141,6 +205,15 @@ export function DataGridColumnMenu({
         const top = Math.min(rect.bottom + 8, maxTop)
         setFilterPosition({ top, left, width })
       }
+      if (formatOpen) {
+        const width = Math.min(FORMAT_PANEL_WIDTH, Math.max(280, window.innerWidth - VIEWPORT_GAP * 2))
+        const maxLeft = Math.max(VIEWPORT_GAP, window.innerWidth - width - VIEWPORT_GAP)
+        const left = Math.min(Math.max(VIEWPORT_GAP, rect.left), maxLeft)
+        const panelHeight = formatPanelRef.current?.offsetHeight ?? 0
+        const maxTop = Math.max(VIEWPORT_GAP, window.innerHeight - panelHeight - VIEWPORT_GAP)
+        const top = Math.min(rect.bottom + 8, maxTop)
+        setFormatPosition({ top, left, width })
+      }
     }
     updatePosition()
     window.addEventListener('resize', updatePosition)
@@ -149,7 +222,7 @@ export function DataGridColumnMenu({
       window.removeEventListener('resize', updatePosition)
       window.removeEventListener('scroll', updatePosition, true)
     }
-  }, [filterOpen, open])
+  }, [filterOpen, formatOpen, open])
 
   return (
     <div ref={triggerRef} className="relative inline-flex items-center gap-0.5">
@@ -157,7 +230,7 @@ export function DataGridColumnMenu({
         <Button
           variant="ghost"
           size="compact"
-          className={`h-6 w-6 px-0 ${currentFilter ? 'text-accent' : 'text-muted hover:text-ink'}`}
+          className={`h-8 w-8 px-0 ${currentFilter ? 'text-accent' : 'text-muted hover:text-ink'}`}
           aria-label={`${label} column filter`}
           aria-pressed={currentFilter ? true : undefined}
           onPointerDown={(event) => event.stopPropagation()}
@@ -167,13 +240,13 @@ export function DataGridColumnMenu({
             setFilterOpen(true)
           }}
         >
-          <ListFilter aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
+          <ListFilter aria-hidden="true" className="h-5 w-5" strokeWidth={2.25} />
         </Button>
       )}
       <Button
         variant="ghost"
         size="compact"
-        className="h-6 w-6 px-0 text-muted hover:text-ink"
+        className="h-8 w-8 px-0 text-muted hover:text-ink"
         aria-label={`${label} column menu`}
         aria-expanded={open}
         onPointerDown={(event) => event.stopPropagation()}
@@ -182,7 +255,7 @@ export function DataGridColumnMenu({
           setOpen((value) => !value)
         }}
       >
-        <EllipsisVertical aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
+        <EllipsisVertical aria-hidden="true" className="h-5 w-5" strokeWidth={2.25} />
       </Button>
       {open && portalRoot && createPortal(
         <>
@@ -211,7 +284,19 @@ export function DataGridColumnMenu({
                 Filter
               </button>
             )}
-            {filterType && <div className="my-1 border-t border-line" />}
+            {canFormatNumber && (
+              <button
+                role="menuitem"
+                className={item}
+                onClick={() => {
+                  setOpen(false)
+                  setFormatOpen(true)
+                }}
+              >
+                Number format
+              </button>
+            )}
+            {(filterType || canFormatNumber) && <div className="my-1 border-t border-line" />}
             {canGroup && (
               <>
                 <button
@@ -338,6 +423,132 @@ export function DataGridColumnMenu({
                   Clear
                 </Button>
                 <Button variant="secondary" size="compact" aria-label={`Close ${label} filter`} onClick={close}>Close</Button>
+              </div>
+            </div>
+          </div>
+        </>,
+        portalRoot,
+      )}
+      {formatOpen && effectiveNumberFormat && portalRoot && createPortal(
+        <>
+          <div className="fixed inset-0 z-40" onClick={close} />
+          <div
+            ref={formatPanelRef}
+            role="dialog"
+            aria-label={`${label} number format`}
+            className="shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
+            style={{ top: formatPosition.top, left: formatPosition.left, width: formatPosition.width }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="grid gap-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1">
+                  <span className="micro text-faint">Style</span>
+                  <Select
+                    aria-label={`${label} number format style`}
+                    value={effectiveNumberFormat.style ?? 'number'}
+                    onChange={(event) => {
+                      const style = event.target.value as NonNullable<DataGridNumberFormat['style']>
+                      setNumberFormat({ style, scale: style === 'percent' ? 0.01 : 1 })
+                    }}
+                  >
+                    {NUMBER_FORMAT_STYLES.map((style) => (
+                      <option key={style} value={style}>{formatStyleLabels[style]}</option>
+                    ))}
+                  </Select>
+                </label>
+                <label className="grid gap-1">
+                  <span className="micro text-faint">Notation</span>
+                  <Select
+                    aria-label={`${label} number format notation`}
+                    value={effectiveNumberFormat.notation ?? 'standard'}
+                    onChange={(event) => setNumberFormat({ notation: event.target.value as DataGridNumberFormat['notation'] })}
+                  >
+                    {NUMBER_FORMAT_NOTATIONS.map((notation) => (
+                      <option key={notation} value={notation}>{notation === 'compact' ? 'Compact' : 'Standard'}</option>
+                    ))}
+                  </Select>
+                </label>
+                {(effectiveNumberFormat.style ?? 'number') === 'currency' && (
+                  <label className="grid gap-1">
+                    <span className="micro text-faint">Currency</span>
+                    <Select
+                      aria-label={`${label} number format currency`}
+                      value={effectiveNumberFormat.currency ?? 'USD'}
+                      onChange={(event) => setNumberFormat({ currency: event.target.value })}
+                    >
+                      {NUMBER_FORMAT_CURRENCIES.map((currency) => (
+                        <option key={currency} value={currency}>{currency}</option>
+                      ))}
+                    </Select>
+                  </label>
+                )}
+                <label className="grid gap-1">
+                  <span className="micro text-faint">Sign</span>
+                  <Select
+                    aria-label={`${label} number format sign`}
+                    value={effectiveNumberFormat.signDisplay ?? 'auto'}
+                    onChange={(event) => setNumberFormat({ signDisplay: event.target.value as DataGridNumberFormat['signDisplay'] })}
+                  >
+                    {NUMBER_FORMAT_SIGN_DISPLAYS.map((display) => (
+                      <option key={display} value={display}>{signDisplayLabels[display]}</option>
+                    ))}
+                  </Select>
+                </label>
+                <label className="grid gap-1">
+                  <span className="micro text-faint">Scale</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    aria-label={`${label} number format scale`}
+                    value={effectiveNumberFormat.scale ?? 1}
+                    onChange={(event) => setNumberFormat({ scale: coerceScale(event.target.value) })}
+                  />
+                </label>
+                <label className="grid gap-1">
+                  <span className="micro text-faint">Min decimals</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={20}
+                    aria-label={`${label} number format minimum decimals`}
+                    value={effectiveNumberFormat.minimumFractionDigits ?? ''}
+                    onChange={(event) => setNumberFormat({ minimumFractionDigits: coerceFraction(event.target.value) })}
+                  />
+                </label>
+                <label className="grid gap-1">
+                  <span className="micro text-faint">Max decimals</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={20}
+                    aria-label={`${label} number format maximum decimals`}
+                    value={effectiveNumberFormat.maximumFractionDigits ?? ''}
+                    onChange={(event) => setNumberFormat({ maximumFractionDigits: coerceFraction(event.target.value) })}
+                  />
+                </label>
+              </div>
+              <label className="flex items-center gap-2 text-[13px] text-ink">
+                <input
+                  type="checkbox"
+                  checked={effectiveNumberFormat.useGrouping ?? true}
+                  onChange={(event) => setNumberFormat({ useGrouping: event.target.checked })}
+                />
+                Use thousands separators
+              </label>
+              <div className="rounded-[2px] border border-line bg-surface-2 px-3 py-2">
+                <span className="micro mr-2 text-faint">Preview</span>
+                <span className="num text-ink">{formatDataGridNumber(12345.678, type, undefined, effectiveNumberFormat)}</span>
+              </div>
+              <div className="flex gap-2 sm:justify-end">
+                <Button
+                  variant="ghost"
+                  size="compact"
+                  onClick={() => dispatch({ type: 'CLEAR_COLUMN_NUMBER_FORMAT', columnId })}
+                >
+                  Reset
+                </Button>
+                <Button variant="secondary" size="compact" aria-label={`Close ${label} number format`} onClick={close}>Close</Button>
               </div>
             </div>
           </div>
