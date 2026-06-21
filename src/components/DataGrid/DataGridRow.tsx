@@ -115,6 +115,10 @@ function DataGridRowComponent<TData>({
         colIndex={colIndex}
         focused={focusedColIndex >= 0 && focusedColIndex === colIndex}
         rangeSelected={rangeColStart >= 0 && colIndex >= rangeColStart && colIndex <= rangeColEnd}
+        // Only sticky/pinned cells need the selection flag (their opaque bg hides the <tr> tint);
+        // center cells inherit it from the row, so passing a constant false keeps them memo-stable
+        // across a selection toggle — only the few pinned cells of the toggled row re-render.
+        selected={pinnedSide ? selected : false}
         pinnedSide={pinnedSide}
         pinnedOffset={
           pinnedSide === 'left'
@@ -136,10 +140,15 @@ function DataGridRowComponent<TData>({
   const windowedCenterCells = columnWindow
     ? centerCells.filter((cell) => centerIds.has(cell.column.id))
     : centerCells
+  // Selection wins over the hover/group/pinned background so the tint is unambiguous; the accent
+  // band stays put on hover (no surface-2 override) so a selected row never looks deselected.
+  const rowBgClass = selected
+    ? 'bg-accent-soft'
+    : `hover:bg-surface-2 ${pinned ? 'bg-surface' : ''} ${isGroupRow ? 'bg-surface-2' : ''}`
   return (
     <tr
       role="row"
-      className={`group border-t border-line hover:bg-surface-2 ${pinned ? 'bg-surface shadow-pinned' : ''} ${isGroupRow ? 'bg-surface-2' : ''}`}
+      className={`group border-t border-line ${rowBgClass} ${pinned ? 'shadow-pinned' : ''}`}
       data-testid={`grid-row-${row.id}`}
       data-row-id={row.id}
       data-row-pinned={pinned}
@@ -169,7 +178,7 @@ function DataGridRowComponent<TData>({
       }
     >
       {enableRowSelection && (
-        <td className="sticky left-0 z-10 w-10 bg-surface px-2 text-center">
+        <td className={`sticky left-0 z-10 w-10 px-2 text-center ${selected ? 'bg-accent-soft' : 'bg-surface group-hover:bg-surface-2'}`}>
           {!isGroupRow && (
             <DataGridRowCheckbox rowId={row.id} rowLabel={rowLabel} checked={selected} onToggle={(id) => onToggleRow?.(id)} />
           )}

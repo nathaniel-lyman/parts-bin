@@ -30,6 +30,13 @@ function Harness() {
   )
 }
 
+function SelectedRow() {
+  // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({ data, columns, getRowId: (row) => row.id, getCoreRowModel: getCoreRowModel() })
+  return table.getRowModel().rows.map((row) => <DataGridRow key={row.id} row={row} selected />)
+}
+
 function PreviewHarness() {
   // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -70,6 +77,20 @@ describe('DataGridRow / DataGridCell', () => {
     render(<Harness />)
     const cell = screen.getByText('9').closest('td')!
     expect(cell.className).toContain('text-right')
+  })
+
+  it('tints the selected row with accent-soft and holds it on hover', () => {
+    render(
+      <table>
+        <tbody>
+          <SelectedRow />
+        </tbody>
+      </table>,
+    )
+    const row = screen.getByText('Acme').closest('tr')!
+    expect(row.className).toContain('bg-accent-soft')
+    // Selection must not be overridden by the neutral hover tint.
+    expect(row.className).not.toContain('hover:bg-surface-2')
   })
 
   it('dims the active drag-preview column and translates displaced cells', () => {

@@ -29,11 +29,15 @@ function renderGrid() {
 }
 
 describe('DataGridCell hover + copy button', () => {
-  it('data cells carry the per-cell hover highlight classes', () => {
+  it('data cells host the copy-reveal group; row hover is the neutral surface tint', () => {
     renderGrid()
     const cell = screen.getByText('Acme').closest('td')!
+    // The copy button reveals on the cell group; hover highlight now lives on the row (surface-2),
+    // with accent-soft reserved for selection/range so the two reads never collide.
     expect(cell.className).toContain('group/cell')
-    expect(cell.className).toContain('hover:bg-accent-soft')
+    expect(cell.className).not.toContain('hover:bg-accent-soft')
+    const row = cell.closest('tr')!
+    expect(row.className).toContain('hover:bg-surface-2')
   })
 
   it('renders a copy button in data cells but not in the actions column', () => {

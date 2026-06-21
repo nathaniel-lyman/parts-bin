@@ -20,6 +20,9 @@ export interface DataGridCellProps<TData> {
   colIndex?: number
   focused?: boolean
   rangeSelected?: boolean
+  /** True when this cell's row is selected — only consulted for sticky/pinned cells, whose opaque
+   *  background would otherwise hide the row's selection tint. Center cells inherit the <tr> tint. */
+  selected?: boolean
   pinnedSide?: 'left' | 'right'
   pinnedOffset?: number
   /** Rendered instead of the normal cell content for a grouped cell (chevron + value + count). */
@@ -36,6 +39,7 @@ function DataGridCellComponent<TData>({
   colIndex,
   focused,
   rangeSelected,
+  selected = false,
   pinnedSide,
   pinnedOffset = 0,
   groupContent,
@@ -67,6 +71,19 @@ function DataGridCellComponent<TData>({
   const showCopy = onCopyCell !== undefined && !isActions && !isEditing && !isGroupCell
   const canContextMenu = onCellContextMenu !== undefined && !isGroupCell
   const editor = isEditing ? editing.editorFor(cell.column.id) : undefined
+  const alignClass = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'
+  // Background precedence. An active range wins (accent tint + inset ring). Otherwise a sticky/pinned
+  // cell paints its OWN opaque background — center cells stay transparent so the row's <tr> tint
+  // (hover → surface-2, selection → accent-soft) shows through. Hover is now reserved to surface-2
+  // and accent to selection/range, so the two reads never collide; a selected pinned cell still
+  // picks up the accent tint so the selection band is unbroken across the frozen columns.
+  const bgClass = rangeSelected
+    ? 'bg-accent-soft ring-1 ring-inset ring-accent'
+    : pinnedSide
+      ? selected
+        ? 'bg-accent-soft'
+        : 'bg-surface group-hover:bg-surface-2'
+      : ''
   const renderedContent = isEditing && editor ? (
     <DataGridCellEditor
       columnId={cell.column.id}
@@ -91,7 +108,7 @@ function DataGridCellComponent<TData>({
       // drag-selected, and a stray text selection would make Cmd/Ctrl+C copy raw page text instead
       // of the structured TSV (the copy handler defers to any live native selection). Edit inputs
       // are form controls and stay text-selectable regardless.
-      className={`group/cell relative select-none hover:bg-accent-soft ${rangeSelected ? 'bg-accent-soft ring-1 ring-inset ring-accent' : ''} ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${pinnedSide ? 'bg-surface shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
+      className={`group/cell relative select-none ${bgClass} ${pinnedSide ? 'shadow-pinned' : ''} ${alignClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       data-column-id={cell.column.id}
       data-row-index={rowIndex}
       data-col-index={colIndex}
