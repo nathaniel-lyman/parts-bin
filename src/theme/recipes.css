@@ -1,25 +1,25 @@
 /* Optional token recipes. Components still consume the same CSS variables. */
 [data-theme-preview='parts-bin-default'] {
-  --bg: #f8fafc;          --surface: #ffffff;     --surface-2: #f1f5f9;
-  --line: #e2e8f0;        --ink: #0f172a;         --muted: #475569;
-  --faint: #94a3b8;       --accent: #2563eb;      --accent-soft: #dbeafe;
+  --bg: #f4f4f4;          --surface: #ffffff;     --surface-2: #f0f0f0;
+  --line: #e0e0e0;        --ink: #161616;         --muted: #525252;
+  --faint: #6f6f6f;       --accent: #0071dc;      --accent-soft: #e8f1fc;
   --accent-fg: #ffffff;
-  --intel: #7c3aed; --intel-soft: #ede9fe;
-  --pos: #16a34a;   --pos-soft: #dcfce7;
-  --neg: #dc2626;   --neg-soft: #fee2e2; --neg-fg: #ffffff;
-  --warn: #d97706;  --warn-soft: #fef3c7;
+  --intel: #8e6a00; --intel-soft: #fff4c6;
+  --pos: #24a148;   --pos-soft: #defbe6;
+  --neg: #da1e28;   --neg-soft: #fff1f1; --neg-fg: #ffffff;
+  --warn: #8e6a00;  --warn-soft: #fcf4d6;
   --review: var(--warn); --review-soft: var(--warn-soft);
   --reject: var(--neg);  --reject-soft: var(--neg-soft);
 }
 
 .dark [data-theme-preview='parts-bin-default'] {
-  --bg: #020617;          --surface: #0f172a;     --surface-2: #1e293b;
-  --line: #334155;        --ink: #f8fafc;         --muted: #cbd5e1;
-  --faint: #64748b;       --accent: #60a5fa;      --accent-soft: #172554;
-  --intel: #a78bfa; --intel-soft: #2e1065;
-  --pos: #22c55e;   --pos-soft: #052e16;
-  --neg: #f87171;   --neg-soft: #450a0a; --neg-fg: #020617;
-  --warn: #f59e0b;  --warn-soft: #451a03;
+  --bg: #161616;          --surface: #262626;     --surface-2: #333333;
+  --line: #404040;        --ink: #f4f4f4;         --muted: #c6c6c6;
+  --faint: #a0a0a0;       --accent: #2f8bff;      --accent-soft: #0a2547;
+  --intel: #ffc220; --intel-soft: #33290a;
+  --pos: #42be65;   --pos-soft: #18331f;
+  --neg: #ff8389;   --neg-soft: #3a1416; --neg-fg: #161616;
+  --warn: #f1c21b;  --warn-soft: #33290a;
   --review: var(--warn); --review-soft: var(--warn-soft);
   --reject: var(--neg);  --reject-soft: var(--neg-soft);
 }

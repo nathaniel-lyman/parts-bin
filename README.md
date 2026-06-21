@@ -75,7 +75,7 @@ The sample surfaces are built from the design system and live in the docs/exampl
 | | |
 |---|---|
 | ![Component catalog](docs/screenshots/components-light.png) **`/` or `/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/examples/dashboard`** — example KPI + charts + read-only table assembly |
-| **`/examples/datagrid`** — interactive DataGrid harness with grouping, server mode, selection, CRUD, saved views, row pinning, editing, tree/detail rows, and export flows | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in |
+| **`/examples/datagrid`** — interactive DataGrid harness with grouping, server mode, selection, CRUD, saved views, row pinning, editing, tree/detail rows, advanced filtering, keyboard navigation, and export flows | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in |
 | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — example appearance/profile/preferences page | |
 
 ## What's inside
@@ -89,10 +89,11 @@ The sample surfaces are built from the design system and live in the docs/exampl
   activity/detail surfaces, loading states, spinners, pagination, and toasts.
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
-- **`src/components/DataGrid/`** — neutral, TanStack-backed grid with sorting, filtering,
-  pagination, row selection, saved views, row pinning, range copy/paste, inline editing,
-  grouping, built-in/custom aggregation, tree rows, detail panels, CSV/TSV export, and
-  server-query helpers.
+- **`src/components/DataGrid/`** — neutral, TanStack-backed grid with nulls-last/custom sorting,
+  two-condition column filters, pagination, row selection, saved views, row pinning, range
+  copy/paste, inline editing, grouping, built-in/custom aggregation, tree rows, detail panels,
+  CSV/TSV export, server-query helpers, ARIA grid semantics, roving keyboard focus, F2/type-to-edit,
+  arrow-key row expand/collapse, and live screen-reader announcements.
 - **`src/components/`** — public design-system components and barrels: UI, shell, charts, maps,
   DataGrid, chat, KPI cards, sparkline, and confirm dialog. Demo-only example/template code is
   not exported from the aggregate component API.

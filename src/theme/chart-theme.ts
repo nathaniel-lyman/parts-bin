@@ -5,7 +5,7 @@
 // state meaning (segment labels such as Enterprise and Startup should not inherit
 // success/reject colors), and Recharts cannot cleanly resolve many CSS vars for
 // categorical fills.
-export const SERIES = ['var(--accent)', '#00a6c2', '#7c4dff', '#f59e0b', '#d6336c', '#0d9488', '#64748b', '#84cc16']
+export const SERIES = ['var(--accent)', '#ffc220', '#08bdba', '#8a3ffc', '#24a148', '#ff832b', '#da1e28', '#6f6f6f']
 
 export const axisProps = {
   tick: { fill: 'var(--muted)', fontSize: 11, fontFamily: '"JetBrains Mono", monospace' },
@@ -13,7 +13,7 @@ export const axisProps = {
   tickLine: false as const,
 }
 export const gridProps = { stroke: 'var(--line)', strokeDasharray: '3 3', vertical: false }
-export const semantic = { accent: 'var(--accent)', intel: 'var(--intel)', cyan: '#00a6c2', pos: 'var(--pos)', neg: 'var(--neg)', muted: 'var(--muted)' }
+export const semantic = { accent: 'var(--accent)', intel: 'var(--intel)', cyan: '#08bdba', pos: 'var(--pos)', neg: 'var(--neg)', muted: 'var(--muted)' }
 
 // Themed tooltip (surface + hairline + dropdown shadow, mono values) — THEME-SPEC §6.
 export const tooltipProps = {
