@@ -37,6 +37,22 @@ function SelectedRow() {
   return table.getRowModel().rows.map((row) => <DataGridRow key={row.id} row={row} selected />)
 }
 
+function FlashHarness({ mrr, name = 'Acme' }: { mrr: number; name?: string }) {
+  const localRows: Item[] = [{ id: '1', name, mrr }]
+  // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({ data: localRows, columns, getRowId: (row) => row.id, getCoreRowModel: getCoreRowModel() })
+  return (
+    <table>
+      <tbody>
+        {table.getRowModel().rows.map((row) => (
+          <DataGridRow key={row.id} row={row} />
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 function PreviewHarness() {
   // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -91,6 +107,25 @@ describe('DataGridRow / DataGridCell', () => {
     expect(row.className).toContain('bg-accent-soft')
     // Selection must not be overridden by the neutral hover tint.
     expect(row.className).not.toContain('hover:bg-surface-2')
+  })
+
+  it('flashes a cell on value change — up for an increase, down for a decrease, never on first render', () => {
+    const { rerender, container } = render(<FlashHarness mrr={9} />)
+    // No flash on initial mount (prev === current value).
+    expect(container.querySelector('[data-testid="cell-flash"]')).toBeNull()
+    rerender(<FlashHarness mrr={12} />)
+    expect(container.querySelector('[data-testid="cell-flash"]')!.className).toContain('cell-flash-up')
+    rerender(<FlashHarness mrr={4} />)
+    expect(container.querySelector('[data-testid="cell-flash"]')!.className).toContain('cell-flash-down')
+  })
+
+  it('does not flash when an unrelated re-render leaves the value unchanged', () => {
+    const { rerender, container } = render(<FlashHarness mrr={9} name="Acme" />)
+    rerender(<FlashHarness mrr={9} name="Acme Corp" />)
+    // The mrr cell value did not change, so it must not flash on this re-render.
+    const cells = Array.from(container.querySelectorAll('td'))
+    const mrrCell = cells.find((td) => td.getAttribute('data-column-id') === 'mrr')!
+    expect(mrrCell.querySelector('[data-testid="cell-flash"]')).toBeNull()
   })
 
   it('dims the active drag-preview column and translates displaced cells', () => {

@@ -1,9 +1,19 @@
 import './columnMeta'
 import { flexRender, type Cell } from '@tanstack/react-table'
-import { memo, type CSSProperties, type ReactNode } from 'react'
+import { memo, useState, type CSSProperties, type ReactNode } from 'react'
 import { isEditingCell } from './editing'
 import { DataGridCellEditor } from './DataGridCellEditor'
 import { useGridRuntime } from './GridRuntimeContext'
+
+type FlashDir = 'up' | 'down' | 'neutral' | null
+
+/** Direction of a value change: numeric deltas drive the pos/neg tint; anything else flashes neutral. */
+function flashDirection(prev: unknown, next: unknown): Exclude<FlashDir, null> {
+  const a = Number(prev)
+  const b = Number(next)
+  if (Number.isFinite(a) && Number.isFinite(b) && a !== b) return b > a ? 'up' : 'down'
+  return 'neutral'
+}
 
 function CopyGlyph() {
   return (
@@ -49,6 +59,20 @@ function DataGridCellComponent<TData>({
   // Runtime-wide values come from context so this component can be memoized on its per-cell props.
   const { dragPreview, editing, onCopyCell, onCellContextMenu, onFocusCell, onRangeStart, onRangeEnter } =
     useGridRuntime()
+  // Cell-change flash. Detect a value change with React's sanctioned "derive state from a changed
+  // value during render" pattern (a guarded setState in render — no effect, no extra browser paint,
+  // and StrictMode-idempotent because the Object.is guard makes the next render a no-op). Because
+  // the flash is held in STATE (not a ref read during render) it survives unrelated re-renders —
+  // focus, range, pin, drag keep the same `seq`, so the keyed overlay is neither restarted nor cut
+  // short — and onAnimationEnd clears it. This is wholly local to the memoized cell: no orchestrator
+  // state and no context churn, so Phase B's render-layer memoization is untouched.
+  const value = cell.getValue()
+  const [prevValue, setPrevValue] = useState(value)
+  const [flash, setFlash] = useState<{ dir: Exclude<FlashDir, null>; seq: number } | null>(null)
+  if (!Object.is(prevValue, value)) {
+    setPrevValue(value)
+    setFlash((current) => ({ dir: flashDirection(prevValue, value), seq: (current?.seq ?? 0) + 1 }))
+  }
   const align = cell.column.columnDef.meta?.align
   const isActions = cell.column.columnDef.meta?.actions === true
   const previewOffset = dragPreview?.offsets[cell.column.id] ?? 0
@@ -157,6 +181,19 @@ function DataGridCellComponent<TData>({
         </span>
       ) : (
         renderedContent
+      )}
+      {flash && !isGroupCell && !isEditing && (
+        // One-shot highlight overlay; keyed by the change seq so each value change remounts it and
+        // restarts the CSS animation. Sits above the cell background (doesn't disturb the td's own
+        // bg/tint) and is purely decorative; onAnimationEnd unmounts it. Reduced-motion suppresses
+        // the animation in base.css.
+        <span
+          key={flash.seq}
+          aria-hidden="true"
+          data-testid="cell-flash"
+          className={`pointer-events-none absolute inset-0 cell-flash cell-flash-${flash.dir}`}
+          onAnimationEnd={() => setFlash(null)}
+        />
       )}
       {isDirty && !isEditing && (
         <span

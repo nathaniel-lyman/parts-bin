@@ -40,6 +40,18 @@
   html[data-density='compact'] { --row-h: var(--row-h-compact); --cell-pad: var(--cell-pad-compact); }
   .shadow-pinned { box-shadow: var(--shadow-pinned); }
 
+  /* Cell-change flash: a one-shot tint that fades to transparent on a value change. The colour is
+     a token (re-skinnable; stays inside the theme boundary), green/red for numeric up/down and a
+     neutral accent for everything else. Rendered as an overlay span so it never disturbs the cell's
+     own background. Reduced-motion suppresses it below. */
+  .cell-flash {
+    /* base stays transparent so the overlay leaves no residue once the one-shot fade completes */
+    animation: ledger-cell-flash 0.6s ease-out;
+  }
+  .cell-flash-up { --cell-flash-color: var(--pos-soft); }
+  .cell-flash-down { --cell-flash-color: var(--neg-soft); }
+  .cell-flash-neutral { --cell-flash-color: var(--accent-soft); }
+
   .ledger-loading-shimmer {
     background: linear-gradient(100deg, var(--surface-2) 30%, var(--surface) 50%, var(--surface-2) 70%);
     background-size: 220% 100%;
@@ -149,6 +161,11 @@
   }
 }
 
+@keyframes ledger-cell-flash {
+  0% { background-color: var(--cell-flash-color, var(--accent-soft)); }
+  100% { background-color: transparent; }
+}
+
 @keyframes ledger-shimmer {
   0% { background-position: 130% 0; }
   100% { background-position: -30% 0; }
@@ -199,6 +216,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cell-flash,
   .ledger-loading-shimmer,
   .ledger-loading-line,
   .ledger-loading-donut-spin,
@@ -217,6 +235,7 @@
 /* Opt-in reduce-motion preference (Settings ▸ Appearance), set on <html> by
    useSettings — mirrors the prefers-reduced-motion rule above for users who
    toggle it explicitly rather than at the OS level. */
+html[data-reduce-motion='true'] .cell-flash,
 html[data-reduce-motion='true'] .ledger-loading-shimmer,
 html[data-reduce-motion='true'] .ledger-loading-line,
 html[data-reduce-motion='true'] .ledger-loading-donut-spin,
