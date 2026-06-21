@@ -3,6 +3,10 @@
 > **Purpose:** Resumable roadmap for bringing `src/components/DataGrid/` up to premium AG Grid
 > Enterprise polish. This doc is self-contained — a fresh session can pick up from here.
 > **Branch:** `datagrid-aggrid-polish` (off `main`). **Started:** 2026-06-21.
+>
+> **STATUS: all five phases (A–E) COMPLETE.** 752 tests green; full gate (build/vitest/lint/lint:theme)
+> clean. Remaining: a minor free-text set-filter-as-alternate-mode follow-up, and a browser visual pass
+> (not yet run — localhost wasn't enabled in the browser extension). Ready to merge to `main`.
 
 ---
 
@@ -39,7 +43,7 @@
 | **B — Render-layer memoization** | ✅ COMPLETE | `GridRuntimeContext` + memo ✅, debounce/throttle ✅, O(1) pinned indexing ✅, `lockPosition` capability ✅; adversarial-review fixes folded |
 | **C — Interaction polish** | ✅ COMPLETE | selection tint, cell flash, lucide icons, overlay/skeleton states, resize/reorder/fill affordances, scrollbar/popover/density polish |
 | **D — Correctness + filter depth** | ✅ COMPLETE | **baseline now GREEN**; percent round-trip, date timestamps, expanded operators, export BOM/html, floating-filter sync, set filter, **two-condition AND/OR**, and **nulls-last + comparator** all done. (Free-text set-filter-as-alternate-mode is the only minor follow-up.) |
-| **E — Accessibility / ARIA pass** | ⬜ next | |
+| **E — Accessibility / ARIA pass** | ✅ COMPLETE | aria-rowindex/colindex + multiselectable, single tab stop / roving focus (Alt+Down opens header menu), live-region announcer, F2 / type-to-edit + arrow expand-collapse from any column |
 
 ### Commits on the branch so far
 - `07f5b37` — extract god-component into six hooks (DataGrid.tsx 1310 → 898 lines)
@@ -56,6 +60,30 @@
   `86da293` date timestamp filters · `d5d6853` expanded operators · `bafc938` CSV BOM + html
   clipboard · `2b1b81f` floating-filter sync · `9e78ef9` set filter (search/select-all/counts) ·
   `da67071` two-condition AND/OR · `cf8fe24` nulls-last sort + comparator
+- Phase E: `62e5084` aria-rowindex/colindex + multiselectable · `1c2b6e6` single tab stop / roving
+  focus · `bb228b8` live-region announcer · `6fb8033` F2 / type-to-edit + arrow expand-collapse
+
+### Phase E — COMPLETE
+The accessibility / ARIA-grid workstream. All test-driven; full gate green (`npm run build`,
+`npx vitest run` = 752 passing, `npm run lint`, `lint:theme`). Fixes the second fault line
+(broken-ARIA-under-virtualization) and brings keyboard interaction to AG-Grid level.
+
+- **aria-rowindex/colindex + multiselectable** (`62e5084`): every data row carries an absolute 1-based
+  `aria-rowindex` (page offset + 2; the column-header row is index 1), so a screen reader places a row
+  correctly even though only ~20 render. Cells/headers carry `aria-colindex` (the selection column
+  owns index 1; `aria-colcount`/`aria-rowcount` count it + the header). `aria-multiselectable` on the
+  grid. `data-row-index`/focus coords stay page-relative — only the ARIA indices are absolute.
+- **Single tab stop / roving focus** (`1c2b6e6`): rows + the header menu/filter/resize controls are
+  now `tabIndex=-1`, so Tab lands once on the grid and arrows rove among cells/headers. **Alt+Down**
+  opens the focused header's column menu (the ARIA-grid way to reach a header popup, surfacing
+  Filter/sort/etc. as items); keyboard resize stays on Ctrl+Arrow at the header.
+- **Live-region announcer** (`bb228b8`): a visually-hidden `role="status"` `aria-live="polite"` region
+  speaks sort ("Sorted by X ascending" / "Sorting cleared"), filter result count ("Filtered: N rows"),
+  and selection ("N rows selected" / "Selection cleared"); derived during render (no effect), silent on
+  mount. Copy/paste/fill already surface via toasts.
+- **F2 / type-to-edit + arrow expand-collapse** (`6fb8033`): F2 opens the editor on the focused cell;
+  a printable char opens it seeded with that char; ArrowRight/ArrowLeft expand/collapse an expandable
+  row from any column (falling through to focus movement when the state already matches).
 
 ### Phase D — COMPLETE
 The **baseline is now GREEN** — the 2 long-standing `aggregation.test.ts` failures are fixed, so the
