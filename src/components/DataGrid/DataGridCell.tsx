@@ -1,9 +1,9 @@
 import './columnMeta'
 import { flexRender, type Cell } from '@tanstack/react-table'
-import type { CSSProperties, MouseEvent, ReactNode } from 'react'
-import type { ColumnDragPreviewState } from './dragPreview'
-import { isEditingCell, type GridEditingApi } from './editing'
+import { memo, type CSSProperties, type ReactNode } from 'react'
+import { isEditingCell } from './editing'
 import { DataGridCellEditor } from './DataGridCellEditor'
+import { useGridRuntime } from './GridRuntimeContext'
 
 function CopyGlyph() {
   return (
@@ -14,46 +14,37 @@ function CopyGlyph() {
   )
 }
 
-export function DataGridCell<TData>({
-  cell,
-  onContextMenu,
-  onCopy,
-  dragPreview,
-  rowIndex,
-  colIndex,
-  focused,
-  rangeSelected,
-  pinnedSide,
-  pinnedOffset = 0,
-  onFocusCell,
-  onRangeStart,
-  onRangeEnter,
-  editing,
-  groupContent,
-  aggregatedContent,
-  treePrefix,
-}: {
+export interface DataGridCellProps<TData> {
   cell: Cell<TData, unknown>
-  onContextMenu?: (event: MouseEvent<HTMLTableCellElement>) => void
-  onCopy?: () => void
-  dragPreview?: ColumnDragPreviewState | null
   rowIndex?: number
   colIndex?: number
   focused?: boolean
   rangeSelected?: boolean
   pinnedSide?: 'left' | 'right'
   pinnedOffset?: number
-  onFocusCell?: (row: number, col: number) => void
-  onRangeStart?: (row: number, col: number) => void
-  onRangeEnter?: (row: number, col: number) => void
-  editing?: GridEditingApi
   /** Rendered instead of the normal cell content for a grouped cell (chevron + value + count). */
   groupContent?: ReactNode
   /** Rendered instead of the normal cell content for an aggregated cell in a group row. */
   aggregatedContent?: ReactNode
   /** Optional tree indentation / expander rendered before the normal cell content. */
   treePrefix?: ReactNode
-}) {
+}
+
+function DataGridCellComponent<TData>({
+  cell,
+  rowIndex,
+  colIndex,
+  focused,
+  rangeSelected,
+  pinnedSide,
+  pinnedOffset = 0,
+  groupContent,
+  aggregatedContent,
+  treePrefix,
+}: DataGridCellProps<TData>) {
+  // Runtime-wide values come from context so this component can be memoized on its per-cell props.
+  const { dragPreview, editing, onCopyCell, onCellContextMenu, onFocusCell, onRangeStart, onRangeEnter } =
+    useGridRuntime()
   const align = cell.column.columnDef.meta?.align
   const isActions = cell.column.id === 'actions'
   const previewOffset = dragPreview?.offsets[cell.column.id] ?? 0
@@ -73,7 +64,8 @@ export function DataGridCell<TData>({
   const editable = !isGroupCell && editing !== undefined && editing.isEditable(cell.column.id)
   const isEditing = editable && isEditingCell(editing.session, cell.row.id, cell.column.id, editing.isEditable)
   const isDirty = !isGroupCell && editing !== undefined && editing.isDirty(cell.row.id, cell.column.id)
-  const showCopy = onCopy !== undefined && !isActions && !isEditing && !isGroupCell
+  const showCopy = onCopyCell !== undefined && !isActions && !isEditing && !isGroupCell
+  const canContextMenu = onCellContextMenu !== undefined && !isGroupCell
   const editor = isEditing ? editing.editorFor(cell.column.id) : undefined
   const renderedContent = isEditing && editor ? (
     <DataGridCellEditor
@@ -107,7 +99,14 @@ export function DataGridCell<TData>({
       style={style}
       tabIndex={focused ? 0 : -1}
       aria-selected={rangeSelected ? true : undefined}
-      onContextMenu={onContextMenu}
+      onContextMenu={
+        canContextMenu
+          ? (event) => {
+              event.preventDefault()
+              onCellContextMenu!(cell.row.id, cell.column.id, event.clientX, event.clientY)
+            }
+          : undefined
+      }
       onMouseDown={
         !isActions && !isGroupCell && rowIndex !== undefined && colIndex !== undefined
           ? (event) => {
@@ -160,7 +159,7 @@ export function DataGridCell<TData>({
           className="absolute right-1 top-1/2 -translate-y-1/2 rounded-[2px] border border-line bg-surface p-0.5 text-muted opacity-0 pointer-events-none transition-opacity hover:text-ink group-hover/cell:opacity-100 group-hover/cell:pointer-events-auto group-focus-within/cell:opacity-100 group-focus-within/cell:pointer-events-auto"
           onClick={(event) => {
             event.stopPropagation()
-            onCopy()
+            onCopyCell!(cell.row.id, cell.column.id)
           }}
         >
           <CopyGlyph />
@@ -169,3 +168,13 @@ export function DataGridCell<TData>({
     </td>
   )
 }
+
+/**
+ * Memoized on its per-cell props. `cell` is a stable TanStack ref (regenerated only when the row's
+ * data or column config changes); every other prop is a primitive, or `undefined` for normal cells.
+ * So React's default shallow comparison skips re-renders during unrelated grid updates while still
+ * re-rendering on data, focus, range, pin, or group/tree-content changes. Context-driven values
+ * (drag preview, editing) still re-render cells when they change, as required. The cast restores the
+ * generic call signature that `memo()` erases.
+ */
+export const DataGridCell = memo(DataGridCellComponent) as typeof DataGridCellComponent

@@ -1,4 +1,4 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from 'react'
+import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import {
   commitSession,
   editorTypeFor,
@@ -9,6 +9,7 @@ import {
   startEdit,
   type DirtyCells,
   type EditMode,
+  type EditorType,
   type EditSession,
   type GridEditingApi,
 } from './editing'
@@ -109,23 +110,47 @@ export function useInlineEditing<TData>({
     [columns, columnsById, editSession, getRowId, onRowUpdate, refocusActiveCell, rows, setFocus, visibleColumnIds],
   )
 
-  const editingApi: GridEditingApi | undefined = editingEnabled
-    ? {
-        session: editSession,
-        isEditable: (columnId) => isColumnEditable(columnsById.get(columnId)),
-        isDirty: (rowId, columnId) => isDirtyCell(dirtyCells, rowId, columnId),
-        editorFor: (columnId) => {
-          const column = columnsById.get(columnId)
-          return column
-            ? { type: editorTypeFor(column), options: column.meta?.options }
-            : { type: 'text' }
-        },
-        start: startEditing,
-        setDraft: (columnId, value) => setEditSession((session) => (session ? setDraft(session, columnId, value) : session)),
-        commit: commitEditing,
-        cancel: cancelEditing,
-      }
-    : undefined
+  // The editing API is read from GridRuntimeContext by every cell, so its identity must be stable
+  // across renders that don't change editing state — otherwise the context value churns and the
+  // memoized cells can never skip. Each method is individually stable; the object only changes when
+  // the open session or the dirty-cell set changes (which legitimately must re-render cells).
+  const isEditable = useCallback(
+    (columnId: string) => isColumnEditable(columnsById.get(columnId)),
+    [columnsById],
+  )
+  const isDirty = useCallback(
+    (rowId: string, columnId: string) => isDirtyCell(dirtyCells, rowId, columnId),
+    [dirtyCells],
+  )
+  const editorFor = useCallback(
+    (columnId: string): { type: EditorType; options?: string[] } => {
+      const column = columnsById.get(columnId)
+      return column ? { type: editorTypeFor(column), options: column.meta?.options } : { type: 'text' }
+    },
+    [columnsById],
+  )
+  const setDraftValue = useCallback(
+    (columnId: string, value: string) =>
+      setEditSession((session) => (session ? setDraft(session, columnId, value) : session)),
+    [],
+  )
+
+  const editingApi = useMemo<GridEditingApi | undefined>(
+    () =>
+      editingEnabled
+        ? {
+            session: editSession,
+            isEditable,
+            isDirty,
+            editorFor,
+            start: startEditing,
+            setDraft: setDraftValue,
+            commit: commitEditing,
+            cancel: cancelEditing,
+          }
+        : undefined,
+    [editingEnabled, editSession, isEditable, isDirty, editorFor, startEditing, setDraftValue, commitEditing, cancelEditing],
+  )
 
   return { editingApi, markDirtyCells }
 }

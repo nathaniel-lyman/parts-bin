@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import { describe, expect, it, vi } from 'vitest'
 import { DataGridBody } from '../DataGridBody'
+import { GridRuntimeProvider } from '../GridRuntimeContext'
 
 interface Row { id: string; name: string }
 
@@ -14,7 +15,9 @@ function Harness({ onCellContextMenu }: { onCellContextMenu?: (rowId: string, co
   const table = useReactTable({ data, columns, getRowId: (row) => row.id, getCoreRowModel: getCoreRowModel() })
   return (
     <table>
-      <DataGridBody table={table} onCellContextMenu={onCellContextMenu} />
+      <GridRuntimeProvider value={{ enableRowSelection: false, visibleColumnIds: ['name'], onCellContextMenu }}>
+        <DataGridBody table={table} />
+      </GridRuntimeProvider>
     </table>
   )
 }

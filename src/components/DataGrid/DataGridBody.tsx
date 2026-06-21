@@ -2,37 +2,20 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Row, Table } from '@tanstack/react-table'
 import { Fragment, type ReactNode } from 'react'
 import { DataGridRow } from './DataGridRow'
-import type { ColumnDragPreviewState } from './dragPreview'
-import type { GridEditingApi } from './editing'
+import { useGridRuntime } from './GridRuntimeContext'
 import type { GridFocus } from './keyboard'
-import type { PinnedOffsets } from './selectors'
-import type { ColumnVirtualWindow } from './types'
-import type { CellRange } from './rangeSelection'
+import { cellRangeBounds, type CellRange } from './rangeSelection'
 
 interface Props<TData> {
   table: Table<TData>
-  enableRowSelection?: boolean
   rowSelection?: Record<string, boolean>
   rowHeight?: number
   enableVirtualization?: boolean
   scrollElement?: HTMLDivElement | null
   getRowLabel?: (row: TData, rowId: string) => string
-  onToggleRow?: (id: string) => void
-  onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
-  onCopyCell?: (rowId: string, colId: string) => void
-  dragPreview?: ColumnDragPreviewState | null
   focus?: GridFocus
-  columnWindow?: ColumnVirtualWindow
-  visibleColumnIds?: string[]
-  onFocusCell?: (row: number, col: number) => void
   range?: CellRange | null
-  onRangeStart?: (row: number, col: number) => void
-  onRangeEnter?: (row: number, col: number) => void
-  pinnedOffsets?: PinnedOffsets
-  editing?: GridEditingApi
-  renderAggregatedCell?: (columnId: string, leafRows: TData[]) => ReactNode
   renderDetailPanel?: (ctx: { row: TData; rowId: string }) => ReactNode
-  treeColumnId?: string
 }
 
 function defaultRowLabel<TData>(row: TData, rowId: string): string {
@@ -44,33 +27,22 @@ function defaultRowLabel<TData>(row: TData, rowId: string): string {
 
 export function DataGridBody<TData>({
   table,
-  enableRowSelection,
   rowSelection = {},
   rowHeight = 40,
   enableVirtualization = false,
   scrollElement,
   getRowLabel = defaultRowLabel,
-  onToggleRow,
-  onCellContextMenu,
-  onCopyCell,
-  dragPreview,
   focus,
-  columnWindow,
-  visibleColumnIds,
-  onFocusCell,
   range,
-  onRangeStart,
-  onRangeEnter,
-  pinnedOffsets,
-  editing,
-  renderAggregatedCell,
   renderDetailPanel,
-  treeColumnId,
 }: Props<TData>) {
+  const { enableRowSelection } = useGridRuntime()
   const topRows = table.getTopRows()
   const centerRows = table.getCenterRows()
   const bottomRows = table.getBottomRows()
   const colSpan = table.getVisibleLeafColumns().length + (enableRowSelection ? 1 : 0)
+  // Bounds of the active range, computed once; rows derive their own narrow column span from it.
+  const rangeBounds = range ? cellRangeBounds(range) : null
 
   // TanStack Virtual is the chosen windowing engine; React Compiler skips this hook.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -100,6 +72,8 @@ export function DataGridBody<TData>({
     const detail = renderDetailPanel && !row.getIsGrouped() && row.getIsExpanded()
       ? renderDetailPanel({ row: row.original, rowId: row.id })
       : null
+    const focusedColIndex = focus && focus.row === rowIndex ? focus.col : -1
+    const inRange = rangeBounds !== null && rowIndex >= rangeBounds.rowStart && rowIndex <= rangeBounds.rowEnd
     return (
       <Fragment key={`${pinned ?? 'row'}-${row.id}-fragment`}>
         <DataGridRow
@@ -107,24 +81,11 @@ export function DataGridBody<TData>({
           row={row}
           pinned={pinned}
           rowIndex={rowIndex}
-          enableRowSelection={enableRowSelection}
           selected={rowSelection[row.id] === true}
           rowLabel={rowLabel}
-          onToggleRow={onToggleRow}
-          onCellContextMenu={onCellContextMenu}
-          onCopyCell={onCopyCell}
-          dragPreview={dragPreview}
-          focus={focus}
-          columnWindow={columnWindow}
-          visibleColumnIds={visibleColumnIds}
-          onFocusCell={onFocusCell}
-          range={range}
-          onRangeStart={onRangeStart}
-          onRangeEnter={onRangeEnter}
-          pinnedOffsets={pinnedOffsets}
-          editing={editing}
-          renderAggregatedCell={renderAggregatedCell}
-          treeColumnId={treeColumnId}
+          focusedColIndex={focusedColIndex}
+          rangeColStart={inRange ? rangeBounds.colStart : -1}
+          rangeColEnd={inRange ? rangeBounds.colEnd : -1}
         />
         {detail && (
           <tr key={`${pinned ?? 'row'}-${row.id}-detail`} role="row" data-testid={`grid-row-${row.id}-detail`} data-row-detail="true">

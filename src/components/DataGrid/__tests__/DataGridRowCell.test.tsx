@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-table'
 import { describe, expect, it } from 'vitest'
 import { DataGridRow } from '../DataGridRow'
+import { GridRuntimeProvider } from '../GridRuntimeContext'
 
 interface Item { id: string; name: string; mrr: number }
 const data: Item[] = [{ id: '1', name: 'Acme', mrr: 9 }]
@@ -36,18 +37,22 @@ function PreviewHarness() {
   return (
     <table>
       <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <DataGridRow
-            key={row.id}
-            row={row}
-            dragPreview={{
+        <GridRuntimeProvider
+          value={{
+            enableRowSelection: false,
+            visibleColumnIds: ['name', 'mrr'],
+            dragPreview: {
               activeId: 'name',
               overId: 'mrr',
               projectedOrder: ['mrr', 'name'],
               offsets: { mrr: -140 },
-            }}
-          />
-        ))}
+            },
+          }}
+        >
+          {table.getRowModel().rows.map((row) => (
+            <DataGridRow key={row.id} row={row} />
+          ))}
+        </GridRuntimeProvider>
       </tbody>
     </table>
   )

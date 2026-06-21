@@ -1,62 +1,48 @@
 import { type Cell, type Row } from '@tanstack/react-table'
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { DataGridCell } from './DataGridCell'
 import { DataGridRowCheckbox } from './DataGridSelectionCell'
-import type { ColumnDragPreviewState } from './dragPreview'
-import type { GridEditingApi } from './editing'
-import type { GridFocus } from './keyboard'
-import type { PinnedOffsets } from './selectors'
-import type { ColumnVirtualWindow } from './types'
-import type { CellRange } from './rangeSelection'
-import { isCellInRange } from './rangeSelection'
+import { useGridRuntime } from './GridRuntimeContext'
 
-interface Props<TData> {
+export interface DataGridRowProps<TData> {
   row: Row<TData>
-  enableRowSelection?: boolean
-  selected?: boolean
   pinned?: 'top' | 'bottom'
-  rowLabel?: string
-  onToggleRow?: (id: string) => void
-  onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
-  onCopyCell?: (rowId: string, colId: string) => void
-  dragPreview?: ColumnDragPreviewState | null
+  /** Index used for focus/range coordinates and the cell `data-row-index`. */
   rowIndex?: number
-  focus?: GridFocus
-  columnWindow?: ColumnVirtualWindow
-  visibleColumnIds?: string[]
-  onFocusCell?: (row: number, col: number) => void
-  range?: CellRange | null
-  onRangeStart?: (row: number, col: number) => void
-  onRangeEnter?: (row: number, col: number) => void
-  pinnedOffsets?: PinnedOffsets
-  editing?: GridEditingApi
-  renderAggregatedCell?: (columnId: string, leafRows: TData[]) => ReactNode
-  treeColumnId?: string
+  selected?: boolean
+  rowLabel?: string
+  /** Column index focused in THIS row, or -1 when focus is elsewhere — kept as a primitive so the
+   *  memoized row only re-renders when its own focus state changes. */
+  focusedColIndex?: number
+  /** Column span of the active cell range intersected with this row, or -1/-1 when not in range. */
+  rangeColStart?: number
+  rangeColEnd?: number
 }
 
-export function DataGridRow<TData>({
+function DataGridRowComponent<TData>({
   row,
-  enableRowSelection,
-  selected = false,
   pinned,
-  rowLabel = row.id,
-  onToggleRow,
-  onCellContextMenu,
-  onCopyCell,
-  dragPreview,
   rowIndex = row.index,
-  focus,
-  columnWindow,
-  visibleColumnIds = row.getVisibleCells().map((cell) => cell.column.id),
-  onFocusCell,
-  range,
-  onRangeStart,
-  onRangeEnter,
-  pinnedOffsets,
-  editing,
-  renderAggregatedCell,
-  treeColumnId,
-}: Props<TData>) {
+  selected = false,
+  rowLabel = row.id,
+  focusedColIndex = -1,
+  rangeColStart = -1,
+  rangeColEnd = -1,
+}: DataGridRowProps<TData>) {
+  const {
+    enableRowSelection,
+    onToggleRow,
+    columnWindow,
+    pinnedOffsets,
+    renderAggregatedCell,
+    treeColumnId,
+    visibleColumnIds: runtimeColumnIds,
+  } = useGridRuntime()
+  // Context carries the grid-wide column order; fall back to the row's own cells so a row rendered
+  // without a provider (focused component tests) still resolves column indices.
+  const visibleColumnIds = runtimeColumnIds.length
+    ? runtimeColumnIds
+    : row.getVisibleCells().map((cell) => cell.column.id)
   const isGroupRow = row.getIsGrouped()
   const toggle = () => onToggleRow?.(row.id)
   const visibleColIndex = (columnId: string) => visibleColumnIds.indexOf(columnId)
@@ -125,11 +111,10 @@ export function DataGridRow<TData>({
       <DataGridCell
         key={cell.id}
         cell={cell}
-        dragPreview={dragPreview}
         rowIndex={rowIndex}
         colIndex={colIndex}
-        focused={focus?.row === rowIndex && focus.col === colIndex}
-        rangeSelected={isCellInRange(range ?? null, rowIndex, colIndex)}
+        focused={focusedColIndex >= 0 && focusedColIndex === colIndex}
+        rangeSelected={rangeColStart >= 0 && colIndex >= rangeColStart && colIndex <= rangeColEnd}
         pinnedSide={pinnedSide}
         pinnedOffset={
           pinnedSide === 'left'
@@ -138,22 +123,9 @@ export function DataGridRow<TData>({
               ? pinnedOffsets?.right[cell.column.id] ?? 0
               : 0
         }
-        onFocusCell={onFocusCell}
-        onRangeStart={onRangeStart}
-        onRangeEnter={onRangeEnter}
-        editing={isGroupRow ? undefined : editing}
         groupContent={isGroupedCell ? groupCellContent(cell) : undefined}
         aggregatedContent={isAggregatedCell ? aggregatedCellContent(cell) : undefined}
         treePrefix={treePrefix}
-        onCopy={onCopyCell && !isGroupRow ? () => onCopyCell(row.id, cell.column.id) : undefined}
-        onContextMenu={
-          onCellContextMenu && !isGroupRow
-            ? (event) => {
-                event.preventDefault()
-                onCellContextMenu(row.id, cell.column.id, event.clientX, event.clientY)
-              }
-            : undefined
-        }
       />
     )
   }
@@ -215,3 +187,12 @@ export function DataGridRow<TData>({
     </tr>
   )
 }
+
+/**
+ * Memoized on its per-row props. `row` is a stable TanStack ref (regenerated only when that row's
+ * data changes); the rest are primitives (`selected`, `rowIndex`, the focus/range column indices,
+ * `rowLabel`). So a render that only changes another row's state — or grid-wide state carried by
+ * GridRuntimeContext — leaves this row's props untouched and the default shallow comparison skips
+ * it. The cast restores the generic call signature that `memo()` erases.
+ */
+export const DataGridRow = memo(DataGridRowComponent) as typeof DataGridRowComponent

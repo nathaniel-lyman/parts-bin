@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
 import './columnMeta'
 import {
   closestCenter,
@@ -55,6 +55,7 @@ import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
 import type { EditMode } from './editing'
 import { useInlineEditing } from './useInlineEditing'
 import { DataGridAggregationFooter } from './DataGridAggregationFooter'
+import { GridRuntimeProvider, type GridRuntime } from './GridRuntimeContext'
 import type { ColumnVirtualWindow, DataGridColumn, DataGridNumberFormat, DataGridState, GridAction } from './types'
 
 export interface DataGridProps<TData> {
@@ -237,10 +238,19 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const paginationEnabled = enablePagination || manualPagination
   const savedViewsEnabled = !isControlled && (enableSavedViews || persistenceKey !== undefined)
 
-  const dispatch = (action: GridAction) => {
-    if (isControlled) props.onStateChange!(gridReducer(state, action, columns))
-    else view.dispatch(action)
-  }
+  // Stable dispatch identity. Memoized Row/Cell read their action handlers from a context value
+  // whose stability depends on these callbacks not changing each render; an unstable `dispatch`
+  // would churn that context and defeat the memoization. The implementation reads the latest
+  // state/columns/controlled props through a ref written in a layout effect (never during render,
+  // for StrictMode/concurrent safety) so the returned reference is constant for the grid's lifetime.
+  const dispatchImplRef = useRef<(action: GridAction) => void>(() => {})
+  useLayoutEffect(() => {
+    dispatchImplRef.current = (action: GridAction) => {
+      if (isControlled) props.onStateChange!(gridReducer(state, action, columns))
+      else view.dispatch(action)
+    }
+  })
+  const dispatch = useCallback((action: GridAction) => dispatchImplRef.current(action), [])
 
   useGridPersistence(state, persistenceEnabled, persistenceKey)
 
@@ -359,16 +369,24 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     ...(paginationEnabled && !manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
   })
 
-  const rowCount = table.getRowModel().rows.length
   const visibleRows = table.getRowModel().rows
+  const rowCount = visibleRows.length
+  const filteredRows = table.getFilteredRowModel().rows
   const visibleLeafColumns = table.getVisibleLeafColumns()
   const centerLeafColumns = table.getCenterVisibleLeafColumns()
   // Group rows have no `original`; selection/copy/context must only ever see leaf rows.
-  const visibleLeafRows = visibleRows.filter((row) => !row.getIsGrouped())
-  const visibleIds = visibleLeafRows.map((row) => row.id)
-  const visibleData = visibleLeafRows.map((row) => row.original)
-  const exportData = (manualFiltering ? table.getRowModel().rows : table.getFilteredRowModel().rows).map((row) => row.original)
-  const footerTotalRows = manualPagination ? (totalRowCount ?? rowCount) : table.getFilteredRowModel().rows.length
+  // These derive off TanStack's already-memoized row model / leaf-column arrays, so they stay
+  // referentially stable across renders that don't touch the data (e.g. a selection toggle).
+  // That stability is the linchpin: it keeps the clipboard handlers and the GridRuntimeContext
+  // value from churning every render, which is what lets the memoized Row/Cell actually skip.
+  const visibleLeafRows = useMemo(() => visibleRows.filter((row) => !row.getIsGrouped()), [visibleRows])
+  const visibleIds = useMemo(() => visibleLeafRows.map((row) => row.id), [visibleLeafRows])
+  const visibleData = useMemo(() => visibleLeafRows.map((row) => row.original), [visibleLeafRows])
+  const exportData = useMemo(
+    () => (manualFiltering ? visibleRows : filteredRows).map((row) => row.original),
+    [manualFiltering, visibleRows, filteredRows],
+  )
+  const footerTotalRows = manualPagination ? (totalRowCount ?? rowCount) : filteredRows.length
   const footerPageCount = manualPagination
     ? Math.max(1, Math.ceil(footerTotalRows / state.pagination.pageSize))
     : Math.max(1, table.getPageCount())
@@ -384,10 +402,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     && footerTotalRows > visibleIds.length,
   )
   const selectionDisplayCount = matchingSelectionActive ? footerTotalRows : selCount
-  const visibleColumnIds = visibleLeafColumns.map((column) => column.id)
-  const visibleMovableColumnIds = visibleColumnIds.filter(isMovableColumnId)
-  const columnWidthMap = Object.fromEntries(visibleLeafColumns.map((column) => [column.id, state.columnSizing[column.id] ?? column.getSize()]))
-  const pinnedGroups = pinnedLeafGroups(visibleColumnIds, state.columnPinning)
+  const visibleColumnIds = useMemo(() => visibleLeafColumns.map((column) => column.id), [visibleLeafColumns])
+  const visibleMovableColumnIds = useMemo(() => visibleColumnIds.filter(isMovableColumnId), [visibleColumnIds])
+  const columnWidthMap = useMemo(
+    () => Object.fromEntries(visibleLeafColumns.map((column) => [column.id, state.columnSizing[column.id] ?? column.getSize()])),
+    [visibleLeafColumns, state.columnSizing],
+  )
+  const pinnedGroups = useMemo(() => pinnedLeafGroups(visibleColumnIds, state.columnPinning), [visibleColumnIds, state.columnPinning])
   const rowHeight = rowHeightForDensity(state.density)
   // Sticky offsets must come from RENDERED widths: the w-full table stretches columns past
   // their logical getSize(), and the selection column has no fixed width — so we measure.
@@ -462,9 +483,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       dispatch({ type: 'CLEAR_SELECTION' })
       onClearAllMatching?.()
     },
-    // dispatch is stable for our purposes; recreating per render is harmless here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onClearAllMatching],
+    [dispatch, onClearAllMatching],
   )
   const contextSnapshot = useMemo<DataGridContextSnapshot<TData>>(() => ({
     totalRowCount: footerTotalRows,
@@ -547,9 +566,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       const width = fitColumnWidth(widths, { min: column?.minWidth, max: column?.maxWidth })
       dispatch({ type: 'RESIZE_COLUMN', id: columnId, width })
     },
-    // dispatch is stable for our purposes; recreating per render is harmless here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [scrollElement, columns],
+    [dispatch, scrollElement, columns],
   )
 
   const columnsById = useMemo(() => new Map(columns.map((column) => [column.id, column])), [columns])
@@ -568,10 +585,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   })
 
   const renderAggregatedCell = useCallback(
-    (columnId: string, leafRows: TData[]) => {
+    (columnId: string, leafRows: unknown[]) => {
       const column = columnsById.get(columnId)
       if (!column?.aggregate) return null
-      const value = resolveAggregate(column, leafRows)
+      const value = resolveAggregate(column, leafRows as TData[])
       if (column.aggregatedCell) return column.aggregatedCell({ value })
       const formatted = isNumericColumnType(column.type)
         ? formatDataGridNumber(value, column.type, column.numberFormat, state.numberFormats[column.id])
@@ -581,8 +598,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     [columnsById, state.numberFormats],
   )
 
-  const hasAggregates = columns.some((column) => column.aggregate !== undefined)
-  const footerAggregates = hasAggregates ? computeAggregates(columns, exportData, state.numberFormats) : {}
+  const hasAggregates = useMemo(() => columns.some((column) => column.aggregate !== undefined), [columns])
+  const footerAggregates = useMemo(
+    () => (hasAggregates ? computeAggregates(columns, exportData, state.numberFormats) : {}),
+    [hasAggregates, columns, exportData, state.numberFormats],
+  )
 
   const {
     rootRef,
@@ -617,6 +637,54 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     onExportAllCsv,
     onExportAllXlsx,
   })
+
+  // Identity-constant handlers handed to the memoized render tree. Keeping these stable (alongside
+  // the memoized derivations above) is what lets a selection toggle / data edit re-render only the
+  // affected Row/Cell instead of the whole body.
+  const handleToggleRow = useCallback((id: string) => dispatch({ type: 'TOGGLE_ROW', id }), [dispatch])
+  const handleCellContextMenu = useCallback(
+    (rowId: string, colId: string, x: number, y: number) => setMenu({ rowId, colId, x, y }),
+    [],
+  )
+  const handleFocusCell = useCallback((row: number, col: number) => setFocus({ row, col }), [setFocus])
+
+  // The single runtime value shared by every memoized row/cell. Its members are all stabilized
+  // (memoized derivations + identity-constant handlers), so this object only changes when something
+  // grid-wide actually changes — drag, edit session, pinned offsets, column window. A render driven
+  // purely by per-row state (selection toggle, one row's data) leaves it untouched, which is exactly
+  // what lets the memoized children skip.
+  const gridRuntime = useMemo<GridRuntime>(() => ({
+    enableRowSelection: Boolean(enableRowSelection),
+    visibleColumnIds,
+    treeColumnId,
+    dragPreview,
+    editing: editingApi,
+    pinnedOffsets: pinnedColumnOffsets,
+    columnWindow,
+    onToggleRow: handleToggleRow,
+    onCellContextMenu: handleCellContextMenu,
+    onCopyCell: copyCell,
+    onFocusCell: handleFocusCell,
+    onRangeStart: beginCellRange,
+    onRangeEnter: extendCellRange,
+    renderAggregatedCell: groupingActive ? renderAggregatedCell : undefined,
+  }), [
+    enableRowSelection,
+    visibleColumnIds,
+    treeColumnId,
+    dragPreview,
+    editingApi,
+    pinnedColumnOffsets,
+    columnWindow,
+    handleToggleRow,
+    handleCellContextMenu,
+    copyCell,
+    handleFocusCell,
+    beginCellRange,
+    extendCellRange,
+    groupingActive,
+    renderAggregatedCell,
+  ])
 
   const onGridKeyDown = (event: ReactKeyboardEvent<HTMLTableElement>) => {
     const target = event.target
@@ -785,70 +853,58 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           <table
             className="w-full border-collapse"
             role="grid"
-            aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : table.getFilteredRowModel().rows.length}
+            aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : filteredRows.length}
             aria-colcount={visibleLeafColumns.length}
             onKeyDown={onGridKeyDown}
           >
-            <DataGridHeader
-              table={table}
-              dispatch={dispatch}
-              columnSizing={state.columnSizing}
-              columns={columns}
-              columnPinning={state.columnPinning}
-              columnFilters={state.columnFilters}
-              enableHeaderFilters={Boolean(enableHeaderFilters && headerFiltersOpen)}
-              enableRowSelection={enableRowSelection}
-              isServerMode={isServerMode}
-              selectAll={allState}
-              onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
-              dndProvider={false}
-              dragPreview={dragPreview}
-              focus={focus}
-              columnWindow={columnWindow}
-              visibleColumnIds={visibleColumnIds}
-              onFocusCell={(row, col) => setFocus({ row, col })}
-              onAutofitColumn={autofitColumn}
-              pinnedOffsets={pinnedColumnOffsets}
-              enableGrouping={groupingActive}
-              grouping={state.grouping}
-              numberFormats={state.numberFormats}
-            />
-            {!loading && error === undefined && rowCount > 0 && (
-              <DataGridBody
+            <GridRuntimeProvider value={gridRuntime}>
+              <DataGridHeader
                 table={table}
+                dispatch={dispatch}
+                columnSizing={state.columnSizing}
+                columns={columns}
+                columnPinning={state.columnPinning}
+                columnFilters={state.columnFilters}
+                enableHeaderFilters={Boolean(enableHeaderFilters && headerFiltersOpen)}
                 enableRowSelection={enableRowSelection}
-                rowSelection={state.rowSelection}
-                rowHeight={rowHeight}
-                scrollElement={scrollElement}
-                enableVirtualization={rowCount > 100 && !detailPanelActive}
-                onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
-                onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
-                onCopyCell={copyCell}
+                isServerMode={isServerMode}
+                selectAll={allState}
+                onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
+                dndProvider={false}
                 dragPreview={dragPreview}
                 focus={focus}
                 columnWindow={columnWindow}
                 visibleColumnIds={visibleColumnIds}
-                onFocusCell={(row, col) => setFocus({ row, col })}
-                range={cellRange}
-                onRangeStart={beginCellRange}
-                onRangeEnter={extendCellRange}
+                onFocusCell={handleFocusCell}
+                onAutofitColumn={autofitColumn}
                 pinnedOffsets={pinnedColumnOffsets}
-                editing={editingApi}
-                renderAggregatedCell={groupingActive ? renderAggregatedCell : undefined}
-                renderDetailPanel={detailPanelActive ? renderDetailPanel : undefined}
-                treeColumnId={treeColumnId}
+                enableGrouping={groupingActive}
+                grouping={state.grouping}
+                numberFormats={state.numberFormats}
               />
-            )}
-            {hasAggregates && !loading && error === undefined && rowCount > 0 && (
-              <DataGridAggregationFooter
-                table={table}
-                aggregates={footerAggregates}
-                rowCount={footerTotalRows}
-                enableRowSelection={enableRowSelection}
-                columnWindow={columnWindow}
-                pinnedOffsets={pinnedColumnOffsets}
-              />
-            )}
+              {!loading && error === undefined && rowCount > 0 && (
+                <DataGridBody
+                  table={table}
+                  rowSelection={state.rowSelection}
+                  rowHeight={rowHeight}
+                  scrollElement={scrollElement}
+                  enableVirtualization={rowCount > 100 && !detailPanelActive}
+                  focus={focus}
+                  range={cellRange}
+                  renderDetailPanel={detailPanelActive ? renderDetailPanel : undefined}
+                />
+              )}
+              {hasAggregates && !loading && error === undefined && rowCount > 0 && (
+                <DataGridAggregationFooter
+                  table={table}
+                  aggregates={footerAggregates}
+                  rowCount={footerTotalRows}
+                  enableRowSelection={enableRowSelection}
+                  columnWindow={columnWindow}
+                  pinnedOffsets={pinnedColumnOffsets}
+                />
+              )}
+            </GridRuntimeProvider>
           </table>
         </div>
         <DragOverlay dropAnimation={null}>
