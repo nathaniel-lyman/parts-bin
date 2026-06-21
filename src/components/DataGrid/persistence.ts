@@ -4,7 +4,8 @@ import { DEFAULT_STATE, hydrate } from './state'
 import type { Density, LedgerGridState } from './types'
 
 export const GRID_VIEW_VERSION = 1 as const
-export const GRID_STORAGE_KEY = 'ledger.accounts.grid'
+export const GRID_STORAGE_KEY = 'parts-bin.datagrid'
+export const LEGACY_GRID_STORAGE_KEY = 'ledger.accounts.grid'
 
 export interface PersistedGridView {
   version: typeof GRID_VIEW_VERSION

@@ -14,8 +14,6 @@ export const DEMO_SUGGESTIONS = [
 
 export type AssistantRouteKind =
   | 'accounts'
-  | 'customer-success'
-  | 'recommendation-review'
   | 'components'
   | 'composer'
   | 'settings'
@@ -64,8 +62,6 @@ export interface AssistantScreenContext {
   dashboardEvidence?: AssistantDashboardEvidence
 }
 
-export type RecommendationFeedbackAction = 'accept' | 'modify' | 'reject' | 'flag'
-
 export interface AssistantActionResult {
   title: string
   body: string
@@ -73,8 +69,6 @@ export interface AssistantActionResult {
 
 export interface AssistantActions {
   createSavedView?: (name: string) => AssistantActionResult
-  draftTouchpointNote?: () => AssistantActionResult
-  fillRecommendationFeedback?: (action: RecommendationFeedbackAction) => AssistantActionResult
 }
 
 export interface DemoAdapterOptions {
@@ -342,34 +336,6 @@ function createSavedViewAnswer(
   return actionAnswer(actions.createSavedView(extractNamedView(text) ?? savedViewName(context)))
 }
 
-function touchpointAnswer(actions: AssistantActions | undefined): string {
-  if (!actions?.draftTouchpointNote) {
-    return [
-      'Draft touchpoint note:',
-      '',
-      '**Title:** Executive sponsor follow-up',
-      '',
-      '**Notes:** Confirm the next milestone, decision owner, and renewal risk before the weekly review.',
-    ].join('\n')
-  }
-  return actionAnswer(actions.draftTouchpointNote())
-}
-
-function recommendationAction(text: string): RecommendationFeedbackAction {
-  const q = text.toLowerCase()
-  if (/\baccept/.test(q)) return 'accept'
-  if (/\breject/.test(q)) return 'reject'
-  if (/\bflag/.test(q)) return 'flag'
-  return 'modify'
-}
-
-function recommendationFeedbackAnswer(text: string, actions: AssistantActions | undefined): string {
-  if (!actions?.fillRecommendationFeedback) {
-    return 'Open the recommendation review template and I can prepare a feedback drawer for the selected recommendation.'
-  }
-  return actionAnswer(actions.fillRecommendationFeedback(recommendationAction(text)))
-}
-
 export function contextualAssistantSuggestions(context: AssistantScreenContext | undefined): string[] {
   if (!context) return DEMO_SUGGESTIONS
   if (context.routeKind === 'accounts') {
@@ -379,22 +345,6 @@ export function contextualAssistantSuggestions(context: AssistantScreenContext |
       'Create a saved view for this screen',
       'Explain this signed movement',
       'Which rows need review?',
-    ]
-  }
-  if (context.routeKind === 'customer-success') {
-    return [
-      'Draft this touchpoint note',
-      'Summarize the current screen',
-      'Which rows need review?',
-      'Create a saved view for this screen',
-    ]
-  }
-  if (context.routeKind === 'recommendation-review') {
-    return [
-      'Fill recommendation feedback',
-      'Summarize the current screen',
-      'How do I integrate a real model?',
-      'Explain this signed movement',
     ]
   }
   return [
@@ -455,8 +405,6 @@ function route(
   const q = text.toLowerCase()
   if (/\b(saved view|view)\b/.test(q) && /\b(create|save|make)\b/.test(q)) return createSavedViewAnswer(text, context, actions)
   if (/\bselected\b/.test(q) && /\b(account|row|summar)/.test(q)) return selectedAccountsAnswer(context)
-  if (/\btouchpoint\b/.test(q) || /\bdraft\b.*\bnote\b/.test(q)) return touchpointAnswer(actions)
-  if (/\bfeedback\b/.test(q) || /\brecommendation\b/.test(q)) return recommendationFeedbackAnswer(text, actions)
   if (/\b(current screen|screen context|where am i|summarize the current screen)\b/.test(q)) return screenAnswer(context)
   if (/\bmovement\b/.test(q) || /\bbridge\b/.test(q)) return revenueMovementAnswer(accounts, context)
   if (/\bmrr/.test(q) || /\brevenue/.test(q) || /\bvalue\b/.test(q)) return mrrAnswer(accounts, context)

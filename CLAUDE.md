@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Default to direct implementation — no TDD, no subagents, no multi-agent workflows unless I explicitly ask.
 - You may recommend a heavier approach (e.g. "this might benefit from TDD / a workflow") but wait for my confirmation before proceeding.
+- Default to scoped verification. If I ask for one component or one narrow UI fix, test that component or directly affected surface first; do not run the whole repo gauntlet unless the change is cross-cutting, public API/package-related, risky, or I ask for broad verification.
 
 ## What this is
 
@@ -76,6 +77,15 @@ data/accounts.ts ──> useAccounts ──> selectors/metrics ──> KpiCard �
 
 ## When changing behavior
 
-`demo.html` is the parity target and `THEME-SPEC.md` §6 the visual spec — consult both before altering KPIs, the table, charts, or component styling. Keep new visual constants in `src/theme/` and run `npm run lint:theme` + `npm run build` + `npm test`.
+`demo.html` is the parity target and `THEME-SPEC.md` §6 the visual spec — consult both before altering KPIs, the table, charts, or component styling.
+
+Use the smallest meaningful verification set:
+
+- Single component or narrow UI fix: run the colocated component test, plus a focused browser check only when rendering/layout/interaction changed.
+- Catalog or barrel change: run `npx vitest run src/components/catalog.test.ts src/components/barrels.test.ts`, and `npm run build` if exported props or public types changed.
+- Styling/theme-token change: run the affected component test plus `npm run lint:theme`; add a focused browser check for visible changes.
+- Shared hooks/selectors/DataGrid infrastructure/package work: run the directly affected tests first, then broaden to `npm test`, `npm run build`, `npm run lint`, or `npm run test:e2e` only when the blast radius justifies it.
+
+Keep new visual constants in `src/theme/`. Do not claim unrun gates passed; report the focused checks actually run.
 
 Procedural workflows live in `skills/<name>/SKILL.md` — follow `add-component` for component-library work and `verify-changes` before claiming done. `swap-data-domain` is an optional example-dashboard workflow, not the default repo path.

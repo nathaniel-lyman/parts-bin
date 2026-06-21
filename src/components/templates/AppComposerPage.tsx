@@ -23,7 +23,7 @@ import { navigate } from '../../lib/routes'
 
 type StepId = 'use-case' | 'layout' | 'theme' | 'data' | 'generate'
 type UseCaseId = 'project-ops' | 'customer-success' | 'review-queue' | 'admin-settings'
-type LayoutId = 'metrics-datagrid' | 'customer-success-workspace' | 'review-queue-console' | 'settings-workspace'
+type LayoutId = 'metrics-datagrid' | 'settings-workspace'
 type DensityChoice = 'standard' | 'compact' | 'comfortable'
 type TokenTweak = 'default' | 'compact-radius' | 'risk-forward' | 'quiet-admin'
 
@@ -60,7 +60,7 @@ interface LayoutConfig {
   id: LayoutId
   label: string
   description: string
-  templateImport?: 'CustomerSuccessTemplate' | 'RecommendationReviewTemplate' | 'SettingsPage'
+  templateImport?: 'SettingsPage'
   componentImports: string[]
   previewMode: 'dashboard' | 'workspace' | 'queue' | 'settings'
 }
@@ -97,7 +97,7 @@ const useCases: UseCaseConfig[] = [
     id: 'customer-success',
     label: 'Customer success',
     description: 'Portfolio health, priority queue, selected account detail, and touchpoint capture.',
-    defaultLayoutId: 'customer-success-workspace',
+    defaultLayoutId: 'metrics-datagrid',
     routeVerb: 'Renew',
     data: {
       entitySingular: 'Customer',
@@ -114,7 +114,7 @@ const useCases: UseCaseConfig[] = [
     id: 'review-queue',
     label: 'Review queue',
     description: 'Ranked recommendations, queue filters, decision actions, and audit history.',
-    defaultLayoutId: 'review-queue-console',
+    defaultLayoutId: 'metrics-datagrid',
     routeVerb: 'Review',
     data: {
       entitySingular: 'Recommendation',
@@ -153,22 +153,6 @@ const layouts: LayoutConfig[] = [
     description: 'Page header, KPI row, charts, dense table, export, pagination, and row actions.',
     componentImports: ['PageHeader', 'KpiSummaryRow', 'KpiCard', 'DataGrid', 'StatusBadge'],
     previewMode: 'dashboard',
-  },
-  {
-    id: 'customer-success-workspace',
-    label: 'Customer workspace',
-    description: 'Full routed customer operations screen with queue, detail panel, grid, and notes.',
-    templateImport: 'CustomerSuccessTemplate',
-    componentImports: ['CustomerSuccessTemplate'],
-    previewMode: 'workspace',
-  },
-  {
-    id: 'review-queue-console',
-    label: 'Queue and detail console',
-    description: 'Full routed review console with segmented filters, decision actions, and feedback drawer.',
-    templateImport: 'RecommendationReviewTemplate',
-    componentImports: ['RecommendationReviewTemplate'],
-    previewMode: 'queue',
   },
   {
     id: 'settings-workspace',
@@ -299,33 +283,6 @@ function importSnippet(layout: LayoutConfig) {
 function routeSnippet(config: ComposerConfig, layout: LayoutConfig) {
   const routePath = normalizeRoutePath(config.data.routePath)
   const routeFlag = `${toCamelCase(config.data.entityPlural, 'records')}Active`
-
-  if (layout.templateImport === 'CustomerSuccessTemplate') {
-    return `const ${routeFlag} = pathname === '${routePath}'
-
-{${routeFlag} ? (
-  <CustomerSuccessTemplate
-    globalSearch={globalSearch}
-    atRiskOnly={atRiskOnly}
-    timePeriodLabel={dashboardPeriodLabel}
-  />
-) : (
-  fallback
-)}`
-  }
-
-  if (layout.templateImport === 'RecommendationReviewTemplate') {
-    return `const ${routeFlag} = pathname === '${routePath}'
-
-{${routeFlag} ? (
-  <RecommendationReviewTemplate
-    globalSearch={globalSearch}
-    timePeriodLabel={dashboardPeriodLabel}
-  />
-) : (
-  fallback
-)}`
-  }
 
   if (layout.templateImport === 'SettingsPage') {
     return `const ${routeFlag} = pathname === '${routePath}'

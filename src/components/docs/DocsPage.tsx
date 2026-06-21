@@ -30,8 +30,8 @@ const copyChecklist: Array<[string, string]> = [
   ['Primitives', 'Copy src/components/ui/ and import from the ./ui barrel (Button, Field, Drawer, IconButton, InlineAlert, SegmentedControl, …).'],
   ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
   ['Charts', 'Copy src/components/charts/ for token-styled Recharts wrappers and ChartCard examples; import from the ./charts barrel.'],
-  ['Maps & DataGrid', 'Copy src/components/maps/ and src/components/DataGrid/ for geographic views and the headless-table-backed grid.'],
-  ['Examples', 'Use /, /compose, and /templates/* as examples that import from the design system, not as the public component API.'],
+  ['Maps & DataGrid', 'Copy src/components/maps/ for geographic views. For library builds, import the grid from parts-bin/datagrid and provide your own rows, columns, and getRowId.'],
+  ['Examples', 'Use /, /compose, /login, and /settings as examples that import from the design system, not as the public component API.'],
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
 ]
 
@@ -71,24 +71,24 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
           <ComponentGallery onSelect={setSelected} externalQuery={globalSearch} />
         </Card>
 
-        <Card title="Use parts-bin in your app" description="Copy the design-system source first. The assembly demo, composer, and templates are example screens that prove the parts work together.">
+        <Card title="Use parts-bin in your app" description="Copy the design-system source first. The assembly demo, composer, sign-in, and settings screens prove the parts work together.">
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
                 <h2 className="m-0 text-[15px] font-semibold text-ink">Examples are secondary</h2>
-                <p className="m-0 text-[13px] text-muted">Use the assembly demo, composer, and templates as reference implementations after choosing components from the catalog.</p>
+                <p className="m-0 text-[13px] text-muted">Use the assembly demo, composer, sign-in, and settings screens as reference implementations after choosing components from the catalog.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="primary" onClick={() => { navigate('/examples/dashboard') }}>Assembly demo</Button>
                 <Button variant="secondary" onClick={() => { navigate('/compose') }}>App composer</Button>
-                <Button variant="secondary" onClick={() => { navigate('/templates/customer-success') }}>Customer success</Button>
-                <Button variant="secondary" onClick={() => { navigate('/templates/recommendation-review') }}>Recommendation review</Button>
+                <Button variant="secondary" onClick={() => { navigate('/login') }}>Sign in</Button>
+                <Button variant="secondary" onClick={() => { navigate('/settings') }}>Settings</Button>
               </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
               <Snippet code={usageSnippet} />
               <div className="grid content-start gap-3 text-[13px] text-muted">
-                <p className="m-0">Public API: import from the barrels <code className="num text-ink">src/components/ui</code>, <code className="num text-ink">shell</code>, <code className="num text-ink">charts</code>, and <code className="num text-ink">DataGrid</code> — or the aggregate <code className="num text-ink">src/components</code>.</p>
+                <p className="m-0">Public API: import from the barrels <code className="num text-ink">src/components/ui</code>, <code className="num text-ink">shell</code>, and <code className="num text-ink">charts</code> — or the aggregate <code className="num text-ink">src/components</code>. For packaged grid usage, use <code className="num text-ink">parts-bin/datagrid</code>.</p>
                 <p className="m-0">Theme boundary: style with token utilities like <code className="num text-ink">bg-surface</code>, <code className="num text-ink">text-ink</code>, and <code className="num text-ink">border-line</code>.</p>
                 <p className="m-0">Reach for the right component: each card below links a near-twin disambiguation so you never reinvent or misuse a primitive.</p>
               </div>

@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { seedAccounts } from '../../../data/accounts'
 import { accountGridColumns } from '../../accountGridColumns'
-import { GRID_STORAGE_KEY, GRID_VIEW_VERSION } from '../persistence'
+import { GRID_STORAGE_KEY, GRID_VIEW_VERSION, LEGACY_GRID_STORAGE_KEY } from '../persistence'
 import { DataGrid } from '../DataGrid'
 
 describe('DataGrid persistence integration', () => {
@@ -12,7 +12,7 @@ describe('DataGrid persistence integration', () => {
 
   it('boots from ledger.accounts.grid when persistenceKey is provided', () => {
     localStorage.setItem(
-      GRID_STORAGE_KEY,
+      LEGACY_GRID_STORAGE_KEY,
       JSON.stringify({ version: GRID_VIEW_VERSION, columnVisibility: { arr: true } }),
     )
 
@@ -50,12 +50,12 @@ describe('DataGrid persistence integration', () => {
         columns={accountGridColumns({ onEdit: vi.fn(), onDelete: vi.fn() })}
         getRowId={(row) => row.id}
         initialState={{ density: 'comfortable' }}
-        persistenceKey="ledger.accounts.grid"
+        persistenceKey={LEGACY_GRID_STORAGE_KEY}
       />,
     )
 
     act(() => vi.advanceTimersByTime(500))
-    const saved = JSON.parse(localStorage.getItem(GRID_STORAGE_KEY)!)
+    const saved = JSON.parse(localStorage.getItem(LEGACY_GRID_STORAGE_KEY)!)
     expect(saved.version).toBe(GRID_VIEW_VERSION)
     expect(saved.density).toBe('comfortable')
   })
@@ -74,6 +74,7 @@ describe('DataGrid persistence integration', () => {
 
     act(() => vi.advanceTimersByTime(500))
     expect(localStorage.getItem(GRID_STORAGE_KEY)).toBeNull()
+    expect(localStorage.getItem(LEGACY_GRID_STORAGE_KEY)).toBeNull()
     const saved = JSON.parse(localStorage.getItem('workspace.grid')!)
     expect(saved.version).toBe(GRID_VIEW_VERSION)
     expect(saved.density).toBe('comfortable')

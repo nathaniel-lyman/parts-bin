@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { DENSITIES } from '../types'
 import type {
   Density,
+  DataGridCellContext,
+  DataGridColumn,
+  DataGridState,
   GridAction,
   GridRuntimeStatus,
   LedgerCellContext,
@@ -9,6 +12,22 @@ import type {
   LedgerGridState,
 } from '../types'
 import type { Account } from '../../../data/types'
+
+const BASE_STATE: DataGridState = {
+  sorting: [{ id: 'mrr', desc: true }],
+  columnFilters: [],
+  globalFilter: '',
+  columnVisibility: { account: true },
+  columnOrder: ['account', 'actions'],
+  columnSizing: {},
+  columnPinning: { left: [], right: ['actions'] },
+  rowSelection: {},
+  rowPinning: { top: [], bottom: [] },
+  pagination: { pageIndex: 0, pageSize: 25 },
+  density: 'compact',
+  grouping: [],
+  expanded: {},
+}
 
 describe('grid types', () => {
   it('DENSITIES is the canonical ordered runtime list', () => {
@@ -20,35 +39,31 @@ describe('grid types', () => {
     expect(density).toBe('compact')
   })
 
-  it('LedgerGridColumn<Account> accepts a parity column shape (compile check)', () => {
-    const column: LedgerGridColumn<Account, number> = {
+  it('DataGridColumn<Account> accepts a parity column shape (compile check)', () => {
+    const column: DataGridColumn<Account, number> = {
       id: 'mrr',
       accessorKey: 'mrr',
       header: 'MRR',
       align: 'right',
       type: 'currency',
-      cell: (ctx: LedgerCellContext<Account, number>) => String(ctx.value),
+      cell: (ctx: DataGridCellContext<Account, number>) => String(ctx.value),
     }
     expect(column.id).toBe('mrr')
   })
 
-  it('LedgerGridState holds Community+Pro slices only (compile check)', () => {
-    const state: LedgerGridState = {
-      sorting: [{ id: 'mrr', desc: true }],
-      columnFilters: [],
-      globalFilter: '',
-      columnVisibility: { account: true },
-      columnOrder: ['account', 'actions'],
-      columnSizing: {},
-      columnPinning: { left: [], right: ['actions'] },
-      rowSelection: {},
-      rowPinning: { top: [], bottom: [] },
-      pagination: { pageIndex: 0, pageSize: 25 },
-      density: 'compact',
-      grouping: [],
-      expanded: {},
+  it('DataGridState holds Community+Pro slices only (compile check)', () => {
+    expect(BASE_STATE.density).toBe('compact')
+  })
+
+  it('keeps Ledger* aliases assignable for compatibility', () => {
+    const column: LedgerGridColumn<Account, number> = {
+      id: 'mrr',
+      accessorKey: 'mrr',
+      header: 'MRR',
+      cell: (ctx: LedgerCellContext<Account, number>) => String(ctx.value),
     }
-    expect(state.density).toBe('compact')
+    const state: LedgerGridState = { ...BASE_STATE, columnOrder: [column.id] }
+    expect(state.columnOrder).toEqual(['mrr'])
   })
 
   it('GridAction discriminated union covers the Phase 1 slices (compile check)', () => {

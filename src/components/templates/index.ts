@@ -1,5 +1,3 @@
-export * from './CustomerSuccessTemplate'
-export * from './RecommendationReviewTemplate'
 export * from './LoginPage'
 export * from './SettingsPage'
 export * from './AppComposerPage'

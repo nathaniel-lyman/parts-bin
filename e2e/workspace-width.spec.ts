@@ -2,8 +2,9 @@ import { expect, test } from '@playwright/test'
 
 const workspaceRoutes = [
   '/',
-  '/templates/customer-success',
-  '/templates/recommendation-review',
+  '/examples/dashboard',
+  '/compose',
+  '/settings',
 ]
 
 test.describe('workspace width', () => {
@@ -33,16 +34,4 @@ test.describe('workspace width', () => {
     })
   }
 
-  test('recommendation detail metrics stay inside the fixed detail rail', async ({ page }) => {
-    await page.setViewportSize({ width: 1470, height: 622 })
-    await page.goto('/templates/recommendation-review')
-    const metrics = page.getByTestId('recommendation-detail-metrics')
-    await expect(metrics).toBeVisible()
-
-    const overflowingCells = await metrics.evaluate((grid) => Array.from(grid.children)
-      .filter((cell) => cell.scrollWidth > cell.clientWidth + 1)
-      .map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim()))
-
-    expect(overflowingCells).toEqual([])
-  })
 })

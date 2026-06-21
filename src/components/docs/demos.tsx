@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import {
-  createMemoryServerAdapter,
   DataGrid,
   DEFAULT_STATE,
   toGridQuery,
@@ -8,6 +7,7 @@ import {
   type GridQuery,
 } from '../DataGrid'
 import { useServerData } from '../../hooks/useServerData'
+import { createMemoryServerAdapter } from '../DataGrid/memoryServerAdapter'
 import {
   Accordion,
   AppliedFiltersBar,

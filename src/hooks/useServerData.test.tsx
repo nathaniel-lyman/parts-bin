@@ -1,7 +1,18 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { generateAccounts } from '../components/DataGrid/mockServerAdapter'
 import { useServerData } from './useServerData'
+
+interface Row {
+  id: string
+  title: string
+}
+
+function makeRows(count: number): Row[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `row-${index}`,
+    title: `Row ${index}`,
+  }))
+}
 
 const query = {
   version: 1 as const,
@@ -14,7 +25,7 @@ const query = {
 
 describe('useServerData', () => {
   it('debounces fetches and returns rows', async () => {
-    const rows = generateAccounts(2)
+    const rows = makeRows(2)
     const adapter = {
       fetch: vi.fn().mockResolvedValue({ rows, totalRowCount: 2 }),
     }
@@ -28,8 +39,8 @@ describe('useServerData', () => {
   })
 
   it('aborts stale requests and ignores their results', async () => {
-    const firstRows = generateAccounts(1)
-    const secondRows = generateAccounts(2)
+    const firstRows = makeRows(1)
+    const secondRows = makeRows(2)
     const signals: AbortSignal[] = []
     let resolveFirst: ((value: { rows: typeof firstRows; totalRowCount: number }) => void) | undefined
     let resolveSecond: ((value: { rows: typeof secondRows; totalRowCount: number }) => void) | undefined
@@ -62,7 +73,7 @@ describe('useServerData', () => {
   })
 
   it('exposes a refetch handle for the current query', async () => {
-    const rows = generateAccounts(1)
+    const rows = makeRows(1)
     const adapter = {
       fetch: vi.fn().mockResolvedValue({ rows, totalRowCount: 1 }),
     }

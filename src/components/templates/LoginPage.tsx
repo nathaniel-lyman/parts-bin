@@ -13,7 +13,7 @@ import { BrandLockup } from '../shell'
 
 /** Marketing proof points shown on the brand panel — pure demo copy. */
 const proofStats: { value: string; label: string }[] = [
-  { value: '12', label: 'example templates' },
+  { value: '10+', label: 'example screens' },
   { value: '~100', label: 'component surfaces' },
   { value: '1', label: 'theme folder' },
 ]
@@ -52,7 +52,7 @@ export function LoginPage() {
             Example app surfaces,<br />ready to adapt.
           </p>
           <p className="m-0 max-w-sm text-[14px] text-muted">
-            parts-bin gives you token-only components and template screens. Clone it, re-skin it from
+            parts-bin gives you token-only components and example screens. Clone it, re-skin it from
             one folder, and replace the example copy with your product language.
           </p>
         </div>

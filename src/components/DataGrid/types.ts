@@ -24,7 +24,7 @@ export type AggregateKind = 'sum' | 'avg' | 'min' | 'max' | 'count'
 export interface AggregateContext<TData> {
   values: unknown[]
   rows: TData[]
-  column: LedgerGridColumn<TData>
+  column: DataGridColumn<TData>
 }
 
 export type AggregateFn<TData> = (context: AggregateContext<TData>) => number | null
@@ -32,20 +32,21 @@ export type AggregateSpec<TData> = AggregateKind | AggregateFn<TData>
 
 export type GridExpandedState = true | Record<string, boolean>
 
-export interface LedgerCellContext<TData, TValue = unknown> {
+export interface DataGridCellContext<TData, TValue = unknown> {
   value: TValue
   row: TData
   rowId: string
 }
 
-export type DataGridCellContext<TData, TValue = unknown> = LedgerCellContext<TData, TValue>
+/** @deprecated Use DataGridCellContext. */
+export type LedgerCellContext<TData, TValue = unknown> = DataGridCellContext<TData, TValue>
 
-export interface LedgerGridColumn<TData, TValue = unknown> {
+export interface DataGridColumn<TData, TValue = unknown> {
   id: string
   accessorKey?: keyof TData
   accessorFn?: (row: TData) => TValue
   header: string | ReactNode
-  cell?: (ctx: LedgerCellContext<TData, TValue>) => ReactNode
+  cell?: (ctx: DataGridCellContext<TData, TValue>) => ReactNode
   width?: number
   minWidth?: number
   maxWidth?: number
@@ -82,9 +83,10 @@ export interface LedgerGridColumn<TData, TValue = unknown> {
   aggregatedCell?: (ctx: { value: unknown }) => ReactNode
 }
 
-export type DataGridColumn<TData, TValue = unknown> = LedgerGridColumn<TData, TValue>
+/** @deprecated Use DataGridColumn. */
+export type LedgerGridColumn<TData, TValue = unknown> = DataGridColumn<TData, TValue>
 
-export interface LedgerGridState {
+export interface DataGridState {
   sorting: SortingState
   columnFilters: ColumnFiltersState
   globalFilter: string
@@ -100,7 +102,8 @@ export interface LedgerGridState {
   expanded: GridExpandedState
 }
 
-export type DataGridState = LedgerGridState
+/** @deprecated Use DataGridState. */
+export type LedgerGridState = DataGridState
 
 export interface ColumnPinning {
   left: string[]
@@ -151,4 +154,4 @@ export type GridAction =
   | { type: 'TOGGLE_GROUP_BY'; columnId: string }
   | { type: 'CLEAR_GROUPING' }
   | { type: 'SET_EXPANDED'; expanded: GridExpandedState }
-  | { type: 'APPLY_VIEW'; state: LedgerGridState }
+  | { type: 'APPLY_VIEW'; state: DataGridState }

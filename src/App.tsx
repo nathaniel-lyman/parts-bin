@@ -7,9 +7,8 @@ import { fmtCurrency, fmtPercent, formatCompactKValue, formatCurrencyK } from '.
 import { KpiCard, KpiSummaryRow } from './components/KpiCard'
 import {
   DataGrid,
-  createMockServerAdapter,
-  generateAccounts,
   toGridQuery,
+  type DataGridColumn,
   type DataGridContextSnapshot,
   type GridQuery,
 } from './components/DataGrid'
@@ -49,7 +48,6 @@ import {
   type AssistantGridContext,
   type AssistantRouteKind,
   type AssistantScreenContext,
-  type RecommendationFeedbackAction,
 } from './components/chat'
 import {
   AppShell,
@@ -62,11 +60,11 @@ import {
   UserAvatarMenu,
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
-import { AppComposerPage, CustomerSuccessTemplate, LoginPage, RecommendationReviewTemplate, SettingsPage } from './components/templates'
+import { AppComposerPage, LoginPage, SettingsPage } from './components/templates'
 import { monthlySeries, movementSeries, revenueWaterfallSeries, sparks } from './data/accounts'
+import { createMockServerAdapter, generateAccounts } from './data/examples/accountMockServerAdapter'
 import type { Account } from './data/types'
 import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
-import type { LedgerGridColumn } from './components/DataGrid'
 import { appHref, appPath, navigate } from './lib/routes'
 
 const timePeriodOptions = [
@@ -106,10 +104,10 @@ function commandSavedViewName(grid: AssistantGridContext | undefined): string {
   return bits.length ? bits.join(' - ') : 'Current grid'
 }
 
-function wideAccountGridColumns(columns: LedgerGridColumn<Account>[]): LedgerGridColumn<Account>[] {
+function wideAccountGridColumns(columns: DataGridColumn<Account>[]): DataGridColumn<Account>[] {
   const actions = columns.find((column) => column.id === 'actions')
   const base = columns.filter((column) => column.id !== 'actions')
-  const wide: LedgerGridColumn<Account>[] = Array.from({ length: 24 }, (_, index) => ({
+  const wide: DataGridColumn<Account>[] = Array.from({ length: 24 }, (_, index) => ({
     id: `wide-${index}`,
     header: `Metric ${index + 1}`,
     align: 'right',
@@ -455,8 +453,7 @@ export default function App() {
   const { mode, toggle } = useTheme()
   const toast = useToast()
   // Shared instance for the assembly demo AND the assistant adapter, so the demo
-  // answers track live CRUD edits. (CustomerSuccessTemplate intentionally keeps
-  // its own read-only useAccounts instance.)
+  // answers track live CRUD edits.
   const accountsApi = useAccounts()
   const accountsRef = useRef(accountsApi.accounts)
   useLayoutEffect(() => { accountsRef.current = accountsApi.accounts })
@@ -464,19 +461,12 @@ export default function App() {
   const assistantGridContextRef = useRef<AssistantGridContext | undefined>(undefined)
   const assistantDashboardEvidenceRef = useRef<AssistantDashboardEvidence | undefined>(undefined)
   const gridAssistantActionsRef = useRef<DataGridContextSnapshot<Account>['actions'] | null>(null)
-  const [customerAssistantDraft, setCustomerAssistantDraft] = useState<{ id: number } | undefined>()
-  const [recommendationAssistantFeedback, setRecommendationAssistantFeedback] = useState<{
-    id: number
-    action: RecommendationFeedbackAction
-  } | undefined>()
   const pathname = appPath()
   const loginActive = pathname === '/login'
   const settingsActive = pathname === '/settings'
   const docsActive = pathname === '/' || pathname === '/docs'
   const composerActive = pathname === '/compose' || pathname === '/docs/start'
   const assemblyActive = pathname === '/examples/dashboard' || pathname === '/demo'
-  const customerTemplateActive = pathname === '/templates/customer-success'
-  const recommendationTemplateActive = pathname === '/templates/recommendation-review'
   const kitActive = docsActive || composerActive
   const accountsActive = assemblyActive
   const routeKind: AssistantRouteKind = settingsActive
@@ -485,24 +475,16 @@ export default function App() {
       ? 'composer'
       : docsActive
         ? 'components'
-        : recommendationTemplateActive
-          ? 'recommendation-review'
-          : customerTemplateActive
-            ? 'customer-success'
-            : accountsActive
-              ? 'accounts'
-              : 'unknown'
+        : accountsActive
+          ? 'accounts'
+          : 'unknown'
   const routeLabel = settingsActive
     ? 'Settings'
     : composerActive
       ? 'App composer'
       : docsActive
         ? 'Component catalog'
-        : recommendationTemplateActive
-          ? 'Recommendation review'
-          : customerTemplateActive
-            ? 'Customer success'
-            : 'Component assembly'
+        : 'Component assembly'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
@@ -534,24 +516,16 @@ export default function App() {
     route: pathname,
     routeLabel,
     routeKind,
-    activeTemplate: customerTemplateActive
-      ? 'Customer success'
-      : recommendationTemplateActive
-        ? 'Recommendation review'
-        : composerActive
-          ? 'App composer'
-          : undefined,
+    activeTemplate: composerActive ? 'App composer' : undefined,
     globalSearch,
     atRiskOnly,
     timePeriodLabel: dashboardPeriodLabel,
   }), [
     atRiskOnly,
     composerActive,
-    customerTemplateActive,
     dashboardPeriodLabel,
     globalSearch,
     pathname,
-    recommendationTemplateActive,
     routeKind,
     routeLabel,
   ])
@@ -571,22 +545,6 @@ export default function App() {
       return {
         title: 'Saved view created',
         body: `Saved **${trimmedName}** from the current sample grid. You can apply it from the grid Views menu.`,
-      }
-    },
-    draftTouchpointNote: () => {
-      window.history.pushState({}, '', appHref('/templates/customer-success'))
-      setCustomerAssistantDraft({ id: Date.now() })
-      return {
-        title: 'Touchpoint note drafted',
-        body: 'Opened the customer success template and prepared the touchpoint drawer with a renewal-risk follow-up note.',
-      }
-    },
-    fillRecommendationFeedback: (action) => {
-      window.history.pushState({}, '', appHref('/templates/recommendation-review'))
-      setRecommendationAssistantFeedback({ id: Date.now(), action })
-      return {
-        title: 'Recommendation feedback prepared',
-        body: `Opened the recommendation review template and prepared the **${action}** feedback drawer for the selected recommendation.`,
       }
     },
   }), [toast])
@@ -686,20 +644,6 @@ export default function App() {
           description: 'Build a routed parts-bin admin screen',
           shortcut: 'G A',
           onSelect: () => { navigate('/compose') },
-        },
-        {
-          id: 'template',
-          label: 'Open customer success template',
-          description: 'Customer operations workspace',
-          shortcut: 'G T',
-          onSelect: () => { navigate('/templates/customer-success') },
-        },
-        {
-          id: 'recommendation-review-template',
-          label: 'Open recommendation review template',
-          description: 'Queue, detail panel, and feedback workflow',
-          shortcut: 'G R',
-          onSelect: () => { navigate('/templates/recommendation-review') },
         },
         {
           id: 'settings',
@@ -867,8 +811,6 @@ export default function App() {
       items={[
         { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
         { label: 'Assembly demo', href: appHref('/examples/dashboard'), active: assemblyActive, meta: 'demo' },
-        { label: 'Customer success', href: appHref('/templates/customer-success'), active: customerTemplateActive, meta: 'app' },
-        { label: 'Review queue', href: appHref('/templates/recommendation-review'), active: recommendationTemplateActive, meta: 'app' },
         { label: 'Compose', href: appHref('/compose'), active: composerActive, meta: 'start' },
       ]}
       adminItems={[
@@ -964,19 +906,6 @@ export default function App() {
           timePeriodLabel={dashboardPeriodLabel}
           onAssistantGridContextChange={handleAssistantGridContextChange}
           onAssistantDashboardEvidenceChange={handleAssistantDashboardEvidenceChange}
-        />
-      ) : customerTemplateActive ? (
-        <CustomerSuccessTemplate
-          globalSearch={globalSearch}
-          atRiskOnly={atRiskOnly}
-          timePeriodLabel={dashboardPeriodLabel}
-          assistantDraft={customerAssistantDraft}
-        />
-      ) : recommendationTemplateActive ? (
-        <RecommendationReviewTemplate
-          globalSearch={globalSearch}
-          timePeriodLabel={dashboardPeriodLabel}
-          assistantFeedback={recommendationAssistantFeedback}
         />
       ) : (
         <DocsPage globalSearch={globalSearch} />

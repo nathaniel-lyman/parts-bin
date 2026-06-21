@@ -1,32 +1,30 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { seedAccounts } from '../../../data/accounts'
-import { accountGridColumns } from '../../accountGridColumns'
 import { DataGrid } from '../DataGrid'
+import { productColumns, productRows } from './fixtures'
 
 const noop = vi.fn()
-const cols = () => accountGridColumns({ onEdit: noop, onDelete: noop })
 
 describe('DataGrid manual server modes', () => {
   it('does not client-filter in manualFiltering mode', async () => {
     const user = userEvent.setup()
     render(
       <DataGrid
-        rows={seedAccounts}
-        columns={cols()}
+        rows={productRows}
+        columns={productColumns}
         getRowId={(row) => row.id}
         manualSorting
         manualFiltering
         manualPagination
-        totalRowCount={seedAccounts.length}
+        totalRowCount={productRows.length}
         onQueryChange={noop}
       />,
     )
 
-    await user.type(screen.getByPlaceholderText(/search rows/i), 'cobalt')
+    await user.type(screen.getByPlaceholderText(/search rows/i), 'widget')
 
-    expect(screen.getByText('Meridian Corp')).toBeInTheDocument()
+    expect(screen.getByText('Gadget')).toBeInTheDocument()
   })
 
   it('emits query changes and labels select-all as loaded in server mode', async () => {
@@ -34,8 +32,8 @@ describe('DataGrid manual server modes', () => {
     const onQueryChange = vi.fn()
     render(
       <DataGrid
-        rows={seedAccounts}
-        columns={cols()}
+        rows={productRows}
+        columns={productColumns}
         getRowId={(row) => row.id}
         enableRowSelection
         manualSorting
@@ -48,8 +46,8 @@ describe('DataGrid manual server modes', () => {
 
     expect(screen.getByRole('checkbox', { name: /select all loaded/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /select all 9999/i })).toBeNull()
-    await user.type(screen.getByPlaceholderText(/search rows/i), 'park')
-    await waitFor(() => expect(onQueryChange).toHaveBeenLastCalledWith(expect.objectContaining({ globalFilter: 'park', scope: 'page' })))
+    await user.type(screen.getByPlaceholderText(/search rows/i), 'gdt')
+    await waitFor(() => expect(onQueryChange).toHaveBeenLastCalledWith(expect.objectContaining({ globalFilter: 'gdt', scope: 'page' })))
   })
 
   it('offers an explicit all-matching selection action in server mode', async () => {
@@ -57,8 +55,8 @@ describe('DataGrid manual server modes', () => {
     const onSelectAllMatching = vi.fn()
     render(
       <DataGrid
-        rows={seedAccounts.slice(0, 3)}
-        columns={cols()}
+        rows={productRows.slice(0, 3)}
+        columns={productColumns}
         getRowId={(row) => row.id}
         enableRowSelection
         manualSorting
@@ -81,8 +79,8 @@ describe('DataGrid manual server modes', () => {
     const onClearAllMatching = vi.fn()
     render(
       <DataGrid
-        rows={seedAccounts.slice(0, 3)}
-        columns={cols()}
+        rows={productRows.slice(0, 3)}
+        columns={productColumns}
         getRowId={(row) => row.id}
         enableRowSelection
         manualSorting
@@ -106,8 +104,8 @@ describe('DataGrid manual server modes', () => {
     const onExportAllXlsx = vi.fn()
     render(
       <DataGrid
-        rows={seedAccounts.slice(0, 3)}
-        columns={cols()}
+        rows={productRows.slice(0, 3)}
+        columns={productColumns}
         getRowId={(row) => row.id}
         enableExport
         enableExcelExport

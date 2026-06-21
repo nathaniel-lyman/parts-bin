@@ -1,14 +1,18 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { seedAccounts } from '../../../data/accounts'
-import { accountGridColumns } from '../../accountGridColumns'
+import { describe, expect, it } from 'vitest'
 import { DataGrid } from '../DataGrid'
+import { productColumns, type ProductRow } from './fixtures'
 
-const rows = Array.from({ length: 30 }, (_, index) => ({
-  ...seedAccounts[index % seedAccounts.length],
+const rows: ProductRow[] = Array.from({ length: 30 }, (_, index) => ({
   id: `r${index}`,
-  name: `Acct ${index}`,
+  title: `Item ${index}`,
+  sku: `SKU-${index}`,
+  category: index % 2 === 0 ? 'Hardware' : 'Software',
+  quantity: index,
+  score: 100 - index,
+  status: index % 2 === 0 ? 'Ready' : 'Review',
+  updatedAt: '2026-06-01',
 }))
 
 function bodyRows() {
@@ -21,7 +25,7 @@ describe('DataGrid pagination', () => {
     render(
       <DataGrid
         rows={rows}
-        columns={accountGridColumns({ onEdit: vi.fn(), onDelete: vi.fn() })}
+        columns={productColumns}
         getRowId={(row) => row.id}
         initialState={{ sorting: [], pagination: { pageIndex: 0, pageSize: 10 } }}
       />,
@@ -29,12 +33,12 @@ describe('DataGrid pagination', () => {
 
     expect(bodyRows()).toHaveLength(10)
     expect(screen.getByText('Page 1 of 3')).toBeInTheDocument()
-    expect(within(bodyRows()[0]).getByText('Acct 0')).toBeInTheDocument()
+    expect(within(bodyRows()[0]).getByText('Item 0')).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /next page/i }))
 
     expect(screen.getByText('Page 2 of 3')).toBeInTheDocument()
     expect(bodyRows()).toHaveLength(10)
-    expect(within(bodyRows()[0]).getByText('Acct 10')).toBeInTheDocument()
+    expect(within(bodyRows()[0]).getByText('Item 10')).toBeInTheDocument()
   })
 })

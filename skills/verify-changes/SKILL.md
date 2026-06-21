@@ -8,36 +8,42 @@ description: Use before claiming any change to this repo is done, fixed, or pass
 ## Overview
 
 Green tests alone do not prove a change is done in this repo. Vitest does not
-type-check, and the theme boundary has blind spots. Run every gate below, in
-order, before reporting success.
+type-check, and the theme boundary has blind spots. Verification should still
+match the risk and blast radius of the change. Start with the smallest test that
+can fail for the edited surface, then broaden only when the change crosses
+component, theme, public API, package, or behavior boundaries.
 
-## The gates (run in order)
+## Choose the smallest meaningful gate
 
-| # | Command | Catches |
+| Change type | Run |
 |---|---|---|
-| 1 | `npm run lint` | ESLint issues |
-| 2 | `npm run lint:theme` | raw colors (`#hex`, `rgb()`, `hsl()`) outside `src/theme/` |
-| 3 | `npm run build` | **type errors tests can't see** (`tsc -b` + Vite build) |
-| 4 | `npm test` | Vitest suite, single run (jsdom) |
-| 5 | `npm run test:e2e` | Playwright — run only when layout or visual behavior changed |
+| One component only | `npx vitest run path/to/Component.test.tsx` |
+| Component export or catalog metadata changed | Affected component test + `npx vitest run src/components/catalog.test.ts src/components/barrels.test.ts`; add `npm run build` when public props/types changed |
+| Styling or theme-token change | Affected component test + `npm run lint:theme`; add a focused browser check for visible changes |
+| Shared hook/selector/helper | Directly affected test file(s), then broaden only if callers or contracts changed |
+| DataGrid infrastructure, persistence, or package entrypoints | Directly affected DataGrid tests first; add `npm run build`, `npm run test:package`, or focused Playwright when that surface changed |
+| Release, broad refactor, dependency/config change, or user asks for full verification | `npm run lint`, `npm run lint:theme`, `npm run build`, `npm test`; add `npm run test:e2e` for layout/visual behavior |
 
 Notes that prevent wasted debugging:
 
-- **Gate 3 is the real type-check.** Vitest does not type-check, and
+- **Build is the real type-check.** Vitest does not type-check, and
   `tsconfig` sets `noUnusedLocals`, so a single unused import fails the build
-  even when every test is green. Never claim done on `npm test` alone.
-- **Gate 2 has a blind spot.** It only matches raw color text. Named Tailwind
+  even when every test is green. Run `npm run build` when TypeScript contracts,
+  exported props, barrels, package entrypoints, or public APIs changed.
+- **`lint:theme` has a blind spot.** It only matches raw color text. Named Tailwind
   color utilities (e.g. `bg-black/40`) slip past it — do not introduce new
-  ones; use token-backed utilities instead.
-- **Gate 4 depends on `src/test-setup.ts`.** It installs an in-memory
+  ones; use token-backed utilities instead. Run it when styling or tokens
+  changed.
+- **Vitest depends on `src/test-setup.ts`.** It installs an in-memory
   localStorage polyfill (Node 25 ships a broken experimental global that
   shadows jsdom's). If localStorage-backed hook tests fail strangely, check
   that file is intact — and never remove it.
-- **Gate 5 is self-contained.** Playwright's `webServer` config builds and
+- **Playwright is self-contained.** Playwright's `webServer` config builds and
   serves the app itself — don't pre-start a dev server. First run on a
   fresh clone needs browser binaries: `npx playwright install`.
 
-Run a single test while iterating, then the full gauntlet at the end:
+Run a single test while iterating, and only run broader gates when the table
+above calls for them:
 
 ```bash
 npx vitest run src/selectors/metrics.test.ts        # one file
@@ -57,7 +63,8 @@ changing any metric, KPI, table, or chart behavior. Browsers/tools can't open
 
 | Mistake | Reality |
 |---|---|
-| "Tests pass, ship it" | Build may still fail on types/unused imports. Run gate 3. |
+| "Tests pass, ship it" | Build may still fail on types/unused imports. Run `npm run build` when public types/contracts changed. |
 | "lint:theme passed, boundary is clean" | Named Tailwind colors slip past. Grep your diff: `grep -E 'bg-(white|black|gray|slate|zinc)|text-(white|black|gray)'` |
 | "This metric is obviously wrong, fixing it" | Check `demo.html` parity first — it may be pinned by design. |
 | "Skipping e2e, jsdom covered it" | Layout-sensitive DataGrid behavior only fails in a real browser. |
+| "One component changed, so run everything" | Start with that component's colocated test and broaden only for changed boundaries. |

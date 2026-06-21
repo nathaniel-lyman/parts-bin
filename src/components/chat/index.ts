@@ -20,7 +20,6 @@ export {
   type AssistantSavedViewRef,
   type AssistantScreenContext,
   type DemoAdapterOptions,
-  type RecommendationFeedbackAction,
 } from './demoAdapter'
 export { ChatMarkdown, type ChatMarkdownProps } from './ChatMarkdown'
 export { CodeBlock, type CodeBlockProps } from './CodeBlock'

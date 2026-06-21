@@ -5,7 +5,7 @@ import { appHref, appPath } from './routes'
 test('appPath is identity at root base', () => {
   expect(appPath('/', '/')).toBe('/')
   expect(appPath('/docs', '/')).toBe('/docs')
-  expect(appPath('/templates/customer-success', '/')).toBe('/templates/customer-success')
+  expect(appPath('/settings', '/')).toBe('/settings')
 })
 
 test('appHref is identity at root base', () => {
@@ -18,7 +18,7 @@ test('appPath strips the subpath base', () => {
   expect(appPath('/dashboard-theme/', '/dashboard-theme/')).toBe('/')
   expect(appPath('/dashboard-theme', '/dashboard-theme/')).toBe('/')
   expect(appPath('/dashboard-theme/docs', '/dashboard-theme/')).toBe('/docs')
-  expect(appPath('/dashboard-theme/templates/customer-success', '/dashboard-theme/')).toBe('/templates/customer-success')
+  expect(appPath('/dashboard-theme/settings', '/dashboard-theme/')).toBe('/settings')
 })
 
 test('appPath does not strip a same-prefix sibling path', () => {
@@ -33,7 +33,7 @@ test('appHref prefixes the subpath base', () => {
 
 test('appPath and appHref round-trip', () => {
   for (const base of ['/', '/dashboard-theme/']) {
-    for (const path of ['/', '/examples/dashboard', '/compose', '/docs', '/docs/start', '/login', '/settings', '/templates/recommendation-review']) {
+    for (const path of ['/', '/examples/dashboard', '/compose', '/docs', '/docs/start', '/login', '/settings']) {
       expect(appPath(appHref(path, base), base)).toBe(path)
     }
   }

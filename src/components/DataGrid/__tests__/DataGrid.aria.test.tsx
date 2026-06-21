@@ -1,15 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { seedAccounts } from '../../../data/accounts'
-import { accountGridColumns } from '../../accountGridColumns'
+import { describe, expect, it } from 'vitest'
 import { DataGrid } from '../DataGrid'
+import { productColumns, productRows } from './fixtures'
 
 function renderGrid() {
   render(
     <DataGrid
-      rows={seedAccounts}
-      columns={accountGridColumns({ onEdit: vi.fn(), onDelete: vi.fn() })}
+      rows={productRows}
+      columns={productColumns}
       getRowId={(row) => row.id}
       enableRowSelection
     />,
@@ -25,12 +24,12 @@ describe('DataGrid ARIA', () => {
 
   it('updates row selection and menu expanded state', async () => {
     renderGrid()
-    const row = screen.getByRole('row', { name: /Cobalt Freight/ })
+    const row = screen.getByRole('row', { name: /Widget/ })
     expect(row).toHaveAttribute('aria-selected', 'false')
-    await userEvent.click(screen.getByRole('checkbox', { name: /Select Cobalt Freight/ }))
+    await userEvent.click(screen.getByRole('checkbox', { name: /Select p1/ }))
     expect(row).toHaveAttribute('aria-selected', 'true')
 
-    const trigger = screen.getByRole('button', { name: /Value column menu/ })
+    const trigger = screen.getByRole('button', { name: /Quantity column menu/ })
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await userEvent.click(trigger)
     expect(trigger).toHaveAttribute('aria-expanded', 'true')

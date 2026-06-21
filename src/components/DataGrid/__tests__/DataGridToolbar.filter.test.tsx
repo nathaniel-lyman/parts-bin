@@ -1,22 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { seedAccounts } from '../../../data/accounts'
-import { accountGridColumns } from '../../accountGridColumns'
+import { describe, expect, it } from 'vitest'
 import { DataGrid } from '../DataGrid'
-
-const noop = vi.fn()
-const cols = () => accountGridColumns({ onEdit: noop, onDelete: noop })
+import { productColumns, productGlobalFilter, productRows } from './fixtures'
 
 describe('DataGridToolbar quick filter', () => {
-  it('filters by account name and owner', async () => {
+  it('filters arbitrary rows through the consumer-provided global filter', async () => {
     const user = userEvent.setup()
-    render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
+    render(<DataGrid rows={productRows} columns={productColumns} getRowId={(row) => row.id} globalFilterFn={productGlobalFilter} />)
 
-    await user.type(screen.getByPlaceholderText(/search rows/i), 'rivera')
+    await user.type(screen.getByPlaceholderText(/search rows/i), 'gzm')
 
-    expect(screen.getByText('Foxglove Labs')).toBeInTheDocument()
-    expect(screen.getByText('Quill Analytics')).toBeInTheDocument()
-    expect(screen.queryByText('Cobalt Freight')).toBeNull()
+    expect(screen.getByText('Gizmo')).toBeInTheDocument()
+    expect(screen.queryByText('Widget')).toBeNull()
   })
 })

@@ -39,8 +39,13 @@ workflow is catalog-first, token-only, catalog-registered.
    cataloged nor `INTERNAL`, if an `INTERNAL` entry goes stale, or if
    `prefer_over`/`related` reference uncataloged names.
 5. **Colocate a test** as `ComponentName.test.tsx` next to the source.
-6. **Verify:** follow `skills/verify-changes/SKILL.md` — note that the
-   catalog `props` check only runs in the build gate, not in Vitest.
+6. **Verify the smallest affected surface:** run the component's colocated
+   test first. If you changed exports, catalog metadata, or public props, also
+   run `npx vitest run src/components/catalog.test.ts src/components/barrels.test.ts`
+   and `npm run build` because the catalog `props` check only runs in the build
+   gate, not in Vitest. If you only changed internal rendering or styling, do
+   not run the full repo gauntlet unless the change is cross-cutting or the
+   user asks for it.
 
 ## Common mistakes
 
@@ -50,4 +55,4 @@ workflow is catalog-first, token-only, catalog-registered.
 | Hardcoded a hex "temporarily" | Add a token; lint:theme fails the build regardless |
 | `bg-white`, `bg-black/40`, `text-gray-500` | Invisible to lint:theme but wrong — use `bg-surface`, `text-muted`, … |
 | Skipped the CATALOG entry | `catalog.test.ts` fails; intentional helpers go in `INTERNAL` |
-| Tests green, called it done | `defineComponent` props are checked by `tsc`, so run `npm run build` |
+| Internal component test passed, but public props changed | `defineComponent` props are checked by `tsc`, so run `npm run build` |

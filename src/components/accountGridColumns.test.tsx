@@ -38,7 +38,17 @@ describe('buildAccountGridColumns', () => {
     const cols = buildAccountGridColumns(vi.fn(), vi.fn())
     for (const id of ['mrr', 'growth', 'arr']) {
       expect(cols.find((column) => column.id === id)!.align).toBe('right')
+      expect(cols.find((column) => column.id === id)!.meta?.align).toBe('right')
     }
+  })
+
+  it('maps text columns and resize affordances into column meta', () => {
+    const cols = buildAccountGridColumns(vi.fn(), vi.fn())
+    const byId = (id: string) => cols.find((column) => column.id === id)!
+    expect(byId('account').meta?.align).toBe('left')
+    expect(byId('owner').meta?.align).toBe('left')
+    expect(byId('account').meta?.resizable).toBe(true)
+    expect(byId('actions').meta?.resizable).toBe(false)
   })
 
   it('locks the actions column', () => {

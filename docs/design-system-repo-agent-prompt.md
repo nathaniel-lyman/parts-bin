@@ -128,8 +128,6 @@ Things that should become demo-only or be wrapped as demo examples:
 - buildAssistantDashboardEvidence when it depends on revenue movement/MRR
 - generateAccounts if it returns account-shaped rows
 - ledgerRegions / ledgerPoints / ledgerFlows demo map data
-- CustomerSuccessTemplate if it is account/MRR-specific
-- RecommendationReviewTemplate if it is a full-page example rather than a reusable primitive
 - AppComposerPage if it is a starter/demo surface rather than design-system docs
 
 Things that should remain public design-system components:
@@ -244,8 +242,6 @@ Critical fixes:
 8. Separate examples
    Move or clearly label:
    - Account/MRR dashboard
-   - Customer success template
-   - Recommendation review template
    - Settings/Login/AppComposer examples if they remain full-page starters
    - Demo assistant behavior that reads account data
    - Demo map data named `ledger*`

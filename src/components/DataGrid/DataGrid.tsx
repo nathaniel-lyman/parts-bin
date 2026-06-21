@@ -26,9 +26,9 @@ import {
   type FilterFn,
   type Row,
 } from '@tanstack/react-table'
-import { useGridViewState } from '../../hooks/useGridViewState'
-import { bootGridSeed, useGridPersistence } from '../../hooks/useGridPersistence'
-import { useSavedViews } from '../../hooks/useSavedViews'
+import { useGridViewState } from './useGridViewState'
+import { bootGridSeed, useGridPersistence } from './useGridPersistence'
+import { useSavedViews } from './useSavedViews'
 import { ACTIONS_COLUMN_ID, canHideColumn, canSortColumn, isMovableColumnId } from './normalize'
 import { gridReducer } from './reducers'
 import { densityClass, pinnedLeafGroups, pinnedOffsets, rowHeightForDensity, selectAllState, selectionCount, type PinnedOffsets } from './selectors'

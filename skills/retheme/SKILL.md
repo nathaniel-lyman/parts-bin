@@ -77,7 +77,9 @@ corners"* maps to the checklist like this:
 1. `npm run lint:theme` — must pass.
 2. `npm run dev`, then eyeball **both modes** (the theme toggle adds/removes
    `.dark` on `<html>`): dashboard `/`, `/login`, `/settings`, `/docs`.
-3. Finish with the full gauntlet: follow `skills/verify-changes/SKILL.md`.
+3. Follow `skills/verify-changes/SKILL.md` and broaden only for the surfaces the
+   retheme touched. A full visual/theme pass is usually appropriate for a
+   repository-wide re-skin, but not for an isolated component token fix.
 
 ## Common mistakes
 

@@ -17,15 +17,15 @@ test('generates default imports, route branch, data mapping, and theme setup', (
   expect(screen.getByText(/applyThemeRecipe\('parts-bin-default'\)/)).toBeInTheDocument()
 })
 
-test('switches use case defaults to the review queue template', () => {
+test('switches use case defaults to a generated review queue route', () => {
   render(<AppComposerPage />)
 
   fireEvent.click(screen.getByRole('radio', { name: /Review queue/ }))
   fireEvent.click(screen.getByRole('button', { name: 'Generate screen' }))
 
-  expect(screen.getByText(/import \{ RecommendationReviewTemplate \}/)).toBeInTheDocument()
+  expect(screen.getByText(/import \{ PageHeader, KpiSummaryRow, KpiCard, DataGrid, StatusBadge/)).toBeInTheDocument()
   expect(screen.getByText(/const recommendationsActive = pathname === '\/recommendations'/)).toBeInTheDocument()
-  expect(screen.getAllByText(/<RecommendationReviewTemplate/).length).toBeGreaterThan(0)
+  expect(screen.getAllByText(/<RecommendationsRoute/).length).toBeGreaterThan(0)
   expect(screen.getByText(/decisionStatus/)).toBeInTheDocument()
 })
 

@@ -7,7 +7,7 @@ A reusable React + TypeScript design system with token-only theming, UI primitiv
 forms, overlays, feedback states, data display, DataGrid, charts, maps, shell/layout,
 and chat primitives. The local Vite app exists to browse docs and examples.
 
-**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · the root route opens the component catalog; then explore `/examples/dashboard`, `/compose`, `/login`, `/settings`, and `/templates/*`.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · the root route opens the component catalog; then explore `/examples/dashboard`, `/compose`, `/login`, and `/settings`.
 
 ![parts-bin component catalog](docs/screenshots/components-light.png)
 
@@ -22,7 +22,7 @@ chart, and page re-skins — zero component edits, enforced by lint:
 
 - **Product engineers** who need a copyable internal-app design system with a real public API.
 - **Teams standardizing UI** across dashboards, admin tools, AI surfaces, and workflow apps.
-- **Developers building examples fast** — the assembly demo, composer, settings, sign-in, and template routes are proof surfaces built from the same components.
+- **Developers building examples fast** — the assembly demo, composer, settings, and sign-in routes are proof surfaces built from the same components.
 
 The assembly demo is intentionally demoted to example code. It demonstrates composition,
 data derivation, and persistence, but it does not define the public component API.
@@ -38,7 +38,7 @@ delete `.git`) so you begin with a clean history.
 
 **Primary surface: open [`/docs`](http://localhost:5173/docs).**
 The docs catalog shows component purpose, imports, props, near-twin guidance, and snippets. Use
-the assembly demo, composer, and templates only as examples after selecting components.
+the assembly demo, composer, sign-in, and settings screens only as examples after selecting components.
 
 ## Your first 30 minutes
 
@@ -47,7 +47,7 @@ The fastest path from clone to using the design system:
 1. **Browse `/docs`** and pick components from the catalog rather than deep files.
 2. **Copy the design-system layers** you need: `src/theme/`, `src/components/ui/`, `shell/`, `DataGrid/`, `charts/`, `maps/`, and `chat/`.
 3. **Re-skin through tokens** in `src/theme/tokens.css`; do not hardcode colors in components.
-4. **Use examples as references**: `/examples/dashboard` for a component assembly, `/compose` for a generated route plan, and `/templates/*` for full-page workflow examples.
+4. **Use examples as references**: `/examples/dashboard` for a component assembly, `/compose` for a generated route plan, `/login` for a sign-in screen, and `/settings` for preferences.
 5. **Verify** with `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
 
 Nothing in the framework is tied to the bundled sample dataset — map the generic parts to your domain:
@@ -77,9 +77,6 @@ The sample surfaces are built from the design system and live in the docs/exampl
 | ![Component catalog](docs/screenshots/components-light.png) **`/` or `/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/examples/dashboard`** — example KPI + charts + DataGrid assembly |
 | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — example appearance/profile/preferences page |
 
-Workflow starter routes are included too: **`/templates/customer-success`** for a customer-operations console and
-**`/templates/recommendation-review`** for a queue/detail review surface.
-
 ## What's inside
 - **`src/theme/`** — the entire design system (tokens, fonts, base styles, Tailwind mapping,
   chart styling, and optional theme recipes). This is the swappable, portable layer.
@@ -96,7 +93,7 @@ Workflow starter routes are included too: **`/templates/customer-success`** for 
 - **`src/components/chat/`** — a composable assistant panel with markdown messages, prompt chips,
   streaming state, and a demo adapter that can read the current screen context.
 - **`src/components/templates/`** — example full-page starters you can route to directly: a guided
-  **App composer** (`/compose`), a component assembly dashboard (`/examples/dashboard`), two workflow consoles, plus a split brand-panel
+  **App composer** (`/compose`), a component assembly dashboard (`/examples/dashboard`), plus a split brand-panel
   **Login** (`/login`) and a section-scroll **Settings** (`/settings`) page. The starter pages
   are presentational demos — Settings' Appearance section is the live home for color mode,
   theme recipe, and density.
@@ -129,6 +126,8 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 |---|---|
 | `npm run dev` | start the app |
 | `npm run build` | typecheck + production build |
+| `npm run build:lib` | build the package entrypoints in `dist/` |
+| `npm run test:package` | build and verify the `parts-bin/datagrid` subpath export |
 | `npm run test` | run the Vitest suite |
 | `npm run lint:theme` | fail if raw colors leak outside `src/theme/` |
 | `npm run test:e2e` | run Playwright checks for layout-sensitive flows |
@@ -141,7 +140,7 @@ Copy-paste checklist (clone what you need, in order):
 - [ ] **Shell** — copy `src/components/shell/` for the app shell, sidebar, top nav, and filter bars.
 - [ ] **Charts & DataGrid** *(optional)* — copy `src/components/charts/` and `src/components/DataGrid/`;
   import from the `charts` and `DataGrid` barrels.
-- [ ] **Examples** — consult `/`, `/compose`, and `/templates/*` only as reference assemblies.
+- [ ] **Examples** — consult `/`, `/compose`, `/login`, and `/settings` only as reference assemblies.
 - [ ] **Boundary** — copy `scripts/lint-theme.mjs` and wire `npm run lint:theme` so raw colors never leak
   outside `src/theme/`.
 - [ ] **Reference** — see `src/theme/RETHEME.md` to re-skin and `THEME-SPEC.md` for the canonical design spec.
@@ -152,6 +151,30 @@ from a barrel, not a deep file path:
 ```ts
 import { Button, DataGrid, WaterfallChart, KpiCard } from './components'
 ```
+
+### Experimental package entrypoints
+
+The repo is still private, but the package boundary is now explicit enough to build a library
+artifact for integration testing:
+
+```bash
+npm run build:lib
+```
+
+The DataGrid-only entrypoint is `parts-bin/datagrid`. It exports the neutral `DataGrid`,
+`DataGridColumn`, `DataGridState`, query/export helpers, grid persistence hooks, saved-view
+helpers, and the generic `createMemoryServerAdapter`. Demo account fixtures stay in deep demo
+files and are not part of this entrypoint.
+
+Consumers must load the token theme once at the app root:
+
+```ts
+import 'parts-bin/theme.css'
+import { DataGrid, type DataGridColumn } from 'parts-bin/datagrid'
+```
+
+Peer dependencies for the DataGrid entrypoint are React, React DOM, TanStack Table/Virtual, and
+dnd-kit. The root `parts-bin` entrypoint also uses the broader chart, map, and chat dependencies.
 
 parts-bin is intentionally a copy-paste kit first, not an npm package. Let the public API harden
 across real cloned apps before packaging it.

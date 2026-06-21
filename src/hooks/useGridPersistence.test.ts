@@ -1,11 +1,11 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GRID_STORAGE_KEY, GRID_VIEW_VERSION } from '../components/DataGrid/persistence'
+import { GRID_STORAGE_KEY, GRID_VIEW_VERSION, LEGACY_GRID_STORAGE_KEY } from '../components/DataGrid/persistence'
 import { DEFAULT_STATE } from '../components/DataGrid/state'
 import { bootGridSeed, useGridPersistence } from './useGridPersistence'
 
 describe('bootGridSeed', () => {
-  it('reads ledger.accounts.grid when present and hydrates it', () => {
+  it('reads the neutral default grid key when present and hydrates it', () => {
     localStorage.setItem(
       GRID_STORAGE_KEY,
       JSON.stringify({ version: GRID_VIEW_VERSION, density: 'standard', columnVisibility: { arr: true } }),
@@ -15,7 +15,7 @@ describe('bootGridSeed', () => {
     expect(seed.columnVisibility.arr).toBe(true)
   })
 
-  it('reads the provided grid key instead of the legacy account key', () => {
+  it('reads the provided grid key instead of the neutral default key', () => {
     localStorage.setItem(
       'workspace.grid',
       JSON.stringify({ version: GRID_VIEW_VERSION, density: 'comfortable', columnVisibility: { score: true } }),
@@ -31,14 +31,15 @@ describe('bootGridSeed', () => {
     expect(seed.columnVisibility.arr).toBeUndefined()
   })
 
-  it('runs migration (via legacy keys) when the grid key is absent', () => {
+  it('runs account migration only when the legacy account grid key is requested', () => {
     localStorage.setItem('ledger.cols', JSON.stringify({ name: false }))
-    const seed = bootGridSeed()
+    const seed = bootGridSeed(undefined, LEGACY_GRID_STORAGE_KEY)
     expect(seed.columnVisibility.account).toBe(false)
     expect(localStorage.getItem('ledger.cols')).toBe(JSON.stringify({ name: false }))
   })
 
-  it('absent grid key with no legacy data yields DEFAULT_STATE', () => {
+  it('absent neutral grid key ignores legacy account data and yields DEFAULT_STATE', () => {
+    localStorage.setItem('ledger.cols', JSON.stringify({ name: false }))
     expect(bootGridSeed()).toEqual(DEFAULT_STATE)
   })
 })
@@ -47,7 +48,7 @@ describe('useGridPersistence (debounced write of projection)', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
-  it('writes project(state) to ledger.accounts.grid after the debounce', () => {
+  it('writes project(state) to the neutral default grid key after the debounce', () => {
     const state = { ...DEFAULT_STATE, density: 'comfortable' as const }
     renderHook(() => useGridPersistence(state, true))
     expect(localStorage.getItem(GRID_STORAGE_KEY)).toBeNull()

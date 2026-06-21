@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PERSISTED_VIEW } from '../components/DataGrid/persistence'
+import { DEFAULT_PERSISTED_VIEW, LEGACY_GRID_STORAGE_KEY } from '../components/DataGrid/persistence'
 import { LEGACY_SAVED_VIEWS_KEY, SAVED_VIEWS_KEY, exportViewsJson, importViewsJson, savedViewsKeyForGrid, useSavedViews } from './useSavedViews'
 
 describe('useSavedViews', () => {
@@ -40,7 +40,7 @@ describe('useSavedViews', () => {
     act(() => result.current.reset((view) => applied.push(view)))
 
     expect(applied).toHaveLength(2)
-    expect(localStorage.getItem('ledger.accounts.grid')).toBeNull()
+    expect(localStorage.getItem(LEGACY_GRID_STORAGE_KEY)).toBeNull()
   })
 
   it('round-trips JSON helper output', () => {

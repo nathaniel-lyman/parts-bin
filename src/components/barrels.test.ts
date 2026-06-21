@@ -25,9 +25,12 @@ test('DataGrid barrel exposes the component, state, query, and helpers', () => {
   expect(typeof dataGrid.DataGridToolbar).toBe('function')
   expect(typeof dataGrid.hydrate).toBe('function')
   expect(typeof dataGrid.toGridQuery).toBe('function')
-  expect(typeof dataGrid.generateAccounts).toBe('function')
+  expect(typeof dataGrid.createMemoryServerAdapter).toBe('function')
+  expect(typeof dataGrid.bootGridSeed).toBe('function')
   expect(typeof dataGrid.serializeCSV).toBe('function')
   expect(dataGrid.DEFAULT_STATE).toBeDefined()
+  expect('generateAccounts' in dataGrid).toBe(false)
+  expect('createMockServerAdapter' in dataGrid).toBe(false)
 })
 
 test('maps barrel exposes spatial analytics components and compatibility demo data', () => {

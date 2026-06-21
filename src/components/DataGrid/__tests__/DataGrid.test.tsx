@@ -1,31 +1,24 @@
 import { useState } from 'react'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, buildAccountGridColumns } from '../../accountGridColumns'
+import { describe, expect, it } from 'vitest'
 import { DataGrid } from '../DataGrid'
 import { DEFAULT_STATE } from '../state'
-import type { LedgerGridColumn, LedgerGridState } from '../types'
-import type { Account } from '../../../data/types'
-
-const accounts: Account[] = [
-  { id: '1', name: 'Acme', owner: 'Dana', segment: 'Enterprise', mrr: 30, growth: 5, status: 'Active', arr: 360, since: '2022-01-01' },
-  { id: '2', name: 'Beta', owner: 'Lee', segment: 'Startup', mrr: 10, growth: -2, status: 'At risk', arr: 120, since: '2023-06-01' },
-  { id: '3', name: 'Cyan', owner: 'Mo', segment: 'Mid-market', mrr: 20, growth: 0, status: 'Active', arr: 240, since: '2021-03-01' },
-]
+import type { DataGridColumn, DataGridState } from '../types'
+import { PRODUCT_GRID_INITIAL_STATE, productColumns, productGlobalFilter, productRows, type ProductRow } from './fixtures'
 
 const common = {
-  rows: accounts,
-  columns: buildAccountGridColumns(vi.fn(), vi.fn()),
-  getRowId: (row: Account) => row.id,
-  globalFilterFn: accountGlobalFilter,
+  rows: productRows,
+  columns: productColumns,
+  getRowId: (row: ProductRow) => row.id,
+  globalFilterFn: productGlobalFilter,
 }
 
-describe('DataGrid (uncontrolled, account table)', () => {
+describe('DataGrid (uncontrolled, generic product table)', () => {
   it('preserves TanStack default cell rendering when no custom cell renderer is provided', () => {
     interface Row { id: string; name: string }
     const rows: Row[] = [{ id: '1', name: 'Default renderer value' }]
-    const columns: LedgerGridColumn<Row>[] = [
+    const columns: DataGridColumn<Row>[] = [
       { id: 'name', accessorKey: 'name', header: 'Name' },
     ]
 
@@ -49,57 +42,57 @@ describe('DataGrid (uncontrolled, account table)', () => {
 
   it('layers pinned headers above pinned body cells', () => {
     render(
-      <DataGrid<Account>
+      <DataGrid<ProductRow>
         {...common}
         initialState={{
           ...DEFAULT_STATE,
-          columnPinning: { left: ['account'], right: ['actions'] },
+          columnPinning: { left: ['title'], right: ['actions'] },
         }}
       />,
     )
 
-    expect(screen.getByTestId('col-header-account').style.zIndex).toBe('30')
+    expect(screen.getByTestId('col-header-title').style.zIndex).toBe('30')
     expect(screen.getByTestId('col-header-actions').style.zIndex).toBe('30')
   })
 
-  it('renders the default visible columns and hides arr/since by default', () => {
-    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} />)
-    expect(screen.getByRole('columnheader', { name: /Account/ })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: /Value/ })).toBeInTheDocument()
-    expect(screen.queryByRole('columnheader', { name: 'ARR' })).toBeNull()
-    expect(screen.queryByRole('columnheader', { name: 'Since' })).toBeNull()
+  it('renders the default visible columns and hides optional generic columns by default', () => {
+    render(<DataGrid<ProductRow> {...common} initialState={PRODUCT_GRID_INITIAL_STATE} />)
+    expect(screen.getByRole('columnheader', { name: /Title/ })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /Quantity/ })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Score' })).toBeNull()
+    expect(screen.queryByRole('columnheader', { name: 'Updated' })).toBeNull()
   })
 
-  it('renders rows sorted by mrr desc by default', () => {
-    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} />)
+  it('renders rows sorted by quantity desc by default', () => {
+    render(<DataGrid<ProductRow> {...common} initialState={PRODUCT_GRID_INITIAL_STATE} />)
     const rows = screen.getAllByRole('row').slice(1)
-    expect(within(rows[0]).getByText('Acme')).toBeInTheDocument()
-    expect(within(rows[2]).getByText('Beta')).toBeInTheDocument()
+    expect(within(rows[0]).getByText('Widget')).toBeInTheDocument()
+    expect(within(rows[2]).getByText('Gadget')).toBeInTheDocument()
   })
 
-  it('flipping columnVisibility shows arr/since', () => {
+  it('flipping columnVisibility shows hidden generic columns', () => {
     render(
-      <DataGrid<Account>
+      <DataGrid<ProductRow>
         {...common}
-        initialState={{ ...ACCOUNT_GRID_INITIAL_STATE, columnVisibility: { account: true, arr: true, since: true } }}
+        initialState={{ ...PRODUCT_GRID_INITIAL_STATE, columnVisibility: { title: true, score: true, updatedAt: true } }}
       />,
     )
-    expect(screen.getByRole('columnheader', { name: /ARR/ })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: /Since/ })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /Score/ })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /Updated/ })).toBeInTheDocument()
   })
 
   it('shows the empty state when no rows match the quick filter', () => {
-    render(<DataGrid<Account> {...common} initialState={{ ...ACCOUNT_GRID_INITIAL_STATE, globalFilter: 'zzzzz' }} />)
+    render(<DataGrid<ProductRow> {...common} initialState={{ ...PRODUCT_GRID_INITIAL_STATE, globalFilter: 'zzzzz' }} />)
     expect(screen.getByText(/no results/i)).toBeInTheDocument()
   })
 
   it('renders the loading component when loading prop is set', () => {
-    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} loading />)
+    render(<DataGrid<ProductRow> {...common} initialState={PRODUCT_GRID_INITIAL_STATE} loading />)
     expect(screen.getByText(/loading/i)).toBeInTheDocument()
   })
 
   it('renders the error component when error prop is set', () => {
-    render(<DataGrid<Account> {...common} initialState={ACCOUNT_GRID_INITIAL_STATE} error={new Error('fetch failed')} />)
+    render(<DataGrid<ProductRow> {...common} initialState={PRODUCT_GRID_INITIAL_STATE} error={new Error('fetch failed')} />)
     expect(screen.getByText(/fetch failed/)).toBeInTheDocument()
   })
 })
@@ -121,12 +114,12 @@ describe('DataGrid (foreign schema contract)', () => {
     { id: 'p2', title: 'Gadget', sku: 'GDG-2', price: 10 },
     { id: 'p3', title: 'Gizmo', sku: 'GZM-3', price: 20 },
   ]
-  const productColumns: LedgerGridColumn<Product>[] = [
+  const productColumns: DataGridColumn<Product>[] = [
     { id: 'title', accessorKey: 'title', header: 'Title' },
     { id: 'sku', accessorKey: 'sku', header: 'SKU' },
     { id: 'price', accessorKey: 'price', header: 'Price', meta: { type: 'number' } },
   ]
-  const foreignState = (overrides: Partial<LedgerGridState> = {}): LedgerGridState => ({
+  const foreignState = (overrides: Partial<DataGridState> = {}): DataGridState => ({
     ...DEFAULT_STATE,
     sorting: [],
     columnOrder: ['title', 'sku', 'price'],
@@ -202,14 +195,14 @@ describe('DataGrid (controlled override)', () => {
     const user = userEvent.setup()
 
     function Controlled() {
-      const [state, setState] = useState<LedgerGridState>({
-        ...ACCOUNT_GRID_INITIAL_STATE,
-        columnVisibility: { account: true, arr: true, since: false },
+      const [state, setState] = useState<DataGridState>({
+        ...PRODUCT_GRID_INITIAL_STATE,
+        columnVisibility: { title: true, score: true, updatedAt: false },
       })
       return (
-        <DataGrid<Account>
+        <DataGrid<ProductRow>
           {...common}
-          initialState={{ ...ACCOUNT_GRID_INITIAL_STATE, columnVisibility: { account: true, arr: false, since: false } }}
+          initialState={{ ...PRODUCT_GRID_INITIAL_STATE, columnVisibility: { title: true, score: false, updatedAt: false } }}
           state={state}
           onStateChange={setState}
         />
@@ -217,9 +210,9 @@ describe('DataGrid (controlled override)', () => {
     }
 
     render(<Controlled />)
-    expect(screen.getByRole('columnheader', { name: /ARR/ })).toBeInTheDocument()
-    await user.click(screen.getByRole('columnheader', { name: /Value/ }))
-    const mrr = screen.getByRole('columnheader', { name: /Value/ })
-    expect(['ascending', 'descending']).toContain(mrr.getAttribute('aria-sort'))
+    expect(screen.getByRole('columnheader', { name: /Score/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('columnheader', { name: /Quantity/ }))
+    const quantity = screen.getByRole('columnheader', { name: /Quantity/ })
+    expect(['ascending', 'descending']).toContain(quantity.getAttribute('aria-sort'))
   })
 })

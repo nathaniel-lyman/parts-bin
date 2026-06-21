@@ -62,8 +62,8 @@ const channelOptions = [
 const landingOptions: { value: WorkspaceSettings['landingPage']; label: string }[] = [
   { value: '/docs', label: 'Components' },
   { value: '/examples/dashboard', label: 'Assembly demo' },
-  { value: '/templates/customer-success', label: 'Customer success' },
-  { value: '/templates/recommendation-review', label: 'Review queue' },
+  { value: '/compose', label: 'App composer' },
+  { value: '/settings', label: 'Settings' },
 ]
 
 const recipeOptions = THEME_RECIPES.map((recipe) => ({

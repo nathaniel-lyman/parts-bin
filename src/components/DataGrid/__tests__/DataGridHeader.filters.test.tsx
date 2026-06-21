@@ -1,34 +1,30 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { seedAccounts } from '../../../data/accounts'
-import { accountGridColumns } from '../../accountGridColumns'
+import { describe, expect, it } from 'vitest'
 import { DataGrid } from '../DataGrid'
-
-const noop = vi.fn()
-const cols = () => accountGridColumns({ onEdit: noop, onDelete: noop })
+import { productColumns, productRows } from './fixtures'
 
 describe('inline header filters', () => {
   it('renders header filter controls only when enabled and toggled open', async () => {
     const user = userEvent.setup()
-    const { rerender } = render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
-    expect(screen.queryByRole('textbox', { name: /filter account/i })).toBeNull()
+    const { rerender } = render(<DataGrid rows={productRows} columns={productColumns} getRowId={(row) => row.id} />)
+    expect(screen.queryByRole('textbox', { name: /filter title/i })).toBeNull()
 
-    rerender(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} enableHeaderFilters />)
-    expect(screen.queryByRole('textbox', { name: /filter account/i })).toBeNull()
+    rerender(<DataGrid rows={productRows} columns={productColumns} getRowId={(row) => row.id} enableHeaderFilters />)
+    expect(screen.queryByRole('textbox', { name: /filter title/i })).toBeNull()
 
     await user.click(screen.getByRole('button', { name: /filters/i }))
-    expect(screen.getByRole('textbox', { name: /filter account/i })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /filter title/i })).toBeInTheDocument()
   })
 
   it('filters through the same column-filter slice', async () => {
     const user = userEvent.setup()
-    render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} enableHeaderFilters />)
+    render(<DataGrid rows={productRows} columns={productColumns} getRowId={(row) => row.id} enableHeaderFilters />)
 
     await user.click(screen.getByRole('button', { name: /filters/i }))
-    await user.type(screen.getByRole('textbox', { name: /filter account/i }), 'cobalt')
+    await user.type(screen.getByRole('textbox', { name: /filter title/i }), 'widget')
 
-    expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
-    expect(screen.queryByText('Meridian Corp')).toBeNull()
+    expect(screen.getByText('Widget')).toBeInTheDocument()
+    expect(screen.queryByText('Gadget')).toBeNull()
   })
 })
