@@ -24,7 +24,7 @@ export interface WorkspaceSettings {
   weeklyReport: boolean
   channels: string[]
   // Preferences
-  landingPage: '/docs' | '/examples/dashboard' | '/compose' | '/settings'
+  landingPage: '/docs' | '/examples/dashboard' | '/settings'
   numberFormat: 'compact' | 'full'
 }
 

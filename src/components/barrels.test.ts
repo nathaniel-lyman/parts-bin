@@ -59,7 +59,6 @@ test('root barrel aggregates reusable design-system components only', () => {
   expect(typeof components.KpiCard).toBe('function') // generic metric display
   expect(typeof components.Sparkline).toBe('function')
   expect(typeof components.ConfirmDialog).toBe('function')
-  expect('AppComposerPage' in components).toBe(false)
   expect('AccountFormModal' in components).toBe(false)
   expect('accountGridColumns' in components).toBe(false)
 })

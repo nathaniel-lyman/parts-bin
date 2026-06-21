@@ -15,7 +15,6 @@ export const DEMO_SUGGESTIONS = [
 export type AssistantRouteKind =
   | 'accounts'
   | 'components'
-  | 'composer'
   | 'settings'
   | 'unknown'
 

@@ -33,7 +33,7 @@ test('appHref prefixes the subpath base', () => {
 
 test('appPath and appHref round-trip', () => {
   for (const base of ['/', '/dashboard-theme/']) {
-    for (const path of ['/', '/examples/dashboard', '/compose', '/docs', '/docs/start', '/login', '/settings']) {
+    for (const path of ['/', '/examples/dashboard', '/docs', '/login', '/settings']) {
       expect(appPath(appHref(path, base), base)).toBe(path)
     }
   }

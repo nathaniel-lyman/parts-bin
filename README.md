@@ -7,7 +7,7 @@ A reusable React + TypeScript design system with token-only theming, UI primitiv
 forms, overlays, feedback states, data display, DataGrid, charts, maps, shell/layout,
 and chat primitives. The local Vite app exists to browse docs and examples.
 
-**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · the root route opens the component catalog; then explore `/examples/dashboard`, `/compose`, `/login`, and `/settings`.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · the root route opens the component catalog; then explore `/examples/dashboard`, `/login`, and `/settings`.
 
 ![parts-bin component catalog](docs/screenshots/components-light.png)
 
@@ -22,7 +22,7 @@ chart, and page re-skins — zero component edits, enforced by lint:
 
 - **Product engineers** who need a copyable internal-app design system with a real public API.
 - **Teams standardizing UI** across dashboards, admin tools, AI surfaces, and workflow apps.
-- **Developers building examples fast** — the assembly demo, composer, settings, and sign-in routes are proof surfaces built from the same components.
+- **Developers building examples fast** — the assembly demo, settings, and sign-in routes are proof surfaces built from the same components.
 
 The assembly demo is intentionally demoted to example code. It demonstrates composition,
 data derivation, and persistence, but it does not define the public component API.
@@ -38,7 +38,7 @@ delete `.git`) so you begin with a clean history.
 
 **Primary surface: open [`/docs`](http://localhost:5173/docs).**
 The docs catalog shows component purpose, imports, props, near-twin guidance, and snippets. Use
-the assembly demo, composer, sign-in, and settings screens only as examples after selecting components.
+the assembly demo, sign-in, and settings screens only as examples after selecting components.
 
 ## Your first 30 minutes
 
@@ -47,7 +47,7 @@ The fastest path from clone to using the design system:
 1. **Browse `/docs`** and pick components from the catalog rather than deep files.
 2. **Copy the design-system layers** you need: `src/theme/`, `src/components/ui/`, `shell/`, `DataGrid/`, `charts/`, `maps/`, and `chat/`.
 3. **Re-skin through tokens** in `src/theme/tokens.css`; do not hardcode colors in components.
-4. **Use examples as references**: `/examples/dashboard` for a component assembly, `/compose` for a generated route plan, `/login` for a sign-in screen, and `/settings` for preferences.
+4. **Use examples as references**: `/examples/dashboard` for a component assembly, `/login` for a sign-in screen, and `/settings` for preferences.
 5. **Verify** with `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
 
 Nothing in the framework is tied to the bundled sample dataset — map the generic parts to your domain:
@@ -92,14 +92,12 @@ The sample surfaces are built from the design system and live in the docs/exampl
   not exported from the aggregate component API.
 - **`src/components/chat/`** — a composable assistant panel with markdown messages, prompt chips,
   streaming state, and a demo adapter that can read the current screen context.
-- **`src/components/templates/`** — example full-page starters you can route to directly: a guided
-  **App composer** (`/compose`), a component assembly dashboard (`/examples/dashboard`), plus a split brand-panel
+- **`src/components/templates/`** — example full-page starters you can route to directly: a split brand-panel
   **Login** (`/login`) and a section-scroll **Settings** (`/settings`) page. The starter pages
   are presentational demos — Settings' Appearance section is the live home for color mode,
   theme recipe, and density.
 - **`src/hooks/`, `src/selectors/`, `src/data/`** — client-side state, derived metrics, seed data.
 - **`/docs`** — live component catalog with examples, prop guidance, and copy-paste usage snippets.
-- **`/compose`** — example admin-app composer that generates route, import, data-mapping, and theme snippets.
 - **`skills/`** — agent skills: step-by-step workflows for re-theming, swapping the data domain,
   adding components, and verifying changes. See [Agent skills](#agent-skills).
 - **`THEME-SPEC.md`** — the canonical design reference.
@@ -140,7 +138,7 @@ Copy-paste checklist (clone what you need, in order):
 - [ ] **Shell** — copy `src/components/shell/` for the app shell, sidebar, top nav, and filter bars.
 - [ ] **Charts & DataGrid** *(optional)* — copy `src/components/charts/` and `src/components/DataGrid/`;
   import from the `charts` and `DataGrid` barrels.
-- [ ] **Examples** — consult `/`, `/compose`, `/login`, and `/settings` only as reference assemblies.
+- [ ] **Examples** — consult `/`, `/login`, and `/settings` only as reference assemblies.
 - [ ] **Boundary** — copy `scripts/lint-theme.mjs` and wire `npm run lint:theme` so raw colors never leak
   outside `src/theme/`.
 - [ ] **Reference** — see `src/theme/RETHEME.md` to re-skin and `THEME-SPEC.md` for the canonical design spec.

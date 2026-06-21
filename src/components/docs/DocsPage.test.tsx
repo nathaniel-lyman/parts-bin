@@ -30,5 +30,5 @@ test('keeps the onboarding and theme sections below the gallery', () => {
   expect(screen.getByRole('button', { name: 'Browse components' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Use parts-bin in your app' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Examples are secondary' })).toBeInTheDocument()
-  expect(screen.getByText(/Use \/, \/compose, \/login, and \/settings/)).toBeInTheDocument()
+  expect(screen.getByText(/Use \/, \/login, and \/settings/)).toBeInTheDocument()
 })

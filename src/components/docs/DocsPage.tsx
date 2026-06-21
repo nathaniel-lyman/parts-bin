@@ -31,7 +31,7 @@ const copyChecklist: Array<[string, string]> = [
   ['Shell', 'Copy src/components/shell/ for the app shell, sidebar, top nav, and filter bars.'],
   ['Charts', 'Copy src/components/charts/ for token-styled Recharts wrappers and ChartCard examples; import from the ./charts barrel.'],
   ['Maps & DataGrid', 'Copy src/components/maps/ for geographic views. For library builds, import the grid from parts-bin/datagrid and provide your own rows, columns, and getRowId.'],
-  ['Examples', 'Use /, /compose, /login, and /settings as examples that import from the design system, not as the public component API.'],
+  ['Examples', 'Use /, /login, and /settings as examples that import from the design system, not as the public component API.'],
   ['Boundary', 'Copy scripts/lint-theme.mjs and wire npm run lint:theme so raw colors never leak outside src/theme/.'],
 ]
 
@@ -71,16 +71,15 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
           <ComponentGallery onSelect={setSelected} externalQuery={globalSearch} />
         </Card>
 
-        <Card title="Use parts-bin in your app" description="Copy the design-system source first. The assembly demo, composer, sign-in, and settings screens prove the parts work together.">
+        <Card title="Use parts-bin in your app" description="Copy the design-system source first. The assembly demo, sign-in, and settings screens prove the parts work together.">
           <div className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
                 <h2 className="m-0 text-[15px] font-semibold text-ink">Examples are secondary</h2>
-                <p className="m-0 text-[13px] text-muted">Use the assembly demo, composer, sign-in, and settings screens as reference implementations after choosing components from the catalog.</p>
+                <p className="m-0 text-[13px] text-muted">Use the assembly demo, sign-in, and settings screens as reference implementations after choosing components from the catalog.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="primary" onClick={() => { navigate('/examples/dashboard') }}>Assembly demo</Button>
-                <Button variant="secondary" onClick={() => { navigate('/compose') }}>App composer</Button>
                 <Button variant="secondary" onClick={() => { navigate('/login') }}>Sign in</Button>
                 <Button variant="secondary" onClick={() => { navigate('/settings') }}>Settings</Button>
               </div>

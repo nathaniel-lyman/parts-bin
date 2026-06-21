@@ -60,7 +60,7 @@ import {
   UserAvatarMenu,
 } from './components/shell'
 import { DocsPage } from './components/docs/DocsPage'
-import { AppComposerPage, LoginPage, SettingsPage } from './components/templates'
+import { LoginPage, SettingsPage } from './components/templates'
 import { monthlySeries, movementSeries, revenueWaterfallSeries, sparks } from './data/accounts'
 import { createMockServerAdapter, generateAccounts } from './data/examples/accountMockServerAdapter'
 import type { Account } from './data/types'
@@ -465,26 +465,21 @@ export default function App() {
   const loginActive = pathname === '/login'
   const settingsActive = pathname === '/settings'
   const docsActive = pathname === '/' || pathname === '/docs'
-  const composerActive = pathname === '/compose' || pathname === '/docs/start'
   const assemblyActive = pathname === '/examples/dashboard' || pathname === '/demo'
-  const kitActive = docsActive || composerActive
+  const kitActive = docsActive
   const accountsActive = assemblyActive
   const routeKind: AssistantRouteKind = settingsActive
     ? 'settings'
-    : composerActive
-      ? 'composer'
-      : docsActive
-        ? 'components'
-        : accountsActive
-          ? 'accounts'
-          : 'unknown'
+    : docsActive
+      ? 'components'
+      : accountsActive
+        ? 'accounts'
+        : 'unknown'
   const routeLabel = settingsActive
     ? 'Settings'
-    : composerActive
-      ? 'App composer'
-      : docsActive
-        ? 'Component catalog'
-        : 'Component assembly'
+    : docsActive
+      ? 'Component catalog'
+      : 'Component assembly'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
@@ -516,13 +511,12 @@ export default function App() {
     route: pathname,
     routeLabel,
     routeKind,
-    activeTemplate: composerActive ? 'App composer' : undefined,
+    activeTemplate: undefined,
     globalSearch,
     atRiskOnly,
     timePeriodLabel: dashboardPeriodLabel,
   }), [
     atRiskOnly,
-    composerActive,
     dashboardPeriodLabel,
     globalSearch,
     pathname,
@@ -637,13 +631,6 @@ export default function App() {
           description: 'Example assembly of KPI, chart, DataGrid, and assistant components',
           shortcut: 'G D',
           onSelect: () => { navigate('/examples/dashboard') },
-        },
-        {
-          id: 'composer',
-          label: 'Open app composer',
-          description: 'Build a routed parts-bin admin screen',
-          shortcut: 'G A',
-          onSelect: () => { navigate('/compose') },
         },
         {
           id: 'settings',
@@ -811,7 +798,6 @@ export default function App() {
       items={[
         { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
         { label: 'Assembly demo', href: appHref('/examples/dashboard'), active: assemblyActive, meta: 'demo' },
-        { label: 'Compose', href: appHref('/compose'), active: composerActive, meta: 'start' },
       ]}
       adminItems={[
         { label: 'Settings', href: appHref('/settings'), active: settingsActive },
@@ -894,8 +880,6 @@ export default function App() {
     <AppShell sidebar={sidebar} topNav={topNav}>
       {settingsActive ? (
         <SettingsPage />
-      ) : composerActive ? (
-        <AppComposerPage />
       ) : docsActive ? (
         <DocsPage globalSearch={globalSearch} />
       ) : assemblyActive ? (

@@ -62,7 +62,6 @@ const channelOptions = [
 const landingOptions: { value: WorkspaceSettings['landingPage']; label: string }[] = [
   { value: '/docs', label: 'Components' },
   { value: '/examples/dashboard', label: 'Assembly demo' },
-  { value: '/compose', label: 'App composer' },
   { value: '/settings', label: 'Settings' },
 ]
 

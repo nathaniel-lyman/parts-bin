@@ -132,26 +132,6 @@ test('components route drops assembly-only header controls and wires global sear
   expect(screen.queryByRole('heading', { name: 'Button' })).not.toBeInTheDocument()
 })
 
-test('composer route renders a guided starter and hides assembly-only controls', () => {
-  window.history.pushState({}, '', '/compose')
-  render(<ToastProvider><App /></ToastProvider>)
-
-  expect(screen.getByRole('heading', { name: 'App composer' })).toBeInTheDocument()
-  expect(screen.getByText('Guided build')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Generate screen' })).toBeInTheDocument()
-  expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /dates/i })).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: 'Review' })).not.toBeInTheDocument()
-})
-
-test('docs start alias renders the app composer', () => {
-  window.history.pushState({}, '', '/docs/start')
-  render(<ToastProvider><App /></ToastProvider>)
-
-  expect(screen.getByRole('heading', { name: 'App composer' })).toBeInTheDocument()
-  expect(screen.queryByText('Component imports')).not.toBeInTheDocument()
-})
-
 test('signed movement chart exposes bar width and label controls', async () => {
   openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
