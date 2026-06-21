@@ -55,6 +55,12 @@ function isBlank(value: unknown): boolean {
 }
 
 export function makeFilterFn(type: FilterColumnType, operator: string, value: unknown): (cellValue: unknown) => boolean {
+  // isAnyOf is the set-filter predicate and is type-agnostic: keep a row when its stringified value
+  // is one of the selected values. An empty set matches everything (no constraint).
+  if (operator === 'isAnyOf') {
+    const set = new Set(Array.isArray(value) ? value.map(String) : [])
+    return (cellValue) => set.size === 0 || set.has(String(cellValue))
+  }
   switch (type) {
     case 'text': {
       const needle = String(value ?? '').toLowerCase()

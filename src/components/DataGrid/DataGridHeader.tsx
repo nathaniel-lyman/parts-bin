@@ -246,6 +246,7 @@ function SortableHeader<TData>({
               isGrouped={grouping.includes(header.column.id)}
               dispatch={dispatch ?? noopDispatch}
               onAutofit={onAutofitColumn}
+              getFacetedValues={() => header.column.getFacetedUniqueValues()}
             />
           </span>
         ) : (

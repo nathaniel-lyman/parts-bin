@@ -86,6 +86,91 @@ interface Props {
   isGrouped?: boolean
   dispatch: (action: GridAction) => void
   onAutofit?: (columnId: string) => void
+  /** Distinct cell values → counts for the column (TanStack faceted), powering the set filter. */
+  getFacetedValues?: () => Map<unknown, number>
+}
+
+/**
+ * Searchable value checklist (the "set filter"): a search box, a tri-state (Select all), and one row
+ * per distinct value with its count. Commits as an `isAnyOf` filter. Values come from the column's
+ * faceted distinct values (real data) unioned with any predefined options.
+ */
+function SetFilterList({
+  label,
+  values,
+  counts,
+  selected,
+  onChange,
+}: {
+  label: string
+  values: string[]
+  counts: Map<string, number>
+  selected: string[]
+  onChange: (next: string[]) => void
+}) {
+  const [search, setSearch] = useState('')
+  const selectAllRef = useRef<HTMLInputElement>(null)
+  const selectedSet = new Set(selected)
+  const needle = search.trim().toLowerCase()
+  const filtered = needle ? values.filter((value) => value.toLowerCase().includes(needle)) : values
+  const selectedFilteredCount = filtered.reduce((sum, value) => sum + (selectedSet.has(value) ? 1 : 0), 0)
+  const allSelected = filtered.length > 0 && selectedFilteredCount === filtered.length
+  const someSelected = selectedFilteredCount > 0 && !allSelected
+
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected
+  }, [someSelected])
+
+  const toggleAll = () => {
+    // Operate on the currently-searched subset so "(Select all)" respects an active search.
+    if (allSelected) onChange(selected.filter((value) => !filtered.includes(value)))
+    else onChange(Array.from(new Set([...selected, ...filtered])))
+  }
+  const toggleValue = (value: string, checked: boolean) => {
+    onChange(checked ? [...selected, value] : selected.filter((item) => item !== value))
+  }
+
+  return (
+    <div className="grid gap-1.5" data-testid="set-filter">
+      <Input
+        type="search"
+        placeholder="Search values…"
+        aria-label={`Search ${label} values`}
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+      />
+      <label className="flex items-center gap-2 border-b border-line pb-1.5 text-[13px] font-medium text-ink">
+        <input
+          ref={selectAllRef}
+          type="checkbox"
+          className="accent-accent"
+          checked={allSelected}
+          onChange={toggleAll}
+          aria-label={`Select all ${label} values`}
+        />
+        (Select all)
+      </label>
+      <div role="group" aria-label={`${label} values`} className="max-h-48 overflow-auto">
+        {filtered.length === 0 ? (
+          <div className="px-1 py-2 text-[12px] text-faint">No matching values</div>
+        ) : (
+          filtered.map((value) => (
+            <label key={value} className="flex items-center gap-2 py-0.5 text-[13px] text-ink">
+              <input
+                type="checkbox"
+                className="accent-accent"
+                aria-label={value}
+                checked={selectedSet.has(value)}
+                onChange={(event) => toggleValue(value, event.target.checked)}
+              />
+              <span className="min-w-0 flex-1 truncate">{value}</span>
+              <span className="num shrink-0 text-[11px] text-faint">{counts.get(value) ?? 0}</span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function DataGridColumnMenu({
@@ -104,6 +189,7 @@ export function DataGridColumnMenu({
   isGrouped,
   dispatch,
   onAutofit,
+  getFacetedValues,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -158,12 +244,28 @@ export function DataGridColumnMenu({
     dispatch({ type: 'SET_COLUMN_FILTER', columnId, value: { operator: nextOperator as FilterValue['operator'], value: nextValue } })
   }
 
-  const toggleEnum = (option: string, checked: boolean) => {
-    const current = Array.isArray(value) ? value.map(String) : []
-    const next = checked ? [...current, option] : current.filter((item) => item !== option)
+  const applySetFilter = (next: string[]) => {
     if (next.length === 0) dispatch({ type: 'CLEAR_COLUMN_FILTER', columnId })
     else setFilter('isAnyOf', next)
   }
+
+  // Distinct values + counts for the set filter. Counts come from the column's faceted unique values
+  // (real data, post other-column filters); the value list unions any predefined options with the
+  // values actually present. Only computed while the filter panel is open.
+  const facetedValues = filterOpen && getFacetedValues ? getFacetedValues() : undefined
+  const setCounts = new Map<string, number>()
+  if (facetedValues) {
+    for (const [raw, count] of facetedValues) {
+      if (raw === null || raw === undefined || raw === '') continue
+      const key = String(raw)
+      setCounts.set(key, (setCounts.get(key) ?? 0) + count)
+    }
+  }
+  const optionValues = filterMeta?.options ?? []
+  const facetedOnly = Array.from(setCounts.keys()).filter((key) => !optionValues.includes(key))
+  const setValues = optionValues.length
+    ? [...optionValues, ...facetedOnly]
+    : facetedOnly.sort((a, b) => a.localeCompare(b))
 
   useEffect(() => {
     if (!open && !filterOpen && !formatOpen) return
@@ -379,18 +481,13 @@ export function DataGridColumnMenu({
               <div className="grid gap-1">
                 <span className="micro text-faint">Value</span>
                 {filterType === 'enum' || filterType === 'status' ? (
-                  <div className="flex min-h-9 flex-wrap items-center gap-2 rounded-[2px] border border-line bg-surface px-2 py-1" aria-label={`${label} filter options`}>
-                    {(filterMeta?.options ?? []).map((option) => (
-                      <label key={option} className="flex items-center gap-2 text-[13px] text-ink">
-                        <input
-                          type="checkbox"
-                          checked={Array.isArray(value) && value.map(String).includes(option)}
-                          onChange={(event) => toggleEnum(option, event.target.checked)}
-                        />
-                        {option}
-                      </label>
-                    ))}
-                  </div>
+                  <SetFilterList
+                    label={label}
+                    values={setValues}
+                    counts={setCounts}
+                    selected={Array.isArray(value) ? value.map(String) : []}
+                    onChange={applySetFilter}
+                  />
                 ) : isBetween ? (
                   <div className="grid grid-cols-2 gap-2">
                     <Input

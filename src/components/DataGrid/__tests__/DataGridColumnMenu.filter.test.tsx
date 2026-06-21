@@ -31,6 +31,31 @@ describe('column-menu per-column filter', () => {
     expect(screen.queryByText('Cobalt Freight')).toBeNull()
   })
 
+  it('set filter: lists distinct values with counts, searches, and selects all', async () => {
+    const user = userEvent.setup()
+    render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
+
+    await user.click(screen.getByRole('button', { name: /segment column menu/i }))
+    await user.click(within(screen.getByRole('menu', { name: /segment column menu/i })).getByRole('menuitem', { name: 'Filter' }))
+    const setFilter = within(screen.getByRole('dialog', { name: /segment filter/i })).getByTestId('set-filter')
+
+    // Each distinct segment is a checkbox, and its faceted count is shown alongside it.
+    const startupCount = seedAccounts.filter((account) => account.segment === 'Startup').length
+    const startupRow = within(setFilter).getByRole('checkbox', { name: 'Startup' }).closest('label')!
+    expect(startupRow.textContent).toContain(String(startupCount))
+    expect(within(setFilter).getByRole('checkbox', { name: 'Enterprise' })).toBeInTheDocument()
+
+    // (Select all) checks every value.
+    await user.click(within(setFilter).getByRole('checkbox', { name: /select all segment values/i }))
+    expect(within(setFilter).getByRole('checkbox', { name: 'Startup' })).toBeChecked()
+    expect(within(setFilter).getByRole('checkbox', { name: 'Enterprise' })).toBeChecked()
+
+    // Search narrows the visible values.
+    await user.type(within(setFilter).getByLabelText(/search segment values/i), 'start')
+    expect(within(setFilter).getByRole('checkbox', { name: 'Startup' })).toBeInTheDocument()
+    expect(within(setFilter).queryByRole('checkbox', { name: 'Enterprise' })).toBeNull()
+  })
+
   it('opens the filter dialog from the visible header filter icon', async () => {
     const user = userEvent.setup()
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)

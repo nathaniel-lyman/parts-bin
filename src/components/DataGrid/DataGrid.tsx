@@ -13,6 +13,8 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   getCoreRowModel,
   getExpandedRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getGroupedRowModel,
   getPaginationRowModel,
@@ -370,7 +372,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     pageCount: manualPagination && totalRowCount != null ? Math.ceil(totalRowCount / state.pagination.pageSize) : undefined,
     getCoreRowModel: getCoreRowModel(),
     ...(manualSorting ? {} : { getSortedRowModel: getSortedRowModel() }),
-    ...(manualFiltering ? {} : { getFilteredRowModel: getFilteredRowModel() }),
+    ...(manualFiltering
+      ? {}
+      : { getFilteredRowModel: getFilteredRowModel(), getFacetedRowModel: getFacetedRowModel(), getFacetedUniqueValues: getFacetedUniqueValues() }),
     ...(groupingActive ? { getGroupedRowModel: getGroupedRowModel() } : {}),
     ...(expandedActive ? { getExpandedRowModel: getExpandedRowModel() } : {}),
     ...(paginationEnabled && !manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
