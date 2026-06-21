@@ -113,6 +113,8 @@ export interface DataGridProps<TData> {
   renderDetailPanel?: (ctx: { row: TData; rowId: string }) => ReactNode
   /** Column that receives tree indentation/expand controls. Defaults to the first visible data column. */
   treeColumnId?: string
+  /** Row count above which body rows are windowed (virtualized). Default 100. */
+  virtualizeRowThreshold?: number
 }
 
 export interface DataGridContextSnapshot<TData> {
@@ -211,6 +213,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     getRowCanExpand,
     renderDetailPanel,
     treeColumnId,
+    virtualizeRowThreshold = 100,
   } = props
   const isControlled = props.state !== undefined && props.onStateChange !== undefined
   const isServerMode = Boolean(manualSorting || manualFiltering || manualPagination)
@@ -430,7 +433,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     extendCellRange,
     refocusActiveCell,
     restoreGridFocusRef,
-  } = useGridSelectionFocus({ scrollElement, rowCount, rowHeight })
+  } = useGridSelectionFocus({ scrollElement, rowCount, rowHeight, virtualizeThreshold: virtualizeRowThreshold })
   const columnWindow = useMemo<ColumnVirtualWindow | undefined>(() => {
     if (centerLeafColumns.length <= 12) return undefined
     const widths = centerLeafColumns.map((column) => state.columnSizing[column.id] ?? column.getSize())
@@ -888,7 +891,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                   rowSelection={state.rowSelection}
                   rowHeight={rowHeight}
                   scrollElement={scrollElement}
-                  enableVirtualization={rowCount > 100 && !detailPanelActive}
+                  enableVirtualization={rowCount > virtualizeRowThreshold && !detailPanelActive}
                   focus={focus}
                   range={cellRange}
                   renderDetailPanel={detailPanelActive ? renderDetailPanel : undefined}

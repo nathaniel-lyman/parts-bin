@@ -67,6 +67,15 @@ export function DataGridBody<TData>({
     ? Math.max(0, rowVirtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0))
     : 0
 
+  // Pinned (top/bottom) rows are not part of centerRows, so `centerRows.indexOf(row)` is both O(n)
+  // per pinned row and always -1. Resolve the center index via a one-time id→index map instead —
+  // built only when rows are actually pinned, so the common no-pinned (virtualized) path adds nothing.
+  const hasPinnedRows = topRows.length > 0 || bottomRows.length > 0
+  const centerIndexById = hasPinnedRows
+    ? new Map(centerRows.map((row, index) => [row.id, index]))
+    : undefined
+  const pinnedRowIndex = (row: Row<TData>) => centerIndexById?.get(row.id) ?? -1
+
   const renderRow = (row: Row<TData>, rowIndex: number, pinned?: 'top' | 'bottom') => {
     const rowLabel = getRowLabel(row.original, row.id)
     const detail = renderDetailPanel && !row.getIsGrouped() && row.getIsExpanded()
@@ -100,7 +109,7 @@ export function DataGridBody<TData>({
 
   return (
     <tbody data-virtualized={enableVirtualization ? 'true' : 'false'} data-total-size={enableVirtualization ? rowVirtualizer.getTotalSize() : undefined}>
-      {topRows.map((row) => renderRow(row, centerRows.indexOf(row), 'top'))}
+      {topRows.map((row) => renderRow(row, pinnedRowIndex(row), 'top'))}
       {topSpacer > 0 && (
         <tr aria-hidden="true">
           <td colSpan={colSpan} style={{ height: topSpacer, padding: 0 }} />
@@ -112,7 +121,7 @@ export function DataGridBody<TData>({
           <td colSpan={colSpan} style={{ height: bottomSpacer, padding: 0 }} />
         </tr>
       )}
-      {bottomRows.map((row) => renderRow(row, centerRows.indexOf(row), 'bottom'))}
+      {bottomRows.map((row) => renderRow(row, pinnedRowIndex(row), 'bottom'))}
     </tbody>
   )
 }

@@ -6,6 +6,8 @@ export interface UseGridSelectionFocusArgs {
   scrollElement: HTMLDivElement | null
   rowCount: number
   rowHeight: number
+  /** Row count above which the body virtualizes; focus restore scrolls the active row in only then. */
+  virtualizeThreshold?: number
 }
 
 export interface UseGridSelectionFocusResult {
@@ -34,6 +36,7 @@ export function useGridSelectionFocus({
   scrollElement,
   rowCount,
   rowHeight,
+  virtualizeThreshold = 100,
 }: UseGridSelectionFocusArgs): UseGridSelectionFocusResult {
   const [focus, setFocus] = useState<GridFocus>({ row: 0, col: 0 })
   const [cellRange, setCellRange] = useState<CellRange | null>(null)
@@ -87,7 +90,7 @@ export function useGridSelectionFocus({
   useEffect(() => {
     if (!scrollElement) return
     if (!restoreGridFocusRef.current) return
-    if (focus.row >= 0 && rowCount > 100) {
+    if (focus.row >= 0 && rowCount > virtualizeThreshold) {
       scrollElement.scrollTop = Math.max(0, focus.row * rowHeight)
     }
     const restore = () => {
@@ -97,7 +100,7 @@ export function useGridSelectionFocus({
     restore()
     const frame = requestAnimationFrame(restore)
     return () => cancelAnimationFrame(frame)
-  }, [focus, focusActiveCell, rowCount, rowHeight, scrollElement])
+  }, [focus, focusActiveCell, rowCount, rowHeight, scrollElement, virtualizeThreshold])
   /* eslint-enable react-hooks/immutability */
 
   return {
