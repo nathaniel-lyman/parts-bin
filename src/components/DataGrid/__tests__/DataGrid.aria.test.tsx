@@ -55,6 +55,20 @@ describe('DataGrid ARIA', () => {
     expect(menuButton).toHaveAttribute('aria-expanded', 'true')
   })
 
+  it('announces sort and selection changes through a polite live region', async () => {
+    const user = userEvent.setup()
+    renderGrid()
+    const announcer = screen.getByTestId('grid-announcer')
+    expect(announcer).toHaveAttribute('aria-live', 'polite')
+    expect(announcer.textContent).toBe('') // silent on mount
+
+    await user.click(screen.getByRole('columnheader', { name: /Quantity/ }))
+    expect(announcer).toHaveTextContent(/Sorted by Quantity/i)
+
+    await user.click(screen.getByRole('checkbox', { name: /Select p1/ }))
+    expect(announcer).toHaveTextContent('1 row selected')
+  })
+
   it('updates row selection and menu expanded state', async () => {
     renderGrid()
     const row = screen.getByRole('row', { name: /Widget/ })

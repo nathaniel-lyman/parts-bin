@@ -202,6 +202,16 @@ function toColumnDef<TData>(
   return base
 }
 
+/** Human sentence describing the current sort, for the live-region announcer. */
+function describeSort<TData>(sorting: DataGridState['sorting'], columns: DataGridColumn<TData>[]): string {
+  if (sorting.length === 0) return 'Sorting cleared'
+  const label = (id: string) => {
+    const column = columns.find((item) => item.id === id)
+    return typeof column?.header === 'string' ? column.header : id
+  }
+  return `Sorted by ${sorting.map((sort) => `${label(sort.id)} ${sort.desc ? 'descending' : 'ascending'}`).join(', ')}`
+}
+
 export function DataGrid<TData>(props: DataGridProps<TData>) {
   const {
     rows,
@@ -435,6 +445,27 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     && footerTotalRows > visibleIds.length,
   )
   const selectionDisplayCount = matchingSelectionActive ? footerTotalRows : selCount
+
+  // Live-region announcer: derive the message during render via the sanctioned set-state-on-changed-
+  // value pattern (no effect, no extra paint, StrictMode-idempotent) so a screen reader hears a sort,
+  // a filter that changed the result count, or a selection change. Lazy-initialized to the current
+  // signatures so nothing is announced on mount; sort wins over filter wins over selection when more
+  // than one changed in a single render.
+  const sortSig = JSON.stringify(state.sorting)
+  const filterSig = JSON.stringify([state.columnFilters, state.globalFilter])
+  const [announcer, setAnnouncer] = useState(() => ({ message: '', sortSig, filterSig, sel: selCount }))
+  if (sortSig !== announcer.sortSig || filterSig !== announcer.filterSig || selCount !== announcer.sel) {
+    const message =
+      sortSig !== announcer.sortSig
+        ? describeSort(state.sorting, columns)
+        : filterSig !== announcer.filterSig
+          ? `Filtered: ${footerTotalRows} ${footerTotalRows === 1 ? 'row' : 'rows'}`
+          : selCount === 0
+            ? 'Selection cleared'
+            : `${selCount} ${selCount === 1 ? 'row' : 'rows'} selected`
+    setAnnouncer({ message, sortSig, filterSig, sel: selCount })
+  }
+
   const visibleColumnIds = useMemo(() => visibleLeafColumns.map((column) => column.id), [visibleLeafColumns])
   const visibleMovableColumnIds = useMemo(() => visibleColumnIds.filter((id) => !lockedColumnIdSet.has(id)), [visibleColumnIds, lockedColumnIdSet])
   const columnWidthMap = useMemo(
@@ -851,6 +882,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       data-pinned-center={pinnedGroups.center.length}
       data-pinned-right={pinnedGroups.right.length}
     >
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="grid-announcer">
+        {announcer.message}
+      </div>
       <DataGridToolbar
         columns={columns}
         columnVisibility={state.columnVisibility}
