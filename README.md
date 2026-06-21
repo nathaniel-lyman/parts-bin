@@ -7,7 +7,7 @@ A reusable React + TypeScript design system with token-only theming, UI primitiv
 forms, overlays, feedback states, data display, DataGrid, charts, maps, shell/layout,
 and chat primitives. The local Vite app exists to browse docs and examples.
 
-**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · the root route opens the component catalog; then explore `/examples/dashboard`, `/login`, and `/settings`.
+**[Live demo →](https://nathaniel-lyman.github.io/parts-bin/)** · the root route opens the component catalog; then explore `/examples/dashboard`, `/examples/datagrid`, `/login`, and `/settings`.
 
 ![parts-bin component catalog](docs/screenshots/components-light.png)
 
@@ -45,10 +45,10 @@ the assembly demo, sign-in, and settings screens only as examples after selectin
 The fastest path from clone to using the design system:
 
 1. **Browse `/docs`** and pick components from the catalog rather than deep files.
-2. **Copy the design-system layers** you need: `src/theme/`, `src/components/ui/`, `shell/`, `DataGrid/`, `charts/`, `maps/`, and `chat/`.
+2. **Copy the design-system layers** you need: `src/theme/`, `src/components/ui/`, `src/components/shell/`, `src/components/DataGrid/`, `src/components/charts/`, `src/components/maps/`, and `src/components/chat/`.
 3. **Re-skin through tokens** in `src/theme/tokens.css`; do not hardcode colors in components.
-4. **Use examples as references**: `/examples/dashboard` for a component assembly, `/login` for a sign-in screen, and `/settings` for preferences.
-5. **Verify** with `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
+4. **Use examples as references**: `/examples/dashboard` for a read-only component assembly, `/examples/datagrid` for the interactive grid harness, `/login` for a sign-in screen, and `/settings` for preferences.
+5. **Verify to match the risk**: use focused component tests while iterating; before publishing package or public API changes, run `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
 
 Nothing in the framework is tied to the bundled sample dataset — map the generic parts to your domain:
 
@@ -74,19 +74,25 @@ The sample surfaces are built from the design system and live in the docs/exampl
 
 | | |
 |---|---|
-| ![Component catalog](docs/screenshots/components-light.png) **`/` or `/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/examples/dashboard`** — example KPI + charts + DataGrid assembly |
-| ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in | ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — example appearance/profile/preferences page |
+| ![Component catalog](docs/screenshots/components-light.png) **`/` or `/docs`** — live gallery/reference for the public component API | ![Dashboard light](docs/screenshots/dashboard-light.png) **`/examples/dashboard`** — example KPI + charts + read-only table assembly |
+| **`/examples/datagrid`** — interactive DataGrid harness with grouping, server mode, selection, CRUD, saved views, row pinning, editing, tree/detail rows, and export flows | ![Sign-in page](docs/screenshots/login-light.png) **`/login`** — example split brand-panel sign-in |
+| ![Settings page](docs/screenshots/settings-dark.png) **`/settings`** — example appearance/profile/preferences page | |
 
 ## What's inside
 - **`src/theme/`** — the entire design system (tokens, fonts, base styles, Tailwind mapping,
   chart styling, and optional theme recipes). This is the swappable, portable layer.
   See `src/theme/RETHEME.md`.
 - **`src/components/ui/`** — hand-rolled, token-only primitives exported from
-  `src/components/ui`: buttons (with loading state), icon buttons, forms, comboboxes, radio groups,
-  tabs, segmented controls, overlays (modal + drawer), inline alerts, cards, metrics,
-  empty/loading states, spinners, pagination, and toasts.
+  `src/components/ui`: buttons (with loading state), icon buttons, forms, comboboxes, multi-selects,
+  date controls, sliders, switches, tabs, segmented controls, overlays (modal, drawer, popover,
+  dropdown/context menus, command palette), inline alerts, banners, cards, tables, metrics,
+  activity/detail surfaces, loading states, spinners, pagination, and toasts.
 - **`src/components/shell/`** — clone-ready app structure: app shell, sidebar, top nav,
   breadcrumbs, filter bars, section headers, and settings panels.
+- **`src/components/DataGrid/`** — neutral, TanStack-backed grid with sorting, filtering,
+  pagination, row selection, saved views, row pinning, range copy/paste, inline editing,
+  grouping, built-in/custom aggregation, tree rows, detail panels, CSV/TSV export, and
+  server-query helpers.
 - **`src/components/`** — public design-system components and barrels: UI, shell, charts, maps,
   DataGrid, chat, KPI cards, sparkline, and confirm dialog. Demo-only example/template code is
   not exported from the aggregate component API.
@@ -123,10 +129,13 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 | Command | Does |
 |---|---|
 | `npm run dev` | start the app |
+| `npm run preview` | serve the production build locally |
 | `npm run build` | typecheck + production build |
 | `npm run build:lib` | build the package entrypoints in `dist/` |
 | `npm run test:package` | build and verify the `parts-bin/datagrid` subpath export |
-| `npm run test` | run the Vitest suite |
+| `npm test` | run the Vitest suite once |
+| `npm run test:watch` | run Vitest in watch mode |
+| `npm run lint` | run ESLint |
 | `npm run lint:theme` | fail if raw colors leak outside `src/theme/` |
 | `npm run test:e2e` | run Playwright checks for layout-sensitive flows |
 
@@ -138,7 +147,10 @@ Copy-paste checklist (clone what you need, in order):
 - [ ] **Shell** — copy `src/components/shell/` for the app shell, sidebar, top nav, and filter bars.
 - [ ] **Charts & DataGrid** *(optional)* — copy `src/components/charts/` and `src/components/DataGrid/`;
   import from the `charts` and `DataGrid` barrels.
-- [ ] **Examples** — consult `/`, `/login`, and `/settings` only as reference assemblies.
+- [ ] **Maps & Chat** *(optional)* — copy `src/components/maps/` for geographic views and
+  `src/components/chat/` for the assistant panel/composer/message primitives.
+- [ ] **Examples** — consult `/docs`, `/examples/dashboard`, `/examples/datagrid`, `/login`, and
+  `/settings` only as reference assemblies.
 - [ ] **Boundary** — copy `scripts/lint-theme.mjs` and wire `npm run lint:theme` so raw colors never leak
   outside `src/theme/`.
 - [ ] **Reference** — see `src/theme/RETHEME.md` to re-skin and `THEME-SPEC.md` for the canonical design spec.
@@ -152,17 +164,18 @@ import { Button, DataGrid, WaterfallChart, KpiCard } from './components'
 
 ### Experimental package entrypoints
 
-The repo is still private, but the package boundary is now explicit enough to build a library
-artifact for integration testing:
+The repo is still private, but the package boundary is now explicit enough to build library
+artifacts for integration testing:
 
 ```bash
 npm run build:lib
 ```
 
+The root `parts-bin` entrypoint exports the aggregate component surface from `src/components`.
 The DataGrid-only entrypoint is `parts-bin/datagrid`. It exports the neutral `DataGrid`,
-`DataGridColumn`, `DataGridState`, query/export helpers, grid persistence hooks, saved-view
-helpers, and the generic `createMemoryServerAdapter`. Demo account fixtures stay in deep demo
-files and are not part of this entrypoint.
+`DataGridColumn`, `DataGridState`, editing and aggregation helpers, query/export helpers,
+grid persistence/view hooks, saved-view helpers, and the generic `createMemoryServerAdapter`.
+Demo account fixtures stay in deep demo files and are not part of this entrypoint.
 
 Consumers must load the token theme once at the app root:
 
@@ -171,8 +184,10 @@ import 'parts-bin/theme.css'
 import { DataGrid, type DataGridColumn } from 'parts-bin/datagrid'
 ```
 
-Peer dependencies for the DataGrid entrypoint are React, React DOM, TanStack Table/Virtual, and
-dnd-kit. The root `parts-bin` entrypoint also uses the broader chart, map, and chat dependencies.
+Run `npm run test:package` to build the library and verify that `parts-bin/datagrid` imports
+without demo fixtures. Peer dependencies for the DataGrid entrypoint are React, React DOM,
+TanStack Table/Virtual, and dnd-kit. The root `parts-bin` entrypoint also uses the broader chart,
+map, and chat dependencies.
 
 parts-bin is intentionally a copy-paste kit first, not an npm package. Let the public API harden
 across real cloned apps before packaging it.
