@@ -35,8 +35,8 @@
 
 | Phase | State | Notes |
 |---|---|---|
-| **A — Foundation refactor** | 🟡 in progress | hook extraction ✅, Ledger codemod ✅, barrel narrowing ⏳, 'actions' id refactor ⏳ |
-| **B — Render-layer memoization** | ⬜ not started | now ALSO owns `GridRuntimeContext` (re-sequenced from A) |
+| **A — Foundation refactor** | ✅ COMPLETE | hook extraction ✅, Ledger codemod ✅, barrel narrowing ✅; 'actions' id refactor → moved to B |
+| **B — Render-layer memoization** | ⬜ next | owns `GridRuntimeContext` (from A) + the `'actions'` capability-flag refactor (from A) |
 | **C — Interaction polish** | ⬜ not started | |
 | **D — Correctness + filter depth** | ⬜ not started | includes fixing the 2 pre-existing aggregation tests |
 | **E — Accessibility / ARIA pass** | ⬜ not started | |
@@ -56,26 +56,25 @@
 - **`Ledger*` → `DataGrid*` codemod** — removed `LedgerGridColumn/LedgerGridState/LedgerCellContext`
   aliases from `types.ts`; updated all internal usages + the `types.test.ts` compat test.
 
-### Phase A — remaining
-1. **Barrel narrowing** (`src/components/DataGrid/index.ts`): drop the composition-internal
-   re-exports (`DataGridHeader/Body/Row/Cell/SelectionCell/ColumnDragOverlay`) so their prop
-   signatures can be reshaped in Phase B without a "public" break.
-   - **Ripple to handle:** `src/components/catalog.ts` lists these as INTERNAL (`['DataGridHeader',
-     'Composed by DataGrid'], …` ~lines 95-102). `catalog.test.ts` requires every root-exported
-     component to be cataloged or `INTERNAL`. Root barrel `src/components/index.ts` does
-     `export * from './DataGrid'`. Check `barrels.test.ts` + `catalog.test.ts` assertions before/after.
-   - Likely keep `DataGridToolbar`/`DataGridFooter` exported (standalone-usable). Confirm.
-2. **`'actions'` magic column-id → capability flags** (review architecture finding): `ACTIONS_COLUMN_ID`
-   in `normalize.ts` is special-cased across ~10 modules (normalize, reducers, DataGrid, DataGridCell,
-   DataGridRow, accountGridColumns). Replace with per-column capability flags
-   (`lockPosition: 'last'`, `suppressMovable`, `lockPinned`) derived in `normalize`. Medium effort,
-   ~10 files, behavior-preserving. Also fold in `RESET_COLUMNS` hard-coding cleanup
-   (reducers embed account-grid presets like `density: 'compact'`, `right: ['actions']`).
+### Phase A — DONE
+- Barrel narrowed (commit `b09a9af`): `DataGridHeader/Body/Row/Cell/SelectionCell/ColumnDragOverlay`
+  are now deep-import only; `DataGrid` + `Toolbar`/`Footer` stay barrel-exported. `catalog.ts`
+  `INTERNAL` map reconciled (the guard test forbids stale INTERNAL keys). All internal usage was
+  already deep-path, so no call sites changed.
 
-### Re-sequencing note
-`GridRuntimeContext` was originally Phase A but **moved into Phase B** — its only payoff is making
-`DataGridRow`/`DataGridCell` memoizable, which *is* Phase B. Doing it in A would refactor the render
-chain twice. No scope dropped.
+### Re-sequencing notes (two items moved A → B)
+1. **`GridRuntimeContext`** — its only payoff is making `DataGridRow`/`DataGridCell` memoizable,
+   which *is* Phase B. Doing it in A would refactor the render chain twice. No scope dropped.
+2. **`'actions'` magic column-id → capability flags** — turned out structural, not a find-replace:
+   `normalize.ts` bakes the literal `'actions'` into column order (forced last), pinning (forced
+   right), sorting/grouping (excluded), and visibility (forced visible), all via **id-only** helpers
+   (`readonly string[]`, no column-capability access). A true refactor threads a derived
+   "locked-column-ids" set through `normalize` → `reducers` (it already receives `columns`) → `state`
+   /`persistence`, honoring a new `lockPosition: 'last'` flag AND `type: 'actions'` for back-compat.
+   Folded into B because B rethreads the component-side `'actions'` checks (Cell/Row/DataGrid) anyway.
+   Also fold in the `RESET_COLUMNS` hard-coding cleanup (reducers embed account presets like
+   `density: 'compact'`, `right: ['actions']`). Strong safety net: `normalize.test.ts`,
+   `reducers.columnOrder/columnPinning/sorting.test.ts`.
 
 ---
 
@@ -106,6 +105,11 @@ The single biggest gap between "has virtualization" and "feels like AG Grid at s
   pointermove and the scroll handler (`useScrollMetrics`).
 - **Fix O(n) indexOf** for pinned (top/bottom) rows in `DataGridBody` (build an id→index map);
   make the `rowCount > 100` virtualization threshold a prop.
+- **`'actions'` magic-id → capability flags** (moved from A): add `lockPosition: 'last'` (keep
+  `type: 'actions'` for back-compat), derive a locked-ids set in the reducer (it already gets
+  `columns`), thread it through `normalize`/`state`/`persistence`, and convert the component-side
+  `id === 'actions'` checks (Cell/Row/DataGrid) while they're being rethreaded for context. Plus the
+  `RESET_COLUMNS` hard-coded-preset cleanup.
 
 ### Phase C — Interaction polish  *(visible "this is AG Grid" wins)*
 All colors must be theme tokens (no raw hex outside `src/theme/`; avoid new `bg-black/40`-style utilities).
