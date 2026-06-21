@@ -37,8 +37,8 @@
 |---|---|---|
 | **A — Foundation refactor** | ✅ COMPLETE | hook extraction ✅, Ledger codemod ✅, barrel narrowing ✅; 'actions' id refactor → moved to B |
 | **B — Render-layer memoization** | ✅ COMPLETE | `GridRuntimeContext` + memo ✅, debounce/throttle ✅, O(1) pinned indexing ✅, `lockPosition` capability ✅; adversarial-review fixes folded |
-| **C — Interaction polish** | ⬜ next | |
-| **D — Correctness + filter depth** | ⬜ not started | includes fixing the 2 pre-existing aggregation tests |
+| **C — Interaction polish** | ✅ COMPLETE | selection tint, cell flash, lucide icons, overlay/skeleton states, resize/reorder/fill affordances, scrollbar/popover/density polish |
+| **D — Correctness + filter depth** | ⬜ next | includes fixing the 2 pre-existing aggregation tests |
 | **E — Accessibility / ARIA pass** | ⬜ not started | |
 
 ### Commits on the branch so far
@@ -48,6 +48,48 @@
   filter + rAF-throttle scroll/resize · `3b87678` O(1) pinned indexing + `virtualizeRowThreshold`
   prop · `e75c6ab` `'actions'` → `lockPosition` capability · `2cb3fc0` review fixes (flush
   resize on release, flush/cancel filter on blur/re-sync)
+- Phase C: `496a257` selected-row tint + hover/range split · `32373ee` cell-change flash ·
+  `c2a563b` lucide sort icons + badge + chevrons · `190d085` overlay states + skeleton rows ·
+  `ed34d23` thin scrollbar + popover-enter + density transition · `ed6513c` resize guide-line +
+  reorder drop-indicator · `3ae7032` range corner fill handle
+
+### Phase C — DONE
+All colors are theme tokens (no raw hex / no new named utilities); every visible change is behavior-
+preserving and gated with `tsc` + the DataGrid suite + `lint:theme`. Phase B's memoization is intact
+(`GridRuntimeContext` value + handlers stayed identity-stable; new per-row/per-cell signals are
+narrow primitives). **Full gate green:** `npm run build` ✅, `npx vitest run` = 717 passed / **the 2
+known pre-existing aggregation failures only**, `npm run lint` ✅, `lint:theme` ✅.
+
+- **Selected-row tint** (`496a257`): selected `<tr>` paints `bg-accent-soft` incl. the sticky
+  selection cell + any pinned/sticky data cells (their opaque bg used to hide the tint); the band
+  holds on hover. **Hover/range split:** hover is now the neutral `surface-2` at row level,
+  `accent-soft` reserved for selection/range. `selected` flows to cells only for pinned sides, so a
+  selection toggle re-renders just the toggled row's sticky cells.
+- **Cell-change flash** (`32373ee`): one-shot tint on value change — `pos-soft`/`neg-soft` for
+  numeric up/down, `accent-soft` neutral otherwise. Detected wholly inside the memoized `DataGridCell`
+  via React's derive-state-from-a-changed-value-during-render pattern (guarded setState, no effect, no
+  render-time ref read — which the React Compiler lint forbids); the keyed overlay survives unrelated
+  re-renders and `onAnimationEnd` clears it. `@keyframes ledger-cell-flash`, reduced-motion gated.
+- **Lucide icons** (`c2a563b`): sort = `ArrowUp`/`ArrowDown`; sortable-but-unsorted shows a faint
+  `ChevronsUpDown` hint on header hover/focus; multi-sort priority is a styled pill badge (kept the
+  `sort-priority` testid + 1-based index). Group/tree expanders use `ChevronDown`/`ChevronRight`.
+  Header label restructured to a flex row (text truncates, sort cluster stays visible); alignment
+  classes + `col-header-label` testid on the outer span, `data-autofit-label` on the inner text span.
+- **Overlay-style loading/empty/error + skeleton** (`190d085`): a relative wrapper hosts a
+  pointer-transparent `bg-surface/70` backdrop with the state card centered (min-h gives it room).
+  Initial load renders `DataGridSkeletonRows` (token shimmer, aria-hidden) instead of collapsing the
+  tbody; a refetch keeps the real rows mounted + dimmed. State components' text/roles unchanged.
+- **Resize guide-line + reorder drop-indicator** (`ed6513c`): full-height accent line tracks the
+  cursor during a resize (portalled to `<body>`, rAF-coalesced, cleared on release); a crisp accent
+  insertion bar marks the column-reorder drop edge, derived from the live drag preview.
+- **Range corner fill handle** (`3ae7032`): visible accent handle on a multi-cell range's bottom-right
+  corner (editing only). Click fills the range from each column's anchor-row value via the existing
+  validate → `onRowUpdate` path (`fillSelection`). **Stretch deferred:** drag-to-extend-then-fill and
+  series increment (the click-to-fill ships the paste-fill value semantics).
+- **Scrollbar / popover / density** (`ed34d23`): thin token-backed grid scrollbar
+  (`.ledger-scroll-thin`), 120ms `popover-enter` on the column/context menus + dialogs, and a row-
+  height transition on density change (`.ledger-density-anim`). All reduced-motion gated both ways
+  (media query + the explicit `html[data-reduce-motion]` opt-in).
 
 ### Phase B — DONE
 - **Memoization (the fault-line fix):** `GridRuntimeContext` collapses the Body→Row→Cell
