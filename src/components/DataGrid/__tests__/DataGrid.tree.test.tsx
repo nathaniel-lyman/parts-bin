@@ -48,4 +48,27 @@ describe('DataGrid tree data', () => {
     expect(childRow).toHaveAttribute('data-row-depth', '1')
     expect(childRow).toHaveAttribute('aria-level', '2')
   })
+
+  it('ArrowRight/ArrowLeft expand and collapse an expandable row from any column', () => {
+    const { container } = render(
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        getSubRows={(row) => row.children}
+        enablePagination={false}
+      />,
+    )
+    expect(screen.queryByText('Child account')).not.toBeInTheDocument()
+
+    // Focus the OWNER cell (a non-tree column) of the parent and expand with ArrowRight.
+    const ownerCell = container.querySelector<HTMLElement>('tr[data-row-id="p1"] td[data-column-id="owner"]')!
+    fireEvent.focus(ownerCell)
+    fireEvent.keyDown(ownerCell, { key: 'ArrowRight' })
+    expect(screen.getByText('Child account')).toBeInTheDocument()
+
+    // ArrowLeft from the same non-tree column collapses it again.
+    fireEvent.keyDown(container.querySelector('tr[data-row-id="p1"] td[data-column-id="owner"]')!, { key: 'ArrowLeft' })
+    expect(screen.queryByText('Child account')).not.toBeInTheDocument()
+  })
 })

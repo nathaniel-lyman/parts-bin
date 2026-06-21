@@ -32,7 +32,7 @@ import { useScrollMetrics } from './useScrollMetrics'
 import { usePinnedColumnOffsets } from './usePinnedColumnOffsets'
 import { useGridSelectionFocus } from './useGridSelectionFocus'
 import { useGridClipboard } from './useGridClipboard'
-import { ACTIONS_COLUMN_ID, isActionRenderColumn, isLockPositionColumn, lockedColumnIds } from './normalize'
+import { isActionRenderColumn, isLockPositionColumn, lockedColumnIds } from './normalize'
 import { gridReducer } from './reducers'
 import { densityClass, pinnedLeafGroups, rowHeightForDensity, selectAllState, selectionCount } from './selectors'
 import { hydrate } from './state'
@@ -772,6 +772,23 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       metaKey: event.metaKey,
       altKey: event.altKey,
     })
+    // Type-to-edit: a printable character opens the focused editable cell's editor, seeded with it.
+    // (Space is 'toggle-select', Enter 'primary-action', F2 'edit' — so they never reach here.)
+    if (
+      intent === 'none'
+      && focus.row >= 0
+      && event.key.length === 1
+      && !event.ctrlKey && !event.metaKey && !event.altKey
+      && editingApi
+    ) {
+      const colId = visibleColumnIds[focus.col]
+      const targetRow = visibleRows[focus.row]
+      if (targetRow && !targetRow.getIsGrouped() && colId && editingApi.isEditable(colId)) {
+        event.preventDefault()
+        editingApi.start(targetRow.id, colId, event.key)
+        return
+      }
+    }
     if (intent === 'none') return
     if (intent === 'close-menu') {
       setMenu(null)
@@ -791,13 +808,12 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     }
     if (intent === 'move') {
       const focusedRow = focus.row >= 0 ? visibleRows[focus.row] : undefined
-      const focusedColId = visibleColumnIds[focus.col]
-      const activeTreeColumnId = treeColumnId ?? visibleColumnIds.find((id) => id !== ACTIONS_COLUMN_ID)
+      // ArrowRight expands a collapsed expandable row, ArrowLeft collapses an expanded one — from ANY
+      // column. When the row's state already matches, it falls through to ordinary focus movement.
       if (
         focusedRow &&
         !focusedRow.getIsGrouped() &&
         focusedRow.getCanExpand() &&
-        focusedColId === activeTreeColumnId &&
         !event.ctrlKey &&
         !event.metaKey &&
         (event.key === 'ArrowRight' || event.key === 'ArrowLeft')
@@ -860,6 +876,12 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     if (intent === 'toggle-select' && enableRowSelection) {
       event.preventDefault()
       dispatch({ type: 'TOGGLE_ROW', id: row.id })
+      return
+    }
+    if (intent === 'edit') {
+      event.preventDefault()
+      const colId = visibleColumnIds[focus.col]
+      if (editingApi && colId && editingApi.isEditable(colId)) editingApi.start(row.id, colId)
       return
     }
     if (intent === 'primary-action') {

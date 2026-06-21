@@ -63,10 +63,12 @@ export function useInlineEditing<TData>({
   }, [])
 
   const startEditing = useCallback(
-    (rowId: string, columnId: string) => {
+    (rowId: string, columnId: string, seed?: string) => {
       const row = rows.find((item) => getRowId(item) === rowId)
       if (!row || !isColumnEditable(columnsById.get(columnId))) return
-      setEditSession(startEdit(editMode, rowId, columnId, columns, row))
+      const session = startEdit(editMode, rowId, columnId, columns, row)
+      // type-to-edit: replace the seeded draft for the focused column with the printable char.
+      setEditSession(seed !== undefined ? setDraft(session, columnId, seed) : session)
     },
     [columns, columnsById, editMode, getRowId, rows],
   )

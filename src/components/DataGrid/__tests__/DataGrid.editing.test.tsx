@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { seedAccounts } from '../../../data/accounts'
@@ -45,6 +45,22 @@ describe('DataGrid inline editing', () => {
     expect(onRowUpdate).toHaveBeenCalledWith('r0', { owner: 'Dana Field' }, rows[0])
     expect(screen.queryByRole('textbox', { name: 'Edit owner' })).not.toBeInTheDocument()
     expect(cell(container, 'r0', 'owner').dataset.cellDirty).toBe('true')
+  })
+
+  it('F2 opens the editor on the focused cell', () => {
+    const { container } = renderGrid()
+    const ownerCell = cell(container, 'r0', 'owner')
+    fireEvent.focus(ownerCell)
+    fireEvent.keyDown(ownerCell, { key: 'F2' })
+    expect(screen.getByRole('textbox', { name: 'Edit owner' })).toBeInTheDocument()
+  })
+
+  it('type-to-edit opens the editor seeded with the typed character', () => {
+    const { container } = renderGrid()
+    const ownerCell = cell(container, 'r0', 'owner')
+    fireEvent.focus(ownerCell)
+    fireEvent.keyDown(ownerCell, { key: 'Z' })
+    expect(screen.getByRole('textbox', { name: 'Edit owner' })).toHaveValue('Z')
   })
 
   it('Escape cancels without committing', async () => {

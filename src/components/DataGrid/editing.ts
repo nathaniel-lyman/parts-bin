@@ -150,7 +150,8 @@ export interface GridEditingApi {
   isEditable: (columnId: string) => boolean
   isDirty: (rowId: string, columnId: string) => boolean
   editorFor: (columnId: string) => { type: EditorType; options?: string[] }
-  start: (rowId: string, columnId: string) => void
+  /** Opens the editor; `seed` (a typed printable char) replaces the seeded draft for type-to-edit. */
+  start: (rowId: string, columnId: string, seed?: string) => void
   setDraft: (columnId: string, value: string) => void
   commit: (move?: 'next' | 'prev') => void
   cancel: () => void
