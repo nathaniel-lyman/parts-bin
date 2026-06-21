@@ -739,10 +739,18 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       shiftKey: event.shiftKey,
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
+      altKey: event.altKey,
     })
     if (intent === 'none') return
     if (intent === 'close-menu') {
       setMenu(null)
+      return
+    }
+    // Alt+Down on a focused header opens its column menu (the header controls aren't tab stops).
+    if (intent === 'open-menu' && focus.row < 0) {
+      event.preventDefault()
+      const th = scrollElement?.querySelector<HTMLElement>(`th[data-col-index="${focus.col}"]`)
+      th?.querySelector<HTMLButtonElement>('[data-grid-colmenu]')?.click()
       return
     }
     const dims = {

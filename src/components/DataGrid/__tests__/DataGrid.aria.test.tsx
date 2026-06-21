@@ -37,6 +37,24 @@ describe('DataGrid ARIA', () => {
     expect(screen.getByText('Widget').closest('td')).toHaveAttribute('aria-colindex', '2')
   })
 
+  it('keeps the grid to a single tab stop: rows and header controls are not tab stops', () => {
+    renderGrid()
+    expect(screen.getByRole('row', { name: /Widget/ })).toHaveAttribute('tabindex', '-1')
+    expect(screen.getByRole('button', { name: /Quantity column menu/ })).toHaveAttribute('tabindex', '-1')
+    expect(screen.getByRole('button', { name: /Quantity column filter/ })).toHaveAttribute('tabindex', '-1')
+  })
+
+  it('opens a header column menu from the keyboard with Alt+ArrowDown', async () => {
+    const user = userEvent.setup()
+    renderGrid()
+    const menuButton = screen.getByRole('button', { name: /Quantity column menu/ })
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+
+    screen.getByRole('columnheader', { name: /Quantity/ }).focus()
+    await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
+    expect(menuButton).toHaveAttribute('aria-expanded', 'true')
+  })
+
   it('updates row selection and menu expanded state', async () => {
     renderGrid()
     const row = screen.getByRole('row', { name: /Widget/ })

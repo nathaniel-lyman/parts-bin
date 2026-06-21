@@ -84,7 +84,9 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
     <>
     <span
       role="separator"
-      tabIndex={0}
+      // Not a tab stop: the grid is one tab stop and keyboard resize is Ctrl+Arrow on the focused
+      // header. The handle stays pointer-draggable and keeps its own key handler for completeness.
+      tabIndex={-1}
       aria-orientation="vertical"
       aria-label={`Resize ${header} column`}
       onKeyDown={(event) => {

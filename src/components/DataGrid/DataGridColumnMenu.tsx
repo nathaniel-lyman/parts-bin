@@ -450,6 +450,9 @@ export function DataGridColumnMenu({
         <Button
           variant="ghost"
           size="compact"
+          // In-grid header controls aren't tab stops; reach them via the grid's roving header focus
+          // (the menu opens with Alt+Down, which exposes Filter and the rest as menu items).
+          tabIndex={-1}
           className={`h-8 w-8 px-0 ${currentFilter ? 'text-accent' : 'text-muted hover:text-ink'}`}
           aria-label={`${label} column filter`}
           aria-pressed={currentFilter ? true : undefined}
@@ -466,8 +469,11 @@ export function DataGridColumnMenu({
       <Button
         variant="ghost"
         size="compact"
+        tabIndex={-1}
+        data-grid-colmenu=""
         className="h-8 w-8 px-0 text-muted hover:text-ink"
         aria-label={`${label} column menu`}
+        aria-haspopup="menu"
         aria-expanded={open}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {

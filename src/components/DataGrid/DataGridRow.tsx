@@ -169,7 +169,9 @@ function DataGridRowComponent<TData>({
       data-row-depth={row.depth}
       aria-rowindex={ariaRowIndex}
       style={{ height: 'var(--row-h)' }}
-      tabIndex={enableRowSelection && !isGroupRow ? 0 : undefined}
+      // Roving focus lives on the cells, so rows are not tab stops (single tab stop into the grid).
+      // Still programmatically focusable (-1) and Space on a focused cell toggles via this handler.
+      tabIndex={enableRowSelection && !isGroupRow ? -1 : undefined}
       aria-selected={enableRowSelection && !isGroupRow ? selected : undefined}
       aria-expanded={row.getCanExpand() ? row.getIsExpanded() : undefined}
       aria-level={!isGroupRow && row.depth > 0 ? row.depth + 1 : undefined}

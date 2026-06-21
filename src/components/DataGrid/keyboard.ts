@@ -67,12 +67,15 @@ export interface KeyEventLike {
   shiftKey: boolean
   ctrlKey: boolean
   metaKey: boolean
+  altKey?: boolean
 }
 
 export type KeyIntent =
   | 'move'
   | 'toggle-select'
   | 'primary-action'
+  | 'edit'
+  | 'open-menu'
   | 'close-menu'
   | 'reorder-prev'
   | 'reorder-next'
@@ -85,7 +88,11 @@ const MOVE_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'H
 export function keyToIntent(event: KeyEventLike): KeyIntent {
   if (event.key === ' ' || event.key === 'Spacebar') return 'toggle-select'
   if (event.key === 'Enter') return 'primary-action'
+  if (event.key === 'F2') return 'edit'
   if (event.key === 'Escape') return 'close-menu'
+  // Alt+Down opens the focused header's column menu — the ARIA-grid way to reach a header popup
+  // when the header controls are no longer individual tab stops.
+  if (event.altKey && event.key === 'ArrowDown') return 'open-menu'
   const mod = event.ctrlKey || event.metaKey
   if (mod && event.key === 'ArrowLeft') return event.shiftKey ? 'reorder-prev' : 'resize-shrink'
   if (mod && event.key === 'ArrowRight') return event.shiftKey ? 'reorder-next' : 'resize-grow'
