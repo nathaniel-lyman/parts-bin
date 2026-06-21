@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Row, Table } from '@tanstack/react-table'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { DataGridRow } from './DataGridRow'
 import type { ColumnDragPreviewState } from './dragPreview'
 import type { GridEditingApi } from './editing'
@@ -31,6 +31,8 @@ interface Props<TData> {
   pinnedOffsets?: PinnedOffsets
   editing?: GridEditingApi
   renderAggregatedCell?: (columnId: string, leafRows: TData[]) => ReactNode
+  renderDetailPanel?: (ctx: { row: TData; rowId: string }) => ReactNode
+  treeColumnId?: string
 }
 
 function defaultRowLabel<TData>(row: TData, rowId: string): string {
@@ -62,6 +64,8 @@ export function DataGridBody<TData>({
   pinnedOffsets,
   editing,
   renderAggregatedCell,
+  renderDetailPanel,
+  treeColumnId,
 }: Props<TData>) {
   const topRows = table.getTopRows()
   const centerRows = table.getCenterRows()
@@ -91,31 +95,47 @@ export function DataGridBody<TData>({
     ? Math.max(0, rowVirtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0))
     : 0
 
-  const renderRow = (row: Row<TData>, rowIndex: number, pinned?: 'top' | 'bottom') => (
-    <DataGridRow
-      key={`${pinned ?? 'row'}-${row.id}`}
-      row={row}
-      pinned={pinned}
-      rowIndex={rowIndex}
-      enableRowSelection={enableRowSelection}
-      selected={rowSelection[row.id] === true}
-      rowLabel={getRowLabel(row.original, row.id)}
-      onToggleRow={onToggleRow}
-      onCellContextMenu={onCellContextMenu}
-      onCopyCell={onCopyCell}
-      dragPreview={dragPreview}
-      focus={focus}
-      columnWindow={columnWindow}
-      visibleColumnIds={visibleColumnIds}
-      onFocusCell={onFocusCell}
-      range={range}
-      onRangeStart={onRangeStart}
-      onRangeEnter={onRangeEnter}
-      pinnedOffsets={pinnedOffsets}
-      editing={editing}
-      renderAggregatedCell={renderAggregatedCell}
-    />
-  )
+  const renderRow = (row: Row<TData>, rowIndex: number, pinned?: 'top' | 'bottom') => {
+    const rowLabel = getRowLabel(row.original, row.id)
+    const detail = renderDetailPanel && !row.getIsGrouped() && row.getIsExpanded()
+      ? renderDetailPanel({ row: row.original, rowId: row.id })
+      : null
+    return (
+      <Fragment key={`${pinned ?? 'row'}-${row.id}-fragment`}>
+        <DataGridRow
+          key={`${pinned ?? 'row'}-${row.id}`}
+          row={row}
+          pinned={pinned}
+          rowIndex={rowIndex}
+          enableRowSelection={enableRowSelection}
+          selected={rowSelection[row.id] === true}
+          rowLabel={rowLabel}
+          onToggleRow={onToggleRow}
+          onCellContextMenu={onCellContextMenu}
+          onCopyCell={onCopyCell}
+          dragPreview={dragPreview}
+          focus={focus}
+          columnWindow={columnWindow}
+          visibleColumnIds={visibleColumnIds}
+          onFocusCell={onFocusCell}
+          range={range}
+          onRangeStart={onRangeStart}
+          onRangeEnter={onRangeEnter}
+          pinnedOffsets={pinnedOffsets}
+          editing={editing}
+          renderAggregatedCell={renderAggregatedCell}
+          treeColumnId={treeColumnId}
+        />
+        {detail && (
+          <tr key={`${pinned ?? 'row'}-${row.id}-detail`} role="row" data-testid={`grid-row-${row.id}-detail`} data-row-detail="true">
+            <td colSpan={colSpan} className="border-t border-line bg-surface-2 px-4 py-3">
+              {detail}
+            </td>
+          </tr>
+        )}
+      </Fragment>
+    )
+  }
 
   return (
     <tbody data-virtualized={enableVirtualization ? 'true' : 'false'} data-total-size={enableVirtualization ? rowVirtualizer.getTotalSize() : undefined}>

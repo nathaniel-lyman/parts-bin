@@ -43,6 +43,13 @@ describe('DataGridContextMenu', () => {
     expect(onClose).toHaveBeenCalledTimes(2)
   })
 
+  it('clamps menu position inside the viewport', () => {
+    setup({ x: 10_000, y: 10_000 })
+    const menu = screen.getByRole('menu', { name: /row actions/i })
+    expect(Number.parseFloat(menu.style.left)).toBeLessThan(window.innerWidth)
+    expect(Number.parseFloat(menu.style.top)).toBeLessThan(window.innerHeight)
+  })
+
   it('shows copy selection only when a selection is active', () => {
     const { rerender } = render(
       <DataGridContextMenu x={0} y={0} onCopyCell={vi.fn()} onCopyRow={vi.fn()} onClose={vi.fn()} />,
@@ -60,5 +67,51 @@ describe('DataGridContextMenu', () => {
       />,
     )
     expect(screen.getByRole('menuitem', { name: /copy selection \(2\)/i })).toBeInTheDocument()
+  })
+
+  it('shows row pin actions for unpinned rows and closes after running them', async () => {
+    const onPinRowTop = vi.fn()
+    const onPinRowBottom = vi.fn()
+    const onClose = vi.fn()
+    render(
+      <DataGridContextMenu
+        x={0}
+        y={0}
+        rowPinSide={false}
+        onCopyCell={vi.fn()}
+        onCopyRow={vi.fn()}
+        onPinRowTop={onPinRowTop}
+        onPinRowBottom={onPinRowBottom}
+        onClose={onClose}
+      />,
+    )
+
+    expect(screen.getByRole('menuitem', { name: /pin row to top/i })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /pin row to bottom/i })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: /unpin row/i })).toBeNull()
+
+    await userEvent.click(screen.getByRole('menuitem', { name: /pin row to top/i }))
+    expect(onPinRowTop).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows unpin for pinned rows and hides the matching pin side', () => {
+    render(
+      <DataGridContextMenu
+        x={0}
+        y={0}
+        rowPinSide="top"
+        onCopyCell={vi.fn()}
+        onCopyRow={vi.fn()}
+        onPinRowTop={vi.fn()}
+        onPinRowBottom={vi.fn()}
+        onUnpinRow={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('menuitem', { name: /pin row to top/i })).toBeNull()
+    expect(screen.getByRole('menuitem', { name: /pin row to bottom/i })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /unpin row/i })).toBeInTheDocument()
   })
 })

@@ -2,9 +2,11 @@ import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import type { LedgerGridState } from './types'
 
 export const GRID_QUERY_VERSION = 1
+export type GridQueryScope = 'page' | 'allMatching'
 
 export interface GridQuery {
   version: typeof GRID_QUERY_VERSION
+  scope: GridQueryScope
   sorting: SortingState
   columnFilters: ColumnFiltersState
   globalFilter: string
@@ -32,9 +34,13 @@ export interface DataGridDataSource<TData> {
   fetch: (query: GridQuery, context: GridQueryContext) => Promise<DataGridQueryResult<TData>>
 }
 
-export function toGridQuery(state: Pick<LedgerGridState, 'sorting' | 'columnFilters' | 'globalFilter' | 'pagination'>): GridQuery {
+export function toGridQuery(
+  state: Pick<LedgerGridState, 'sorting' | 'columnFilters' | 'globalFilter' | 'pagination'>,
+  scope: GridQueryScope = 'page',
+): GridQuery {
   return {
     version: GRID_QUERY_VERSION,
+    scope,
     sorting: state.sorting,
     columnFilters: state.columnFilters,
     globalFilter: state.globalFilter,

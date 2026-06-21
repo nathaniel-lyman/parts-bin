@@ -75,4 +75,46 @@ describe('DataGridToolbar', () => {
     fireEvent.click(button)
     expect(onToggleHeaderFilters).toHaveBeenCalled()
   })
+
+  it('renders Excel export when the callback is provided', () => {
+    const dispatch = vi.fn()
+    const onExportXlsx = vi.fn()
+    render(
+      <DataGridToolbar
+        columns={COLS}
+        columnVisibility={{ account: true, arr: false }}
+        globalFilter=""
+        density="compact"
+        dispatch={dispatch}
+        enableExport
+        onExportXlsx={onExportXlsx}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /export excel/i }))
+    expect(onExportXlsx).toHaveBeenCalled()
+  })
+
+  it('renders all-row export actions when server callbacks are provided', () => {
+    const dispatch = vi.fn()
+    const onExportAllCsv = vi.fn()
+    const onExportAllXlsx = vi.fn()
+    render(
+      <DataGridToolbar
+        columns={COLS}
+        columnVisibility={{ account: true, arr: false }}
+        globalFilter=""
+        density="compact"
+        dispatch={dispatch}
+        enableExport
+        onExportAllCsv={onExportAllCsv}
+        onExportAllXlsx={onExportAllXlsx}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /export all csv/i }))
+    fireEvent.click(screen.getByRole('button', { name: /export all excel/i }))
+    expect(onExportAllCsv).toHaveBeenCalled()
+    expect(onExportAllXlsx).toHaveBeenCalled()
+  })
 })

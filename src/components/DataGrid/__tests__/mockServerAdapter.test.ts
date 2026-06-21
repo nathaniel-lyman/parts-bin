@@ -4,6 +4,7 @@ import type { DataGridColumn } from '../types'
 
 const baseQuery = {
   version: 1 as const,
+  scope: 'page' as const,
   sorting: [],
   columnFilters: [],
   globalFilter: '',

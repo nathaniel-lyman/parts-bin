@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { Account } from '../../../data/types'
 import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, accountGridColumns } from '../../accountGridColumns'
@@ -66,5 +66,27 @@ describe('DataGrid context menu + copy', () => {
     search.focus()
     fireEvent.keyDown(search, { key: 'c', ctrlKey: true })
     expect(writeText).not.toHaveBeenCalled()
+  })
+
+  it('pins and unpins rows from the row context menu', async () => {
+    const { container } = renderGrid()
+    fireEvent.contextMenu(screen.getByText('Beta'))
+    await userEvent.click(await screen.findByRole('menuitem', { name: /pin row to top/i }))
+
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="grid-row-a2"][data-row-pinned="top"]')).not.toBeNull()
+    })
+
+    const pinnedNameCell = container.querySelector<HTMLElement>('[data-testid="grid-row-a2"][data-row-pinned="top"] [data-column-id="account"]')
+    if (!pinnedNameCell) throw new Error('Pinned Beta name cell not found')
+
+    fireEvent.contextMenu(pinnedNameCell)
+    expect(await screen.findByRole('menuitem', { name: /unpin row/i })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: /pin row to top/i })).toBeNull()
+    await userEvent.click(screen.getByRole('menuitem', { name: /unpin row/i }))
+
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="grid-row-a2"][data-row-pinned="top"]')).toBeNull()
+    })
   })
 })

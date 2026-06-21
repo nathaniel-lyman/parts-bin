@@ -23,6 +23,7 @@ import {
   MultiSelectDemo,
   BannerDemo,
   ContextMenuDemo,
+  DataGridDemo,
   SliderDemo,
   KbdDemo,
 } from './demos'
@@ -57,6 +58,7 @@ export const demos: Partial<Record<string, ReactNode>> = {
   MultiSelect: createElement(MultiSelectDemo),
   Banner: createElement(BannerDemo),
   ContextMenu: createElement(ContextMenuDemo),
+  DataGrid: createElement(DataGridDemo),
   Slider: createElement(SliderDemo),
   Kbd: createElement(KbdDemo),
 }

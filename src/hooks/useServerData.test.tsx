@@ -5,6 +5,7 @@ import { useServerData } from './useServerData'
 
 const query = {
   version: 1 as const,
+  scope: 'page' as const,
   sorting: [],
   columnFilters: [],
   globalFilter: '',

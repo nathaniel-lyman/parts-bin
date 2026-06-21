@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
-import { downloadCSV, serializeCSV } from '../export'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { downloadCSV, downloadXLSX, serializeCSV, serializeXLSX } from '../export'
 import type { LedgerGridColumn } from '../types'
 
 interface Row { id: string; name: string; owner: string; mrr: number }
@@ -15,6 +15,10 @@ const columns: LedgerGridColumn<Row>[] = [
   { id: 'mrr', accessorKey: 'mrr', header: 'MRR' },
   { id: 'actions', header: '', type: 'actions', exportable: false },
 ]
+
+beforeEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe('serializeCSV', () => {
   it('escapes cells and follows visible column order', () => {
@@ -44,5 +48,46 @@ describe('downloadCSV', () => {
     expect(createObjectURL).toHaveBeenCalledTimes(1)
     expect(click).toHaveBeenCalledTimes(1)
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
+  })
+})
+
+describe('serializeXLSX', () => {
+  it('writes an XLSX zip with workbook and worksheet XML', () => {
+    const bytes = serializeXLSX(rows, columns, {
+      getRowId: (row) => row.id,
+      columnOrder: ['owner', 'name', 'actions', 'mrr'],
+    })
+    const text = new TextDecoder().decode(bytes)
+
+    expect(Array.from(bytes.slice(0, 2))).toEqual([0x50, 0x4b])
+    expect(text).toContain('xl/workbook.xml')
+    expect(text).toContain('xl/worksheets/sheet1.xml')
+    expect(text).toContain('Owner')
+    expect(text).toContain('Acme, Inc')
+    expect(text).not.toContain('actions')
+  })
+
+  it('exports selected rows only when rowSelection is supplied', () => {
+    const text = new TextDecoder().decode(serializeXLSX(rows, columns, {
+      getRowId: (row) => row.id,
+      rowSelection: { a2: true },
+    }))
+
+    expect(text).toContain('Beta &quot;Labs&quot;')
+    expect(text).not.toContain('Acme, Inc')
+  })
+})
+
+describe('downloadXLSX', () => {
+  it('creates an XLSX object URL and clicks a download anchor', () => {
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:xlsx')
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    downloadXLSX('accounts.xlsx', new Uint8Array([1, 2, 3]))
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    expect(click).toHaveBeenCalledTimes(1)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:xlsx')
   })
 })

@@ -19,6 +19,9 @@ interface Props<TData> {
   headerFiltersOpen?: boolean
   onToggleHeaderFilters?: () => void
   onExportCsv?: () => void
+  onExportXlsx?: () => void
+  onExportAllCsv?: () => void
+  onExportAllXlsx?: () => void
   savedViews?: { id: string; name: string }[]
   onApplyView?: (id: string) => void
   onSaveView?: (name: string) => void
@@ -40,6 +43,9 @@ export function DataGridToolbar<TData>({
   headerFiltersOpen,
   onToggleHeaderFilters,
   onExportCsv,
+  onExportXlsx,
+  onExportAllCsv,
+  onExportAllXlsx,
   savedViews,
   onApplyView,
   onSaveView,
@@ -99,6 +105,21 @@ export function DataGridToolbar<TData>({
         {enableExport && (
           <Button size="compact" onClick={onExportCsv} aria-label="Export CSV">
             Export CSV
+          </Button>
+        )}
+        {enableExport && onExportXlsx && (
+          <Button size="compact" onClick={onExportXlsx} aria-label="Export Excel">
+            Export Excel
+          </Button>
+        )}
+        {enableExport && onExportAllCsv && (
+          <Button size="compact" onClick={onExportAllCsv} aria-label="Export all CSV">
+            Export all CSV
+          </Button>
+        )}
+        {enableExport && onExportAllXlsx && (
+          <Button size="compact" onClick={onExportAllXlsx} aria-label="Export all Excel">
+            Export all Excel
           </Button>
         )}
         {enableHeaderFilters && (

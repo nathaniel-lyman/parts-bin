@@ -31,6 +31,7 @@ export function DataGridCell<TData>({
   editing,
   groupContent,
   aggregatedContent,
+  treePrefix,
 }: {
   cell: Cell<TData, unknown>
   onContextMenu?: (event: MouseEvent<HTMLTableCellElement>) => void
@@ -50,6 +51,8 @@ export function DataGridCell<TData>({
   groupContent?: ReactNode
   /** Rendered instead of the normal cell content for an aggregated cell in a group row. */
   aggregatedContent?: ReactNode
+  /** Optional tree indentation / expander rendered before the normal cell content. */
+  treePrefix?: ReactNode
 }) {
   const align = cell.column.columnDef.meta?.align
   const isActions = cell.column.id === 'actions'
@@ -72,6 +75,23 @@ export function DataGridCell<TData>({
   const isDirty = !isGroupCell && editing !== undefined && editing.isDirty(cell.row.id, cell.column.id)
   const showCopy = onCopy !== undefined && !isActions && !isEditing && !isGroupCell
   const editor = isEditing ? editing.editorFor(cell.column.id) : undefined
+  const renderedContent = isEditing && editor ? (
+    <DataGridCellEditor
+      columnId={cell.column.id}
+      editorType={editor.type}
+      options={editor.options}
+      value={editing.session?.drafts[cell.column.id] ?? ''}
+      error={editing.session?.errors[cell.column.id]}
+      align={align}
+      onChange={(value) => editing.setDraft(cell.column.id, value)}
+      onCommit={(move) => editing.commit(move)}
+      onCancel={() => editing.cancel()}
+    />
+  ) : isGroupCell ? (
+    groupContent ?? aggregatedContent
+  ) : (
+    flexRender(cell.column.columnDef.cell, cell.getContext())
+  )
   return (
     <td
       role="gridcell"
@@ -110,22 +130,13 @@ export function DataGridCell<TData>({
         if (rowIndex !== undefined && colIndex !== undefined) onFocusCell?.(rowIndex, colIndex)
       }}
     >
-      {isEditing && editor ? (
-        <DataGridCellEditor
-          columnId={cell.column.id}
-          editorType={editor.type}
-          options={editor.options}
-          value={editing.session?.drafts[cell.column.id] ?? ''}
-          error={editing.session?.errors[cell.column.id]}
-          align={align}
-          onChange={(value) => editing.setDraft(cell.column.id, value)}
-          onCommit={(move) => editing.commit(move)}
-          onCancel={() => editing.cancel()}
-        />
-      ) : isGroupCell ? (
-        groupContent ?? aggregatedContent
+      {treePrefix && !isEditing ? (
+        <span className="flex min-w-0 items-center gap-1.5">
+          {treePrefix}
+          <span className="min-w-0 truncate">{renderedContent}</span>
+        </span>
       ) : (
-        flexRender(cell.column.columnDef.cell, cell.getContext())
+        renderedContent
       )}
       {isDirty && !isEditing && (
         <span

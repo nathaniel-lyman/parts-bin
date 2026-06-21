@@ -905,9 +905,9 @@ export const CATALOG: ComponentEntry[] = [
   // ── DataGrid ──────────────────────────────────────────────────────────────
   defineComponent(DataGrid, {
     name: 'DataGrid', import: './components/DataGrid', category: 'datagrid',
-    purpose: 'Headless-table-backed data grid: sort, filter, select, paginate, export, saved views, cell-range copy/paste, inline editing, grouping, aggregation.',
-    use_when: 'Displaying tabular records with interaction; the rows prop takes the data. Mark columns editable/groupable/aggregate to light up editing, spreadsheet paste, grouping chips, and the totals footer.',
-    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport', 'exportFilename', 'persistenceKey', 'manualSorting', 'manualFiltering', 'manualPagination', 'totalRowCount', 'onQueryChange', 'loading', 'error', 'onContextChange', 'quickFilterPlaceholder', 'enableGrouping', 'onRowUpdate', 'editMode'],
+    purpose: 'Headless-table-backed data grid: sort, filter, select, paginate, export, saved views, row pinning, cell-range copy/paste, inline editing, grouping, built-in/custom aggregation, tree rows, detail panels, and server query actions.',
+    use_when: 'Displaying tabular records with interaction; the rows prop takes the data. Mark columns editable/groupable/aggregate, use aggregate functions for domain-specific summaries, use the row context menu for copy/pin actions, pass getSubRows for tree data, renderDetailPanel for master-detail rows, or manual* props for server-owned data.',
+    props: ['rows', 'columns', 'getRowId', 'enableRowSelection', 'enablePagination', 'enableExport', 'enableExcelExport', 'exportFilename', 'allMatchingRowsSelected', 'onSelectAllMatching', 'onClearAllMatching', 'onExportAllCsv', 'onExportAllXlsx', 'persistenceKey', 'manualSorting', 'manualFiltering', 'manualPagination', 'totalRowCount', 'onQueryChange', 'loading', 'error', 'onContextChange', 'quickFilterPlaceholder', 'enableGrouping', 'onRowUpdate', 'editMode', 'getSubRows', 'getRowCanExpand', 'renderDetailPanel', 'treeColumnId'],
     related: ['Pagination', 'FacetedFilter', 'AppliedFiltersBar'],
     snippet: `<DataGrid rows={records} columns={cols} getRowId={(r) => r.id} enableRowSelection enableGrouping onRowUpdate={(id, patch) => update(id, patch)} />`,
   }),

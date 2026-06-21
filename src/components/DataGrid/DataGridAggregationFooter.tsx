@@ -1,5 +1,5 @@
 import type { Table } from '@tanstack/react-table'
-import { AGGREGATE_LABELS, type ColumnAggregate } from './aggregation'
+import type { ColumnAggregate } from './aggregation'
 import type { PinnedOffsets } from './selectors'
 import type { ColumnVirtualWindow } from './types'
 
@@ -56,7 +56,7 @@ export function DataGridAggregationFooter<TData>({
       >
         {aggregateEntry ? (
           <span className="num text-ink">
-            <span className="micro mr-1 text-faint">{AGGREGATE_LABELS[aggregateEntry.kind]}</span>
+            <span className="micro mr-1 text-faint">{aggregateEntry.label}</span>
             {aggregateEntry.formatted}
           </span>
         ) : columnId === firstDataColumnId ? (

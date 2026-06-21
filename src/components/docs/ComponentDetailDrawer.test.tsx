@@ -18,6 +18,13 @@ test('renders the interactive demo when one exists', () => {
   expect(screen.getByTestId('drawer-demo')).toBeInTheDocument()
 })
 
+test('renders the DataGrid reference demo', () => {
+  render(<ComponentDetailDrawer entry={get('DataGrid')} onClose={() => {}} />)
+  expect(screen.getByRole('radio', { name: 'Server' })).toBeInTheDocument()
+  expect(screen.getByRole('grid')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Export Excel' })).toBeInTheDocument()
+})
+
 test('omits demos that open their own focus-trapped layer', () => {
   render(<ComponentDetailDrawer entry={get('Drawer')} onClose={() => {}} />)
   expect(screen.queryByTestId('drawer-demo')).toBeNull()

@@ -21,6 +21,15 @@ export type GridColumnType =
 
 export type AggregateKind = 'sum' | 'avg' | 'min' | 'max' | 'count'
 
+export interface AggregateContext<TData> {
+  values: unknown[]
+  rows: TData[]
+  column: LedgerGridColumn<TData>
+}
+
+export type AggregateFn<TData> = (context: AggregateContext<TData>) => number | null
+export type AggregateSpec<TData> = AggregateKind | AggregateFn<TData>
+
 export type GridExpandedState = true | Record<string, boolean>
 
 export interface LedgerCellContext<TData, TValue = unknown> {
@@ -62,7 +71,7 @@ export interface LedgerGridColumn<TData, TValue = unknown> {
   /** Opt-in: the column appears in "Group by" menus and grouping chips. */
   groupable?: boolean
   /** Aggregate shown in group summary rows and the totals footer. */
-  aggregate?: AggregateKind
+  aggregate?: AggregateSpec<TData>
   /** Custom renderer for aggregated values; defaults to type-aware formatting. */
   aggregatedCell?: (ctx: { value: unknown }) => ReactNode
 }

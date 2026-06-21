@@ -85,6 +85,31 @@ describe('DataGrid grouping & aggregation', () => {
     expect(within(screen.getByTestId('grid-aggregation-footer')).getByTestId('agg-footer-mrr')).toHaveTextContent('$100')
   })
 
+  it('renders custom aggregates in group rows and the totals footer', async () => {
+    const columns = accountGridColumns({ onEdit: vi.fn(), onDelete: vi.fn() }).map((column) => column.id === 'mrr'
+      ? {
+          ...column,
+          aggregate: ({ rows: aggregateRows }: { rows: typeof rows }) => aggregateRows.reduce((max, row) => Math.max(max, row.mrr), 0),
+        }
+      : column)
+    const { container } = render(
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        initialState={{ sorting: [] }}
+        enableGrouping
+      />,
+    )
+
+    await groupBySegment()
+
+    const startupGroup = container.querySelector<HTMLElement>('tr[data-row-id="segment:Startup"]')
+    expect(startupGroup).not.toBeNull()
+    expect(within(startupGroup!).getByText('$300')).toBeInTheDocument()
+    expect(within(screen.getByTestId('grid-aggregation-footer')).getByTestId('agg-footer-mrr')).toHaveTextContent('fx$1,000')
+  })
+
   it('group rows do not render selection checkboxes or copy affordances', async () => {
     const { container } = render(
       <DataGrid

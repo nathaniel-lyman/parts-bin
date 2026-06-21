@@ -1,4 +1,4 @@
-import type { AggregateKind, GridColumnType, LedgerGridColumn } from './types'
+import type { AggregateKind, AggregateSpec, GridColumnType, LedgerGridColumn } from './types'
 
 /** Numeric values only — non-numeric rows are skipped, not coerced to 0. */
 function numericValues(values: unknown[]): number[] {
@@ -49,6 +49,22 @@ export const AGGREGATE_LABELS: Record<AggregateKind, string> = {
   count: '#',
 }
 
+export function resolveAggregate<TData>(
+  column: LedgerGridColumn<TData>,
+  rows: TData[],
+): number | null {
+  if (!column.aggregate) return null
+  const values = rows.map((row) => resolveColumnValue(column, row))
+  if (typeof column.aggregate === 'function') {
+    return column.aggregate({ values, rows, column })
+  }
+  return aggregate(column.aggregate, values)
+}
+
+export function aggregateLabel<TData>(aggregateSpec: AggregateSpec<TData>): string {
+  return typeof aggregateSpec === 'function' ? 'fx' : AGGREGATE_LABELS[aggregateSpec]
+}
+
 export function resolveColumnValue<TData>(column: LedgerGridColumn<TData>, row: TData): unknown {
   if (column.accessorFn) return column.accessorFn(row)
   if (column.accessorKey) return (row as Record<string, unknown>)[column.accessorKey as string]
@@ -57,7 +73,8 @@ export function resolveColumnValue<TData>(column: LedgerGridColumn<TData>, row: 
 
 export interface ColumnAggregate {
   columnId: string
-  kind: AggregateKind
+  kind: AggregateKind | 'custom'
+  label: string
   value: number | null
   formatted: string
 }
@@ -70,11 +87,11 @@ export function computeAggregates<TData>(
   const result: Record<string, ColumnAggregate> = {}
   for (const column of columns) {
     if (!column.aggregate) continue
-    const values = rows.map((row) => resolveColumnValue(column, row))
-    const value = aggregate(column.aggregate, values)
+    const value = resolveAggregate(column, rows)
     result[column.id] = {
       columnId: column.id,
-      kind: column.aggregate,
+      kind: typeof column.aggregate === 'function' ? 'custom' : column.aggregate,
+      label: aggregateLabel(column.aggregate),
       value,
       formatted: formatAggregate(value, column.type),
     }

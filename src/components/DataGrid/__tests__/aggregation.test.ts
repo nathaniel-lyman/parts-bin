@@ -6,13 +6,14 @@ interface Row {
   id: string
   mrr: number
   growth: number
+  impact?: number
   name: string
 }
 
 const rows: Row[] = [
-  { id: 'a', mrr: 100, growth: 10, name: 'A' },
-  { id: 'b', mrr: 300, growth: -4, name: 'B' },
-  { id: 'c', mrr: 200, growth: 6, name: 'C' },
+  { id: 'a', mrr: 100, growth: 10, impact: 5, name: 'A' },
+  { id: 'b', mrr: 300, growth: -4, impact: 2, name: 'B' },
+  { id: 'c', mrr: 200, growth: 6, impact: 8, name: 'C' },
 ]
 
 describe('aggregate', () => {
@@ -51,13 +52,23 @@ describe('computeAggregates', () => {
     { id: 'name', accessorKey: 'name', header: 'Name', type: 'text' },
     { id: 'mrr', accessorKey: 'mrr', header: 'MRR', type: 'currency', aggregate: 'sum' },
     { id: 'growth', accessorKey: 'growth', header: 'Growth', type: 'percent', aggregate: 'avg' },
+    {
+      id: 'impact',
+      accessorKey: 'impact',
+      header: 'Impact',
+      type: 'number',
+      aggregate: ({ rows }) => rows.length
+        ? rows.reduce((best, row) => Math.max(best, row.impact ?? Number.NEGATIVE_INFINITY), Number.NEGATIVE_INFINITY)
+        : null,
+    },
   ]
 
   it('aggregates only columns that declare an aggregate', () => {
     const result = computeAggregates(columns, rows)
-    expect(Object.keys(result).sort()).toEqual(['growth', 'mrr'])
-    expect(result.mrr).toMatchObject({ kind: 'sum', value: 600, formatted: '$600' })
-    expect(result.growth).toMatchObject({ kind: 'avg', value: 4, formatted: '4%' })
+    expect(Object.keys(result).sort()).toEqual(['growth', 'impact', 'mrr'])
+    expect(result.mrr).toMatchObject({ kind: 'sum', label: 'Σ', value: 600, formatted: '$600' })
+    expect(result.growth).toMatchObject({ kind: 'avg', label: 'avg', value: 4, formatted: '4%' })
+    expect(result.impact).toMatchObject({ kind: 'custom', label: 'fx', value: 8, formatted: '8' })
   })
 
   it('handles an empty row set', () => {

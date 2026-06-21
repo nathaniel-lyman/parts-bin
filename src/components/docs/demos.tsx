@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react'
 import {
+  createMemoryServerAdapter,
+  DataGrid,
+  DEFAULT_STATE,
+  toGridQuery,
+  type DataGridColumn,
+  type GridQuery,
+} from '../DataGrid'
+import { useServerData } from '../../hooks/useServerData'
+import {
   Accordion,
   AppliedFiltersBar,
   AttachmentList,
@@ -59,6 +68,75 @@ const importWizardSteps = [
   { id: 'map', label: 'Map columns', state: 'current' as const },
   { id: 'review', label: 'Review', state: 'upcoming' as const },
 ]
+
+type DataGridDemoMode = 'server' | 'tree' | 'detail'
+
+interface DataGridDemoRow {
+  id: string
+  item: string
+  owner: string
+  stage: 'Discovery' | 'Build' | 'Review' | 'Launch'
+  impact: number
+  children?: DataGridDemoRow[]
+}
+
+const dataGridDemoRows: DataGridDemoRow[] = [
+  {
+    id: 'platform',
+    item: 'Platform rollout',
+    owner: 'Avery Cohen',
+    stage: 'Build',
+    impact: 84,
+    children: [
+      { id: 'platform-api', item: 'API adapter', owner: 'Devin Okafor', stage: 'Review', impact: 72 },
+      { id: 'platform-docs', item: 'Docs migration', owner: 'Rowan Mitchell', stage: 'Build', impact: 64 },
+    ],
+  },
+  {
+    id: 'imports',
+    item: 'Import workflow',
+    owner: 'Blair Nakamura',
+    stage: 'Discovery',
+    impact: 58,
+    children: [
+      { id: 'imports-map', item: 'Column mapping', owner: 'Sasha Delgado', stage: 'Build', impact: 69 },
+    ],
+  },
+  { id: 'analytics', item: 'Analytics handoff', owner: 'Devin Okafor', stage: 'Launch', impact: 91 },
+  { id: 'permissions', item: 'Permission review', owner: 'Avery Cohen', stage: 'Review', impact: 77 },
+]
+
+const flatDataGridDemoRows = dataGridDemoRows.flatMap((row) => [row, ...(row.children ?? [])])
+
+const dataGridDemoColumns: DataGridColumn<DataGridDemoRow>[] = [
+  { id: 'item', accessorKey: 'item', header: 'Work item', type: 'text', editable: true, width: 190 },
+  { id: 'owner', accessorKey: 'owner', header: 'Owner', type: 'text', editable: true, width: 160 },
+  {
+    id: 'stage',
+    accessorKey: 'stage',
+    header: 'Stage',
+    type: 'status',
+    editable: true,
+    groupable: true,
+    meta: { options: ['Discovery', 'Build', 'Review', 'Launch'] },
+    width: 130,
+  },
+  { id: 'impact', accessorKey: 'impact', header: 'Impact', type: 'number', editable: true, aggregate: 'avg', width: 110 },
+]
+
+const dataGridDemoInitialState = {
+  ...DEFAULT_STATE,
+  pagination: { pageIndex: 0, pageSize: 3 },
+  columnSizing: { item: 190, owner: 160, stage: 130, impact: 110 },
+}
+
+function updateDataGridDemoRows(rows: DataGridDemoRow[], rowId: string, patch: Partial<DataGridDemoRow>): DataGridDemoRow[] {
+  return rows.map((row) => {
+    if (row.id === rowId) return { ...row, ...patch }
+    if (!row.children) return row
+    return { ...row, children: updateDataGridDemoRows(row.children, rowId, patch) }
+  })
+}
 
 export function CommandPaletteDemo() {
   const [commandResult, setCommandResult] = useState('No command run')
@@ -432,6 +510,95 @@ export function KbdDemo() {
       <span className="inline-flex items-center gap-1.5">Open palette <Kbd keys={['Ctrl', 'K']} /></span>
       <span className="inline-flex items-center gap-1.5">Save view <Kbd keys={['⌘', 'S']} /></span>
       <span className="inline-flex items-center gap-1.5">Dismiss <Kbd>Esc</Kbd></span>
+    </div>
+  )
+}
+
+export function DataGridDemo() {
+  const [mode, setMode] = useState<DataGridDemoMode>('server')
+  const [rows, setRows] = useState(dataGridDemoRows)
+  const [allMatchingRowsSelected, setAllMatchingRowsSelected] = useState(false)
+  const [serverAction, setServerAction] = useState('No server action')
+  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(dataGridDemoInitialState))
+  const serverAdapter = useMemo(
+    () => createMemoryServerAdapter(flatDataGridDemoRows, { columns: dataGridDemoColumns, latencyMs: 100 }),
+    [],
+  )
+  const server = useServerData(serverAdapter, serverQuery, { enabled: mode === 'server', debounceMs: 80 })
+  const isServerMode = mode === 'server'
+  const gridRows = isServerMode ? server.rows : rows
+
+  return (
+    <div className="grid gap-3">
+      <SegmentedControl
+        label="DataGrid mode"
+        value={mode}
+        onValueChange={(value) => {
+          setMode(value as DataGridDemoMode)
+          setAllMatchingRowsSelected(false)
+        }}
+        options={[
+          { value: 'server', label: 'Server' },
+          { value: 'tree', label: 'Tree' },
+          { value: 'detail', label: 'Detail' },
+        ]}
+      />
+      <div className="max-h-[520px] overflow-auto border border-line bg-surface">
+        <DataGrid<DataGridDemoRow>
+          key={mode}
+          rows={gridRows}
+          columns={dataGridDemoColumns}
+          getRowId={(row) => row.id}
+          initialState={dataGridDemoInitialState}
+          enableRowSelection
+          enableExport
+          enableExcelExport
+          enableSavedViews={!isServerMode}
+          enableGrouping={!isServerMode}
+          exportFilename="data-grid-demo.csv"
+          manualSorting={isServerMode}
+          manualFiltering={isServerMode}
+          manualPagination={isServerMode}
+          totalRowCount={isServerMode ? server.totalRowCount : undefined}
+          loading={isServerMode && server.status === 'loading'}
+          error={isServerMode && server.status === 'error' ? server.error : undefined}
+          onQueryChange={isServerMode ? setServerQuery : undefined}
+          allMatchingRowsSelected={isServerMode && allMatchingRowsSelected}
+          onSelectAllMatching={isServerMode
+            ? (query) => {
+                setAllMatchingRowsSelected(true)
+                setServerAction(`Selected ${query.scope} rows`)
+              }
+            : undefined}
+          onClearAllMatching={isServerMode
+            ? () => {
+                setAllMatchingRowsSelected(false)
+                setServerAction('Cleared server selection')
+              }
+            : undefined}
+          onExportAllCsv={isServerMode ? (query) => setServerAction(`Exported ${query.scope} CSV`) : undefined}
+          onExportAllXlsx={isServerMode ? (query) => setServerAction(`Exported ${query.scope} Excel`) : undefined}
+          getSubRows={mode === 'tree' ? (row) => row.children : undefined}
+          getRowCanExpand={mode === 'detail' ? () => true : undefined}
+          renderDetailPanel={mode === 'detail'
+            ? ({ row }) => (
+                <div className="grid gap-1 text-[13px] text-muted">
+                  <p className="m-0 text-ink">{row.item}</p>
+                  <p className="m-0">Owned by {row.owner}; current stage is {row.stage}.</p>
+                </div>
+              )
+            : undefined}
+          treeColumnId="item"
+          onRowUpdate={!isServerMode
+            ? (rowId, patch) => setRows((current) => updateDataGridDemoRows(current, rowId, patch))
+            : undefined}
+        />
+      </div>
+      <p className="m-0 text-[13px] text-muted">
+        {isServerMode
+          ? `Manual sorting, filtering, pagination, query-wide selection, and export flow through the generic data-source contract. ${serverAction}.`
+          : 'Editable cells, range copy/paste, row pinning, grouping with custom summaries, tree rows, and detail panels stay client-side.'}
+      </p>
     </div>
   )
 }

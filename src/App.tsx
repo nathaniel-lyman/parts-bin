@@ -401,6 +401,7 @@ function DashboardPage({
             initialState={gridInitialState}
             enablePagination={!generatedAccounts}
             enableExport
+            enableExcelExport
             persistenceKey={generatedAccounts ? undefined : 'ledger.accounts.grid'}
             globalFilterFn={accountGlobalFilter}
             manualSorting={serverMode}

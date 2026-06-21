@@ -31,6 +31,7 @@ interface Props<TData> {
   pinnedOffsets?: PinnedOffsets
   editing?: GridEditingApi
   renderAggregatedCell?: (columnId: string, leafRows: TData[]) => ReactNode
+  treeColumnId?: string
 }
 
 export function DataGridRow<TData>({
@@ -54,10 +55,12 @@ export function DataGridRow<TData>({
   pinnedOffsets,
   editing,
   renderAggregatedCell,
+  treeColumnId,
 }: Props<TData>) {
   const isGroupRow = row.getIsGrouped()
   const toggle = () => onToggleRow?.(row.id)
   const visibleColIndex = (columnId: string) => visibleColumnIds.indexOf(columnId)
+  const resolvedTreeColumnId = treeColumnId ?? visibleColumnIds.find((id) => id !== 'actions')
 
   const groupCellContent = (cell: Cell<TData, unknown>): ReactNode => {
     const leafCount = row.getLeafRows().filter((leaf) => !leaf.getIsGrouped()).length
@@ -96,6 +99,28 @@ export function DataGridRow<TData>({
     const colIndex = visibleColIndex(cell.column.id)
     const isGroupedCell = isGroupRow && cell.getIsGrouped()
     const isAggregatedCell = isGroupRow && !isGroupedCell
+    const showTreePrefix = !isGroupRow && cell.column.id === resolvedTreeColumnId && (row.depth > 0 || row.getCanExpand())
+    const treePrefix = showTreePrefix ? (
+      <span className="flex shrink-0 items-center gap-1.5" style={{ paddingLeft: row.depth * 16 }}>
+        {row.getCanExpand() ? (
+          <button
+            type="button"
+            aria-label={row.getIsExpanded() ? `Collapse ${rowLabel}` : `Expand ${rowLabel}`}
+            aria-expanded={row.getIsExpanded()}
+            tabIndex={-1}
+            className="text-muted hover:text-accent"
+            onClick={(event) => {
+              event.stopPropagation()
+              row.toggleExpanded()
+            }}
+          >
+            <span aria-hidden="true">{row.getIsExpanded() ? '▾' : '▸'}</span>
+          </button>
+        ) : (
+          <span aria-hidden="true" className="inline-block w-[1em]" />
+        )}
+      </span>
+    ) : undefined
     return (
       <DataGridCell
         key={cell.id}
@@ -119,6 +144,7 @@ export function DataGridRow<TData>({
         editing={isGroupRow ? undefined : editing}
         groupContent={isGroupedCell ? groupCellContent(cell) : undefined}
         aggregatedContent={isAggregatedCell ? aggregatedCellContent(cell) : undefined}
+        treePrefix={treePrefix}
         onCopy={onCopyCell && !isGroupRow ? () => onCopyCell(row.id, cell.column.id) : undefined}
         onContextMenu={
           onCellContextMenu && !isGroupRow
@@ -146,10 +172,12 @@ export function DataGridRow<TData>({
       data-row-id={row.id}
       data-row-pinned={pinned}
       data-row-grouped={isGroupRow ? 'true' : undefined}
+      data-row-depth={row.depth}
       style={{ height: 'var(--row-h)' }}
       tabIndex={enableRowSelection && !isGroupRow ? 0 : undefined}
       aria-selected={enableRowSelection && !isGroupRow ? selected : undefined}
-      aria-expanded={isGroupRow ? row.getIsExpanded() : undefined}
+      aria-expanded={row.getCanExpand() ? row.getIsExpanded() : undefined}
+      aria-level={!isGroupRow && row.depth > 0 ? row.depth + 1 : undefined}
       onClick={
         isGroupRow
           ? () => row.toggleExpanded()

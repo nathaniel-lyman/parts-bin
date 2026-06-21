@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
 import './columnMeta'
 import {
   closestCenter,
@@ -35,7 +35,7 @@ import { densityClass, pinnedLeafGroups, pinnedOffsets, rowHeightForDensity, sel
 import { hydrate } from './state'
 import { ledgerFilterFn } from './filtering'
 import { serializeGridQuery, toGridQuery, type GridQuery } from './query'
-import { copyToClipboard, downloadCSV, serializeCSV, serializeCell, serializeTSV } from './export'
+import { copyToClipboard, downloadCSV, downloadXLSX, serializeCSV, serializeCell, serializeTSV, serializeXLSX } from './export'
 import { projectView } from './persistence'
 import { keyToIntent, moveFocus, resolveCopyIntent, type GridFocus } from './keyboard'
 import { computeColumnRange } from './virtualization'
@@ -52,7 +52,7 @@ import { DataGridLoadingState } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
 import { projectColumnDrag, type ColumnDragPreviewState } from './dragPreview'
 import { fitColumnWidth, measureColumnContentWidths } from './autofit'
-import { aggregate, computeAggregates, formatAggregate, resolveColumnValue } from './aggregation'
+import { computeAggregates, formatAggregate, resolveAggregate } from './aggregation'
 import {
   commitSession,
   editorTypeFor,
@@ -94,7 +94,18 @@ export interface DataGridProps<TData> {
   manualPagination?: boolean
   enablePagination?: boolean
   enableExport?: boolean
+  enableExcelExport?: boolean
   exportFilename?: string
+  /** True when the consumer has selected every row matching the current server query. */
+  allMatchingRowsSelected?: boolean
+  /** Server-mode only: select every row matching the current filters/sort, not just loaded rows. */
+  onSelectAllMatching?: (query: GridQuery) => void
+  /** Clears the consumer-owned all-matching selection state. */
+  onClearAllMatching?: () => void
+  /** Server-mode only: export every row matching the current filters/sort as CSV. */
+  onExportAllCsv?: (query: GridQuery) => void
+  /** Server-mode only: export every row matching the current filters/sort as XLSX. */
+  onExportAllXlsx?: (query: GridQuery) => void
   enableSavedViews?: boolean
   persistenceKey?: string
   totalRowCount?: number
@@ -111,12 +122,22 @@ export interface DataGridProps<TData> {
   onRowUpdate?: (rowId: string, patch: Partial<TData>, row: TData) => void
   /** 'cell' edits one cell at a time (default); 'row' opens every editable cell in the row. */
   editMode?: EditMode
+  /** Enables nested rows. Client-side data only; return children for a row or undefined. */
+  getSubRows?: (row: TData, index: number) => TData[] | undefined
+  /** Overrides which rows can expand for tree/detail rendering. Client-side data only. */
+  getRowCanExpand?: (row: TData) => boolean
+  /** Renders an expanded detail panel below a data row. Client-side data only. */
+  renderDetailPanel?: (ctx: { row: TData; rowId: string }) => ReactNode
+  /** Column that receives tree indentation/expand controls. Defaults to the first visible data column. */
+  treeColumnId?: string
 }
 
 export interface DataGridContextSnapshot<TData> {
   totalRowCount: number
   visibleRowCount: number
   selectedRowCount: number
+  loadedSelectedRowCount: number
+  allMatchingRowsSelected: boolean
   visibleRows: TData[]
   selectedRows: TData[]
   globalFilter: string
@@ -185,7 +206,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     manualPagination,
     enablePagination = true,
     enableExport,
+    enableExcelExport,
     exportFilename = 'data-grid.csv',
+    allMatchingRowsSelected = false,
+    onSelectAllMatching,
+    onClearAllMatching,
+    onExportAllCsv,
+    onExportAllXlsx,
     enableSavedViews,
     persistenceKey,
     totalRowCount,
@@ -195,10 +222,18 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     enableGrouping,
     onRowUpdate,
     editMode = 'cell',
+    getSubRows,
+    getRowCanExpand,
+    renderDetailPanel,
+    treeColumnId,
   } = props
   const isControlled = props.state !== undefined && props.onStateChange !== undefined
   const isServerMode = Boolean(manualSorting || manualFiltering || manualPagination)
+  const matchingSelectionActive = isServerMode && allMatchingRowsSelected
   const groupingActive = Boolean(enableGrouping) && !isServerMode
+  const treeActive = getSubRows !== undefined && !isServerMode
+  const detailPanelActive = renderDetailPanel !== undefined && !isServerMode
+  const expandedActive = groupingActive || treeActive || detailPanelActive
   const editingEnabled = onRowUpdate !== undefined && !isServerMode
   const persistenceEnabled = !isControlled && persistenceKey !== undefined
   const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState, persistenceKey) : hydrate({ initialState: props.initialState }))
@@ -232,16 +267,16 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   useGridPersistence(state, persistenceEnabled, persistenceKey)
 
   const columnDefs = useMemo(() => columns.map(toColumnDef), [columns])
-  const serializedQuery = serializeGridQuery(toGridQuery(state))
+  const pageQuery = useMemo(() => toGridQuery(state), [state])
+  const allMatchingQuery = useMemo(() => toGridQuery(state, 'allMatching'), [state])
+  const serializedQuery = serializeGridQuery(pageQuery)
   const lastSerializedQuery = useRef('')
 
   useEffect(() => {
     if (!isServerMode || !onQueryChange || serializedQuery === lastSerializedQuery.current) return
     lastSerializedQuery.current = serializedQuery
-    onQueryChange(toGridQuery(state))
-    // serializedQuery is the stable change key for the query-relevant state.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isServerMode, onQueryChange, serializedQuery])
+    onQueryChange(pageQuery)
+  }, [isServerMode, onQueryChange, pageQuery, serializedQuery])
 
   const effectiveGlobalFilterFn = (row: Row<TData>, _id: string, value: string) => {
     if (globalFilterFn) return globalFilterFn(row.original, value)
@@ -279,7 +314,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       rowSelection: state.rowSelection,
       rowPinning: state.rowPinning,
       grouping: groupingActive ? state.grouping : [],
-      expanded: groupingActive ? state.expanded : {},
+      expanded: expandedActive ? state.expanded : {},
     },
     defaultColumn: {
       filterFn: ledgerFilterFn as FilterFn<TData>,
@@ -317,6 +352,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       const next = typeof updater === 'function' ? updater(state.expanded) : updater
       dispatch({ type: 'SET_EXPANDED', expanded: next })
     },
+    getSubRows: treeActive ? getSubRows : undefined,
+    getRowCanExpand: (row) => {
+      if (row.getIsGrouped()) return true
+      if (getRowCanExpand?.(row.original)) return true
+      if (detailPanelActive) return true
+      return row.subRows.length > 0
+    },
     globalFilterFn: effectiveGlobalFilterFn,
     manualSorting,
     manualFiltering,
@@ -331,7 +373,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     getCoreRowModel: getCoreRowModel(),
     ...(manualSorting ? {} : { getSortedRowModel: getSortedRowModel() }),
     ...(manualFiltering ? {} : { getFilteredRowModel: getFilteredRowModel() }),
-    ...(groupingActive ? { getGroupedRowModel: getGroupedRowModel(), getExpandedRowModel: getExpandedRowModel() } : {}),
+    ...(groupingActive ? { getGroupedRowModel: getGroupedRowModel() } : {}),
+    ...(expandedActive ? { getExpandedRowModel: getExpandedRowModel() } : {}),
     ...(paginationEnabled && !manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
   })
 
@@ -353,6 +396,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   // rows are never serialized, so copy gates and the menu count must use this, not selCount.
   const visibleSelectedCount = visibleData.filter((row) => state.rowSelection[getRowId(row)]).length
   const allState = selectAllState(state.rowSelection, visibleIds)
+  const canSelectAllMatching = Boolean(
+    isServerMode
+    && onSelectAllMatching
+    && allState === 'all'
+    && footerTotalRows > visibleIds.length,
+  )
+  const selectionDisplayCount = matchingSelectionActive ? footerTotalRows : selCount
   const visibleColumnIds = visibleLeafColumns.map((column) => column.id)
   const visibleMovableColumnIds = visibleColumnIds.filter(isMovableColumnId)
   const columnWidthMap = Object.fromEntries(visibleLeafColumns.map((column) => [column.id, state.columnSizing[column.id] ?? column.getSize()]))
@@ -409,15 +459,20 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     [resetSavedView, view.applyView],
   )
   const clearSelection = useCallback(
-    () => dispatch({ type: 'CLEAR_SELECTION' }),
+    () => {
+      dispatch({ type: 'CLEAR_SELECTION' })
+      onClearAllMatching?.()
+    },
     // dispatch is stable for our purposes; recreating per render is harmless here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [onClearAllMatching],
   )
   const contextSnapshot = useMemo<DataGridContextSnapshot<TData>>(() => ({
     totalRowCount: footerTotalRows,
     visibleRowCount: visibleData.length,
-    selectedRowCount: selectedRows.length,
+    selectedRowCount: matchingSelectionActive ? footerTotalRows : selectedRows.length,
+    loadedSelectedRowCount: selectedRows.length,
+    allMatchingRowsSelected: matchingSelectionActive,
     visibleRows: visibleData,
     selectedRows,
     globalFilter: state.globalFilter,
@@ -436,6 +491,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     clearSelection,
     currentSavedView,
     footerTotalRows,
+    matchingSelectionActive,
     resetCurrentView,
     saveCurrentView,
     savedViewItems,
@@ -450,6 +506,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     totalRowCount: footerTotalRows,
     visibleRowIds,
     selectedRowIds,
+    matchingSelectionActive,
     globalFilter: state.globalFilter,
     columnFilters: state.columnFilters,
     sorting: state.sorting,
@@ -459,6 +516,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   }), [
     currentSavedView,
     footerTotalRows,
+    matchingSelectionActive,
     projectedViewKey,
     savedViewItems,
     selectedRowIds,
@@ -604,7 +662,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     (columnId: string, leafRows: TData[]) => {
       const column = columnsById.get(columnId)
       if (!column?.aggregate) return null
-      const value = aggregate(column.aggregate, leafRows.map((row) => resolveColumnValue(column, row)))
+      const value = resolveAggregate(column, leafRows)
       if (column.aggregatedCell) return column.aggregatedCell({ value })
       return <span className="num text-muted">{formatAggregate(value, column.type)}</span>
     },
@@ -720,6 +778,24 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     }))
   }, [columns, exportData, exportFilename, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
 
+  const exportXlsx = useCallback(() => {
+    const filename = exportFilename.replace(/\.csv$/i, '') || 'data-grid'
+    downloadXLSX(`${filename}.xlsx`, serializeXLSX(exportData, columns, {
+      getRowId,
+      columnOrder: state.columnOrder,
+      columnVisibility: state.columnVisibility,
+      rowSelection: state.rowSelection,
+    }))
+  }, [columns, exportData, exportFilename, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
+
+  const exportAllCsv = useCallback(() => {
+    onExportAllCsv?.(allMatchingQuery)
+  }, [allMatchingQuery, onExportAllCsv])
+
+  const exportAllXlsx = useCallback(() => {
+    onExportAllXlsx?.(allMatchingQuery)
+  }, [allMatchingQuery, onExportAllXlsx])
+
   const pasteTable = useCallback((text: string) => {
     if (!editingEnabled || !onRowUpdate) return false
     const incoming = parseClipboardTable(text)
@@ -755,7 +831,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         if (parsed.error) continue
         const validationMessage = column.validate?.(parsed.value as never, row)
         if (validationMessage) continue
-        if (parsed.value === resolveColumnValue(column, row)) continue
+        if (parsed.value === resolveCellValue(row, column.id)) continue
         patch[column.accessorKey as string] = parsed.value
         changedColumnIds.push(column.id)
       }
@@ -876,6 +952,25 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       pageRows: Math.max(1, Math.floor((scrollElement?.clientHeight ?? 400) / rowHeight)),
     }
     if (intent === 'move') {
+      const focusedRow = focus.row >= 0 ? visibleRows[focus.row] : undefined
+      const focusedColId = visibleColumnIds[focus.col]
+      const activeTreeColumnId = treeColumnId ?? visibleColumnIds.find((id) => id !== ACTIONS_COLUMN_ID)
+      if (
+        focusedRow &&
+        !focusedRow.getIsGrouped() &&
+        focusedRow.getCanExpand() &&
+        focusedColId === activeTreeColumnId &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        (event.key === 'ArrowRight' || event.key === 'ArrowLeft')
+      ) {
+        const shouldExpand = event.key === 'ArrowRight'
+        if (focusedRow.getIsExpanded() !== shouldExpand) {
+          event.preventDefault()
+          focusedRow.toggleExpanded(shouldExpand)
+          return
+        }
+      }
       event.preventDefault()
       restoreGridFocusRef.current = true
       const next = moveFocus(focus, event.key, dims, { ctrl: event.ctrlKey || event.metaKey })
@@ -1015,15 +1110,24 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         headerFiltersOpen={headerFiltersOpen}
         onToggleHeaderFilters={() => setHeaderFiltersOpen((value) => !value)}
         onExportCsv={exportCsv}
+        onExportXlsx={enableExcelExport ? exportXlsx : undefined}
+        onExportAllCsv={isServerMode && onExportAllCsv ? exportAllCsv : undefined}
+        onExportAllXlsx={isServerMode && onExportAllXlsx ? exportAllXlsx : undefined}
         savedViews={savedViewsEnabled ? savedViewItems.map((item) => ({ id: item.id, name: item.name })) : undefined}
         onSaveView={saveCurrentView}
         onApplyView={applySavedViewById}
         onDeleteView={removeSavedView}
         onResetView={resetCurrentView}
       />
-      {enableRowSelection && selCount > 0 && (
+      {enableRowSelection && selectionDisplayCount > 0 && (
         <div className="flex items-center justify-between border-b border-line px-3 py-2">
-          <DataGridBulkActions count={selCount} onClear={() => dispatch({ type: 'CLEAR_SELECTION' })} />
+          <DataGridBulkActions
+            count={selectionDisplayCount}
+            totalMatchingCount={canSelectAllMatching || matchingSelectionActive ? footerTotalRows : undefined}
+            allMatchingRowsSelected={matchingSelectionActive}
+            onSelectAllMatching={canSelectAllMatching ? () => onSelectAllMatching?.(allMatchingQuery) : undefined}
+            onClear={clearSelection}
+          />
         </div>
       )}
       <DndContext
@@ -1073,7 +1177,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 rowSelection={state.rowSelection}
                 rowHeight={rowHeight}
                 scrollElement={scrollElement}
-                enableVirtualization={rowCount > 100}
+                enableVirtualization={rowCount > 100 && !detailPanelActive}
                 onToggleRow={(id) => dispatch({ type: 'TOGGLE_ROW', id })}
                 onCellContextMenu={(rowId, colId, x, y) => setMenu({ rowId, colId, x, y })}
                 onCopyCell={copyCell}
@@ -1088,6 +1192,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 pinnedOffsets={pinnedColumnOffsets}
                 editing={editingApi}
                 renderAggregatedCell={groupingActive ? renderAggregatedCell : undefined}
+                renderDetailPanel={detailPanelActive ? renderDetailPanel : undefined}
+                treeColumnId={treeColumnId}
               />
             )}
             {hasAggregates && !loading && error === undefined && rowCount > 0 && (
@@ -1128,9 +1234,19 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           x={menu.x}
           y={menu.y}
           selectionCount={visibleSelectedCount}
+          rowPinSide={
+            state.rowPinning.top.includes(menu.rowId)
+              ? 'top'
+              : state.rowPinning.bottom.includes(menu.rowId)
+                ? 'bottom'
+                : false
+          }
           onCopyCell={() => copyCell(menu.rowId, menu.colId)}
           onCopyRow={() => copyRow(menu.rowId)}
           onCopySelection={copySelection}
+          onPinRowTop={() => dispatch({ type: 'PIN_ROW_TOP', rowId: menu.rowId })}
+          onPinRowBottom={() => dispatch({ type: 'PIN_ROW_BOTTOM', rowId: menu.rowId })}
+          onUnpinRow={() => dispatch({ type: 'UNPIN_ROW', rowId: menu.rowId })}
           onClose={() => setMenu(null)}
         />
       )}
