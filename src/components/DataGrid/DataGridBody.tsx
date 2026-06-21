@@ -16,6 +16,8 @@ interface Props<TData> {
   focus?: GridFocus
   range?: CellRange | null
   renderDetailPanel?: (ctx: { row: TData; rowId: string }) => ReactNode
+  /** Page offset added to the rendered row's index to produce an absolute aria-rowindex. */
+  ariaRowIndexOffset?: number
 }
 
 function defaultRowLabel<TData>(row: TData, rowId: string): string {
@@ -35,6 +37,7 @@ export function DataGridBody<TData>({
   focus,
   range,
   renderDetailPanel,
+  ariaRowIndexOffset = 0,
 }: Props<TData>) {
   const { enableRowSelection } = useGridRuntime()
   const topRows = table.getTopRows()
@@ -93,6 +96,7 @@ export function DataGridBody<TData>({
           row={row}
           pinned={pinned}
           rowIndex={rowIndex}
+          ariaRowIndex={ariaRowIndexOffset + rowIndex + 2}
           selected={rowSelection[row.id] === true}
           rowLabel={rowLabel}
           focusedColIndex={focusedColIndex}

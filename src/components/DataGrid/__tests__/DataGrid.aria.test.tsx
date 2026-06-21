@@ -22,6 +22,21 @@ describe('DataGrid ARIA', () => {
     expect(screen.getByRole('grid')).toHaveAttribute('aria-rowcount')
   })
 
+  it('exposes 1-based aria-rowindex/colindex so virtualization reports true positions', () => {
+    renderGrid()
+    const grid = screen.getByRole('grid')
+    // Header row is index 1; data rows continue from 2. Count includes the header (+1).
+    expect(grid).toHaveAttribute('aria-rowcount', String(productRows.length + 1))
+    expect(grid).toHaveAttribute('aria-multiselectable', 'true')
+    expect(screen.getByTestId('grid-header-row')).toHaveAttribute('aria-rowindex', '1')
+    expect(screen.getByRole('row', { name: /Widget/ })).toHaveAttribute('aria-rowindex', '2')
+
+    // The selection column occupies colindex 1, so the first data column is 2.
+    const selectionCell = screen.getByRole('checkbox', { name: /Select p1/ }).closest('td')!
+    expect(selectionCell).toHaveAttribute('aria-colindex', '1')
+    expect(screen.getByText('Widget').closest('td')).toHaveAttribute('aria-colindex', '2')
+  })
+
   it('updates row selection and menu expanded state', async () => {
     renderGrid()
     const row = screen.getByRole('row', { name: /Widget/ })

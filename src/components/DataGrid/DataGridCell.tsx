@@ -60,8 +60,10 @@ function DataGridCellComponent<TData>({
   treePrefix,
 }: DataGridCellProps<TData>) {
   // Runtime-wide values come from context so this component can be memoized on its per-cell props.
-  const { dragPreview, editing, onCopyCell, onFillSelection, onCellContextMenu, onFocusCell, onRangeStart, onRangeEnter } =
+  const { enableRowSelection, dragPreview, editing, onCopyCell, onFillSelection, onCellContextMenu, onFocusCell, onRangeStart, onRangeEnter } =
     useGridRuntime()
+  // 1-based ARIA column index: data columns start at 2 when a selection column occupies index 1.
+  const ariaColIndex = colIndex === undefined ? undefined : colIndex + 1 + (enableRowSelection ? 1 : 0)
   // Cell-change flash. Detect a value change with React's sanctioned "derive state from a changed
   // value during render" pattern (a guarded setState in render — no effect, no extra browser paint,
   // and StrictMode-idempotent because the Object.is guard makes the next render a no-op). Because
@@ -139,6 +141,7 @@ function DataGridCellComponent<TData>({
       data-column-id={cell.column.id}
       data-row-index={rowIndex}
       data-col-index={colIndex}
+      aria-colindex={ariaColIndex}
       data-cell-dirty={isDirty ? 'true' : undefined}
       style={style}
       tabIndex={focused ? 0 : -1}

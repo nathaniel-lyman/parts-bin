@@ -156,6 +156,7 @@ function SortableHeader<TData>({
   pinnedSide,
   pinnedOffset = 0,
   dropIndicatorSide,
+  selectionColumnPresent,
   onFocusCell,
   onAutofitColumn,
   enableGrouping,
@@ -175,6 +176,8 @@ function SortableHeader<TData>({
   pinnedOffset?: number
   /** Which edge of this header shows the column-reorder insertion bar, if any. */
   dropIndicatorSide?: 'left' | 'right'
+  /** True when a selection column occupies aria-colindex 1, shifting data columns by one. */
+  selectionColumnPresent?: boolean
   onFocusCell?: (row: number, col: number) => void
   onAutofitColumn?: (columnId: string) => void
   enableGrouping?: boolean
@@ -224,6 +227,7 @@ function SortableHeader<TData>({
       data-col-id={header.column.id}
       data-col-index={colIndex}
       data-col-width={header.column.getSize()}
+      aria-colindex={colIndex === undefined ? undefined : colIndex + 1 + (selectionColumnPresent ? 1 : 0)}
       aria-sort={canSort ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined}
       tabIndex={focused ? 0 : -1}
       onClick={
@@ -399,9 +403,9 @@ export function DataGridHeader<TData>({
     <SortableContext items={visibleMovable} strategy={horizontalListSortingStrategy}>
       <thead className="sticky top-0 z-20 bg-surface-2">
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="bg-surface-2" data-testid="grid-header-row">
+            <tr key={headerGroup.id} className="bg-surface-2" data-testid="grid-header-row" aria-rowindex={1}>
               {enableRowSelection && (
-                <th className="sticky left-0 z-30 w-10 border-r border-line bg-surface-2 px-2 shadow-pinned">
+                <th aria-colindex={1} className="sticky left-0 z-30 w-10 border-r border-line bg-surface-2 px-2 shadow-pinned">
                   <DataGridSelectAllCheckbox
                     state={selectAll}
                     label={isServerMode ? 'Select all loaded' : 'Select all'}
@@ -428,6 +432,7 @@ export function DataGridHeader<TData>({
                       pinnedSide="left"
                       pinnedOffset={pinnedOffsets?.left[header.column.id] ?? 0}
                       dropIndicatorSide={dropIndicatorFor(header.column.id)}
+                      selectionColumnPresent={enableRowSelection}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
@@ -459,6 +464,7 @@ export function DataGridHeader<TData>({
                       colIndex={colIndex}
                       focused={focus?.row === -1 && focus.col === colIndex}
                       dropIndicatorSide={dropIndicatorFor(header.column.id)}
+                      selectionColumnPresent={enableRowSelection}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
@@ -489,6 +495,7 @@ export function DataGridHeader<TData>({
                       pinnedSide="right"
                       pinnedOffset={pinnedOffsets?.right[header.column.id] ?? 0}
                       dropIndicatorSide={dropIndicatorFor(header.column.id)}
+                      selectionColumnPresent={enableRowSelection}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}

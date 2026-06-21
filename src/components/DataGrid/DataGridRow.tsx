@@ -8,8 +8,10 @@ import { useGridRuntime } from './GridRuntimeContext'
 export interface DataGridRowProps<TData> {
   row: Row<TData>
   pinned?: 'top' | 'bottom'
-  /** Index used for focus/range coordinates and the cell `data-row-index`. */
+  /** Index used for focus/range coordinates and the cell `data-row-index` (page-relative). */
   rowIndex?: number
+  /** Absolute 1-based ARIA row index (page offset + header row), for screen readers under virtualization. */
+  ariaRowIndex?: number
   selected?: boolean
   rowLabel?: string
   /** Column index focused in THIS row, or -1 when focus is elsewhere — kept as a primitive so the
@@ -27,6 +29,7 @@ function DataGridRowComponent<TData>({
   row,
   pinned,
   rowIndex = row.index,
+  ariaRowIndex,
   selected = false,
   rowLabel = row.id,
   focusedColIndex = -1,
@@ -164,6 +167,7 @@ function DataGridRowComponent<TData>({
       data-row-pinned={pinned}
       data-row-grouped={isGroupRow ? 'true' : undefined}
       data-row-depth={row.depth}
+      aria-rowindex={ariaRowIndex}
       style={{ height: 'var(--row-h)' }}
       tabIndex={enableRowSelection && !isGroupRow ? 0 : undefined}
       aria-selected={enableRowSelection && !isGroupRow ? selected : undefined}
@@ -188,7 +192,11 @@ function DataGridRowComponent<TData>({
       }
     >
       {enableRowSelection && (
-        <td className={`sticky left-0 z-10 w-10 px-2 text-center ${selected ? 'bg-accent-soft' : 'bg-surface group-hover:bg-surface-2'}`}>
+        <td
+          role="gridcell"
+          aria-colindex={1}
+          className={`sticky left-0 z-10 w-10 px-2 text-center ${selected ? 'bg-accent-soft' : 'bg-surface group-hover:bg-surface-2'}`}
+        >
           {!isGroupRow && (
             <DataGridRowCheckbox rowId={row.id} rowLabel={rowLabel} checked={selected} onToggle={(id) => onToggleRow?.(id)} />
           )}

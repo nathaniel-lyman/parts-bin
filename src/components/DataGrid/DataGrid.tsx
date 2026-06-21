@@ -892,8 +892,10 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
             <table
               className="w-full border-collapse"
               role="grid"
-              aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : filteredRows.length}
-              aria-colcount={visibleLeafColumns.length}
+              aria-multiselectable={enableRowSelection ? true : undefined}
+              // +1 row for the column-header row (aria-rowindex 1); +1 column for the selection column.
+              aria-rowcount={(manualPagination ? (totalRowCount ?? rowCount) : filteredRows.length) + 1}
+              aria-colcount={visibleLeafColumns.length + (enableRowSelection ? 1 : 0)}
               onKeyDown={onGridKeyDown}
             >
               <GridRuntimeProvider value={gridRuntime}>
@@ -933,6 +935,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                     focus={focus}
                     range={cellRange}
                     renderDetailPanel={detailPanelActive ? renderDetailPanel : undefined}
+                    // Absolute aria-rowindex base: the page offset so a screen reader announces the true
+                    // position across pages; 0 when unpaginated (virtualization windows the full set).
+                    ariaRowIndexOffset={paginationEnabled ? state.pagination.pageIndex * state.pagination.pageSize : 0}
                   />
                 )}
                 {error === undefined && loading && rowCount === 0 && (
