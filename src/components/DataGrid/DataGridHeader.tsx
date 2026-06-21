@@ -4,7 +4,7 @@ import { horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordin
 import { CSS } from '@dnd-kit/utilities'
 import { flexRender, type ColumnFiltersState, type Header, type Table } from '@tanstack/react-table'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { isLockedColumn, isMovableColumnId } from './normalize'
+import { isLockPositionColumn, lockedColumnIds } from './normalize'
 import type { PinnedOffsets } from './selectors'
 import { DataGridColumnMenu } from './DataGridColumnMenu'
 import { DataGridResizeHandle } from './DataGridResizeHandle'
@@ -128,9 +128,9 @@ function SortableHeader<TData>({
   const multiSortActive = header.getContext().table.getState().sorting.length > 1
   const align = header.column.columnDef.meta?.align ?? 'left'
   const canSort = header.column.getCanSort()
-  const canMove = isMovableColumnId(header.column.id)
-  const isActions = header.column.id === 'actions'
   const source = columns.find((column) => column.id === header.column.id)
+  const canMove = source ? !isLockPositionColumn(source) : header.column.id !== 'actions'
+  const isActions = header.column.columnDef.meta?.actions === true
   const canResize = header.column.columnDef.meta?.resizable !== false && canMove
   const label = headerLabel(header, source)
   const currentFilter = columnFilters.find((filter) => filter.id === header.column.id)?.value as FilterValue | undefined
@@ -290,7 +290,8 @@ export function DataGridHeader<TData>({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
-  const visibleMovable = table.getVisibleLeafColumns().map((column) => column.id).filter(isMovableColumnId)
+  const lockedIds = new Set(lockedColumnIds(columns))
+  const visibleMovable = table.getVisibleLeafColumns().map((column) => column.id).filter((id) => !lockedIds.has(id))
   const leafIds = visibleColumnIds ?? table.getVisibleLeafColumns().map((column) => column.id)
   const colIndexFor = (columnId: string) => leafIds.indexOf(columnId)
   const onDragEnd = (event: DragEndEvent) => {
@@ -421,7 +422,7 @@ export function DataGridHeader<TData>({
                   transition: dragPreview ? dragPreviewTransition : undefined,
                   opacity: isPreviewActive ? 0.28 : undefined,
                 }
-                if (isLockedColumn(column.id) || !filterType) {
+                if (column.columnDef.meta?.actions === true || !filterType) {
                   return (
                     <th
                       key={column.id}

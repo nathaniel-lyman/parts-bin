@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
+import { isLockPositionColumn } from './normalize'
 import { DENSITIES, DENSITY_LABELS } from './types'
 import type { Density, GridAction, DataGridColumn } from './types'
 
 interface Props<TData> {
-  columns: Pick<DataGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable'>[]
+  columns: Pick<DataGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable' | 'type' | 'lockPosition'>[]
   columnVisibility: Record<string, boolean>
   globalFilter: string
   quickFilterPlaceholder?: string
@@ -57,7 +58,7 @@ export function DataGridToolbar<TData>({
   const [open, setOpen] = useState(false)
   const [viewsOpen, setViewsOpen] = useState(false)
   const [draftName, setDraftName] = useState('')
-  const hideable = columns.filter((column) => column.hideable !== false && column.id !== 'actions')
+  const hideable = columns.filter((column) => column.hideable !== false && !isLockPositionColumn(column))
   const headerFor = (id: string) => {
     const column = columns.find((item) => item.id === id)
     return typeof column?.header === 'string' && column.header ? column.header : id

@@ -28,7 +28,7 @@ export function DataGridAggregationFooter<TData>({
     ? centerColumns.filter((column) => columnWindow.ids.includes(column.id))
     : centerColumns
   const firstDataColumnId = [...leftColumns, ...centerColumns, ...rightColumns].find(
-    (column) => !aggregates[column.id] && column.id !== 'actions',
+    (column) => !aggregates[column.id] && column.columnDef.meta?.actions !== true,
   )?.id
 
   const renderCell = (columnId: string, size: number, pinnedSide?: 'left' | 'right') => {

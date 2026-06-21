@@ -78,6 +78,12 @@ export interface DataGridColumn<TData, TValue = unknown> {
     options?: string[]
   }
   type?: GridColumnType
+  /**
+   * Locks the column to the end of the grid: forced last in order, pinned right, excluded from
+   * sort/group, non-hideable, and always visible. The domain-neutral way to get the old "actions
+   * column" position lock without naming a column `actions` (`type: 'actions'` still implies it).
+   */
+  lockPosition?: 'last'
   numberFormat?: DataGridNumberFormat
   sortable?: boolean
   filterable?: boolean

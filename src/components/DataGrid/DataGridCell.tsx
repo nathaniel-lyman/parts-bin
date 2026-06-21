@@ -46,7 +46,7 @@ function DataGridCellComponent<TData>({
   const { dragPreview, editing, onCopyCell, onCellContextMenu, onFocusCell, onRangeStart, onRangeEnter } =
     useGridRuntime()
   const align = cell.column.columnDef.meta?.align
-  const isActions = cell.column.id === 'actions'
+  const isActions = cell.column.columnDef.meta?.actions === true
   const previewOffset = dragPreview?.offsets[cell.column.id] ?? 0
   const isPreviewActive = dragPreview?.activeId === cell.column.id
   const style: CSSProperties = {

@@ -2,6 +2,7 @@ import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import { arrayMove } from '@dnd-kit/sortable'
 import {
   ACTIONS_COLUMN_ID,
+  lockedColumnIds,
   normalizeColumnOrder,
   normalizePinning,
   normalizeSorting,
@@ -56,23 +57,27 @@ export function columnOrderReducer<TData>(
   columns: DataGridColumn<TData>[] = [],
 ): string[] {
   const columnIds = columns.map((column) => column.id)
+  // Derived from the live columns when available (so lockPosition columns participate); without
+  // columns we leave it undefined and the normalize helpers fall back to the legacy `'actions'` id.
+  const lockedIds = columns.length ? new Set(lockedColumnIds(columns)) : undefined
+  const locked = (id: string) => (lockedIds ? lockedIds.has(id) : id === ACTIONS_COLUMN_ID)
   switch (action.type) {
     case 'SET_COLUMN_ORDER':
-      return normalizeColumnOrder(action.columnOrder, columnIds)
+      return normalizeColumnOrder(action.columnOrder, columnIds, lockedIds)
     case 'REORDER_COLUMN': {
       const { activeId, overId } = action
       if (activeId === overId) return slice
-      if (activeId === ACTIONS_COLUMN_ID || overId === ACTIONS_COLUMN_ID) return slice
+      if (locked(activeId) || locked(overId)) return slice
       const knownIds = columnIds.length ? columnIds : slice
       if (!knownIds.includes(activeId) || !knownIds.includes(overId)) return slice
-      const normalized = normalizeColumnOrder(slice, knownIds)
+      const normalized = normalizeColumnOrder(slice, knownIds, lockedIds)
       const oldIndex = normalized.indexOf(activeId)
       const newIndex = normalized.indexOf(overId)
       if (oldIndex < 0 || newIndex < 0) return slice
-      return normalizeColumnOrder(arrayMove(normalized, oldIndex, newIndex), knownIds)
+      return normalizeColumnOrder(arrayMove(normalized, oldIndex, newIndex), knownIds, lockedIds)
     }
     case 'RESET_COLUMNS':
-      return normalizeColumnOrder([], columnIds)
+      return normalizeColumnOrder([], columnIds, lockedIds)
     default:
       return slice
   }
@@ -293,9 +298,12 @@ export function gridReducer<TData>(
   columns: DataGridColumn<TData>[] = [],
 ): DataGridState {
   const columnIds = columns.map((column) => column.id)
+  // Position-locked ids derived from the live columns (lockPosition / type:'actions' / legacy id).
+  // Left undefined when no columns are supplied so the normalize helpers fall back to `'actions'`.
+  const lockedIds = columns.length ? new Set(lockedColumnIds(columns)) : undefined
   switch (action.type) {
     case 'APPLY_VIEW':
-      return normalizeState(action.state, columnIds)
+      return normalizeState(action.state, columnIds, lockedIds)
     case 'SET_SORTING':
       return { ...state, sorting: sortingReducer(state.sorting, action.sorting) }
     case 'SET_GLOBAL_FILTER':
@@ -310,12 +318,12 @@ export function gridReducer<TData>(
       return normalizeState({
         ...state,
         columnVisibility: columnVisibilityReducer(state.columnVisibility, action),
-      }, columnIds)
+      }, columnIds, lockedIds)
     case 'SET_COLUMN_ORDER':
       return normalizeState({
         ...state,
         columnOrder: columnOrderReducer(state.columnOrder, action, columns),
-      }, columnIds)
+      }, columnIds, lockedIds)
     case 'RESIZE_COLUMN':
     case 'RESET_COLUMN_WIDTH':
       return { ...state, columnSizing: columnSizingReducer(state.columnSizing, action, columns) }
@@ -335,7 +343,7 @@ export function gridReducer<TData>(
         grouping: groupingReducer(state.grouping, action),
         numberFormats: numberFormatsReducer(state.numberFormats, action),
         expanded: action.type === 'RESET_COLUMNS' ? {} : state.expanded,
-      }, columnIds)
+      }, columnIds, lockedIds)
     case 'SET_GROUPING':
     case 'TOGGLE_GROUP_BY':
     case 'CLEAR_GROUPING': {
@@ -345,7 +353,7 @@ export function gridReducer<TData>(
         grouping,
         expanded: expandedReducer(state.expanded, action, grouping),
         pagination: { ...state.pagination, pageIndex: 0 },
-      }, columnIds)
+      }, columnIds, lockedIds)
     }
     case 'SET_EXPANDED':
     case 'EXPAND_ALL':
@@ -353,9 +361,9 @@ export function gridReducer<TData>(
       return { ...state, expanded: expandedReducer(state.expanded, action) }
     case 'SET_SORT':
     case 'CLEAR_SORT':
-      return { ...state, sorting: normalizeSorting(sortActionReducer(state.sorting, action)) }
+      return { ...state, sorting: normalizeSorting(sortActionReducer(state.sorting, action), lockedIds) }
     case 'TOGGLE_SORT':
-      return { ...state, sorting: normalizeSorting(toggleSortingReducer(state.sorting, action)) }
+      return { ...state, sorting: normalizeSorting(toggleSortingReducer(state.sorting, action), lockedIds) }
     case 'TOGGLE_ROW':
     case 'SELECT_ALL_VISIBLE':
     case 'CLEAR_SELECTION':
@@ -369,7 +377,7 @@ export function gridReducer<TData>(
       return normalizeState({
         ...state,
         numberFormats: numberFormatsReducer(state.numberFormats, action),
-      }, columnIds)
+      }, columnIds, lockedIds)
     case 'SET_PAGE_INDEX':
     case 'SET_PAGE_SIZE':
       return { ...state, pagination: paginationReducer(state.pagination, action) }

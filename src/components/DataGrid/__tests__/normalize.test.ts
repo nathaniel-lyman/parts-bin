@@ -7,8 +7,11 @@ import {
   canReorderColumn,
   canSortColumn,
   isMovableColumnId,
+  lockedColumnIds,
   normalizeColumnOrder,
   normalizeColumnPinning,
+  normalizeGrouping,
+  normalizeSorting,
   normalizeState,
 } from '../normalize'
 import type { DataGridState } from '../types'
@@ -88,6 +91,60 @@ describe('normalizeColumnPinning (actions locked right when present)', () => {
       left: [],
       right: ['actions'],
     })
+  })
+})
+
+describe('lockPosition capability (generic, non-actions column)', () => {
+  const lockedIds = new Set(['rowMenu'])
+  const columnIds = ['name', 'score', 'rowMenu']
+
+  it('lockedColumnIds picks up lockPosition, type:actions, and the legacy id', () => {
+    expect(
+      lockedColumnIds([
+        { id: 'a' },
+        { id: 'b', lockPosition: 'last' },
+        { id: 'c', type: 'actions' },
+        { id: 'actions' },
+      ]),
+    ).toEqual(['b', 'c', 'actions'])
+  })
+
+  it('forces a lockPosition column last in order even if it leads the input', () => {
+    expect(normalizeColumnOrder(['rowMenu', 'score', 'name'], columnIds, lockedIds)).toEqual([
+      'score',
+      'name',
+      'rowMenu',
+    ])
+  })
+
+  it('pins a lockPosition column right and never left', () => {
+    expect(normalizeColumnPinning({ left: ['rowMenu'], right: [] }, columnIds, lockedIds)).toEqual({
+      left: [],
+      right: ['rowMenu'],
+    })
+  })
+
+  it('excludes a lockPosition column from sorting and grouping', () => {
+    expect(normalizeSorting([{ id: 'rowMenu', desc: false }, { id: 'name', desc: true }], lockedIds)).toEqual([
+      { id: 'name', desc: true },
+    ])
+    expect(normalizeGrouping(['rowMenu', 'name'], columnIds, lockedIds)).toEqual(['name'])
+  })
+
+  it('forces a hidden lockPosition column back to visible', () => {
+    const out = normalizeState(
+      {
+        ...base,
+        columnOrder: columnIds,
+        columnVisibility: { rowMenu: false },
+        columnPinning: { left: [], right: [] },
+      },
+      columnIds,
+      lockedIds,
+    )
+    expect(out.columnVisibility.rowMenu).toBe(true)
+    expect(out.columnOrder[out.columnOrder.length - 1]).toBe('rowMenu')
+    expect(out.columnPinning.right).toEqual(['rowMenu'])
   })
 })
 

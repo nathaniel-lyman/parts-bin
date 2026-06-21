@@ -30,7 +30,7 @@ import { useScrollMetrics } from './useScrollMetrics'
 import { usePinnedColumnOffsets } from './usePinnedColumnOffsets'
 import { useGridSelectionFocus } from './useGridSelectionFocus'
 import { useGridClipboard } from './useGridClipboard'
-import { ACTIONS_COLUMN_ID, canHideColumn, canSortColumn, isMovableColumnId } from './normalize'
+import { ACTIONS_COLUMN_ID, isActionRenderColumn, isLockPositionColumn, lockedColumnIds } from './normalize'
 import { gridReducer } from './reducers'
 import { densityClass, pinnedLeafGroups, rowHeightForDensity, selectAllState, selectionCount } from './selectors'
 import { hydrate } from './state'
@@ -147,13 +147,14 @@ function toColumnDef<TData>(
   const base: ColumnDef<TData> = {
     id: column.id,
     header: typeof column.header === 'string' ? column.header : () => column.header,
-    enableSorting: column.sortable ?? canSortColumn(column.id),
-    enableHiding: column.hideable ?? canHideColumn(column.id),
+    enableSorting: column.sortable ?? !isLockPositionColumn(column),
+    enableHiding: column.hideable ?? !isLockPositionColumn(column),
     meta: {
       align: column.meta?.align ?? column.align,
       resizable: column.meta?.resizable ?? (column.resizable !== false),
       type: column.meta?.type,
       options: column.meta?.options,
+      actions: isActionRenderColumn(column),
     },
     size: column.width,
     minSize: column.minWidth,
@@ -278,16 +279,19 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     return Object.values(row.original as Record<string, unknown>).some((cell) => String(cell ?? '').toLowerCase().includes(needle))
   }
 
+  // Ids of position-locked columns (lockPosition / type:'actions' / legacy id), in column order.
+  const lockedColumnIdSet = useMemo(() => new Set(lockedColumnIds(columns)), [columns])
   const effectiveColumnOrder = useMemo(
     () => {
       const ids = columns.map((column) => column.id)
-      const ordered = state.columnOrder.filter((id) => ids.includes(id) && id !== ACTIONS_COLUMN_ID)
+      const free = state.columnOrder.filter((id) => ids.includes(id) && !lockedColumnIdSet.has(id))
       for (const id of ids) {
-        if (id !== ACTIONS_COLUMN_ID && !ordered.includes(id)) ordered.push(id)
+        if (!lockedColumnIdSet.has(id) && !free.includes(id)) free.push(id)
       }
-      return [...ordered, ACTIONS_COLUMN_ID].filter((id) => ids.includes(id))
+      const locked = ids.filter((id) => lockedColumnIdSet.has(id))
+      return [...free, ...locked]
     },
-    [columns, state.columnOrder],
+    [columns, state.columnOrder, lockedColumnIdSet],
   )
 
   // TanStack Table is the chosen headless table engine; React Compiler skips this hook.
@@ -406,7 +410,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   )
   const selectionDisplayCount = matchingSelectionActive ? footerTotalRows : selCount
   const visibleColumnIds = useMemo(() => visibleLeafColumns.map((column) => column.id), [visibleLeafColumns])
-  const visibleMovableColumnIds = useMemo(() => visibleColumnIds.filter(isMovableColumnId), [visibleColumnIds])
+  const visibleMovableColumnIds = useMemo(() => visibleColumnIds.filter((id) => !lockedColumnIdSet.has(id)), [visibleColumnIds, lockedColumnIdSet])
   const columnWidthMap = useMemo(
     () => Object.fromEntries(visibleLeafColumns.map((column) => [column.id, state.columnSizing[column.id] ?? column.getSize()])),
     [visibleLeafColumns, state.columnSizing],
@@ -562,8 +566,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
 
   const autofitColumn = useCallback(
     (columnId: string) => {
-      if (!scrollElement || columnId === 'actions') return
+      if (!scrollElement) return
       const column = columns.find((item) => item.id === columnId)
+      if (column && isActionRenderColumn(column)) return
       const widths = measureColumnContentWidths(scrollElement, columnId)
       if (widths.length === 0) return
       const width = fitColumnWidth(widths, { min: column?.minWidth, max: column?.maxWidth })
@@ -768,7 +773,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       }
       if (intent === 'resize-grow' || intent === 'resize-shrink') {
         event.preventDefault()
-        if (column.columnDef.meta?.resizable === false || column.id === 'actions') return
+        if (column.columnDef.meta?.resizable === false || column.columnDef.meta?.actions === true) return
         const delta = intent === 'resize-grow' ? 16 : -16
         dispatch({ type: 'RESIZE_COLUMN', id: column.id, width: column.getSize() + delta })
       }

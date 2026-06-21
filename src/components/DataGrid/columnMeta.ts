@@ -8,5 +8,8 @@ declare module '@tanstack/react-table' {
     resizable?: boolean
     type?: FilterColumnType
     options?: string[]
+    /** True for the non-data action column (compact padding, no copy/range/filter). Set by the
+     *  orchestrator from `type: 'actions'` / the legacy `id === 'actions'`. */
+    actions?: boolean
   }
 }
