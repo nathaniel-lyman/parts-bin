@@ -19,6 +19,17 @@ describe('DataGridResizeHandle', () => {
     fireEvent.pointerUp(window)
   })
 
+  it('flushes the final drag position on pointerup even if the frame has not fired', () => {
+    const onResize = vi.fn()
+    render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onAutofit={() => {}} />)
+    const handle = screen.getByRole('separator', { name: /resize mrr column/i })
+    fireEvent.pointerDown(handle, { clientX: 200, button: 0 })
+    fireEvent.pointerMove(window, { clientX: 280 })
+    // Release immediately, before the rAF tick — the last position must still commit (120 + 80).
+    fireEvent.pointerUp(window)
+    expect(onResize).toHaveBeenLastCalledWith('mrr', 200)
+  })
+
   it('locks the body cursor and text selection during a drag and restores them after', () => {
     render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={() => {}} onAutofit={() => {}} />)
     const handle = screen.getByRole('separator', { name: /resize mrr column/i })

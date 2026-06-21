@@ -46,17 +46,33 @@ function FloatingFilterInput({
   const committedRef = useRef(normalizeFilterDraft(value))
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const cancelPending = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }
+
+  const commit = (raw: string) => {
+    cancelPending()
+    committedRef.current = raw
+    onCommit(columnId, operator, raw)
+  }
+
   // Re-sync the draft to an externally-changed committed value (reset / applied view), but skip when
-  // it matches what we just dispatched so the input never fights the user's cursor while typing.
+  // it matches what we just dispatched so the input never fights the user's cursor while typing. An
+  // external change wins over an in-flight debounced edit, so cancel any pending commit first —
+  // otherwise a late timer would clobber the reset/applied value with the half-typed string.
   useEffect(() => {
     const next = normalizeFilterDraft(value)
     if (next !== committedRef.current) {
+      cancelPending()
       committedRef.current = next
       setDraft(next)
     }
   }, [value])
 
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+  useEffect(() => () => cancelPending(), [])
 
   return (
     <input
@@ -67,11 +83,16 @@ function FloatingFilterInput({
       onChange={(event) => {
         const raw = event.target.value
         setDraft(raw)
-        if (timerRef.current) clearTimeout(timerRef.current)
+        cancelPending()
         timerRef.current = setTimeout(() => {
-          committedRef.current = raw
-          onCommit(columnId, operator, raw)
+          timerRef.current = null
+          commit(raw)
         }, FILTER_DEBOUNCE_MS)
+      }}
+      // Commit immediately on blur (tabbing away / closing the filter panel) so a value typed
+      // within the debounce window is never lost when the input unmounts.
+      onBlur={() => {
+        if (timerRef.current) commit(draft)
       }}
     />
   )

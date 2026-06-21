@@ -46,7 +46,17 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
         onResize(columnId, startWidth.current + latestX - startX.current)
       })
     }
-    const onUp = () => setDragging(false)
+    // On release, flush the last coalesced position synchronously so the final delta is never
+    // lost — without this, a drag that ends mid-frame (or a flick faster than one frame) would
+    // be cancelled by the cleanup below and the column would settle a frame short of the cursor.
+    const onUp = () => {
+      if (frame) {
+        cancelAnimationFrame(frame)
+        frame = 0
+        onResize(columnId, startWidth.current + latestX - startX.current)
+      }
+      setDragging(false)
+    }
 
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)

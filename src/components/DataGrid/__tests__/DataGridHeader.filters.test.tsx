@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { DataGrid } from '../DataGrid'
@@ -26,6 +26,21 @@ describe('inline header filters', () => {
 
     // Header filter typing is debounced (~200ms), so the filter applies after the user pauses.
     await waitFor(() => expect(screen.queryByText('Gadget')).toBeNull())
+    expect(screen.getByText('Widget')).toBeInTheDocument()
+  })
+
+  it('commits the in-flight filter immediately on blur (before the debounce elapses)', async () => {
+    const user = userEvent.setup()
+    render(<DataGrid rows={productRows} columns={productColumns} getRowId={(row) => row.id} enableHeaderFilters />)
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    const input = screen.getByRole('textbox', { name: /filter title/i })
+    await user.type(input, 'widget')
+    fireEvent.blur(input)
+
+    // Blur flushes synchronously — so a value typed within the debounce window survives the input
+    // unmounting (e.g. closing the filter panel) instead of being dropped.
+    expect(screen.queryByText('Gadget')).toBeNull()
     expect(screen.getByText('Widget')).toBeInTheDocument()
   })
 })
