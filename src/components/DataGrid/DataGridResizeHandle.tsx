@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { keyToIntent } from './keyboard'
 
 interface Props {
@@ -11,6 +12,9 @@ interface Props {
 
 export function DataGridResizeHandle({ columnId, header, currentWidth, onResize, onAutofit }: Props) {
   const [dragging, setDragging] = useState(false)
+  // Full-height guide line that tracks the cursor for the duration of the drag (viewport coords,
+  // portalled to <body> so no ancestor transform can shift it). Spans the grid scroll viewport.
+  const [guide, setGuide] = useState<{ x: number; top: number; height: number } | null>(null)
   const startX = useRef(0)
   const startWidth = useRef(currentWidth)
 
@@ -21,6 +25,9 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
     startX.current = event.clientX
     startWidth.current = currentWidth
     event.currentTarget.setPointerCapture?.(event.pointerId)
+    const viewport = (event.currentTarget as HTMLElement).closest('[data-testid="datagrid-scroll"]')
+    const rect = viewport?.getBoundingClientRect()
+    setGuide(rect ? { x: event.clientX, top: rect.top, height: rect.height } : null)
     setDragging(true)
   }, [currentWidth])
 
@@ -44,6 +51,7 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
       frame = requestAnimationFrame(() => {
         frame = 0
         onResize(columnId, startWidth.current + latestX - startX.current)
+        setGuide((current) => (current ? { ...current, x: latestX } : current))
       })
     }
     // On release, flush the last coalesced position synchronously so the final delta is never
@@ -55,6 +63,7 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
         frame = 0
         onResize(columnId, startWidth.current + latestX - startX.current)
       }
+      setGuide(null)
       setDragging(false)
     }
 
@@ -72,6 +81,7 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
   }, [columnId, dragging, onResize])
 
   return (
+    <>
     <span
       role="separator"
       tabIndex={0}
@@ -93,5 +103,15 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
       // 8px grab zone straddling the column border for an easy target; a 1px line shows on hover.
       className={`absolute top-0 -right-1 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:right-1 after:top-0 after:h-full after:w-px after:bg-transparent hover:after:bg-accent ${dragging ? 'after:bg-accent' : ''}`}
     />
+    {guide && createPortal(
+      <div
+        aria-hidden="true"
+        data-testid="resize-guide"
+        className="pointer-events-none fixed z-50 w-0.5 -translate-x-1/2 bg-accent"
+        style={{ left: guide.x, top: guide.top, height: guide.height }}
+      />,
+      document.body,
+    )}
+    </>
   )
 }

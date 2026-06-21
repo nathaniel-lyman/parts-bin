@@ -117,4 +117,16 @@ describe('DataGridHeader / DataGridBody', () => {
     expect(activeHeader.style.opacity).toBe('0.28')
     expect(shiftedHeader.style.transform).toBe('translateX(-140px)')
   })
+
+  it('shows the reorder drop indicator on the trailing edge of the hovered column', () => {
+    render(<HeaderPreviewHarness />)
+    // Dragging name (idx 0) over mrr (idx 1) → dropping rightward → bar on mrr's right edge.
+    const overHeader = screen.getByRole('columnheader', { name: /MRR/ })
+    const indicator = overHeader.querySelector('[data-testid="reorder-drop-indicator"]')!
+    expect(indicator).not.toBeNull()
+    expect(indicator.className).toContain('right-0')
+    // The non-target column carries no indicator.
+    const activeHeader = screen.getByRole('columnheader', { name: /Name/ })
+    expect(activeHeader.querySelector('[data-testid="reorder-drop-indicator"]')).toBeNull()
+  })
 })

@@ -123,6 +123,7 @@ function SortableHeader<TData>({
   focused,
   pinnedSide,
   pinnedOffset = 0,
+  dropIndicatorSide,
   onFocusCell,
   onAutofitColumn,
   enableGrouping,
@@ -140,6 +141,8 @@ function SortableHeader<TData>({
   focused?: boolean
   pinnedSide?: 'left' | 'right'
   pinnedOffset?: number
+  /** Which edge of this header shows the column-reorder insertion bar, if any. */
+  dropIndicatorSide?: 'left' | 'right'
   onFocusCell?: (row: number, col: number) => void
   onAutofitColumn?: (columnId: string) => void
   enableGrouping?: boolean
@@ -272,6 +275,14 @@ function SortableHeader<TData>({
           />
         </span>
       )}
+      {dropIndicatorSide && (
+        // Insertion bar marking where the dragged column will land.
+        <span
+          aria-hidden="true"
+          data-testid="reorder-drop-indicator"
+          className={`pointer-events-none absolute inset-y-0 z-20 w-0.5 bg-accent ${dropIndicatorSide === 'left' ? 'left-0' : 'right-0'}`}
+        />
+      )}
     </th>
   )
 }
@@ -331,6 +342,16 @@ export function DataGridHeader<TData>({
   const visibleMovable = table.getVisibleLeafColumns().map((column) => column.id).filter((id) => !lockedIds.has(id))
   const leafIds = visibleColumnIds ?? table.getVisibleLeafColumns().map((column) => column.id)
   const colIndexFor = (columnId: string) => leafIds.indexOf(columnId)
+  // Where the dragged column will land: a bar on the trailing edge of the hovered column when
+  // dragging rightward, the leading edge when dragging leftward. Read off the live drag preview.
+  const dropTarget = (() => {
+    if (!dragPreview || dragPreview.activeId === dragPreview.overId) return null
+    const activeIdx = leafIds.indexOf(dragPreview.activeId)
+    const overIdx = leafIds.indexOf(dragPreview.overId)
+    if (activeIdx < 0 || overIdx < 0) return null
+    return { columnId: dragPreview.overId, side: (activeIdx < overIdx ? 'right' : 'left') as 'left' | 'right' }
+  })()
+  const dropIndicatorFor = (columnId: string) => (dropTarget?.columnId === columnId ? dropTarget.side : undefined)
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over) return
@@ -373,6 +394,7 @@ export function DataGridHeader<TData>({
                       focused={focus?.row === -1 && focus.col === colIndex}
                       pinnedSide="left"
                       pinnedOffset={pinnedOffsets?.left[header.column.id] ?? 0}
+                      dropIndicatorSide={dropIndicatorFor(header.column.id)}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
@@ -403,6 +425,7 @@ export function DataGridHeader<TData>({
                       dragPreview={dragPreview}
                       colIndex={colIndex}
                       focused={focus?.row === -1 && focus.col === colIndex}
+                      dropIndicatorSide={dropIndicatorFor(header.column.id)}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
@@ -432,6 +455,7 @@ export function DataGridHeader<TData>({
                       focused={focus?.row === -1 && focus.col === colIndex}
                       pinnedSide="right"
                       pinnedOffset={pinnedOffsets?.right[header.column.id] ?? 0}
+                      dropIndicatorSide={dropIndicatorFor(header.column.id)}
                       onFocusCell={onFocusCell}
                       onAutofitColumn={onAutofitColumn}
                       enableGrouping={enableGrouping}
