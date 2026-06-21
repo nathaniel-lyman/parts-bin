@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
 import './columnMeta'
 import {
   closestCenter,
@@ -8,10 +8,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
-  type DragMoveEvent,
-  type DragOverEvent,
-  type DragStartEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
@@ -29,17 +25,20 @@ import {
 import { useGridViewState } from './useGridViewState'
 import { bootGridSeed, useGridPersistence } from './useGridPersistence'
 import { useSavedViews } from './useSavedViews'
+import { useColumnDragPreview } from './useColumnDragPreview'
+import { useScrollMetrics } from './useScrollMetrics'
+import { usePinnedColumnOffsets } from './usePinnedColumnOffsets'
+import { useGridSelectionFocus } from './useGridSelectionFocus'
+import { useGridClipboard } from './useGridClipboard'
 import { ACTIONS_COLUMN_ID, canHideColumn, canSortColumn, isMovableColumnId } from './normalize'
 import { gridReducer } from './reducers'
-import { densityClass, pinnedLeafGroups, pinnedOffsets, rowHeightForDensity, selectAllState, selectionCount, type PinnedOffsets } from './selectors'
+import { densityClass, pinnedLeafGroups, rowHeightForDensity, selectAllState, selectionCount } from './selectors'
 import { hydrate } from './state'
 import { ledgerFilterFn } from './filtering'
 import { serializeGridQuery, toGridQuery, type GridQuery } from './query'
-import { copyToClipboard, downloadCSV, downloadXLSX, serializeCSV, serializeCell, serializeTSV, serializeXLSX } from './export'
 import { projectView } from './persistence'
-import { keyToIntent, moveFocus, resolveCopyIntent, type GridFocus } from './keyboard'
+import { keyToIntent, moveFocus } from './keyboard'
 import { computeColumnRange } from './virtualization'
-import { useToast } from '../ui'
 import { DataGridBulkActions } from './DataGridBulkActions'
 import { DataGridBody } from './DataGridBody'
 import { DataGridColumnDragOverlay } from './DataGridColumnDragOverlay'
@@ -50,33 +49,13 @@ import { DataGridFooter } from './DataGridFooter'
 import { DataGridHeader } from './DataGridHeader'
 import { DataGridLoadingState } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
-import { projectColumnDrag, type ColumnDragPreviewState } from './dragPreview'
 import { fitColumnWidth, measureColumnContentWidths } from './autofit'
 import { computeAggregates, formatAggregate, resolveAggregate } from './aggregation'
 import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
-import {
-  commitSession,
-  editorTypeFor,
-  isColumnEditable,
-  isDirtyCell,
-  markDirty,
-  parseDraft,
-  setDraft,
-  startEdit,
-  type DirtyCells,
-  type EditMode,
-  type EditSession,
-  type GridEditingApi,
-} from './editing'
+import type { EditMode } from './editing'
+import { useInlineEditing } from './useInlineEditing'
 import { DataGridAggregationFooter } from './DataGridAggregationFooter'
 import type { ColumnVirtualWindow, DataGridColumn, DataGridNumberFormat, DataGridState, GridAction } from './types'
-import {
-  cellRangeBounds,
-  isMultiCellRange,
-  parseClipboardTable,
-  serializeCellRange,
-  type CellRange,
-} from './rangeSelection'
 
 export interface DataGridProps<TData> {
   rows: TData[]
@@ -195,18 +174,6 @@ function toColumnDef<TData>(
   return base
 }
 
-const EMPTY_OFFSETS: PinnedOffsets = { left: {}, right: {} }
-
-function sameSide(a: Record<string, number>, b: Record<string, number>): boolean {
-  const keys = Object.keys(a)
-  if (keys.length !== Object.keys(b).length) return false
-  return keys.every((key) => a[key] === b[key])
-}
-
-function sameOffsets(a: PinnedOffsets, b: PinnedOffsets): boolean {
-  return sameSide(a.left, b.left) && sameSide(a.right, b.right)
-}
-
 export function DataGrid<TData>(props: DataGridProps<TData>) {
   const {
     rows,
@@ -256,13 +223,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const [seed] = useState(() => persistenceEnabled ? bootGridSeed(props.initialState, persistenceKey) : hydrate({ initialState: props.initialState }))
   const [menu, setMenu] = useState<{ x: number; y: number; rowId: string; colId: string } | null>(null)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
-  const [scrollMetrics, setScrollMetrics] = useState({ left: 0, width: 1024 })
+  const scrollMetrics = useScrollMetrics(scrollElement)
   const [headerFiltersOpen, setHeaderFiltersOpen] = useState(false)
-  const [dragPreview, setDragPreview] = useState<ColumnDragPreviewState | null>(null)
-  const [focus, setFocus] = useState<GridFocus>({ row: 0, col: 0 })
-  const [cellRange, setCellRange] = useState<CellRange | null>(null)
-  const [selectingRange, setSelectingRange] = useState(false)
-  const restoreGridFocusRef = useRef(false)
   const view = useGridViewState(seed, columns)
   const {
     views: savedViewItems,
@@ -271,7 +233,6 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     apply: applySavedView,
     reset: resetSavedView,
   } = useSavedViews(persistenceKey ? `${persistenceKey}.views` : undefined)
-  const toast = useToast()
   const state = isControlled ? props.state! : view.state
   const paginationEnabled = enablePagination || manualPagination
   const savedViewsEnabled = !isControlled && (enableSavedViews || persistenceKey !== undefined)
@@ -430,7 +391,25 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const rowHeight = rowHeightForDensity(state.density)
   // Sticky offsets must come from RENDERED widths: the w-full table stretches columns past
   // their logical getSize(), and the selection column has no fixed width — so we measure.
-  const [pinnedColumnOffsets, setPinnedColumnOffsets] = useState<PinnedOffsets>({ left: {}, right: {} })
+  const pinnedColumnOffsets = usePinnedColumnOffsets({
+    scrollElement,
+    pinnedGroups,
+    visibleColumnIds,
+    columnSizing: state.columnSizing,
+    density: state.density,
+    scrollWidth: scrollMetrics.width,
+    enableRowSelection,
+  })
+  const {
+    focus,
+    setFocus,
+    cellRange,
+    setCellRange,
+    beginCellRange,
+    extendCellRange,
+    refocusActiveCell,
+    restoreGridFocusRef,
+  } = useGridSelectionFocus({ scrollElement, rowCount, rowHeight })
   const columnWindow = useMemo<ColumnVirtualWindow | undefined>(() => {
     if (centerLeafColumns.length <= 12) return undefined
     const widths = centerLeafColumns.map((column) => state.columnSizing[column.id] ?? column.getSize())
@@ -553,41 +532,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     onContextChange?.(contextSnapshot)
   }, [contextReportKey, contextSnapshot, onContextChange])
 
-  const updateDragPreview = (activeId: string, overId: string) => {
-    if (!isMovableColumnId(activeId)) {
-      setDragPreview(null)
-      return
-    }
-    const effectiveOverId = isMovableColumnId(overId) ? overId : activeId
-    const projection = projectColumnDrag({
-      orderedIds: visibleMovableColumnIds,
-      widths: columnWidthMap,
-      activeId,
-      overId: effectiveOverId,
-    })
-    setDragPreview({ activeId, overId: effectiveOverId, ...projection })
-  }
-
-  const onDragStart = (event: DragStartEvent) => {
-    const activeId = String(event.active.id)
-    updateDragPreview(activeId, activeId)
-  }
-
-  const onDragOver = (event: DragOverEvent) => {
-    updateDragPreview(String(event.active.id), event.over ? String(event.over.id) : String(event.active.id))
-  }
-
-  const onDragMove = (event: DragMoveEvent) => {
-    if (!dragPreview) updateDragPreview(String(event.active.id), String(event.active.id))
-  }
-
-  const onDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    setDragPreview(null)
-    if (over) dispatch({ type: 'REORDER_COLUMN', activeId: String(active.id), overId: String(over.id) })
-  }
-
-  const onDragCancel = () => setDragPreview(null)
+  const { dragPreview, onDragStart, onDragOver, onDragMove, onDragEnd, onDragCancel } = useColumnDragPreview({
+    orderedMovableIds: visibleMovableColumnIds,
+    columnWidths: columnWidthMap,
+    dispatch,
+  })
 
   const autofitColumn = useCallback(
     (columnId: string) => {
@@ -603,80 +552,20 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     [scrollElement, columns],
   )
 
-  const [editSession, setEditSession] = useState<EditSession | null>(null)
-  const [dirtyCells, setDirtyCells] = useState<DirtyCells>({})
   const columnsById = useMemo(() => new Map(columns.map((column) => [column.id, column])), [columns])
 
-  const refocusActiveCell = useCallback(() => {
-    restoreGridFocusRef.current = true
-    setFocus((current) => ({ ...current }))
-  }, [])
-
-  const startEditing = useCallback(
-    (rowId: string, columnId: string) => {
-      const row = rows.find((item) => getRowId(item) === rowId)
-      if (!row || !isColumnEditable(columnsById.get(columnId))) return
-      setEditSession(startEdit(editMode, rowId, columnId, columns, row))
-    },
-    [columns, columnsById, editMode, getRowId, rows],
-  )
-
-  const cancelEditing = useCallback(() => {
-    setEditSession(null)
-    refocusActiveCell()
-  }, [refocusActiveCell])
-
-  const commitEditing = useCallback(
-    (move?: 'next' | 'prev') => {
-      if (!editSession) return
-      const row = rows.find((item) => getRowId(item) === editSession.rowId)
-      if (!row) {
-        setEditSession(null)
-        return
-      }
-      const result = commitSession(editSession, columns, row)
-      if (!result.ok) {
-        setEditSession({ ...editSession, errors: result.errors })
-        return
-      }
-      if (Object.keys(result.patch).length > 0) {
-        onRowUpdate?.(editSession.rowId, result.patch as Partial<TData>, row)
-        setDirtyCells((current) => markDirty(current, editSession.rowId, result.changed))
-      }
-      if (move && editSession.mode === 'cell') {
-        const step = move === 'next' ? 1 : -1
-        const from = visibleColumnIds.indexOf(editSession.columnId)
-        for (let index = from + step; index >= 0 && index < visibleColumnIds.length; index += step) {
-          if (isColumnEditable(columnsById.get(visibleColumnIds[index]))) {
-            setFocus((current) => ({ ...current, col: index }))
-            setEditSession(startEdit('cell', editSession.rowId, visibleColumnIds[index], columns, row))
-            return
-          }
-        }
-      }
-      setEditSession(null)
-      refocusActiveCell()
-    },
-    [columns, columnsById, editSession, getRowId, onRowUpdate, refocusActiveCell, rows, visibleColumnIds],
-  )
-
-  const editingApi: GridEditingApi | undefined = editingEnabled
-    ? {
-        session: editSession,
-        isEditable: (columnId) => isColumnEditable(columnsById.get(columnId)),
-        isDirty: (rowId, columnId) => isDirtyCell(dirtyCells, rowId, columnId),
-        editorFor: (columnId) => {
-          const column = columnsById.get(columnId)
-          return column
-            ? { type: editorTypeFor(column), options: column.meta?.options }
-            : { type: 'text' }
-        },
-        start: startEditing,
-        setDraft: (columnId, value) => setEditSession((session) => (session ? setDraft(session, columnId, value) : session)),
-        commit: commitEditing,
-        cancel: cancelEditing,
-      }
-    : undefined
+  const { editingApi, markDirtyCells } = useInlineEditing({
+    rows,
+    columns,
+    columnsById,
+    getRowId,
+    editMode,
+    editingEnabled,
+    onRowUpdate,
+    visibleColumnIds,
+    setFocus,
+    refocusActiveCell,
+  })
 
   const renderAggregatedCell = useCallback(
     (columnId: string, leafRows: TData[]) => {
@@ -695,288 +584,39 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const hasAggregates = columns.some((column) => column.aggregate !== undefined)
   const footerAggregates = hasAggregates ? computeAggregates(columns, exportData, state.numberFormats) : {}
 
-  const visibleSelectedCountRef = useRef(visibleSelectedCount)
-  const focusTargetRef = useRef<{ rowId: string; colId: string } | null>(null)
-  const rootRef = useRef<HTMLDivElement | null>(null)
-
-  visibleSelectedCountRef.current = visibleSelectedCount
-  focusTargetRef.current = (() => {
-    if (focus.row < 0) return null
-    const row = visibleRows[focus.row]
-    const colId = visibleColumnIds[focus.col]
-    return row && colId ? { rowId: row.id, colId } : null
-  })()
-
-  const resolveCellValue = useCallback(
-    (row: TData, columnId: string): unknown => {
-      const column = columns.find((item) => item.id === columnId)
-      if (!column) return ''
-      if (column.accessorFn) return column.accessorFn(row)
-      if (column.accessorKey) return (row as Record<string, unknown>)[column.accessorKey as string]
-      return ''
-    },
-    [columns],
-  )
-
-  // The clipboard-facing value: the column's `exportValue` formatter when present (so a copied
-  // currency/percent cell lands in Excel as "$24,600" / "-2.1%"), else the raw value. Kept separate
-  // from resolveCellValue, which paste compares against and must stay raw.
-  const resolveCellExportValue = useCallback(
-    (row: TData, columnId: string): unknown => {
-      const raw = resolveCellValue(row, columnId)
-      const column = columnsById.get(columnId)
-      if (column && isNumericColumnType(column.type)) {
-        return formatDataGridNumber(raw, column.type, column.numberFormat, state.numberFormats[columnId])
-      }
-      return column?.exportValue ? column.exportValue(raw, row) : raw
-    },
-    [columnsById, resolveCellValue, state.numberFormats],
-  )
-
-  // Header label for the copied column range. Falls back to the id for non-string headers.
-  const columnHeaderLabel = useCallback(
-    (columnId: string): string => {
-      const column = columnsById.get(columnId)
-      return column && typeof column.header === 'string' ? column.header : columnId
-    },
-    [columnsById],
-  )
-
-  const beginCellRange = useCallback((row: number, col: number) => {
-    const next = { row, col }
-    setFocus(next)
-    setCellRange({ anchor: next, focus: next })
-    setSelectingRange(true)
-  }, [])
-
-  const extendCellRange = useCallback((row: number, col: number) => {
-    if (!selectingRange) return
-    const next = { row, col }
-    setCellRange((current) => current ? { ...current, focus: next } : { anchor: next, focus: next })
-    setFocus(next)
-  }, [selectingRange])
-
-  useEffect(() => {
-    if (!selectingRange) return
-    const stopSelecting = () => setSelectingRange(false)
-    window.addEventListener('mouseup', stopSelecting)
-    return () => window.removeEventListener('mouseup', stopSelecting)
-  }, [selectingRange])
-
-  // Writes to the clipboard and toasts on success; the two-argument then scopes the
-  // error-swallow to the clipboard write only (a throw from toast() would still surface).
-  const copyWithFeedback = useCallback((text: string, message: string) => {
-    void copyToClipboard(text).then(() => toast(message), () => {})
-  }, [toast])
-
-  const copyRange = useCallback(() => {
-    if (!cellRange || !isMultiCellRange(cellRange)) return false
-    const text = serializeCellRange(cellRange, visibleData, visibleColumnIds, resolveCellExportValue, {
-      header: columnHeaderLabel,
-    })
-    if (!text) return false
-    const bounds = cellRangeBounds(cellRange)
-    const cells = (bounds.rowEnd - bounds.rowStart + 1) * (bounds.colEnd - bounds.colStart + 1)
-    copyWithFeedback(text, cells === 1 ? 'Copied cell' : `Copied ${cells} cells`)
-    return true
-  }, [cellRange, columnHeaderLabel, copyWithFeedback, resolveCellExportValue, visibleColumnIds, visibleData])
-
-  const copyCell = useCallback(
-    (rowId: string, colId: string) => {
-      const row = visibleData.find((item) => getRowId(item) === rowId) ?? rows.find((item) => getRowId(item) === rowId)
-      if (!row) return
-      copyWithFeedback(serializeCell(resolveCellExportValue(row, colId)), 'Copied cell')
-    },
-    [copyWithFeedback, getRowId, resolveCellExportValue, rows, visibleData],
-  )
-
-  const copyRow = useCallback(
-    (rowId: string) => {
-      const row = visibleData.find((item) => getRowId(item) === rowId) ?? rows.find((item) => getRowId(item) === rowId)
-      if (!row) return
-      copyWithFeedback(serializeTSV([row], columns, {
-        getRowId,
-        columnOrder: state.columnOrder,
-        columnVisibility: state.columnVisibility,
-        includeHeader: false,
-        formatted: true,
-        numberFormats: state.numberFormats,
-      }), 'Copied row')
-    },
-    [columns, copyWithFeedback, getRowId, rows, state.columnOrder, state.columnVisibility, state.numberFormats, visibleData],
-  )
-
-  const copySelection = useCallback(() => {
-    // Count what serializeTSV actually emits: selected ∩ currently visible (hidden-but-selected
-    // rows are not copied, so they must not be counted in the toast).
-    const copiedCount = visibleData.filter((row) => state.rowSelection[getRowId(row)]).length
-    // Every selected row is filtered out: skip the (header-only) write and the toast entirely.
-    if (copiedCount === 0) return
-    copyWithFeedback(serializeTSV(visibleData, columns, {
-      getRowId,
-      columnOrder: state.columnOrder,
-      columnVisibility: state.columnVisibility,
-      rowSelection: state.rowSelection,
-      formatted: true,
-      numberFormats: state.numberFormats,
-    }), copiedCount === 1 ? 'Copied 1 row' : `Copied ${copiedCount} rows`)
-  }, [columns, copyWithFeedback, getRowId, state.columnOrder, state.columnVisibility, state.numberFormats, state.rowSelection, visibleData])
-
-  const exportCsv = useCallback(() => {
-    downloadCSV(exportFilename, serializeCSV(exportData, columns, {
-      getRowId,
-      columnOrder: state.columnOrder,
-      columnVisibility: state.columnVisibility,
-      rowSelection: state.rowSelection,
-    }))
-  }, [columns, exportData, exportFilename, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
-
-  const exportXlsx = useCallback(() => {
-    const filename = exportFilename.replace(/\.csv$/i, '') || 'data-grid'
-    downloadXLSX(`${filename}.xlsx`, serializeXLSX(exportData, columns, {
-      getRowId,
-      columnOrder: state.columnOrder,
-      columnVisibility: state.columnVisibility,
-      rowSelection: state.rowSelection,
-    }))
-  }, [columns, exportData, exportFilename, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
-
-  const exportAllCsv = useCallback(() => {
-    onExportAllCsv?.(allMatchingQuery)
-  }, [allMatchingQuery, onExportAllCsv])
-
-  const exportAllXlsx = useCallback(() => {
-    onExportAllXlsx?.(allMatchingQuery)
-  }, [allMatchingQuery, onExportAllXlsx])
-
-  const pasteTable = useCallback((text: string) => {
-    if (!editingEnabled || !onRowUpdate) return false
-    const incoming = parseClipboardTable(text)
-    if (incoming.length === 0 || incoming[0]?.length === 0) return false
-
-    const rangeBounds = cellRange ? cellRangeBounds(cellRange) : null
-    const startRow = rangeBounds?.rowStart ?? focus.row
-    const startCol = rangeBounds?.colStart ?? focus.col
-    if (startRow < 0 || startCol < 0) return false
-
-    const fillRange = Boolean(rangeBounds && isMultiCellRange(cellRange) && incoming.length === 1 && incoming[0]?.length === 1)
-    const rowSpan = fillRange && rangeBounds ? rangeBounds.rowEnd - rangeBounds.rowStart + 1 : incoming.length
-    const colSpan = fillRange && rangeBounds ? rangeBounds.colEnd - rangeBounds.colStart + 1 : Math.max(...incoming.map((row) => row.length))
-    let changedCells = 0
-    let attemptedEditableCells = 0
-
-    for (let rowOffset = 0; rowOffset < rowSpan; rowOffset += 1) {
-      const row = visibleData[startRow + rowOffset]
-      if (!row) continue
-      const rowId = getRowId(row)
-      const patch: Record<string, unknown> = {}
-      const changedColumnIds: string[] = []
-
-      for (let colOffset = 0; colOffset < colSpan; colOffset += 1) {
-        const columnId = visibleColumnIds[startCol + colOffset]
-        const column = columnId ? columnsById.get(columnId) : undefined
-        if (!column || !isColumnEditable(column)) continue
-        attemptedEditableCells += 1
-
-        const draft = fillRange ? incoming[0]?.[0] : incoming[rowOffset]?.[colOffset]
-        if (draft === undefined) continue
-        const parsed = parseDraft(editorTypeFor(column), draft)
-        if (parsed.error) continue
-        const validationMessage = column.validate?.(parsed.value as never, row)
-        if (validationMessage) continue
-        if (parsed.value === resolveCellValue(row, column.id)) continue
-        patch[column.accessorKey as string] = parsed.value
-        changedColumnIds.push(column.id)
-      }
-
-      if (changedColumnIds.length > 0) {
-        onRowUpdate(rowId, patch as Partial<TData>, row)
-        setDirtyCells((current) => markDirty(current, rowId, changedColumnIds))
-        changedCells += changedColumnIds.length
-      }
-    }
-
-    if (changedCells > 0) {
-      toast(changedCells === 1 ? 'Pasted 1 cell' : `Pasted ${changedCells} cells`)
-      return true
-    }
-    if (attemptedEditableCells > 0) {
-      toast('Nothing pasted')
-      return true
-    }
-    return false
-  }, [
-    cellRange,
+  const {
+    rootRef,
+    copyCell,
+    copyRow,
+    copySelection,
+    exportCsv,
+    exportXlsx,
+    exportAllCsv,
+    exportAllXlsx,
+  } = useGridClipboard({
+    rows,
+    columns,
     columnsById,
-    editingEnabled,
-    focus.col,
-    focus.row,
     getRowId,
-    onRowUpdate,
-    toast,
-    visibleColumnIds,
     visibleData,
-  ])
-
-  useEffect(() => {
-    if (!scrollElement) return
-    const update = () => setScrollMetrics({ left: scrollElement.scrollLeft, width: scrollElement.clientWidth })
-    update()
-    scrollElement.addEventListener('scroll', update)
-    window.addEventListener('resize', update)
-    return () => {
-      scrollElement.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-    }
-  }, [scrollElement])
-
-  const pinnedKey = `${pinnedGroups.left.join(',')}|${pinnedGroups.right.join(',')}`
-  const layoutKey = `${visibleColumnIds.join(',')}|${JSON.stringify(state.columnSizing)}|${state.density}|${scrollMetrics.width}|${enableRowSelection}`
-  useLayoutEffect(() => {
-    if (!scrollElement) {
-      setPinnedColumnOffsets((prev) => (prev.left === EMPTY_OFFSETS.left ? prev : EMPTY_OFFSETS))
-      return
-    }
-    const headerRow = scrollElement.querySelector('tr[data-testid="grid-header-row"]')
-    if (!headerRow) return
-    const widths: Record<string, number> = {}
-    headerRow.querySelectorAll<HTMLElement>('th[data-column-id]').forEach((th) => {
-      widths[th.dataset.columnId!] = th.getBoundingClientRect().width
-    })
-    const leadingTh = headerRow.querySelector<HTMLElement>('th:not([data-column-id])')
-    const leadingOffset = enableRowSelection && leadingTh ? leadingTh.getBoundingClientRect().width : 0
-    const next = pinnedOffsets({ left: pinnedGroups.left, right: pinnedGroups.right }, widths, leadingOffset)
-    setPinnedColumnOffsets((prev) => (sameOffsets(prev, next) ? prev : next))
-    // pinnedKey/layoutKey capture every layout input; pinnedGroups are derived from them.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollElement, pinnedKey, layoutKey])
-
-  const focusActiveCell = useCallback(() => {
-    const root = scrollElement
-    if (!root) return
-    const selector = focus.row < 0
-      ? `th[data-col-index="${focus.col}"]`
-      : `td[data-row-index="${focus.row}"][data-col-index="${focus.col}"]`
-    const el = root.querySelector<HTMLElement>(selector)
-    if (!el) return
-    el.focus()
-    el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
-  }, [focus.col, focus.row, scrollElement])
-
-  useEffect(() => {
-    if (!scrollElement) return
-    if (!restoreGridFocusRef.current) return
-    if (focus.row >= 0 && rowCount > 100) {
-      scrollElement.scrollTop = Math.max(0, focus.row * rowHeight)
-    }
-    const restore = () => {
-      focusActiveCell()
-      restoreGridFocusRef.current = false
-    }
-    restore()
-    const frame = requestAnimationFrame(restore)
-    return () => cancelAnimationFrame(frame)
-  }, [focus, focusActiveCell, rowCount, rowHeight, scrollElement])
+    visibleColumnIds,
+    visibleRows,
+    exportData,
+    exportFilename,
+    cellRange,
+    focus,
+    visibleSelectedCount,
+    columnOrder: state.columnOrder,
+    columnVisibility: state.columnVisibility,
+    numberFormats: state.numberFormats,
+    rowSelection: state.rowSelection,
+    editingEnabled,
+    onRowUpdate,
+    markDirtyCells,
+    allMatchingQuery,
+    onExportAllCsv,
+    onExportAllXlsx,
+  })
 
   const onGridKeyDown = (event: ReactKeyboardEvent<HTMLTableElement>) => {
     const target = event.target
@@ -1088,58 +728,6 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       rowEl?.querySelector<HTMLButtonElement>('button:not([data-grid-copy])')?.click()
     }
   }
-
-  useEffect(() => {
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      const active = document.activeElement
-      const editableInput =
-        active instanceof HTMLInputElement &&
-        ['email', 'number', 'password', 'search', 'tel', 'text', 'url'].includes(active.type)
-      const inEditableTarget =
-        editableInput ||
-        active instanceof HTMLTextAreaElement ||
-        (active instanceof HTMLElement && active.isContentEditable)
-      const isCopyCombo = event.key.toLowerCase() === 'c' && (event.ctrlKey || event.metaKey)
-      const isPasteCombo = event.key.toLowerCase() === 'v' && (event.ctrlKey || event.metaKey)
-      if (!isCopyCombo && !isPasteCombo) return
-      // Both clipboard intents are window-level, so scope them hard: focus must live inside this
-      // grid, and a native text selection always wins over us (let the browser copy it).
-      if (!rootRef.current || !active || !rootRef.current.contains(active)) return
-      if (inEditableTarget) return
-      if (window.getSelection()?.isCollapsed === false) return
-      if (isPasteCombo) return
-      if (copyRange()) return
-      const intent = resolveCopyIntent(event, { hasSelection: visibleSelectedCountRef.current > 0, inEditableTarget })
-      if (!intent) return
-      if (intent === 'selection') {
-        copySelection()
-        return
-      }
-      if (!(active instanceof HTMLElement) || !active.closest('td[data-col-index]')) return
-      const target = focusTargetRef.current
-      if (target && target.colId !== 'actions') copyCell(target.rowId, target.colId)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [copyCell, copyRange, copySelection])
-
-  useEffect(() => {
-    const onPaste = (event: ClipboardEvent) => {
-      const active = document.activeElement
-      if (!rootRef.current || !active || !rootRef.current.contains(active)) return
-      const inEditableTarget =
-        active instanceof HTMLInputElement ||
-        active instanceof HTMLTextAreaElement ||
-        (active instanceof HTMLElement && active.isContentEditable)
-      if (inEditableTarget) return
-      const text = event.clipboardData?.getData('text/plain') ?? ''
-      if (!text) return
-      if (!pasteTable(text)) return
-      event.preventDefault()
-    }
-    window.addEventListener('paste', onPaste)
-    return () => window.removeEventListener('paste', onPaste)
-  }, [pasteTable])
 
   return (
     <div
