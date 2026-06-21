@@ -3,6 +3,7 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, us
 import { horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { flexRender, type ColumnFiltersState, type Header, type Table } from '@tanstack/react-table'
+import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { isLockPositionColumn, lockedColumnIds } from './normalize'
 import type { PinnedOffsets } from './selectors'
@@ -228,16 +229,31 @@ function SortableHeader<TData>({
           <span aria-hidden="true" />
         )}
         <span
-          className={`min-w-0 truncate text-[13px] font-semibold text-ink ${align === 'right' ? 'justify-self-end text-right' : 'justify-self-start text-left'}`}
-          data-autofit-label
+          className={`flex min-w-0 items-center gap-1 text-[13px] font-semibold text-ink ${align === 'right' ? 'justify-self-end justify-end text-right' : 'justify-self-start text-left'}`}
           data-testid={`col-header-label-${header.column.id}`}
         >
-          {flexRender(header.column.columnDef.header, header.getContext())}
-          {sorted && (
-            <span className="text-accent">
-              {' '}{sorted === 'asc' ? '▲' : '▼'}
-              {multiSortActive && (
-                <span data-testid="sort-priority" className="ml-0.5 align-super text-[9px] tabular-nums">
+          <span className="min-w-0 truncate" data-autofit-label>
+            {flexRender(header.column.columnDef.header, header.getContext())}
+          </span>
+          {canSort && (
+            <span className="flex shrink-0 items-center gap-0.5">
+              {sorted === 'asc' ? (
+                <ArrowUp aria-hidden="true" className="h-3.5 w-3.5 text-accent" strokeWidth={2.5} />
+              ) : sorted === 'desc' ? (
+                <ArrowDown aria-hidden="true" className="h-3.5 w-3.5 text-accent" strokeWidth={2.5} />
+              ) : (
+                // Faint affordance that the column is sortable; revealed on header hover/focus.
+                <ChevronsUpDown
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 text-faint opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+                  strokeWidth={2}
+                />
+              )}
+              {sorted && multiSortActive && (
+                <span
+                  data-testid="sort-priority"
+                  className="flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-full bg-accent-soft px-1 text-[9px] font-semibold tabular-nums text-accent"
+                >
                   {header.column.getSortIndex() + 1}
                 </span>
               )}

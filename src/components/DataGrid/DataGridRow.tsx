@@ -1,4 +1,5 @@
 import { type Cell, type Row } from '@tanstack/react-table'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { memo, type ReactNode } from 'react'
 import { DataGridCell } from './DataGridCell'
 import { DataGridRowCheckbox } from './DataGridSelectionCell'
@@ -64,7 +65,9 @@ function DataGridRowComponent<TData>({
             row.toggleExpanded()
           }}
         >
-          <span aria-hidden="true" className="text-[15px] leading-none">{expanded ? '▾' : '▸'}</span>
+          {expanded
+            ? <ChevronDown aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
+            : <ChevronRight aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />}
         </button>
         <span className="text-ink">{String(cell.getValue() ?? '')}</span>
         <span className="micro text-muted">({leafCount})</span>
@@ -100,7 +103,9 @@ function DataGridRowComponent<TData>({
               row.toggleExpanded()
             }}
           >
-            <span aria-hidden="true" className="text-[15px] leading-none">{row.getIsExpanded() ? '▾' : '▸'}</span>
+            {row.getIsExpanded()
+              ? <ChevronDown aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
+              : <ChevronRight aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />}
           </button>
         ) : (
           <span aria-hidden="true" className="inline-block w-5" />
