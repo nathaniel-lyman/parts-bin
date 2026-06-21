@@ -47,7 +47,7 @@ import { DataGridEmptyState } from './DataGridEmptyState'
 import { DataGridErrorState } from './DataGridErrorState'
 import { DataGridFooter } from './DataGridFooter'
 import { DataGridHeader } from './DataGridHeader'
-import { DataGridLoadingState } from './DataGridLoadingState'
+import { DataGridLoadingState, DataGridSkeletonRows } from './DataGridLoadingState'
 import { DataGridToolbar } from './DataGridToolbar'
 import { fitColumnWidth, measureColumnContentWidths } from './autofit'
 import { computeAggregates, formatAggregate, resolveAggregate } from './aggregation'
@@ -857,63 +857,88 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         onDragEnd={onDragEnd}
         onDragCancel={onDragCancel}
       >
-        <div ref={setScrollElement} className="max-h-[640px] overflow-auto" data-testid="datagrid-scroll">
-          <table
-            className="w-full border-collapse"
-            role="grid"
-            aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : filteredRows.length}
-            aria-colcount={visibleLeafColumns.length}
-            onKeyDown={onGridKeyDown}
-          >
-            <GridRuntimeProvider value={gridRuntime}>
-              <DataGridHeader
-                table={table}
-                dispatch={dispatch}
-                columnSizing={state.columnSizing}
-                columns={columns}
-                columnPinning={state.columnPinning}
-                columnFilters={state.columnFilters}
-                enableHeaderFilters={Boolean(enableHeaderFilters && headerFiltersOpen)}
-                enableRowSelection={enableRowSelection}
-                isServerMode={isServerMode}
-                selectAll={allState}
-                onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
-                dndProvider={false}
-                dragPreview={dragPreview}
-                focus={focus}
-                columnWindow={columnWindow}
-                visibleColumnIds={visibleColumnIds}
-                onFocusCell={handleFocusCell}
-                onAutofitColumn={autofitColumn}
-                pinnedOffsets={pinnedColumnOffsets}
-                enableGrouping={groupingActive}
-                grouping={state.grouping}
-                numberFormats={state.numberFormats}
-              />
-              {!loading && error === undefined && rowCount > 0 && (
-                <DataGridBody
+        <div className={`relative ${loading || error !== undefined || rowCount === 0 ? 'min-h-[220px]' : ''}`}>
+          <div ref={setScrollElement} className="max-h-[640px] overflow-auto" data-testid="datagrid-scroll">
+            <table
+              className="w-full border-collapse"
+              role="grid"
+              aria-rowcount={manualPagination ? (totalRowCount ?? rowCount) : filteredRows.length}
+              aria-colcount={visibleLeafColumns.length}
+              onKeyDown={onGridKeyDown}
+            >
+              <GridRuntimeProvider value={gridRuntime}>
+                <DataGridHeader
                   table={table}
-                  rowSelection={state.rowSelection}
-                  rowHeight={rowHeight}
-                  scrollElement={scrollElement}
-                  enableVirtualization={rowCount > virtualizeRowThreshold && !detailPanelActive}
-                  focus={focus}
-                  range={cellRange}
-                  renderDetailPanel={detailPanelActive ? renderDetailPanel : undefined}
-                />
-              )}
-              {hasAggregates && !loading && error === undefined && rowCount > 0 && (
-                <DataGridAggregationFooter
-                  table={table}
-                  aggregates={footerAggregates}
-                  rowCount={footerTotalRows}
+                  dispatch={dispatch}
+                  columnSizing={state.columnSizing}
+                  columns={columns}
+                  columnPinning={state.columnPinning}
+                  columnFilters={state.columnFilters}
+                  enableHeaderFilters={Boolean(enableHeaderFilters && headerFiltersOpen)}
                   enableRowSelection={enableRowSelection}
+                  isServerMode={isServerMode}
+                  selectAll={allState}
+                  onSelectAll={(select) => dispatch({ type: 'SELECT_ALL_VISIBLE', ids: visibleIds, select })}
+                  dndProvider={false}
+                  dragPreview={dragPreview}
+                  focus={focus}
                   columnWindow={columnWindow}
+                  visibleColumnIds={visibleColumnIds}
+                  onFocusCell={handleFocusCell}
+                  onAutofitColumn={autofitColumn}
                   pinnedOffsets={pinnedColumnOffsets}
+                  enableGrouping={groupingActive}
+                  grouping={state.grouping}
+                  numberFormats={state.numberFormats}
                 />
-              )}
-            </GridRuntimeProvider>
-          </table>
+                {/* Existing rows stay mounted during a refetch (dimmed under the overlay). The
+                    skeleton only stands in for the initial load, so the tbody never collapses. */}
+                {error === undefined && rowCount > 0 && (
+                  <DataGridBody
+                    table={table}
+                    rowSelection={state.rowSelection}
+                    rowHeight={rowHeight}
+                    scrollElement={scrollElement}
+                    enableVirtualization={rowCount > virtualizeRowThreshold && !detailPanelActive}
+                    focus={focus}
+                    range={cellRange}
+                    renderDetailPanel={detailPanelActive ? renderDetailPanel : undefined}
+                  />
+                )}
+                {error === undefined && loading && rowCount === 0 && (
+                  <DataGridSkeletonRows columnCount={visibleLeafColumns.length} enableRowSelection={enableRowSelection} />
+                )}
+                {hasAggregates && !loading && error === undefined && rowCount > 0 && (
+                  <DataGridAggregationFooter
+                    table={table}
+                    aggregates={footerAggregates}
+                    rowCount={footerTotalRows}
+                    enableRowSelection={enableRowSelection}
+                    columnWindow={columnWindow}
+                    pinnedOffsets={pinnedColumnOffsets}
+                  />
+                )}
+              </GridRuntimeProvider>
+            </table>
+          </div>
+          {/* Status overlay centered over a dimmed grid. The backdrop is pointer-transparent so the
+              header stays usable during a refetch; only the message card captures pointer events. */}
+          {(loading || error !== undefined || rowCount === 0) && (
+            <div
+              data-testid="datagrid-overlay"
+              className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-surface/70"
+            >
+              <div className="pointer-events-auto">
+                {loading ? (
+                  <DataGridLoadingState />
+                ) : error !== undefined ? (
+                  <DataGridErrorState error={error} />
+                ) : (
+                  <DataGridEmptyState query={state.globalFilter || undefined} />
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <DragOverlay dropAnimation={null}>
           <DataGridColumnDragOverlay
@@ -933,9 +958,6 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           onPageSizeChange={(pageSize) => dispatch({ type: 'SET_PAGE_SIZE', pageSize })}
         />
       )}
-      {loading && <DataGridLoadingState />}
-      {!loading && error !== undefined && <DataGridErrorState error={error} />}
-      {!loading && error === undefined && rowCount === 0 && <DataGridEmptyState query={state.globalFilter || undefined} />}
       {menu && (
         <DataGridContextMenu
           x={menu.x}

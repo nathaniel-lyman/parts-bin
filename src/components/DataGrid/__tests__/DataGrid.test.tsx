@@ -95,6 +95,28 @@ describe('DataGrid (uncontrolled, generic product table)', () => {
     render(<DataGrid<ProductRow> {...common} initialState={PRODUCT_GRID_INITIAL_STATE} error={new Error('fetch failed')} />)
     expect(screen.getByText(/fetch failed/)).toBeInTheDocument()
   })
+
+  it('on initial load (no rows yet) shows skeleton rows instead of collapsing the body', () => {
+    render(<DataGrid<ProductRow> {...common} rows={[]} initialState={PRODUCT_GRID_INITIAL_STATE} loading />)
+    expect(screen.getByTestId('grid-skeleton')).toBeInTheDocument()
+    // The loading message rides in the centered status overlay.
+    const overlay = screen.getByTestId('datagrid-overlay')
+    expect(within(overlay).getByText(/loading/i)).toBeInTheDocument()
+  })
+
+  it('keeps already-loaded rows mounted under the overlay during a refetch', () => {
+    render(<DataGrid<ProductRow> {...common} initialState={PRODUCT_GRID_INITIAL_STATE} loading />)
+    // Existing rows stay (dimmed by the overlay), so no skeleton stand-in.
+    expect(screen.queryByTestId('grid-skeleton')).toBeNull()
+    expect(screen.getByText('Widget')).toBeInTheDocument()
+    expect(screen.getByTestId('datagrid-overlay')).toBeInTheDocument()
+  })
+
+  it('routes the empty state through the centered overlay', () => {
+    render(<DataGrid<ProductRow> {...common} initialState={{ ...PRODUCT_GRID_INITIAL_STATE, globalFilter: 'zzzzz' }} />)
+    const overlay = screen.getByTestId('datagrid-overlay')
+    expect(within(overlay).getByText(/no results/i)).toBeInTheDocument()
+  })
 })
 
 // Adoption contract: the generic grid must work for a schema that shares NOTHING
