@@ -86,6 +86,8 @@ export interface DataGridColumn<TData, TValue = unknown> {
   lockPosition?: 'last'
   numberFormat?: DataGridNumberFormat
   sortable?: boolean
+  /** Custom sort order for non-blank values (ascending); blanks always sort last regardless. */
+  comparator?: (a: TData, b: TData) => number
   filterable?: boolean
   resizable?: boolean
   reorderable?: boolean

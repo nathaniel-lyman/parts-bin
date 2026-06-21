@@ -163,11 +163,17 @@ function toColumnDef<TData>(
     maxSize: column.maxWidth,
     enableGrouping: column.groupable === true,
   }
+  const rawValue = (row: TData): unknown =>
+    column.accessorFn
+      ? column.accessorFn(row)
+      : column.accessorKey
+        ? (row as Record<string, unknown>)[column.accessorKey as string]
+        : undefined
   if (column.cell) {
     base.cell = (ctx) => column.cell!({
-      value: ctx.getValue(),
-      formattedValue: formatValue(ctx.getValue()),
-      formatValue: (format) => formatValue(ctx.getValue(), format),
+      value: rawValue(ctx.row.original),
+      formattedValue: formatValue(rawValue(ctx.row.original)),
+      formatValue: (format) => formatValue(rawValue(ctx.row.original), format),
       row: ctx.row.original,
       rowId: ctx.row.id,
     })
@@ -175,8 +181,24 @@ function toColumnDef<TData>(
     base.cell = (ctx) => <span className="num text-ink">{formatValue(ctx.getValue())}</span>
   }
 
-  if (column.accessorFn) return { ...base, accessorFn: column.accessorFn }
-  if (column.accessorKey) return { ...base, accessorKey: column.accessorKey as string }
+  if (column.accessorFn || column.accessorKey) {
+    // Coalesce blank cells to `undefined` so TanStack's direction-independent `sortUndefined: 'last'`
+    // pushes empties to the bottom in BOTH sort directions (a custom sortingFn result would be
+    // reversed for desc, and sortUndefined only triggers on `undefined`). Custom cells still get the
+    // original value via rawValue above; export/aggregation/editing read their own accessors, so this
+    // only affects getValue (sort/group/facet) — where a blank already rendered as empty anyway.
+    const accessorFn = (row: TData) => {
+      const value = rawValue(row)
+      return value === null || value === undefined || value === '' ? undefined : value
+    }
+    return {
+      ...base,
+      accessorFn,
+      sortUndefined: 'last',
+      // Optional per-column custom order for non-blank values (blanks are handled by sortUndefined).
+      ...(column.comparator ? { sortingFn: (rowA, rowB) => column.comparator!(rowA.original, rowB.original) } : {}),
+    }
+  }
   return base
 }
 
