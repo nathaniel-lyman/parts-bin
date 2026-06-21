@@ -111,6 +111,8 @@ export interface DataGridProps<TData> {
   totalRowCount?: number
   onQueryChange?: (query: GridQuery) => void
   onContextChange?: (context: DataGridContextSnapshot<TData>) => void
+  /** Shows the toolbar quick filter. Disable when the consumer supplies search elsewhere. */
+  enableQuickFilter?: boolean
   /** Placeholder text for the toolbar quick filter. */
   quickFilterPlaceholder?: string
   /** Enables row grouping (toolbar chips + "Group by" in column menus). Client-side data only. */
@@ -218,6 +220,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     totalRowCount,
     onQueryChange,
     onContextChange,
+    enableQuickFilter,
     quickFilterPlaceholder,
     enableGrouping,
     onRowUpdate,
@@ -1125,6 +1128,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         columns={columns}
         columnVisibility={state.columnVisibility}
         globalFilter={state.globalFilter}
+        enableQuickFilter={enableQuickFilter}
         quickFilterPlaceholder={quickFilterPlaceholder}
         density={state.density}
         grouping={state.grouping}

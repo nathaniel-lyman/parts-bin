@@ -120,22 +120,9 @@ function SortableHeader<TData>({
       className={`group border-r border-line py-2 ${isActions ? 'px-2' : 'px-3'} ${align === 'right' ? 'text-right' : 'text-left'} ${canSort || canMove ? 'cursor-pointer' : ''} ${pinnedSide ? 'bg-surface-2 shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       {...(canMove ? listeners : {})}
     >
-      <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
-        <span className="micro" data-autofit-label>
-          {flexRender(header.column.columnDef.header, header.getContext())}
-          {sorted && (
-            <span className="text-accent">
-              {' '}{sorted === 'asc' ? '▲' : '▼'}
-              {multiSortActive && (
-                <span data-testid="sort-priority" className="ml-0.5 align-super text-[9px] tabular-nums">
-                  {header.column.getSortIndex() + 1}
-                </span>
-              )}
-            </span>
-          )}
-        </span>
-        {!isActions && (
-          <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+        {!isActions ? (
+          <span className="justify-self-start" data-testid={`col-header-controls-${header.column.id}`}>
             <DataGridColumnMenu
               columnId={header.column.id}
               header={label}
@@ -152,7 +139,26 @@ function SortableHeader<TData>({
               onAutofit={onAutofitColumn}
             />
           </span>
+        ) : (
+          <span aria-hidden="true" />
         )}
+        <span
+          className={`min-w-0 truncate text-[13px] font-semibold text-ink ${align === 'right' ? 'justify-self-end text-right' : 'justify-self-start text-left'}`}
+          data-autofit-label
+          data-testid={`col-header-label-${header.column.id}`}
+        >
+          {flexRender(header.column.columnDef.header, header.getContext())}
+          {sorted && (
+            <span className="text-accent">
+              {' '}{sorted === 'asc' ? '▲' : '▼'}
+              {multiSortActive && (
+                <span data-testid="sort-priority" className="ml-0.5 align-super text-[9px] tabular-nums">
+                  {header.column.getSortIndex() + 1}
+                </span>
+              )}
+            </span>
+          )}
+        </span>
       </div>
       {canResize && (
         <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">

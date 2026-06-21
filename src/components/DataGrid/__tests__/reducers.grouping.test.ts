@@ -49,6 +49,11 @@ describe('grouping reducers', () => {
     expect(next.expanded).toEqual({ 'segment:Startup': true })
   })
 
+  it('EXPAND_ALL and COLLAPSE_ALL control expanded state globally', () => {
+    expect(gridReducer(base, { type: 'EXPAND_ALL' }).expanded).toBe(true)
+    expect(gridReducer({ ...base, expanded: true }, { type: 'COLLAPSE_ALL' }).expanded).toEqual({})
+  })
+
   it('RESET_COLUMNS clears grouping along with the column slices', () => {
     const grouped = gridReducer(base, { type: 'TOGGLE_GROUP_BY', columnId: 'segment' })
     const next = gridReducer(grouped, { type: 'RESET_COLUMNS' })

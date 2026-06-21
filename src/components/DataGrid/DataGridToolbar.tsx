@@ -10,6 +10,7 @@ interface Props<TData> {
   columnVisibility: Record<string, boolean>
   globalFilter: string
   quickFilterPlaceholder?: string
+  enableQuickFilter?: boolean
   density: Density
   grouping?: string[]
   enableGrouping?: boolean
@@ -34,6 +35,7 @@ export function DataGridToolbar<TData>({
   columnVisibility,
   globalFilter,
   quickFilterPlaceholder = 'Search rows...',
+  enableQuickFilter = true,
   density,
   grouping = [],
   enableGrouping,
@@ -63,14 +65,16 @@ export function DataGridToolbar<TData>({
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-      <Input
-        type="search"
-        className="max-w-sm"
-        placeholder={quickFilterPlaceholder}
-        aria-label="Quick filter"
-        value={globalFilter}
-        onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}
-      />
+      {enableQuickFilter && (
+        <Input
+          type="search"
+          className="max-w-sm"
+          placeholder={quickFilterPlaceholder}
+          aria-label="Quick filter"
+          value={globalFilter}
+          onChange={(event) => dispatch({ type: 'SET_GLOBAL_FILTER', value: event.target.value })}
+        />
+      )}
       {enableGrouping && grouping.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5" data-testid="grouping-chips">
           <span className="micro text-faint">Grouped by</span>
@@ -90,6 +94,20 @@ export function DataGridToolbar<TData>({
               </button>
             </span>
           ))}
+          <button
+            type="button"
+            className="micro text-muted hover:text-ink"
+            onClick={() => dispatch({ type: 'EXPAND_ALL' })}
+          >
+            Expand all
+          </button>
+          <button
+            type="button"
+            className="micro text-muted hover:text-ink"
+            onClick={() => dispatch({ type: 'COLLAPSE_ALL' })}
+          >
+            Collapse all
+          </button>
           {grouping.length > 1 && (
             <button
               type="button"

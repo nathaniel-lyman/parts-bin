@@ -153,5 +153,7 @@ export type GridAction =
   | { type: 'SET_GROUPING'; grouping: string[] }
   | { type: 'TOGGLE_GROUP_BY'; columnId: string }
   | { type: 'CLEAR_GROUPING' }
+  | { type: 'EXPAND_ALL' }
+  | { type: 'COLLAPSE_ALL' }
   | { type: 'SET_EXPANDED'; expanded: GridExpandedState }
   | { type: 'APPLY_VIEW'; state: DataGridState }

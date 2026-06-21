@@ -14,4 +14,18 @@ describe('DataGridToolbar quick filter', () => {
     expect(screen.getByText('Gizmo')).toBeInTheDocument()
     expect(screen.queryByText('Widget')).toBeNull()
   })
+
+  it('can hide the quick filter for externally searched examples', () => {
+    render(
+      <DataGrid
+        rows={productRows}
+        columns={productColumns}
+        getRowId={(row) => row.id}
+        enableQuickFilter={false}
+      />,
+    )
+
+    expect(screen.queryByRole('searchbox', { name: 'Quick filter' })).toBeNull()
+    expect(screen.getByText('Widget')).toBeInTheDocument()
+  })
 })

@@ -72,11 +72,30 @@ test('settings route renders inside the shell with dashboard-only controls hidde
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
 })
 
-test('datagrid example selection is visible without server mode', async () => {
+test('datagrid example renders grouping and server-mode examples', async () => {
   openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
-  await userEvent.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
-  expect(screen.getByText('1 selected')).toBeInTheDocument()
+
+  const grouping = screen.getByRole('region', { name: 'Grouping example' })
+  const server = screen.getByRole('region', { name: 'Server-mode example' })
+
+  expect(within(grouping).getByTestId('grouping-chips')).toHaveTextContent('Segment')
+  expect(within(grouping).queryByRole('searchbox', { name: 'Quick filter' })).toBeNull()
+  expect(within(grouping).queryByRole('checkbox')).toBeNull()
+  expect(within(grouping).queryByRole('button', { name: /new row/i })).toBeNull()
+  expect(within(grouping).queryByRole('switch', { name: /server mode/i })).toBeNull()
+  expect(within(server).getByRole('button', { name: /new row/i })).toBeInTheDocument()
+  expect(within(server).getByRole('searchbox', { name: 'Quick filter' })).toBeInTheDocument()
+  expect(await within(server).findByText(/server rows/i)).toBeInTheDocument()
+})
+
+test('datagrid grouping example does not expose row selection', () => {
+  openDataGridRoute()
+  render(<ToastProvider><App /></ToastProvider>)
+  const grouping = screen.getByRole('region', { name: 'Grouping example' })
+  expect(screen.getAllByText('200 rows').length).toBeGreaterThan(0)
+  expect(within(grouping).queryByRole('checkbox')).toBeNull()
+  expect(within(grouping).queryByLabelText(/select/i)).toBeNull()
 })
 
 test('Dark toggle switches to dark mode', async () => {
@@ -109,13 +128,32 @@ test('manual date ranges update the assembly period label dynamically', async ()
   expect(screen.getByText(/Last 30 days · /)).toBeInTheDocument()
 })
 
-test('server mode toggle exercises the DataGrid mock server path', async () => {
+test('server mode example exercises the DataGrid mock server path', async () => {
   openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
-  await userEvent.click(screen.getByRole('switch', { name: /server mode/i }))
-  expect(screen.getByText(/loading server rows/i)).toBeInTheDocument()
-  expect(await screen.findByText(/server rows/i)).toBeInTheDocument()
-  expect(screen.getByRole('checkbox', { name: /select all loaded/i })).toBeInTheDocument()
+  const server = screen.getByRole('region', { name: 'Server-mode example' })
+
+  expect(within(server).getByText(/loading server rows/i)).toBeInTheDocument()
+  expect(await within(server).findByText(/server rows/i)).toBeInTheDocument()
+  expect(within(server).getByRole('checkbox', { name: /select all loaded/i })).toBeInTheDocument()
+})
+
+test('server mode example new row updates the route-local server dataset', async () => {
+  const user = userEvent.setup()
+  openDataGridRoute()
+  render(<ToastProvider><App /></ToastProvider>)
+  const server = screen.getByRole('region', { name: 'Server-mode example' })
+
+  await within(server).findByText(/200 server rows/i)
+  await user.click(within(server).getByRole('button', { name: /new row/i }))
+  await user.type(screen.getByLabelText('Account name'), 'Zenith Server Account')
+  await user.type(screen.getByLabelText('Owner'), 'T. Server')
+  await user.type(screen.getByLabelText('Value ($)'), '999999')
+  await user.type(screen.getByLabelText('Growth (%)'), '42')
+  await user.click(screen.getByRole('button', { name: 'Create account' }))
+
+  expect(await within(server).findByText('Zenith Server Account')).toBeInTheDocument()
+  expect(await within(server).findByText(/201 server rows/i)).toBeInTheDocument()
 })
 
 test('components route drops assembly-only header controls and wires global search to the gallery', async () => {
@@ -179,19 +217,17 @@ test('assistant opens from the top nav and answers with live sample value', asyn
   await waitFor(() => expect(screen.getByText(/Total active sample value is/)).toBeInTheDocument(), { timeout: 10000 })
 })
 
-test('assistant summarizes selected rows from the current grid context', async () => {
+test('assistant reports no selected rows for the grouping grid context', async () => {
   const user = userEvent.setup()
   openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
-  await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
   await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Summarize selected rows{Enter}')
 
   await waitFor(() => expect(screen.getAllByText((_content, node) => (
-    node?.tagName === 'P' && (node.textContent?.includes('You selected 1 row') ?? false)
+    node?.tagName === 'P' && (node.textContent?.includes('No rows are selected') ?? false)
   )).length).toBeGreaterThan(0), { timeout: 10000 })
-  expect(screen.getAllByText(/Cobalt Freight/).length).toBeGreaterThan(0)
 })
 
 test('assistant explains signed movement with chart evidence', async () => {
@@ -258,19 +294,14 @@ test('command shortcuts save and reset the current account grid view', async () 
   expect(screen.getByText('Reset sample grid layout')).toBeInTheDocument()
 })
 
-test('command shortcuts clear selected grid rows', async () => {
-  const user = userEvent.setup()
+test('command shortcuts report no selected rows for the grouping grid', () => {
   openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
-
-  await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
-  expect(screen.getByText('1 selected')).toBeInTheDocument()
 
   fireEvent.keyDown(document, { key: 'v' })
   fireEvent.keyDown(document, { key: 'c' })
 
-  await waitFor(() => expect(screen.queryByText('1 selected')).not.toBeInTheDocument())
-  expect(screen.getByText('Cleared 1 selected row')).toBeInTheDocument()
+  expect(screen.getByText('No selected rows to clear')).toBeInTheDocument()
 })
 
 test('command shortcuts can ask the assistant from the current screen', async () => {

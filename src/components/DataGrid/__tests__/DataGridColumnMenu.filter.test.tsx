@@ -31,6 +31,15 @@ describe('column-menu per-column filter', () => {
     expect(screen.queryByText('Cobalt Freight')).toBeNull()
   })
 
+  it('opens the filter dialog from the visible header filter icon', async () => {
+    const user = userEvent.setup()
+    render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)
+
+    await user.click(screen.getByRole('button', { name: /segment column filter/i }))
+
+    expect(screen.getByRole('dialog', { name: /segment filter/i })).toBeInTheDocument()
+  })
+
   it('filters numeric columns through the menu', async () => {
     const user = userEvent.setup()
     render(<DataGrid rows={seedAccounts} columns={cols()} getRowId={(row) => row.id} />)

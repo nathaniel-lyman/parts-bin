@@ -23,6 +23,15 @@ describe('DataGridHeader reorder handles', () => {
     expect(screen.getByRole('columnheader', { name: /Owner/ })).toHaveClass('border-r', 'border-line')
   })
 
+  it('shows persistent menu and filter icons with controls left and right-aligned labels', () => {
+    render(<DataGrid rows={seedAccounts} columns={columns} getRowId={(row) => row.id} />)
+
+    expect(screen.getByRole('button', { name: /account column menu/i })).toBeVisible()
+    expect(screen.getByRole('button', { name: /account column filter/i })).toBeVisible()
+    expect(screen.getByTestId('col-header-controls-mrr')).toHaveClass('justify-self-start')
+    expect(screen.getByTestId('col-header-label-mrr')).toHaveClass('justify-self-end', 'text-right')
+  })
+
   it('marks header and body cells with column ids for drag-preview measurement', () => {
     const { container } = render(<DataGrid rows={seedAccounts} columns={columns} getRowId={(row) => row.id} />)
 

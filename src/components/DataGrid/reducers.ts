@@ -222,6 +222,10 @@ export function expandedReducer(
   switch (action.type) {
     case 'SET_EXPANDED':
       return action.expanded
+    case 'EXPAND_ALL':
+      return true
+    case 'COLLAPSE_ALL':
+      return {}
     case 'SET_GROUPING':
     case 'TOGGLE_GROUP_BY':
       // Grouping changed: expand everything when grouped, reset when ungrouped.
@@ -323,6 +327,8 @@ export function gridReducer<TData>(
       }, columnIds)
     }
     case 'SET_EXPANDED':
+    case 'EXPAND_ALL':
+    case 'COLLAPSE_ALL':
       return { ...state, expanded: expandedReducer(state.expanded, action) }
     case 'SET_SORT':
     case 'CLEAR_SORT':

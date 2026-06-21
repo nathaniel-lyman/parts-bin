@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { EllipsisVertical, ListFilter } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
@@ -151,18 +152,37 @@ export function DataGridColumnMenu({
   }, [filterOpen, open])
 
   return (
-    <div ref={triggerRef} className="relative inline-block">
+    <div ref={triggerRef} className="relative inline-flex items-center gap-0.5">
+      {filterType && (
+        <Button
+          variant="ghost"
+          size="compact"
+          className={`h-6 w-6 px-0 ${currentFilter ? 'text-accent' : 'text-muted hover:text-ink'}`}
+          aria-label={`${label} column filter`}
+          aria-pressed={currentFilter ? true : undefined}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation()
+            setOpen(false)
+            setFilterOpen(true)
+          }}
+        >
+          <ListFilter aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="compact"
+        className="h-6 w-6 px-0 text-muted hover:text-ink"
         aria-label={`${label} column menu`}
         aria-expanded={open}
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation()
           setOpen((value) => !value)
         }}
       >
-        <span aria-hidden="true">⋮</span>
+        <EllipsisVertical aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
       </Button>
       {open && portalRoot && createPortal(
         <>

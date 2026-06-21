@@ -376,45 +376,44 @@ interface DataGridExamplePageProps {
   ) => void
 }
 
-function DataGridExamplePage({
-  accountsApi,
+const DEFAULT_DATAGRID_EXAMPLE_ROWS = 200
+const GROUPING_GRID_PERSISTENCE_KEY = 'ledger.accounts.grid'
+
+function filterExampleAccounts(rows: Account[], globalSearch: string, atRiskOnly: boolean): Account[] {
+  let next = rows
+  const query = globalSearch.trim()
+  if (query) next = next.filter((account) => accountGlobalFilter(account, query))
+  if (atRiskOnly) next = next.filter((account) => account.status !== 'Active')
+  return next
+}
+
+function GroupingDataGridExample({
+  rows,
+  columns,
+  explicitRows,
   globalSearch,
   atRiskOnly,
   timePeriodLabel,
   onAssistantGridContextChange,
-}: DataGridExamplePageProps) {
-  const { accounts, create, update, remove } = accountsApi
-  const toast = useToast()
-  const params = new URLSearchParams(window.location.search)
-  const requestedRows = Number(params.get('rows') ?? 0)
-  const wideColumns = params.get('cols') === 'wide'
-  const generatedAccounts = useMemo(
-    () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
-    [requestedRows],
+}: {
+  rows: Account[]
+  columns: DataGridColumn<Account>[]
+  explicitRows: boolean
+  globalSearch: string
+  atRiskOnly: boolean
+  timePeriodLabel: string
+  onAssistantGridContextChange?: DataGridExamplePageProps['onAssistantGridContextChange']
+}) {
+  const visibleAccounts = useMemo(
+    () => filterExampleAccounts(rows, globalSearch, atRiskOnly),
+    [atRiskOnly, globalSearch, rows],
   )
-  const visibleAccounts = useMemo(() => {
-    let next = generatedAccounts ?? accounts
-    const query = globalSearch.trim()
-    if (query) next = next.filter((account) => accountGlobalFilter(account, query))
-    if (atRiskOnly) next = next.filter((account) => account.status !== 'Active')
-    return next
-  }, [accounts, atRiskOnly, generatedAccounts, globalSearch])
-  const gridInitialState = useMemo(
-    () => (generatedAccounts ? { ...ACCOUNT_GRID_INITIAL_STATE, sorting: [] } : ACCOUNT_GRID_INITIAL_STATE),
-    [generatedAccounts],
-  )
-
-  const [editing, setEditing] = useState<Account | null>(null)
-  const [creating, setCreating] = useState(false)
-  const [deleting, setDeleting] = useState<Account | null>(null)
-  const [serverMode, setServerMode] = useState(params.get('server') === '1')
-  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(ACCOUNT_GRID_INITIAL_STATE))
-  const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
-  const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
-  const gridColumns = useMemo(() => {
-    const columns = accountGridColumns({ onEdit: setEditing, onDelete: setDeleting })
-    return wideColumns ? wideAccountGridColumns(columns) : columns
-  }, [setDeleting, setEditing, wideColumns])
+  const initialState = useMemo(() => ({
+    ...ACCOUNT_GRID_INITIAL_STATE,
+    sorting: [],
+    grouping: ['segment'],
+    expanded: true as const,
+  }), [])
   const handleAssistantGridContextChange = useCallback(
     (snapshot: DataGridContextSnapshot<Account>) => {
       onAssistantGridContextChange?.({
@@ -440,68 +439,139 @@ function DataGridExamplePage({
   )
 
   return (
-    <>
-      <main className="w-full px-6 py-6">
-        <PageHeader
-          eyebrow="parts-bin component assembly"
-          title="DataGrid example"
-          description={`The full DataGrid harness: sorting, filtering, column tools, selection, inline edit, grouping, export, and an optional mock server mode. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
-          actions={
-            <span className="num text-[13px] text-muted">{visibleAccounts.length} rows</span>
-          }
+    <section
+      aria-labelledby="datagrid-grouping-example-title"
+      className="grid gap-3"
+      data-testid="grouping-grid-example"
+    >
+      <div className="grid gap-1">
+        <h2 id="datagrid-grouping-example-title" className="m-0 text-[15px] font-semibold text-ink">Grouping example</h2>
+        <p className="m-0 text-[13px] text-muted">
+          Client-side grouping starts by segment so grouped rows, counts, and aggregate summaries are visible immediately.
+        </p>
+      </div>
+      <div data-testid="accounts-grid">
+        <DataGrid
+          rows={visibleAccounts}
+          columns={columns}
+          getRowId={(row) => row.id}
+          initialState={initialState}
+          enablePagination={!explicitRows}
+          enableExport
+          enableExcelExport
+          persistenceKey={explicitRows ? undefined : GROUPING_GRID_PERSISTENCE_KEY}
+          globalFilterFn={accountGlobalFilter}
+          enableGrouping
+          enableQuickFilter={false}
+          onContextChange={handleAssistantGridContextChange}
         />
+      </div>
+    </section>
+  )
+}
 
-        <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">
-          <Switch
-            label={<span className="micro text-muted">Server mode</span>}
-            checked={serverMode}
-            onChange={(event) => setServerMode(event.target.checked)}
-          />
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="primary" onClick={() => setCreating(true)}>+ New row</Button>
-          </div>
-          {serverMode && (
-            <span className="num text-[12px] text-muted">
-              {server.status === 'loading' ? 'Loading server rows...' : `${server.totalRowCount} server rows`}
-            </span>
-          )}
+function ServerModeDataGridExample({
+  initialRows,
+  wideColumns,
+  globalSearch,
+  atRiskOnly,
+}: {
+  initialRows: Account[]
+  wideColumns: boolean
+  globalSearch: string
+  atRiskOnly: boolean
+}) {
+  const toast = useToast()
+  const localIdCounter = useRef(0)
+  const [rows, setRows] = useState(initialRows)
+  const [editing, setEditing] = useState<Account | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [deleting, setDeleting] = useState<Account | null>(null)
+  const [allMatchingRowsSelected, setAllMatchingRowsSelected] = useState(false)
+  const [serverAction, setServerAction] = useState('Sorting, filtering, pagination, matching selection, and full export are delegated to the mock server adapter.')
+  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(ACCOUNT_GRID_INITIAL_STATE))
+  const visibleAccounts = useMemo(
+    () => filterExampleAccounts(rows, globalSearch, atRiskOnly),
+    [atRiskOnly, globalSearch, rows],
+  )
+  const gridColumns = useMemo(() => {
+    const columns = accountGridColumns({ onEdit: setEditing, onDelete: setDeleting })
+    return wideColumns ? wideAccountGridColumns(columns) : columns
+  }, [setDeleting, setEditing, wideColumns])
+  const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
+  const server = useServerData(serverAdapter, serverQuery, { enabled: true, debounceMs: 120 })
+  const handleQueryChange = useCallback((query: GridQuery) => {
+    setServerQuery(query)
+    setAllMatchingRowsSelected(false)
+  }, [])
+  const createLocalAccount = useCallback((data: NewAccount) => {
+    const id = `server_${Date.now().toString(36)}_${(localIdCounter.current++).toString(36)}`
+    setRows((current) => [{ ...data, id }, ...current])
+    setCreating(false)
+    toast(`Created ${data.name}`, 'pos')
+  }, [toast])
+  const updateLocalAccount = useCallback((id: string, data: NewAccount) => {
+    setRows((current) => current.map((account) => (account.id === id ? { ...account, ...data } : account)))
+  }, [])
+  const removeLocalAccount = useCallback((id: string) => {
+    setRows((current) => current.filter((account) => account.id !== id))
+  }, [])
+
+  return (
+    <section
+      aria-labelledby="datagrid-server-example-title"
+      className="grid gap-3"
+      data-testid="server-grid-example"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface px-3 py-3">
+        <div className="grid gap-1">
+          <h2 id="datagrid-server-example-title" className="m-0 text-[15px] font-semibold text-ink">Server-mode example</h2>
+          <p className="m-0 max-w-3xl text-[13px] text-muted">
+            Manual grid state flows through <code className="num text-ink">onQueryChange</code>; the adapter returns only the current page and total count.
+          </p>
+          <p className="m-0 text-[13px] text-muted">{serverAction}</p>
         </div>
-        <div data-testid="accounts-grid">
-          <DataGrid
-            rows={serverMode ? server.rows : visibleAccounts}
-            columns={gridColumns}
-            getRowId={(row) => row.id}
-            initialState={gridInitialState}
-            enablePagination={!generatedAccounts}
-            enableExport
-            enableExcelExport
-            persistenceKey={generatedAccounts ? undefined : 'ledger.accounts.grid'}
-            globalFilterFn={accountGlobalFilter}
-            manualSorting={serverMode}
-            manualFiltering={serverMode}
-            manualPagination={serverMode}
-            enableRowSelection
-            totalRowCount={serverMode ? server.totalRowCount : undefined}
-            onQueryChange={serverMode ? setServerQuery : undefined}
-            loading={serverMode && server.status === 'loading'}
-            error={serverMode && server.status === 'error' ? server.error : undefined}
-            onContextChange={handleAssistantGridContextChange}
-            enableGrouping={!serverMode}
-            onRowUpdate={serverMode ? undefined : (id, patch, row) => {
-              // The demo's derived annualized value stays in sync when its base value is edited inline.
-              const next = patch.mrr !== undefined ? { ...patch, arr: Number(patch.mrr) * 12 } : patch
-              update(id, next)
-              toast(`Saved ${row.name}`, 'accent')
-            }}
-          />
+        <div className="flex items-center gap-2">
+          <Button variant="primary" onClick={() => setCreating(true)}>+ New row</Button>
+          <span className="num text-[12px] text-muted">
+            {server.status === 'loading' ? 'Loading server rows...' : `${server.totalRowCount} server rows`}
+          </span>
         </div>
-      </main>
+      </div>
+      <DataGrid
+        rows={server.rows}
+        columns={gridColumns}
+        getRowId={(row) => row.id}
+        initialState={ACCOUNT_GRID_INITIAL_STATE}
+        enableExport
+        enableExcelExport
+        globalFilterFn={accountGlobalFilter}
+        manualSorting
+        manualFiltering
+        manualPagination
+        enableRowSelection
+        totalRowCount={server.totalRowCount}
+        onQueryChange={handleQueryChange}
+        loading={server.status === 'loading'}
+        error={server.status === 'error' ? server.error : undefined}
+        allMatchingRowsSelected={allMatchingRowsSelected}
+        onSelectAllMatching={(query) => {
+          setAllMatchingRowsSelected(true)
+          setServerAction(`Selected ${query.scope} rows on the server.`)
+        }}
+        onClearAllMatching={() => {
+          setAllMatchingRowsSelected(false)
+          setServerAction('Cleared server-owned matching selection.')
+        }}
+        onExportAllCsv={(query) => setServerAction(`Queued ${query.scope} CSV export on the server.`)}
+        onExportAllXlsx={(query) => setServerAction(`Queued ${query.scope} Excel export on the server.`)}
+      />
 
       {creating && (
         <AccountFormModal
           onClose={() => setCreating(false)}
           onInvalid={(msg) => toast(msg, 'warn')}
-          onSubmit={(data: NewAccount) => { create(data); setCreating(false); toast(`Created ${data.name}`, 'pos') }}
+          onSubmit={createLocalAccount}
         />
       )}
       {editing && (
@@ -509,7 +579,7 @@ function DataGridExamplePage({
           account={editing}
           onClose={() => setEditing(null)}
           onInvalid={(msg) => toast(msg, 'warn')}
-          onSubmit={(data) => { update(editing.id, data); setEditing(null); toast(`Saved ${data.name}`, 'accent') }}
+          onSubmit={(data) => { updateLocalAccount(editing.id, data); setEditing(null); toast(`Saved ${data.name}`, 'accent') }}
         />
       )}
       {deleting && (
@@ -517,9 +587,74 @@ function DataGridExamplePage({
           title="Delete row"
           message={`Delete ${deleting.name}? This removes ${fmtCurrency(deleting.mrr)} of sample value and its history.`}
           onCancel={() => setDeleting(null)}
-          onConfirm={() => { remove(deleting.id); toast(`Deleted ${deleting.name}`, 'neg'); setDeleting(null) }}
+          onConfirm={() => { removeLocalAccount(deleting.id); toast(`Deleted ${deleting.name}`, 'neg'); setDeleting(null) }}
         />
       )}
+    </section>
+  )
+}
+
+function DataGridExamplePage({
+  accountsApi,
+  globalSearch,
+  atRiskOnly,
+  timePeriodLabel,
+  onAssistantGridContextChange,
+}: DataGridExamplePageProps) {
+  const { accounts } = accountsApi
+  const params = new URLSearchParams(window.location.search)
+  const explicitRows = params.has('rows')
+  const requestedRows = Number(params.get('rows') ?? DEFAULT_DATAGRID_EXAMPLE_ROWS)
+  const wideColumns = params.get('cols') === 'wide'
+  const generatedAccounts = useMemo(
+    () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
+    [requestedRows],
+  )
+  const groupingRows = generatedAccounts ?? accounts
+  const serverRows = useMemo(
+    () => generateAccounts(Number.isFinite(requestedRows) && requestedRows > 0 ? requestedRows : DEFAULT_DATAGRID_EXAMPLE_ROWS),
+    [requestedRows],
+  )
+  const groupingColumns = useMemo(() => {
+    const columns = accountGridColumns({ onEdit: () => undefined, onDelete: () => undefined }).filter((column) => column.id !== 'actions')
+    return wideColumns ? wideAccountGridColumns(columns) : columns
+  }, [wideColumns])
+  const visibleGroupingRows = useMemo(
+    () => filterExampleAccounts(groupingRows, globalSearch, atRiskOnly),
+    [atRiskOnly, globalSearch, groupingRows],
+  )
+
+  return (
+    <>
+      <main className="w-full px-6 py-6">
+        <PageHeader
+          eyebrow="parts-bin component assembly"
+          title="DataGrid example"
+          description={`Two focused DataGrid examples: client-side grouping first, then a server-backed manual-query grid with row creation. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
+          actions={
+            <span className="num text-[13px] text-muted">{visibleGroupingRows.length} rows</span>
+          }
+        />
+
+        <div className="grid gap-8">
+          <GroupingDataGridExample
+            rows={groupingRows}
+            columns={groupingColumns}
+            explicitRows={explicitRows}
+            globalSearch={globalSearch}
+            atRiskOnly={atRiskOnly}
+            timePeriodLabel={timePeriodLabel}
+            onAssistantGridContextChange={onAssistantGridContextChange}
+          />
+          <ServerModeDataGridExample
+            key={`${requestedRows}:${wideColumns ? 'wide' : 'standard'}`}
+            initialRows={serverRows}
+            wideColumns={wideColumns}
+            globalSearch={globalSearch}
+            atRiskOnly={atRiskOnly}
+          />
+        </div>
+      </main>
     </>
   )
 }

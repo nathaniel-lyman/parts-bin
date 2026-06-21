@@ -72,13 +72,13 @@ export function DataGridRow<TData>({
           aria-label={expanded ? `Collapse ${String(cell.getValue() ?? row.id)}` : `Expand ${String(cell.getValue() ?? row.id)}`}
           aria-expanded={expanded}
           tabIndex={-1}
-          className="text-muted hover:text-accent"
+          className="flex h-5 w-5 items-center justify-center text-muted hover:text-accent"
           onClick={(event) => {
             event.stopPropagation()
             row.toggleExpanded()
           }}
         >
-          <span aria-hidden="true">{expanded ? '▾' : '▸'}</span>
+          <span aria-hidden="true" className="text-[15px] leading-none">{expanded ? '▾' : '▸'}</span>
         </button>
         <span className="text-ink">{String(cell.getValue() ?? '')}</span>
         <span className="micro text-muted">({leafCount})</span>
@@ -108,16 +108,16 @@ export function DataGridRow<TData>({
             aria-label={row.getIsExpanded() ? `Collapse ${rowLabel}` : `Expand ${rowLabel}`}
             aria-expanded={row.getIsExpanded()}
             tabIndex={-1}
-            className="text-muted hover:text-accent"
+            className="flex h-5 w-5 items-center justify-center text-muted hover:text-accent"
             onClick={(event) => {
               event.stopPropagation()
               row.toggleExpanded()
             }}
           >
-            <span aria-hidden="true">{row.getIsExpanded() ? '▾' : '▸'}</span>
+            <span aria-hidden="true" className="text-[15px] leading-none">{row.getIsExpanded() ? '▾' : '▸'}</span>
           </button>
         ) : (
-          <span aria-hidden="true" className="inline-block w-[1em]" />
+          <span aria-hidden="true" className="inline-block w-5" />
         )}
       </span>
     ) : undefined

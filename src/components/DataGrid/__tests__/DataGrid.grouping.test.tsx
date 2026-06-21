@@ -73,6 +73,19 @@ describe('DataGrid grouping & aggregation', () => {
     expect(container.querySelector('tr[data-row-id="r0"]')).not.toBeNull()
   })
 
+  it('expands and collapses all grouped rows from the grouping toolbar', async () => {
+    const { container } = renderGrid()
+    await groupBySegment()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse all' }))
+    expect(container.querySelector('tr[data-row-id="r0"]')).toBeNull()
+    expect(container.querySelector('tr[data-row-id="r2"]')).toBeNull()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+    expect(container.querySelector('tr[data-row-id="r0"]')).not.toBeNull()
+    expect(container.querySelector('tr[data-row-id="r2"]')).not.toBeNull()
+  })
+
   it('renders an aggregation footer with totals over filtered rows', async () => {
     renderGrid()
 
