@@ -42,6 +42,9 @@ export interface UseGridClipboardResult {
   copySelection: () => void
   copyRange: () => boolean
   pasteTable: (text: string) => boolean
+  /** Fills the active multi-cell range: each column takes its top (anchor) row's value down the
+   *  range. Reuses the paste-fill validate/update path. No-op unless editing + a multi-cell range. */
+  fillSelection: () => boolean
   exportCsv: () => void
   exportXlsx: () => void
   exportAllCsv: () => void
@@ -289,6 +292,58 @@ export function useGridClipboard<TData>({
     visibleData,
   ])
 
+  const fillSelection = useCallback(() => {
+    if (!editingEnabled || !onRowUpdate || !cellRange || !isMultiCellRange(cellRange)) return false
+    const bounds = cellRangeBounds(cellRange)
+    const sourceRow = visibleData[bounds.rowStart]
+    if (!sourceRow) return false
+    let changedCells = 0
+
+    for (let rowIndex = bounds.rowStart; rowIndex <= bounds.rowEnd; rowIndex += 1) {
+      const row = visibleData[rowIndex]
+      if (!row) continue
+      const rowId = getRowId(row)
+      const patch: Record<string, unknown> = {}
+      const changedColumnIds: string[] = []
+
+      for (let colIndex = bounds.colStart; colIndex <= bounds.colEnd; colIndex += 1) {
+        const columnId = visibleColumnIds[colIndex]
+        const column = columnId ? columnsById.get(columnId) : undefined
+        if (!column || !isColumnEditable(column)) continue
+        // Source value is already a typed cell value (not a clipboard string), so it skips
+        // parseDraft and feeds straight into the same validate → onRowUpdate path as paste.
+        const sourceValue = resolveCellValue(sourceRow, columnId)
+        if (sourceValue === resolveCellValue(row, columnId)) continue
+        if (column.validate?.(sourceValue as never, row)) continue
+        patch[column.accessorKey as string] = sourceValue
+        changedColumnIds.push(column.id)
+      }
+
+      if (changedColumnIds.length > 0) {
+        onRowUpdate(rowId, patch as Partial<TData>, row)
+        markDirtyCells(rowId, changedColumnIds)
+        changedCells += changedColumnIds.length
+      }
+    }
+
+    if (changedCells > 0) {
+      toast(changedCells === 1 ? 'Filled 1 cell' : `Filled ${changedCells} cells`)
+      return true
+    }
+    return false
+  }, [
+    cellRange,
+    columnsById,
+    editingEnabled,
+    getRowId,
+    markDirtyCells,
+    onRowUpdate,
+    resolveCellValue,
+    toast,
+    visibleColumnIds,
+    visibleData,
+  ])
+
   useEffect(() => {
     const onKey = (event: globalThis.KeyboardEvent) => {
       const active = document.activeElement
@@ -348,6 +403,7 @@ export function useGridClipboard<TData>({
     copySelection,
     copyRange,
     pasteTable,
+    fillSelection,
     exportCsv,
     exportXlsx,
     exportAllCsv,

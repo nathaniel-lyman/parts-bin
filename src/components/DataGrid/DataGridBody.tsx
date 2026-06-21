@@ -4,7 +4,7 @@ import { Fragment, type ReactNode } from 'react'
 import { DataGridRow } from './DataGridRow'
 import { useGridRuntime } from './GridRuntimeContext'
 import type { GridFocus } from './keyboard'
-import { cellRangeBounds, type CellRange } from './rangeSelection'
+import { cellRangeBounds, isMultiCellRange, type CellRange } from './rangeSelection'
 
 interface Props<TData> {
   table: Table<TData>
@@ -43,6 +43,8 @@ export function DataGridBody<TData>({
   const colSpan = table.getVisibleLeafColumns().length + (enableRowSelection ? 1 : 0)
   // Bounds of the active range, computed once; rows derive their own narrow column span from it.
   const rangeBounds = range ? cellRangeBounds(range) : null
+  // The fill handle only makes sense on a real multi-cell range's bottom-right cell.
+  const rangeIsMulti = isMultiCellRange(range ?? null)
 
   // TanStack Virtual is the chosen windowing engine; React Compiler skips this hook.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -83,6 +85,7 @@ export function DataGridBody<TData>({
       : null
     const focusedColIndex = focus && focus.row === rowIndex ? focus.col : -1
     const inRange = rangeBounds !== null && rowIndex >= rangeBounds.rowStart && rowIndex <= rangeBounds.rowEnd
+    const isRangeBottomRow = inRange && rangeIsMulti && rowIndex === rangeBounds.rowEnd
     return (
       <Fragment key={`${pinned ?? 'row'}-${row.id}-fragment`}>
         <DataGridRow
@@ -95,6 +98,7 @@ export function DataGridBody<TData>({
           focusedColIndex={focusedColIndex}
           rangeColStart={inRange ? rangeBounds.colStart : -1}
           rangeColEnd={inRange ? rangeBounds.colEnd : -1}
+          rangeCornerCol={isRangeBottomRow ? rangeBounds.colEnd : -1}
         />
         {detail && (
           <tr key={`${pinned ?? 'row'}-${row.id}-detail`} role="row" data-testid={`grid-row-${row.id}-detail`} data-row-detail="true">

@@ -30,6 +30,8 @@ export interface DataGridCellProps<TData> {
   colIndex?: number
   focused?: boolean
   rangeSelected?: boolean
+  /** True for the bottom-right cell of a multi-cell range — renders the fill handle. */
+  rangeCorner?: boolean
   /** True when this cell's row is selected — only consulted for sticky/pinned cells, whose opaque
    *  background would otherwise hide the row's selection tint. Center cells inherit the <tr> tint. */
   selected?: boolean
@@ -49,6 +51,7 @@ function DataGridCellComponent<TData>({
   colIndex,
   focused,
   rangeSelected,
+  rangeCorner = false,
   selected = false,
   pinnedSide,
   pinnedOffset = 0,
@@ -57,7 +60,7 @@ function DataGridCellComponent<TData>({
   treePrefix,
 }: DataGridCellProps<TData>) {
   // Runtime-wide values come from context so this component can be memoized on its per-cell props.
-  const { dragPreview, editing, onCopyCell, onCellContextMenu, onFocusCell, onRangeStart, onRangeEnter } =
+  const { dragPreview, editing, onCopyCell, onFillSelection, onCellContextMenu, onFocusCell, onRangeStart, onRangeEnter } =
     useGridRuntime()
   // Cell-change flash. Detect a value change with React's sanctioned "derive state from a changed
   // value during render" pattern (a guarded setState in render — no effect, no extra browser paint,
@@ -200,6 +203,26 @@ function DataGridCellComponent<TData>({
           aria-hidden="true"
           data-testid="dirty-marker"
           className="absolute right-0 top-0 border-l-8 border-t-8 border-l-transparent border-t-accent"
+        />
+      )}
+      {rangeCorner && !isEditing && onFillSelection !== undefined && (
+        // Fill handle on the range's bottom-right corner. Click fills the range from each column's
+        // anchor-row value (reuses the paste-fill path). mousedown is swallowed so it neither starts
+        // a new cell-range drag nor blurs the focused cell.
+        <button
+          type="button"
+          aria-label="Fill range"
+          data-testid="fill-handle"
+          tabIndex={-1}
+          className="absolute -bottom-[3px] -right-[3px] z-20 h-2 w-2 cursor-crosshair rounded-[1px] border border-surface bg-accent"
+          onMouseDown={(event) => {
+            event.stopPropagation()
+            event.preventDefault()
+          }}
+          onClick={(event) => {
+            event.stopPropagation()
+            onFillSelection()
+          }}
         />
       )}
       {showCopy && (

@@ -18,6 +18,9 @@ export interface DataGridRowProps<TData> {
   /** Column span of the active cell range intersected with this row, or -1/-1 when not in range. */
   rangeColStart?: number
   rangeColEnd?: number
+  /** Column index of the range's bottom-right cell when this is its bottom row, else -1. Drives
+   *  the fill handle, which only appears on a multi-cell range's corner. */
+  rangeCornerCol?: number
 }
 
 function DataGridRowComponent<TData>({
@@ -29,6 +32,7 @@ function DataGridRowComponent<TData>({
   focusedColIndex = -1,
   rangeColStart = -1,
   rangeColEnd = -1,
+  rangeCornerCol = -1,
 }: DataGridRowProps<TData>) {
   const {
     enableRowSelection,
@@ -120,6 +124,7 @@ function DataGridRowComponent<TData>({
         colIndex={colIndex}
         focused={focusedColIndex >= 0 && focusedColIndex === colIndex}
         rangeSelected={rangeColStart >= 0 && colIndex >= rangeColStart && colIndex <= rangeColEnd}
+        rangeCorner={rangeCornerCol >= 0 && colIndex === rangeCornerCol}
         // Only sticky/pinned cells need the selection flag (their opaque bg hides the <tr> tint);
         // center cells inherit it from the row, so passing a constant false keeps them memo-stable
         // across a selection toggle — only the few pinned cells of the toggled row re-render.

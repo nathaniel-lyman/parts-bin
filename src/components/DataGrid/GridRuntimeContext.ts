@@ -30,6 +30,8 @@ export interface GridRuntime {
   onToggleRow?: (id: string) => void
   onCellContextMenu?: (rowId: string, colId: string, clientX: number, clientY: number) => void
   onCopyCell?: (rowId: string, colId: string) => void
+  /** Fills the active range from each column's anchor-row value; present only when editing is on. */
+  onFillSelection?: () => void
   onFocusCell?: (row: number, col: number) => void
   onRangeStart?: (row: number, col: number) => void
   onRangeEnter?: (row: number, col: number) => void
