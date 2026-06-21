@@ -9,7 +9,7 @@ import {
 } from './normalize'
 import { DEFAULT_COLUMN_VISIBILITY } from './state'
 import type { FilterValue } from './filtering'
-import type { ColumnPinning, Density, GridAction, LedgerGridColumn, LedgerGridState } from './types'
+import type { ColumnPinning, Density, GridAction, DataGridColumn, DataGridState } from './types'
 
 export const sortingReducer = (_slice: SortingState, sorting: SortingState): SortingState => sorting
 export const globalFilterReducer = (_slice: string, globalFilter: string): string => globalFilter
@@ -27,7 +27,7 @@ export function columnFiltersReducer(
 export function columnSizingReducer<TData>(
   slice: Record<string, number>,
   action: GridAction,
-  columns: LedgerGridColumn<TData>[] = [],
+  columns: DataGridColumn<TData>[] = [],
 ): Record<string, number> {
   switch (action.type) {
     case 'RESIZE_COLUMN': {
@@ -53,7 +53,7 @@ export function columnSizingReducer<TData>(
 export function columnOrderReducer<TData>(
   slice: string[],
   action: GridAction,
-  columns: LedgerGridColumn<TData>[] = [],
+  columns: DataGridColumn<TData>[] = [],
 ): string[] {
   const columnIds = columns.map((column) => column.id)
   switch (action.type) {
@@ -133,9 +133,9 @@ export function columnPinningReducer(slice: ColumnPinning, action: GridAction): 
 }
 
 export function rowSelectionReducer(
-  slice: LedgerGridState['rowSelection'],
+  slice: DataGridState['rowSelection'],
   action: GridAction,
-): LedgerGridState['rowSelection'] {
+): DataGridState['rowSelection'] {
   switch (action.type) {
     case 'TOGGLE_ROW': {
       const next = { ...slice }
@@ -159,9 +159,9 @@ export function rowSelectionReducer(
 }
 
 export function rowPinningReducer(
-  slice: LedgerGridState['rowPinning'],
+  slice: DataGridState['rowPinning'],
   action: GridAction,
-): LedgerGridState['rowPinning'] {
+): DataGridState['rowPinning'] {
   switch (action.type) {
     case 'PIN_ROW_TOP':
       return {
@@ -184,9 +184,9 @@ export function rowPinningReducer(
 }
 
 export function paginationReducer(
-  slice: LedgerGridState['pagination'],
+  slice: DataGridState['pagination'],
   action: GridAction,
-): LedgerGridState['pagination'] {
+): DataGridState['pagination'] {
   switch (action.type) {
     case 'SET_PAGE_INDEX':
       return { ...slice, pageIndex: Math.max(0, action.pageIndex) }
@@ -215,9 +215,9 @@ export function groupingReducer(slice: string[], action: GridAction): string[] {
 }
 
 export function numberFormatsReducer(
-  slice: LedgerGridState['numberFormats'],
+  slice: DataGridState['numberFormats'],
   action: GridAction,
-): LedgerGridState['numberFormats'] {
+): DataGridState['numberFormats'] {
   switch (action.type) {
     case 'SET_COLUMN_NUMBER_FORMAT':
       return { ...slice, [action.columnId]: action.format }
@@ -235,10 +235,10 @@ export function numberFormatsReducer(
 }
 
 export function expandedReducer(
-  slice: LedgerGridState['expanded'],
+  slice: DataGridState['expanded'],
   action: GridAction,
   nextGrouping?: string[],
-): LedgerGridState['expanded'] {
+): DataGridState['expanded'] {
   switch (action.type) {
     case 'SET_EXPANDED':
       return action.expanded
@@ -288,10 +288,10 @@ export function toggleSortingReducer(slice: SortingState, action: { columnId: st
 }
 
 export function gridReducer<TData>(
-  state: LedgerGridState,
+  state: DataGridState,
   action: GridAction,
-  columns: LedgerGridColumn<TData>[] = [],
-): LedgerGridState {
+  columns: DataGridColumn<TData>[] = [],
+): DataGridState {
   const columnIds = columns.map((column) => column.id)
   switch (action.type) {
     case 'APPLY_VIEW':

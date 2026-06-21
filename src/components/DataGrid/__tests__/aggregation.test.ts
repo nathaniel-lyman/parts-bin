@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aggregate, computeAggregates, formatAggregate } from '../aggregation'
-import type { LedgerGridColumn } from '../types'
+import type { DataGridColumn } from '../types'
 
 interface Row {
   id: string
@@ -48,7 +48,7 @@ describe('formatAggregate', () => {
 })
 
 describe('computeAggregates', () => {
-  const columns: LedgerGridColumn<Row>[] = [
+  const columns: DataGridColumn<Row>[] = [
     { id: 'name', accessorKey: 'name', header: 'Name', type: 'text' },
     { id: 'mrr', accessorKey: 'mrr', header: 'MRR', type: 'currency', aggregate: 'sum' },
     { id: 'growth', accessorKey: 'growth', header: 'Growth', type: 'percent', aggregate: 'avg' },

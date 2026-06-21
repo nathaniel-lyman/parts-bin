@@ -12,12 +12,12 @@ import { DataGridSelectAllCheckbox } from './DataGridSelectionCell'
 import type { FilterValue } from './filtering'
 import type { ColumnDragPreviewState } from './dragPreview'
 import type { GridFocus } from './keyboard'
-import type { ColumnPinning, ColumnVirtualWindow, DataGridNumberFormat, GridAction, LedgerGridColumn } from './types'
+import type { ColumnPinning, ColumnVirtualWindow, DataGridNumberFormat, GridAction, DataGridColumn } from './types'
 
 const noopDispatch = () => {}
 const dragPreviewTransition = 'transform 160ms ease'
 
-function headerLabel<TData>(header: Header<TData, unknown>, column?: LedgerGridColumn<TData>) {
+function headerLabel<TData>(header: Header<TData, unknown>, column?: DataGridColumn<TData>) {
   if (typeof column?.header === 'string' && column.header) return column.header
   if (typeof header.column.columnDef.header === 'string' && header.column.columnDef.header) return header.column.columnDef.header
   return header.column.id
@@ -50,7 +50,7 @@ function SortableHeader<TData>({
   header: Header<TData, unknown>
   dispatch?: (action: GridAction) => void
   columnSizing: Record<string, number>
-  columns: LedgerGridColumn<TData>[]
+  columns: DataGridColumn<TData>[]
   columnPinning: ColumnPinning
   columnFilters: ColumnFiltersState
   dragPreview?: ColumnDragPreviewState | null
@@ -206,7 +206,7 @@ export function DataGridHeader<TData>({
   table: Table<TData>
   dispatch?: (action: GridAction) => void
   columnSizing?: Record<string, number>
-  columns?: LedgerGridColumn<TData>[]
+  columns?: DataGridColumn<TData>[]
   columnPinning?: ColumnPinning
   columnFilters?: ColumnFiltersState
   enableHeaderFilters?: boolean

@@ -1,5 +1,5 @@
 import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
-import type { LedgerGridState } from './types'
+import type { DataGridState } from './types'
 
 export const GRID_QUERY_VERSION = 1
 export type GridQueryScope = 'page' | 'allMatching'
@@ -35,7 +35,7 @@ export interface DataGridDataSource<TData> {
 }
 
 export function toGridQuery(
-  state: Pick<LedgerGridState, 'sorting' | 'columnFilters' | 'globalFilter' | 'pagination'>,
+  state: Pick<DataGridState, 'sorting' | 'columnFilters' | 'globalFilter' | 'pagination'>,
   scope: GridQueryScope = 'page',
 ): GridQuery {
   return {

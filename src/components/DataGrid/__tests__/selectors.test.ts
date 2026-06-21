@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { orderedColumns, visibleColumns } from '../selectors'
 import { DEFAULT_STATE } from '../state'
-import type { LedgerGridColumn } from '../types'
+import type { DataGridColumn } from '../types'
 
-const cols: LedgerGridColumn<{ x: number }>[] = [
+const cols: DataGridColumn<{ x: number }>[] = [
   { id: 'account', header: 'Account' },
   { id: 'owner', header: 'Owner' },
   { id: 'arr', header: 'ARR' },

@@ -14,7 +14,7 @@ import {
   isNumericColumnType,
   resolveNumberFormat,
 } from './numberFormat'
-import type { DataGridNumberFormat, GridAction, LedgerGridColumn } from './types'
+import type { DataGridNumberFormat, GridAction, DataGridColumn } from './types'
 
 const MENU_WIDTH = 208
 const FILTER_PANEL_WIDTH = 720
@@ -66,7 +66,7 @@ function coerceScale(value: string): number | undefined {
 interface Props {
   columnId: string
   header: string
-  type: NonNullable<LedgerGridColumn<unknown>['type']>
+  type: NonNullable<DataGridColumn<unknown>['type']>
   filterMeta?: { type?: FilterColumnType; options?: string[] }
   currentFilter?: FilterValue
   columnNumberFormat?: DataGridNumberFormat

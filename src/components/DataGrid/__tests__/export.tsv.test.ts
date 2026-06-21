@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { serializeTSV } from '../export'
-import type { LedgerGridColumn } from '../types'
+import type { DataGridColumn } from '../types'
 
 interface Row { id: string; name: string; mrr: number; owner: string }
 
-const columns: LedgerGridColumn<Row>[] = [
+const columns: DataGridColumn<Row>[] = [
   { id: 'name', accessorKey: 'name', header: 'Account', type: 'text' },
   { id: 'mrr', accessorKey: 'mrr', header: 'MRR', type: 'currency', exportValue: (value) => `$${value}` },
   { id: 'owner', accessorKey: 'owner', header: 'Owner', type: 'text' },

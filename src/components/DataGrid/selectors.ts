@@ -1,11 +1,11 @@
-import type { ColumnPinning, Density, LedgerGridColumn, LedgerGridState } from './types'
+import type { ColumnPinning, Density, DataGridColumn, DataGridState } from './types'
 
 export function orderedColumns<TData>(
-  columns: LedgerGridColumn<TData>[],
-  state: LedgerGridState,
-): LedgerGridColumn<TData>[] {
+  columns: DataGridColumn<TData>[],
+  state: DataGridState,
+): DataGridColumn<TData>[] {
   const byId = new Map(columns.map((column) => [column.id, column]))
-  const ordered: LedgerGridColumn<TData>[] = []
+  const ordered: DataGridColumn<TData>[] = []
   const seen = new Set<string>()
 
   for (const id of state.columnOrder) {
@@ -24,9 +24,9 @@ export function orderedColumns<TData>(
 }
 
 export function visibleColumns<TData>(
-  columns: LedgerGridColumn<TData>[],
-  state: LedgerGridState,
-): LedgerGridColumn<TData>[] {
+  columns: DataGridColumn<TData>[],
+  state: DataGridState,
+): DataGridColumn<TData>[] {
   return orderedColumns(columns, state).filter((column) => state.columnVisibility[column.id] !== false)
 }
 
@@ -93,12 +93,12 @@ export function pinnedOffsets(
   return { left, right }
 }
 
-export function selectionCount(rowSelection: LedgerGridState['rowSelection']): number {
+export function selectionCount(rowSelection: DataGridState['rowSelection']): number {
   return Object.keys(rowSelection).length
 }
 
 export function selectAllState(
-  rowSelection: LedgerGridState['rowSelection'],
+  rowSelection: DataGridState['rowSelection'],
   visibleIds: string[],
 ): 'none' | 'some' | 'all' {
   if (visibleIds.length === 0) return 'none'

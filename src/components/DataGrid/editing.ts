@@ -1,5 +1,5 @@
 import { resolveColumnValue } from './aggregation'
-import type { LedgerGridColumn } from './types'
+import type { DataGridColumn } from './types'
 
 export type EditorType = 'text' | 'number' | 'select' | 'date'
 
@@ -20,11 +20,11 @@ export interface EditSession {
 /** Cells committed-changed this browser session: rowId -> columnId -> true. */
 export type DirtyCells = Record<string, Record<string, true>>
 
-export function isColumnEditable<TData>(column: LedgerGridColumn<TData> | undefined): boolean {
+export function isColumnEditable<TData>(column: DataGridColumn<TData> | undefined): boolean {
   return Boolean(column && column.editable && column.accessorKey && column.type !== 'actions')
 }
 
-export function editorTypeFor<TData>(column: LedgerGridColumn<TData>): EditorType {
+export function editorTypeFor<TData>(column: DataGridColumn<TData>): EditorType {
   if (column.meta?.options?.length) return 'select'
   switch (column.type) {
     case 'number':
@@ -47,7 +47,7 @@ export function startEdit<TData>(
   mode: EditMode,
   rowId: string,
   columnId: string,
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   row: TData,
 ): EditSession {
   const editable = mode === 'row'
@@ -93,7 +93,7 @@ export interface CommitResult {
 
 export function commitSession<TData>(
   session: EditSession,
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   row: TData,
 ): CommitResult {
   const patch: Record<string, unknown> = {}

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { downloadCSV, downloadXLSX, serializeCSV, serializeXLSX } from '../export'
-import type { LedgerGridColumn } from '../types'
+import type { DataGridColumn } from '../types'
 
 interface Row { id: string; name: string; owner: string; mrr: number }
 
@@ -9,7 +9,7 @@ const rows: Row[] = [
   { id: 'a2', name: 'Beta "Labs"', owner: 'Lee', mrr: 20 },
 ]
 
-const columns: LedgerGridColumn<Row>[] = [
+const columns: DataGridColumn<Row>[] = [
   { id: 'name', accessorKey: 'name', header: 'Name' },
   { id: 'owner', accessorKey: 'owner', header: 'Owner' },
   { id: 'mrr', accessorKey: 'mrr', header: 'MRR' },

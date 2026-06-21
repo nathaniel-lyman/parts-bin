@@ -1,5 +1,5 @@
 import type { SortingState } from '@tanstack/react-table'
-import type { ColumnPinning, LedgerGridState } from './types'
+import type { ColumnPinning, DataGridState } from './types'
 
 export const ACTIONS_COLUMN_ID = 'actions'
 
@@ -80,15 +80,15 @@ export function normalizeGrouping(value: unknown, columnIds?: readonly string[])
 }
 
 export function normalizeNumberFormats(
-  value: LedgerGridState['numberFormats'],
+  value: DataGridState['numberFormats'],
   columnIds?: readonly string[],
-): LedgerGridState['numberFormats'] {
+): DataGridState['numberFormats'] {
   if (!columnIds?.length) return value
   const known = new Set(columnIds)
   return Object.fromEntries(Object.entries(value).filter(([id]) => known.has(id)))
 }
 
-export function normalizeState(state: LedgerGridState, columnIds?: readonly string[]): LedgerGridState {
+export function normalizeState(state: DataGridState, columnIds?: readonly string[]): DataGridState {
   const columnOrder = normalizeColumnOrder(state.columnOrder, columnIds)
   const inferredColumnIds = columnIds?.length ? columnIds : columnOrder
   const columnPinning = normalizeColumnPinning(

@@ -1,7 +1,7 @@
 import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import { normalizeColumnOrder } from './normalize'
 import { DEFAULT_STATE, hydrate } from './state'
-import type { DataGridNumberFormat, Density, LedgerGridState } from './types'
+import type { DataGridNumberFormat, Density, DataGridState } from './types'
 
 export const GRID_VIEW_VERSION = 1 as const
 export const GRID_STORAGE_KEY = 'parts-bin.datagrid'
@@ -25,7 +25,7 @@ export interface PersistedGridView {
 
 export const DEFAULT_PERSISTED_VIEW: PersistedGridView = project(DEFAULT_STATE)
 
-export function project(state: LedgerGridState): PersistedGridView {
+export function project(state: DataGridState): PersistedGridView {
   return {
     version: GRID_VIEW_VERSION,
     columnVisibility: state.columnVisibility,
@@ -43,8 +43,8 @@ export function project(state: LedgerGridState): PersistedGridView {
 
 export const projectView = project
 
-export function hydrateView(view: Partial<PersistedGridView>, initialState?: Partial<LedgerGridState>): LedgerGridState {
-  const persisted: Partial<LedgerGridState> = {}
+export function hydrateView(view: Partial<PersistedGridView>, initialState?: Partial<DataGridState>): DataGridState {
+  const persisted: Partial<DataGridState> = {}
   if (view.columnVisibility) persisted.columnVisibility = view.columnVisibility
   if (view.columnOrder) persisted.columnOrder = view.columnOrder
   if (view.columnSizing) persisted.columnSizing = view.columnSizing
@@ -75,7 +75,7 @@ const LEGACY_ACCOUNT_COLUMN_ORDER = [
   'since',
   'actions',
 ]
-const LEGACY_ACCOUNT_DEFAULT_STATE: LedgerGridState = {
+const LEGACY_ACCOUNT_DEFAULT_STATE: DataGridState = {
   ...DEFAULT_STATE,
   sorting: [{ id: 'mrr', desc: true }],
   columnVisibility: { account: true, arr: false, since: false },

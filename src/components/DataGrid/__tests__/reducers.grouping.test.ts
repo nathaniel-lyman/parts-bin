@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { gridReducer } from '../reducers'
 import { DEFAULT_STATE } from '../state'
-import type { LedgerGridState } from '../types'
+import type { DataGridState } from '../types'
 
-const base: LedgerGridState = { ...DEFAULT_STATE }
+const base: DataGridState = { ...DEFAULT_STATE }
 
 describe('grouping reducers', () => {
   it('TOGGLE_GROUP_BY adds a column and expands everything', () => {

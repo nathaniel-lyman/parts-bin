@@ -7,9 +7,6 @@ import type {
   DataGridState,
   GridAction,
   GridRuntimeStatus,
-  LedgerCellContext,
-  LedgerGridColumn,
-  LedgerGridState,
 } from '../types'
 import type { Account } from '../../../data/types'
 
@@ -55,17 +52,6 @@ describe('grid types', () => {
 
   it('DataGridState holds Community+Pro slices only (compile check)', () => {
     expect(BASE_STATE.density).toBe('compact')
-  })
-
-  it('keeps Ledger* aliases assignable for compatibility', () => {
-    const column: LedgerGridColumn<Account, number> = {
-      id: 'mrr',
-      accessorKey: 'mrr',
-      header: 'MRR',
-      cell: (ctx: LedgerCellContext<Account, number>) => String(ctx.value),
-    }
-    const state: LedgerGridState = { ...BASE_STATE, columnOrder: [column.id] }
-    expect(state.columnOrder).toEqual(['mrr'])
   })
 
   it('GridAction discriminated union covers the Phase 1 slices (compile check)', () => {

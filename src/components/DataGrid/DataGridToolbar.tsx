@@ -3,10 +3,10 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { DENSITIES, DENSITY_LABELS } from './types'
-import type { Density, GridAction, LedgerGridColumn } from './types'
+import type { Density, GridAction, DataGridColumn } from './types'
 
 interface Props<TData> {
-  columns: Pick<LedgerGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable'>[]
+  columns: Pick<DataGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable'>[]
   columnVisibility: Record<string, boolean>
   globalFilter: string
   quickFilterPlaceholder?: string

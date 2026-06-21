@@ -1,9 +1,9 @@
-import type { LedgerGridState } from './types'
+import type { DataGridState } from './types'
 import { normalizeState } from './normalize'
 
 export const DEFAULT_COLUMN_VISIBILITY: Record<string, boolean> = {}
 
-export const DEFAULT_STATE: LedgerGridState = {
+export const DEFAULT_STATE: DataGridState = {
   sorting: [],
   columnFilters: [],
   globalFilter: '',
@@ -21,15 +21,15 @@ export const DEFAULT_STATE: LedgerGridState = {
 }
 
 export interface HydrateOptions {
-  controlledState?: LedgerGridState
-  initialState?: Partial<LedgerGridState>
-  persisted?: Partial<LedgerGridState>
+  controlledState?: DataGridState
+  initialState?: Partial<DataGridState>
+  persisted?: Partial<DataGridState>
 }
 
 function mergeLayers(
-  initialState: Partial<LedgerGridState>,
-  persisted: Partial<LedgerGridState>,
-): LedgerGridState {
+  initialState: Partial<DataGridState>,
+  persisted: Partial<DataGridState>,
+): DataGridState {
   return {
     ...DEFAULT_STATE,
     ...initialState,
@@ -62,7 +62,7 @@ function mergeLayers(
   }
 }
 
-export function hydrate(opts: HydrateOptions): LedgerGridState {
+export function hydrate(opts: HydrateOptions): DataGridState {
   if (opts.controlledState) return normalizeState(opts.controlledState)
   return normalizeState(mergeLayers(opts.initialState ?? {}, opts.persisted ?? {}))
 }

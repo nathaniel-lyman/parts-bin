@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { GRID_VIEW_VERSION, hydrateView, migrateLegacy, project } from '../persistence'
 import { DEFAULT_STATE } from '../state'
 
-describe('project (LedgerGridState -> PersistedGridView)', () => {
+describe('project (DataGridState -> PersistedGridView)', () => {
   const live = {
     ...DEFAULT_STATE,
     globalFilter: 'acme',
@@ -41,7 +41,7 @@ describe('project (LedgerGridState -> PersistedGridView)', () => {
   })
 })
 
-describe('hydrateView (PersistedGridView -> LedgerGridState)', () => {
+describe('hydrateView (PersistedGridView -> DataGridState)', () => {
   it('merges a partial payload over defaults and seeds runtime fields', () => {
     const state = hydrateView({ density: 'comfortable', columnVisibility: { arr: true } })
     expect(state.columnVisibility).toEqual({ arr: true })

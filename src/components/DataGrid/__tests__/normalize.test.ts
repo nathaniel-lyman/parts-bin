@@ -11,7 +11,7 @@ import {
   normalizeColumnPinning,
   normalizeState,
 } from '../normalize'
-import type { LedgerGridState } from '../types'
+import type { DataGridState } from '../types'
 
 describe('normalizeColumnOrder (ported verbatim)', () => {
   it('golden case: dedupes, drops unknowns, appends missing, forces actions last', () => {
@@ -48,7 +48,7 @@ describe('normalizeColumnOrder (ported verbatim)', () => {
   })
 })
 
-const base: LedgerGridState = {
+const base: DataGridState = {
   sorting: [{ id: 'mrr', desc: true }],
   columnFilters: [],
   globalFilter: '',

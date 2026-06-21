@@ -1,7 +1,7 @@
 import type { Account, Status } from '../data/types'
 import { ACTIONS_COLUMN_ID } from './DataGrid/normalize'
 import { DEFAULT_STATE } from './DataGrid/state'
-import type { LedgerGridColumn, LedgerGridState } from './DataGrid/types'
+import type { DataGridColumn, DataGridState } from './DataGrid/types'
 import { StatusBadge, type BadgeTone } from './ui/Badge'
 
 /**
@@ -23,7 +23,7 @@ export const ACCOUNT_GRID_COLUMN_ORDER = [
   ACTIONS_COLUMN_ID,
 ]
 
-export const ACCOUNT_GRID_INITIAL_STATE: LedgerGridState = {
+export const ACCOUNT_GRID_INITIAL_STATE: DataGridState = {
   ...DEFAULT_STATE,
   sorting: [{ id: 'mrr', desc: true }],
   columnVisibility: { account: true, arr: false, since: false },
@@ -31,7 +31,7 @@ export const ACCOUNT_GRID_INITIAL_STATE: LedgerGridState = {
   columnPinning: { left: [], right: [ACTIONS_COLUMN_ID] },
 }
 
-function withMeta(column: LedgerGridColumn<Account>): LedgerGridColumn<Account> {
+function withMeta(column: DataGridColumn<Account>): DataGridColumn<Account> {
   const align = column.align ?? 'left'
   const filterType = column.id === 'segment' ? 'enum' : column.type === 'actions' ? undefined : column.type
   return {
@@ -49,8 +49,8 @@ function withMeta(column: LedgerGridColumn<Account>): LedgerGridColumn<Account> 
 export function buildAccountGridColumns(
   onEdit: (account: Account) => void,
   onDelete: (account: Account) => void,
-): LedgerGridColumn<Account>[] {
-  const columns: LedgerGridColumn<Account>[] = [
+): DataGridColumn<Account>[] {
+  const columns: DataGridColumn<Account>[] = [
     {
       id: 'account',
       accessorKey: 'name',
@@ -173,6 +173,6 @@ export function accountGridColumns({
 }: {
   onEdit: (account: Account) => void
   onDelete: (account: Account) => void
-}): LedgerGridColumn<Account>[] {
+}): DataGridColumn<Account>[] {
   return buildAccountGridColumns(onEdit, onDelete)
 }

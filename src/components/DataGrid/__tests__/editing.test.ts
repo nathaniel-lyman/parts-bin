@@ -10,7 +10,7 @@ import {
   setDraft,
   startEdit,
 } from '../editing'
-import type { LedgerGridColumn } from '../types'
+import type { DataGridColumn } from '../types'
 
 interface Row {
   id: string
@@ -21,7 +21,7 @@ interface Row {
 
 const row: Row = { id: 'a1', name: 'Acme', mrr: 1200, segment: 'Startup' }
 
-const columns: LedgerGridColumn<Row>[] = [
+const columns: DataGridColumn<Row>[] = [
   {
     id: 'name',
     accessorKey: 'name',
@@ -62,7 +62,7 @@ describe('editing model', () => {
     expect(editorTypeFor(columns[0])).toBe('text')
     expect(editorTypeFor(columns[1])).toBe('number')
     expect(editorTypeFor(columns[2])).toBe('select')
-    expect(editorTypeFor({ id: 'd', accessorKey: 'id', header: 'D', type: 'date' } as LedgerGridColumn<Row>)).toBe('date')
+    expect(editorTypeFor({ id: 'd', accessorKey: 'id', header: 'D', type: 'date' } as DataGridColumn<Row>)).toBe('date')
   })
 
   it('startEdit cell mode seeds a single draft from the row', () => {

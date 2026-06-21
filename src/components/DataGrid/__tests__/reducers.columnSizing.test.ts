@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { columnSizingReducer } from '../reducers'
-import type { LedgerGridColumn } from '../types'
+import type { DataGridColumn } from '../types'
 import type { Account } from '../../../data/types'
 
-const cols: LedgerGridColumn<Account>[] = [
+const cols: DataGridColumn<Account>[] = [
   { id: 'mrr', header: 'MRR', minWidth: 80, maxWidth: 200 },
   { id: 'account', header: 'Account' },
 ]

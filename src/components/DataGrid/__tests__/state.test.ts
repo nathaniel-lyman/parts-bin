@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_STATE, hydrate } from '../state'
-import type { LedgerGridState } from '../types'
+import type { DataGridState } from '../types'
 
 describe('DEFAULT_STATE', () => {
   it('is domain-neutral so cloned grids do not inherit demo account columns', () => {
@@ -31,7 +31,7 @@ describe('hydrate precedence (persisted over initialState over defaults)', () =>
   })
 
   it('controlled state (when provided) wins over persisted AND initialState', () => {
-    const controlled: LedgerGridState = { ...DEFAULT_STATE, density: 'comfortable', globalFilter: 'live' }
+    const controlled: DataGridState = { ...DEFAULT_STATE, density: 'comfortable', globalFilter: 'live' }
     const out = hydrate({
       controlledState: controlled,
       initialState: { density: 'standard' },

@@ -1,5 +1,5 @@
 import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
-import type { LedgerGridColumn } from './types'
+import type { DataGridColumn } from './types'
 import type { DataGridNumberFormat } from './types'
 
 export interface SerializeTSVOptions<TData> {
@@ -18,7 +18,7 @@ function cleanCell(value: unknown): string {
   return String(value).replace(/[\t\n\r]+/g, ' ')
 }
 
-function resolveValue<TData>(row: TData, column: LedgerGridColumn<TData>): unknown {
+function resolveValue<TData>(row: TData, column: DataGridColumn<TData>): unknown {
   if (column.accessorFn) return column.accessorFn(row)
   if (column.accessorKey) return (row as Record<string, unknown>)[column.accessorKey as string]
   return ''
@@ -28,7 +28,7 @@ function resolveValue<TData>(row: TData, column: LedgerGridColumn<TData>): unkno
 // copy). Keeps file exports on the raw value so XLSX still writes real numbers, not "$24,600" text.
 function exportCellValue<TData>(
   row: TData,
-  column: LedgerGridColumn<TData>,
+  column: DataGridColumn<TData>,
   opts: Pick<SerializeTSVOptions<TData>, 'formatted' | 'numberFormats'>,
 ): unknown {
   const raw = resolveValue(row, column)
@@ -39,13 +39,13 @@ function exportCellValue<TData>(
 }
 
 function orderedExportColumns<TData>(
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   columnOrder?: string[],
   columnVisibility?: Record<string, boolean>,
-): LedgerGridColumn<TData>[] {
+): DataGridColumn<TData>[] {
   const byId = new Map(columns.map((column) => [column.id, column]))
   const ids = columnOrder ?? columns.map((column) => column.id)
-  const out: LedgerGridColumn<TData>[] = []
+  const out: DataGridColumn<TData>[] = []
 
   for (const id of ids) {
     const column = byId.get(id)
@@ -70,7 +70,7 @@ function selectExportRows<TData>(rows: TData[], opts: SerializeTSVOptions<TData>
 
 export function serializeTSV<TData>(
   rows: TData[],
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   opts: SerializeTSVOptions<TData>,
 ): string {
   const cols = orderedExportColumns(columns, opts.columnOrder, opts.columnVisibility)
@@ -97,7 +97,7 @@ function escapeCsvCell(value: unknown): string {
 
 export function serializeCSV<TData>(
   rows: TData[],
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   opts: SerializeTSVOptions<TData>,
 ): string {
   const cols = orderedExportColumns(columns, opts.columnOrder, opts.columnVisibility)
@@ -151,7 +151,7 @@ function worksheetCell(value: unknown, rowIndex: number, colIndex: number): stri
 
 function worksheetXml<TData>(
   rows: TData[],
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   opts: SerializeTSVOptions<TData>,
 ): string {
   const cols = orderedExportColumns(columns, opts.columnOrder, opts.columnVisibility)
@@ -262,7 +262,7 @@ function zipStore(files: Array<{ path: string; content: string }>): Uint8Array {
 
 export function serializeXLSX<TData>(
   rows: TData[],
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   opts: SerializeTSVOptions<TData>,
 ): Uint8Array {
   return zipStore([

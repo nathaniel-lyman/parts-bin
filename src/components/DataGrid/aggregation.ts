@@ -1,5 +1,5 @@
 import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
-import type { AggregateKind, AggregateSpec, DataGridNumberFormat, GridColumnType, LedgerGridColumn } from './types'
+import type { AggregateKind, AggregateSpec, DataGridNumberFormat, GridColumnType, DataGridColumn } from './types'
 
 /** Numeric values only — non-numeric rows are skipped, not coerced to 0. */
 function numericValues(values: unknown[]): number[] {
@@ -51,7 +51,7 @@ export const AGGREGATE_LABELS: Record<AggregateKind, string> = {
 }
 
 export function resolveAggregate<TData>(
-  column: LedgerGridColumn<TData>,
+  column: DataGridColumn<TData>,
   rows: TData[],
 ): number | null {
   if (!column.aggregate) return null
@@ -66,7 +66,7 @@ export function aggregateLabel<TData>(aggregateSpec: AggregateSpec<TData>): stri
   return typeof aggregateSpec === 'function' ? 'fx' : AGGREGATE_LABELS[aggregateSpec]
 }
 
-export function resolveColumnValue<TData>(column: LedgerGridColumn<TData>, row: TData): unknown {
+export function resolveColumnValue<TData>(column: DataGridColumn<TData>, row: TData): unknown {
   if (column.accessorFn) return column.accessorFn(row)
   if (column.accessorKey) return (row as Record<string, unknown>)[column.accessorKey as string]
   return undefined
@@ -82,7 +82,7 @@ export interface ColumnAggregate {
 
 /** Footer totals: one entry per column that declares an `aggregate`, over the given rows. */
 export function computeAggregates<TData>(
-  columns: LedgerGridColumn<TData>[],
+  columns: DataGridColumn<TData>[],
   rows: TData[],
   numberFormats: Record<string, DataGridNumberFormat> = {},
 ): Record<string, ColumnAggregate> {
