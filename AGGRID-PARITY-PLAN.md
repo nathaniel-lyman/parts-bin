@@ -38,7 +38,7 @@
 | **A — Foundation refactor** | ✅ COMPLETE | hook extraction ✅, Ledger codemod ✅, barrel narrowing ✅; 'actions' id refactor → moved to B |
 | **B — Render-layer memoization** | ✅ COMPLETE | `GridRuntimeContext` + memo ✅, debounce/throttle ✅, O(1) pinned indexing ✅, `lockPosition` capability ✅; adversarial-review fixes folded |
 | **C — Interaction polish** | ✅ COMPLETE | selection tint, cell flash, lucide icons, overlay/skeleton states, resize/reorder/fill affordances, scrollbar/popover/density polish |
-| **D — Correctness + filter depth** | ◑ MOSTLY DONE | **baseline now GREEN** (2 pre-existing aggregation failures fixed); percent round-trip, date timestamps, expanded operators, export BOM/html, floating-filter sync, set filter — all done. **Deferred: two-condition AND/OR + shared comparator/nulls-last.** |
+| **D — Correctness + filter depth** | ✅ COMPLETE | **baseline now GREEN**; percent round-trip, date timestamps, expanded operators, export BOM/html, floating-filter sync, set filter, **two-condition AND/OR**, and **nulls-last + comparator** all done. (Free-text set-filter-as-alternate-mode is the only minor follow-up.) |
 | **E — Accessibility / ARIA pass** | ⬜ next | |
 
 ### Commits on the branch so far
@@ -54,11 +54,12 @@
   reorder drop-indicator · `3ae7032` range corner fill handle
 - Phase D: `5dd9d80` aggregation '—' + baseline green · `2f627b6` scale-aware percent paste ·
   `86da293` date timestamp filters · `d5d6853` expanded operators · `bafc938` CSV BOM + html
-  clipboard · `2b1b81f` floating-filter sync · `9e78ef9` set filter (search/select-all/counts)
+  clipboard · `2b1b81f` floating-filter sync · `9e78ef9` set filter (search/select-all/counts) ·
+  `da67071` two-condition AND/OR · `cf8fe24` nulls-last sort + comparator
 
-### Phase D — MOSTLY DONE (2 items deferred)
+### Phase D — COMPLETE
 The **baseline is now GREEN** — the 2 long-standing `aggregation.test.ts` failures are fixed, so the
-whole repo suite passes (735 tests). All work is test-driven; full gate green (`npm run build`,
+whole repo suite passes (745 tests). All work is test-driven; full gate green (`npm run build`,
 `npx vitest run`, `npm run lint`, `lint:theme`).
 
 **Correctness (the bug slice):**
@@ -89,12 +90,22 @@ whole repo suite passes (735 tests). All work is test-driven; full gate green (`
   tri-state (Select all) respecting the search + per-value faceted counts. Values union predefined
   options with present values.
 
-**Deferred (carry to a follow-up):**
-- **Two-condition AND/OR per column** — changes the public `FilterValue` shape + persistence + query
-  serialization; deliberately punted for a dedicated design pass (user call).
-- **Shared client/server comparator + optional `comparator` + nulls-last** — TanStack v8 `sortUndefined`
-  only catches literal `undefined` (not `null`/`''`) and direction-independent nulls-last needs a
-  custom path; not a quick flag, so deferred with the AND/OR work.
+**Two-condition AND/OR** (`da67071`): `FilterValue` gained optional `conjunction` + `condition2` (the
+base `{ operator, value }` stays condition 1, so single-condition filters + persisted state are
+shape-compatible); `ledgerFilterFn` evaluates both and combines. The menu's value area became a
+reusable `FilterConditionFields` with "+ Add condition" / AND-OR selector / Remove (a local draft
+keeps an in-progress second operator alive before its value is filled); enum/status keep the set
+filter; condition 1 kept its original aria-labels. The floating filter treats a two-condition filter
+as complex → read-only chip ("≥ 10 AND ≤ 40").
+
+**Nulls-last + comparator** (`cf8fe24`): the TanStack accessor coalesces blank cells
+(null/undefined/'') to `undefined` so the built-in, direction-independent `sortUndefined: 'last'`
+pushes empties to the bottom in BOTH directions (a custom sortingFn result is reversed for desc;
+`sortUndefined` only fires on literal `undefined`). Custom cells still get the original value via
+`rawValue`; only getValue (sort/group/facet) is affected. New `DataGridColumn.comparator` becomes the
+column's `sortingFn` for non-blank ordering.
+
+**Remaining minor follow-up:**
 - Free-text **set filter** as an alternate mode alongside the operator filter (the checklist currently
   lands on enum/status, the natural home).
 
