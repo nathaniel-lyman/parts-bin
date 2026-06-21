@@ -25,14 +25,14 @@ export interface TagProps {
  */
 export function Tag({ label, tone = 'neutral', onRemove, className }: TagProps) {
   return (
-    <span className={cx('micro inline-flex items-center gap-1 rounded-[2px] px-1.5 py-0.5', tones[tone], className)}>
+    <span className={cx('micro inline-flex items-center gap-1 rounded-pill px-1.5 py-0.5', tones[tone], className)}>
       {label}
       {onRemove && (
         <button
           type="button"
           aria-label={`Remove ${label}`}
           onClick={onRemove}
-          className="-mr-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-[2px] hover:bg-surface/60"
+          className="-mr-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm hover:bg-surface/60"
         >
           <span aria-hidden="true">✕</span>
         </button>

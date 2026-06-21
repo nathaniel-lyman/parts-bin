@@ -25,7 +25,7 @@ export function FilterChip({ label, value, onRemove, className }: FilterChipProp
 
   if (!onRemove) {
     return (
-      <span className={cx('inline-flex h-7 max-w-full items-center gap-1.5 rounded-[2px] border border-line bg-surface-2 px-2 text-[12px]', className)}>
+      <span className={cx('inline-flex h-7 max-w-full items-center gap-1.5 rounded-pill border border-line bg-surface-2 px-2 text-[12px]', className)}>
         {content}
       </span>
     )
@@ -36,7 +36,7 @@ export function FilterChip({ label, value, onRemove, className }: FilterChipProp
       type="button"
       onClick={onRemove}
       aria-label={`Remove ${String(label)} filter`}
-      className={cx('inline-flex h-7 max-w-full items-center gap-1.5 rounded-[2px] border border-line bg-surface-2 px-2 text-[12px] hover:bg-surface', className)}
+      className={cx('inline-flex h-7 max-w-full items-center gap-1.5 rounded-pill border border-line bg-surface-2 px-2 text-[12px] hover:bg-surface', className)}
     >
       {content}
       <span aria-hidden="true" className="text-faint">x</span>
@@ -146,7 +146,7 @@ export function FacetedFilter({
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-8 items-center justify-center gap-2 rounded-[2px] border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
+        className="inline-flex h-8 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
       >
         <span>{label}</span>
         {selectedValues.length > 0 && <span className="num text-muted">{selectedValues.length}</span>}
@@ -161,7 +161,7 @@ export function FacetedFilter({
             event.preventDefault()
             closePanel()
           }}
-          className="absolute left-0 top-full z-40 mt-2 grid w-72 gap-3 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
+          className="absolute left-0 top-full z-40 mt-2 grid w-72 gap-3 rounded-md border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
         >
           <Input
             aria-label={`${String(label)} filter search`}

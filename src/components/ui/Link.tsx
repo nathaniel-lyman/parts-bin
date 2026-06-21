@@ -19,7 +19,7 @@ export function Link({ variant = 'accent', external = false, className, children
     <a
       {...(external ? { target: '_blank', rel: 'noreferrer' } : undefined)}
       className={cx(
-        'underline underline-offset-2 transition-[color,opacity] duration-150 ease-out',
+        'underline underline-offset-2 transition-[color,opacity] duration-[var(--motion-moderate-01)] ease-[var(--ease-productive)]',
         variants[variant],
         className,
       )}

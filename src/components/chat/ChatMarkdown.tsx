@@ -68,7 +68,7 @@ export function ChatMarkdown({ content }: ChatMarkdownProps) {
             return <CodeBlock code={extracted.code} language={extracted.language} />
           },
           code: ({ children }) => (
-            <code className="rounded-[2px] bg-surface-2 px-1 py-0.5 text-[12px] text-ink">{children}</code>
+            <code className="rounded-sm bg-surface-2 px-1 py-0.5 text-[12px] text-ink">{children}</code>
           ),
         }}
       >

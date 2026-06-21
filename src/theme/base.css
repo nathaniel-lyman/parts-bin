@@ -28,8 +28,9 @@
   .display { font-family: 'Space Grotesk', sans-serif; }
 
   .scrim-backdrop { background: rgb(0 0 0 / .40); }
-  .shadow-modal { box-shadow: 0 16px 48px rgb(0 0 0 / .18); }
-  .shadow-dropdown { box-shadow: 0 4px 16px rgb(0 0 0 / .10); }
+  .shadow-card { box-shadow: var(--sh-1); }
+  .shadow-dropdown { box-shadow: var(--sh-2); }
+  .shadow-modal { box-shadow: var(--sh-3); }
   .density-compact { --row-h: var(--row-h-compact); --cell-pad: var(--cell-pad-compact); }
   .density-standard { --row-h: var(--row-h-standard); --cell-pad: var(--cell-pad-standard); }
   .density-comfortable { --row-h: var(--row-h-comfortable); --cell-pad: var(--cell-pad-comfortable); }
@@ -46,7 +47,7 @@
      own background. Reduced-motion suppresses it below. */
   .cell-flash {
     /* base stays transparent so the overlay leaves no residue once the one-shot fade completes */
-    animation: ledger-cell-flash 0.6s ease-out;
+    animation: ledger-cell-flash var(--motion-slow-02) var(--ease-productive);
   }
   .cell-flash-up { --cell-flash-color: var(--pos-soft); }
   .cell-flash-down { --cell-flash-color: var(--neg-soft); }
@@ -67,16 +68,16 @@
   .ledger-scroll-thin::-webkit-scrollbar-corner { background: transparent; }
 
   /* Popover open: a brief fade + rise so menus/dialogs don't pop in hard. Reduced-motion gated. */
-  .popover-enter { animation: ledger-popover-enter 120ms ease-out; }
+  .popover-enter { animation: ledger-popover-enter var(--motion-fast-02) var(--ease-expressive); }
 
   /* Density switch animates row height instead of snapping. Scoped to the grid root so only its
      rows transition; header rows (fixed padding) never change height and so never animate. */
-  .ledger-density-anim tr { transition: height 200ms ease-out; }
+  .ledger-density-anim tr { transition: height var(--motion-moderate-02) var(--ease-emphasized); }
 
   .ledger-loading-shimmer {
     background: linear-gradient(100deg, var(--surface-2) 30%, var(--surface) 50%, var(--surface-2) 70%);
     background-size: 220% 100%;
-    animation: ledger-shimmer 1.4s ease-in-out infinite;
+    animation: ledger-shimmer var(--motion-slow-02) var(--ease-emphasized) infinite;
   }
 
   .ledger-loading-line {
@@ -87,7 +88,7 @@
     stroke-linejoin: round;
     stroke-dasharray: 520;
     stroke-dashoffset: 520;
-    animation: ledger-line-draw 2.4s ease-in-out infinite;
+    animation: ledger-line-draw calc(var(--motion-slow-02) * 3) var(--ease-emphasized) infinite;
   }
 
   .ledger-loading-line-secondary {
@@ -100,7 +101,7 @@
   .ledger-loading-donut-spin {
     transform-box: fill-box;
     transform-origin: center;
-    animation: ledger-spin 1.15s linear infinite;
+    animation: ledger-spin calc(var(--motion-slow-02) * 1.5) linear infinite;
   }
 
   .ledger-loading-donut-segment {
@@ -109,7 +110,7 @@
 
   .ledger-loading-bar {
     height: 18%;
-    animation: ledger-bars 1.1s ease-in-out infinite;
+    animation: ledger-bars calc(var(--motion-slow-02) * 1.5) var(--ease-emphasized) infinite;
   }
 
   .ledger-loading-sparkline {
@@ -119,16 +120,16 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-dasharray: 200;
-    animation: ledger-sparkline-run 1.6s linear infinite;
+    animation: ledger-sparkline-run calc(var(--motion-slow-02) * 2) linear infinite;
   }
 
   .ledger-loading-sparkline-dot {
     fill: currentColor;
-    animation: ledger-dot-pulse 1.6s ease-in-out infinite;
+    animation: ledger-dot-pulse calc(var(--motion-slow-02) * 2) var(--ease-emphasized) infinite;
   }
 
   .ledger-loading-dot {
-    animation: ledger-dot-bounce 1.2s ease-in-out infinite;
+    animation: ledger-dot-bounce calc(var(--motion-slow-02) * 1.5) var(--ease-emphasized) infinite;
   }
 
   .ledger-loading-progress {
@@ -143,11 +144,11 @@
     width: 40%;
     border-radius: inherit;
     background: linear-gradient(90deg, var(--accent), var(--pos));
-    animation: ledger-progress-sweep 1.4s cubic-bezier(.65, 0, .35, 1) infinite;
+    animation: ledger-progress-sweep calc(var(--motion-slow-02) * 2) var(--ease-emphasized) infinite;
   }
 
   .ledger-loading-count-track i {
-    animation: ledger-count-fill 2.2s ease-in-out infinite;
+    animation: ledger-count-fill calc(var(--motion-slow-02) * 3) var(--ease-emphasized) infinite;
   }
 
   .ledger-loading-arc {
@@ -160,11 +161,11 @@
   }
 
   .ledger-loading-arc-one {
-    animation: ledger-spin 1.1s linear infinite;
+    animation: ledger-spin calc(var(--motion-slow-02) * 1.5) linear infinite;
   }
 
   .ledger-loading-arc-two {
-    animation: ledger-spin 1.5s linear infinite reverse;
+    animation: ledger-spin calc(var(--motion-slow-02) * 2) linear infinite reverse;
   }
 
   .ledger-loading-arc-two circle {
@@ -173,7 +174,7 @@
   }
 
   .ledger-loading-arc-three {
-    animation: ledger-spin .9s linear infinite;
+    animation: ledger-spin var(--motion-slow-02) linear infinite;
   }
 
   .ledger-loading-arc-three circle {

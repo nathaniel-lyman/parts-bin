@@ -12,7 +12,7 @@ export function SuggestedPrompts({ prompts, onSelect }: SuggestedPromptsProps) {
           key={prompt}
           type="button"
           onClick={() => onSelect(prompt)}
-          className="micro rounded-[2px] border border-line bg-surface-2 px-2 py-1 text-muted transition-colors hover:border-accent hover:text-accent"
+          className="micro rounded-sm border border-line bg-surface-2 px-2 py-1 text-muted transition-colors hover:border-accent hover:text-accent"
         >
           {prompt}
         </button>

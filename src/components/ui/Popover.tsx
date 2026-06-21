@@ -38,7 +38,7 @@ export function Popover({ trigger, children, align = 'start', className }: Popov
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-8 items-center justify-center rounded-[2px] border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
+        className="inline-flex h-8 items-center justify-center rounded-sm border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
       >
         {trigger}
       </button>
@@ -79,7 +79,7 @@ function PopoverPanel({ id, panelRef, style, className, onClose, children }: Pop
       role="dialog"
       tabIndex={-1}
       style={style}
-      className={cx('z-50 w-72 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown', className)}
+      className={cx('z-50 w-72 rounded-md border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown', className)}
     >
       {children}
     </div>

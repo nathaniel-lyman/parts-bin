@@ -34,7 +34,7 @@ export interface StatusBadgeProps {
  */
 export function StatusBadge({ status, tone = 'neutral', className }: StatusBadgeProps) {
   return (
-    <span className={cx('micro inline-flex items-center gap-1.5 rounded-[2px] px-1.5 py-0.5', toneBg[tone], className)}>
+    <span className={cx('micro inline-flex items-center gap-1.5 rounded-pill px-1.5 py-0.5', toneBg[tone], className)}>
       <span className={cx('h-1.5 w-1.5 rounded-full', toneDot[tone])} />
       {status}
     </span>

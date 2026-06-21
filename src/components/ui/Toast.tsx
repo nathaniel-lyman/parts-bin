@@ -14,7 +14,7 @@ export interface ToastProps {
 
 export function Toast({ tone = 'accent', title, action, onDismiss, children }: ToastProps) {
   return (
-    <div className={`shadow-dropdown min-w-56 max-w-96 rounded-[2px] border border-line border-l-2 bg-surface px-3 py-2 text-[13px] text-ink ${edge[tone]}`}>
+    <div className={`shadow-dropdown min-w-56 max-w-96 rounded-md border border-line border-l-2 bg-surface px-3 py-2 text-[13px] text-ink ${edge[tone]}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="grid gap-0.5">
           {title && <span className="font-semibold">{title}</span>}

@@ -32,13 +32,13 @@ export function DataGridSkeletonRows({
         <tr key={rowIndex} className="border-t border-line" style={{ height: 'var(--row-h)' }}>
           {enableRowSelection && (
             <td className="w-10 px-2">
-              <span className="ledger-loading-shimmer block h-3.5 w-3.5 rounded-[2px]" />
+              <span className="ledger-loading-shimmer block h-3.5 w-3.5 rounded-sm" />
             </td>
           )}
           {Array.from({ length: columnCount }).map((_, colIndex) => (
             <td key={colIndex} className="px-3">
               <span
-                className="ledger-loading-shimmer block h-3 rounded-[2px]"
+                className="ledger-loading-shimmer block h-3 rounded-sm"
                 style={{ width: `${widths[(rowIndex + colIndex) % widths.length]}%` }}
               />
             </td>

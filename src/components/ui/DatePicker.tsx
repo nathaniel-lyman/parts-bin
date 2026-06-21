@@ -57,7 +57,7 @@ export function DatePicker({ label, value = '', onValueChange, id, className, di
           onInput={(event) => onValueChange?.(event.currentTarget.value)}
           onChange={(event) => onValueChange?.(event.target.value)}
           className={cx(
-            'h-8 rounded-[2px] border border-line bg-surface px-2 pr-9 text-[13px] text-ink focus:border-accent disabled:bg-surface-2 disabled:text-faint',
+            'h-8 rounded-sm border border-line bg-surface px-2 pr-9 text-[13px] text-ink focus:border-accent disabled:bg-surface-2 disabled:text-faint',
             !hasWidthUtility(className) && 'w-full',
             className,
           )}
@@ -69,7 +69,7 @@ export function DatePicker({ label, value = '', onValueChange, id, className, di
           title={calendarLabel}
           disabled={disabled}
           onClick={openNativePicker}
-          className="absolute right-1 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-[2px] text-muted hover:bg-surface-2 hover:text-ink focus:outline-none focus:ring-2 focus:ring-accent disabled:text-faint"
+          className="absolute right-1 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-muted hover:bg-surface-2 hover:text-ink focus:outline-none focus:ring-2 focus:ring-accent disabled:text-faint"
         >
           <CalendarGlyph className="h-3.5 w-3.5" />
         </button>
@@ -137,7 +137,7 @@ export function DateRangePicker({
         aria-expanded={open}
         aria-controls={open ? pickerId : undefined}
         onClick={() => (open ? closePanel() : openPanel())}
-        className="inline-flex h-8 min-w-56 items-center justify-between gap-3 rounded-[2px] border border-line bg-surface px-3 text-left text-[13px] text-ink hover:bg-surface-2"
+        className="inline-flex h-8 min-w-56 items-center justify-between gap-3 rounded-sm border border-line bg-surface px-3 text-left text-[13px] text-ink hover:bg-surface-2"
       >
         <span className="micro shrink-0">{label}</span>
         <span className={cx('num truncate text-[12px]', labelText === emptyLabel && 'text-muted')}>{labelText}</span>
@@ -203,7 +203,7 @@ function DateRangePanel({ id, panelRef, style, ariaLabel, onClose, children }: D
       aria-label={ariaLabel}
       tabIndex={-1}
       style={style}
-      className="z-50 grid w-[340px] max-w-[calc(100vw-2rem)] gap-3 border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
+      className="z-50 grid w-[340px] max-w-[calc(100vw-2rem)] gap-3 rounded-md border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
     >
       {children}
     </div>

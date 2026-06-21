@@ -11,8 +11,19 @@
   --review: var(--warn); --review-soft: var(--warn-soft);
   --reject: var(--neg);  --reject-soft: var(--neg-soft);
 
-  --radius: 2px;
-  --radius-lg: 4px;
+  --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 10px; --r-pill: 20px;
+  --radius-sm: var(--r-sm); --radius-md: var(--r-md); --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl); --radius-pill: var(--r-pill);
+  --radius: var(--r-sm);
+  --sh-1: 0 1px 2px rgb(22 22 22 / .10), 0 1px 3px rgb(22 22 22 / .05);
+  --sh-2: 0 2px 4px rgb(22 22 22 / .05), 0 6px 18px rgb(22 22 22 / .09);
+  --sh-3: 0 3px 6px rgb(22 22 22 / .04), 0 8px 20px rgb(22 22 22 / .10);
+  --motion-fast-01: 70ms; --motion-fast-02: 110ms;
+  --motion-moderate-01: 150ms; --motion-moderate-02: 240ms;
+  --motion-slow-01: 400ms; --motion-slow-02: 700ms;
+  --ease-productive: cubic-bezier(.2, 0, .38, .9);
+  --ease-expressive: cubic-bezier(.4, .14, .3, 1);
+  --ease-emphasized: cubic-bezier(.2, 0, 0, 1);
   --row-h-compact: 40px;       --cell-pad-compact: 0 12px;
   --row-h-standard: 48px;      --cell-pad-standard: 4px 12px;
   --row-h-comfortable: 56px;   --cell-pad-comfortable: 8px 12px;
@@ -39,5 +50,8 @@
   --warn: #f1c21b;  --warn-soft: #33290a;
   --review: var(--warn); --review-soft: var(--warn-soft);
   --reject: var(--neg);  --reject-soft: var(--neg-soft);
+  --sh-1: 0 1px 2px rgb(0 0 0 / .45);
+  --sh-2: 0 2px 10px rgb(0 0 0 / .55);
+  --sh-3: 0 6px 18px rgb(0 0 0 / .55);
   --shadow-pinned: 6px 0 8px -6px rgb(0 0 0 / .45);
 }

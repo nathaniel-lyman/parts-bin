@@ -53,7 +53,7 @@ export function CalendarIconButton({ label, onClick, className }: GlobalControlB
       title={label}
       onClick={onClick}
       className={cx(
-        'inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink',
+        'inline-flex h-8 w-8 items-center justify-center rounded-sm border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink',
         className,
       )}
     >
@@ -115,7 +115,7 @@ export function NotificationButton({ count = 0, onClick }: NotificationButtonPro
       aria-label={count > 0 ? `${count} notifications` : 'Notifications'}
       title="Notifications"
       onClick={onClick}
-      className="relative inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink"
+      className="relative inline-flex h-8 w-8 items-center justify-center rounded-sm border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink"
     >
       <BellGlyph className="h-4 w-4" />
       <NotificationBadge count={count} />

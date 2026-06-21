@@ -118,7 +118,7 @@ function WaterfallTooltip({ active, payload, valueFormatter }: WaterfallTooltipP
   if (!datum) return null
 
   return (
-    <div className="shadow-dropdown min-w-48 border border-line bg-surface px-3 py-2 text-[12px] text-ink">
+    <div className="shadow-dropdown min-w-48 rounded-md border border-line bg-surface px-3 py-2 text-[12px] text-ink">
       <div className="micro mb-2">{datum.label}</div>
       <dl className="grid gap-1">
         <div className="flex items-center justify-between gap-6">

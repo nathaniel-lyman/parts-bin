@@ -56,7 +56,7 @@ export function DataGridCellEditor({
     event.stopPropagation()
   }
 
-  const fieldClass = `h-7 w-full min-w-0 rounded-[2px] border bg-surface px-1.5 text-[13px] text-ink focus:outline-none ${
+  const fieldClass = `h-7 w-full min-w-0 rounded-sm border bg-surface px-1.5 text-[13px] text-ink focus:outline-none ${
     error ? 'border-neg ring-1 ring-neg' : 'border-accent ring-1 ring-accent'
   } ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`
 
@@ -91,7 +91,7 @@ export function DataGridCellEditor({
       {error && (
         <span
           role="alert"
-          className="micro shadow-dropdown absolute left-0 top-full z-30 mt-1 whitespace-nowrap rounded-[2px] border border-neg bg-surface px-1.5 py-0.5 text-neg"
+          className="micro shadow-dropdown absolute left-0 top-full z-30 mt-1 whitespace-nowrap rounded-md border border-neg bg-surface px-1.5 py-0.5 text-neg"
         >
           {error}
         </span>

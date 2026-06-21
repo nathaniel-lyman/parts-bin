@@ -43,7 +43,7 @@ export function DataGridColumnDragOverlay<TData>({
 
   return (
     <div
-      className="pointer-events-none overflow-hidden rounded-[2px] border border-line bg-surface text-ink opacity-80 shadow-dropdown"
+      className="pointer-events-none overflow-hidden rounded-md border border-line bg-surface text-ink opacity-80 shadow-dropdown"
       data-testid="column-drag-overlay"
       data-column-id={columnId}
       style={{ width }}

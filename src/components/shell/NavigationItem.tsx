@@ -20,7 +20,7 @@ function NavigationItemBase({ label, href, active, meta, collapsed, variant = 'p
       aria-current={active ? 'page' : undefined}
       title={collapsed && typeof label === 'string' ? label : undefined}
       className={cx(
-        'flex h-8 items-center rounded-[2px] px-2 text-[13px] hover:bg-surface-2',
+        'flex h-8 items-center rounded-sm px-2 text-[13px] hover:bg-surface-2',
         collapsed ? 'justify-center' : 'justify-between',
         active ? 'bg-accent-soft text-accent' : adminClass,
       )}

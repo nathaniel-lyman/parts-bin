@@ -2,7 +2,7 @@
 
 **Sharp & technical. Corporate polish with personality.** Built for data-heavy dashboards with simple CRUD. Targets Tailwind CSS + shadcn/ui.
 
-The personality comes from four moves: monospace numerals everywhere data lives, uppercase micro-labels with wide tracking, a near-zero border radius that makes everything feel machined, and a disciplined slate palette with blue actions, purple recommendation intelligence, and explicit review/reject semantics. Everything else stays quiet so the data is the loudest thing on screen.
+The personality comes from four moves: monospace numerals everywhere data lives, uppercase micro-labels with wide tracking, a restrained Plex·Elevate radius/elevation scale, and a disciplined analytics palette with blue actions plus explicit review/reject semantics. Everything else stays quiet so the data is the loudest thing on screen.
 
 ---
 
@@ -12,7 +12,7 @@ The personality comes from four moves: monospace numerals everywhere data lives,
 
 **Density without claustrophobia.** Default to compact spacing (40px table rows, 16px card padding) but enforce a strict 4px spacing grid and hairline (1px) dividers so density reads as precision, not clutter.
 
-**Motion is utilitarian.** 120–160ms ease-out transitions on hover/focus/open. No springs, no bounces. The one indulgence: numbers may tick/fade when they update.
+**Motion is utilitarian.** Use the Plex·Elevate motion tokens: productive motion for data updates, expressive motion for floating surfaces entering view, and emphasized motion for larger layout changes. No springs, no bounces. The one indulgence: numbers may tick/fade when they update.
 
 **Honest hierarchy.** Three text sizes do 90% of the work: 13px body, 12px secondary, 11px micro-labels. Headings use a display face sparingly — that contrast is the polish.
 
@@ -90,8 +90,8 @@ Sequential: primary ramp `--accent-soft → --accent`. Diverging: `--neg → neu
 
 ## 4. Shape, depth, and texture
 
-- **Radius:** `2px` on everything (buttons, inputs, cards, badges). `4px` max for modals. This single decision does the most "sharp & technical" work.
-- **Borders over shadows.** Every surface gets a 1px `--line` border. Shadows only for floating layers: modal `0 16px 48px rgb(0 0 0 / .18)`, dropdown `0 4px 16px rgb(0 0 0 / .10)`.
+- **Radius:** follow the Plex·Elevate scale: `--r-sm: 4px` for buttons, inputs, square chips, and icons; `--r-md: 6px` for segmented controls, dropdowns, and inline notifications; `--r-lg: 8px` for cards, panels, and tables; `--r-xl: 10px` for modals and dialogs; `--r-pill: 20px` for tags, status pills, and toggles.
+- **Elevation:** flat dense tables still use borders first. Resting cards use `--sh-1`; dropdowns, popovers, and sticky bars use `--sh-2`; modals and drawers use `--sh-3`. Dark mode uses stronger black shadows but relies primarily on surface tone and `--line` for separation.
 - **Focus ring:** `2px solid --accent`, `2px` offset. Visible, square, proud. Keyboard users are first-class in CRUD apps.
 - **Personality texture (optional):** the app background may carry a faint 24px dot-grid (`radial-gradient` at 3% opacity) — terminal-paper energy, invisible until you look.
 
@@ -125,7 +125,21 @@ Sequential: primary ramp `--accent-soft → --accent`. Diverging: `--neg → neu
   --muted-bg: var(--surface-2);   --muted-foreground: var(--muted);
   --destructive: var(--neg);      --destructive-foreground: #ffffff;
   --border: var(--line);          --input: var(--line);
-  --ring: var(--accent);          --radius: 2px;
+  --ring: var(--accent);
+
+  --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 10px; --r-pill: 20px;
+  --radius-sm: var(--r-sm); --radius-md: var(--r-md); --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl); --radius-pill: var(--r-pill);
+  --radius: var(--r-sm);
+  --sh-1: 0 1px 2px rgb(22 22 22 / .10), 0 1px 3px rgb(22 22 22 / .05);
+  --sh-2: 0 2px 4px rgb(22 22 22 / .05), 0 6px 18px rgb(22 22 22 / .09);
+  --sh-3: 0 3px 6px rgb(22 22 22 / .04), 0 8px 20px rgb(22 22 22 / .10);
+  --motion-fast-01: 70ms; --motion-fast-02: 110ms;
+  --motion-moderate-01: 150ms; --motion-moderate-02: 240ms;
+  --motion-slow-01: 400ms; --motion-slow-02: 700ms;
+  --ease-productive: cubic-bezier(.2, 0, .38, .9);
+  --ease-expressive: cubic-bezier(.4, .14, .3, 1);
+  --ease-emphasized: cubic-bezier(.2, 0, 0, 1);
 }
 
 .dark {
@@ -138,6 +152,9 @@ Sequential: primary ramp `--accent-soft → --accent`. Diverging: `--neg → neu
   --warn: #f59e0b;  --warn-soft: #451a03;
   --review: var(--warn); --review-soft: var(--warn-soft);
   --reject: var(--neg);  --reject-soft: var(--neg-soft);
+  --sh-1: 0 1px 2px rgb(0 0 0 / .45);
+  --sh-2: 0 2px 10px rgb(0 0 0 / .55);
+  --sh-3: 0 6px 18px rgb(0 0 0 / .55);
 }
 
 body {
@@ -178,7 +195,14 @@ export default {
         mono: ['"JetBrains Mono"', 'monospace'],
         display: ['"Space Grotesk"', 'sans-serif'],
       },
-      borderRadius: { DEFAULT: '2px', md: '2px', lg: '4px' },
+      borderRadius: {
+        DEFAULT: 'var(--r-sm)',
+        sm: 'var(--r-sm)',
+        md: 'var(--r-md)',
+        lg: 'var(--r-lg)',
+        xl: 'var(--r-xl)',
+        pill: 'var(--r-pill)',
+      },
     },
   },
 }
@@ -199,17 +223,17 @@ const gridProps = { stroke: 'var(--line)', strokeDasharray: '3 3', vertical: fal
 // diverging stacked bars: <BarChart stackOffset="sign"> + <ReferenceLine y={0} stroke="var(--muted)" />
 ```
 
-**KPI stat card.** Eyebrow micro-label → display-font value (mono numerals) → delta badge with glyph → optional sparkline in accent at 60% opacity. Border, no shadow, 16px padding.
+**KPI stat card.** Eyebrow micro-label → display-font value (mono numerals) → delta badge with glyph → optional sparkline in accent at 60% opacity. Border plus `--sh-1`, `--r-lg`, 16px padding.
 
 **Data table.** The centerpiece. Built on TanStack Table (headless) so sorting, filtering, and column visibility are state-driven, with the theme applied at render time via `flexRender`. Include a "Columns" menu (popover with checkboxes) so users add/remove columns; ship secondary columns (ARR, Since, IDs) hidden by default and persist the user's choice to `localStorage`. Actions and selection columns set `enableHiding: false`. Sortable headers expose `aria-sort`. Header row on `--surface-2` with micro-label columns; 40px body rows; numerals right-aligned in mono; hairline row dividers only (no vertical rules, no zebra). Row hover = `--surface-2`; selected = `--accent-soft` with a 2px accent left edge. Sort indicator: `▲/▼` in accent next to the active column. Row actions (edit/delete) are icon buttons that appear on hover.
 
-**Forms (CRUD).** Inputs 32px tall, `--surface` on `--line` border, 2px radius; focus swaps border to accent + ring. Labels are micro-labels above the field. Use modals for create/edit (480px, 4px radius, heavy shadow, micro-label section dividers). Destructive confirms: red outline button, never a red-filled primary until the final confirm.
+**Forms (CRUD).** Inputs 32px tall, `--surface` on `--line` border, `--r-sm`; focus swaps border to accent + ring. Labels are micro-labels above the field. Use modals for create/edit (480px, `--r-xl`, `--sh-3`, micro-label section dividers). Destructive confirms: red outline button, never a red-filled primary until the final confirm.
 
-**Buttons.** Primary = accent fill; Secondary = surface + line border; Ghost = text-only; Destructive = neg outline → neg fill on confirm step. Heights: 32px default, 28px compact (in-table). All 2px radius, 13px/500.
+**Buttons.** Primary = accent fill; Secondary = surface + line border; Ghost = text-only; Destructive = neg outline → neg fill on confirm step. Heights: 32px default, 28px compact (in-table). All `--r-sm`, 13px/500, productive motion.
 
-**Badges/status.** Soft-tint background + strong-color text + 6px status dot, micro-label type. e.g. `Active` = pos-soft/pos · `Review` = warn-soft/warn · `Blocked` = neg-soft/neg.
+**Badges/status.** Soft-tint background + strong-color text + 6px status dot, micro-label type, `--r-pill`. e.g. `Active` = pos-soft/pos · `Review` = warn-soft/warn · `Blocked` = neg-soft/neg.
 
-**Toasts.** Bottom-right, surface + border + dropdown shadow, 4px accent (or semantic) left edge, auto-dismiss 4s.
+**Toasts.** Bottom-right, surface + border + dropdown shadow (`--sh-2`), `--r-md`, 4px accent (or semantic) left edge, auto-dismiss 4s.
 
 **Empty states.** Mono-font ASCII-ish glyph or sparse line icon, one sentence in `--muted`, one primary action. Never illustrations — wrong personality.
 

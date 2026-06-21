@@ -273,7 +273,7 @@ export function CommandPalette({
           aria-expanded={isOpen}
           aria-controls={isOpen ? dialogId : undefined}
           onClick={() => setPaletteOpen(true)}
-          className="inline-flex h-8 items-center justify-center gap-2 rounded-[2px] border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
         >
           <span>{trigger}</span>
           {shortcutLabel && (
@@ -297,7 +297,7 @@ export function CommandPalette({
             aria-labelledby={titleId}
             tabIndex={-1}
             className={cx(
-              'mx-auto grid w-[640px] max-w-full overflow-hidden rounded-[4px] border border-line bg-surface shadow-modal',
+              'mx-auto grid w-[640px] max-w-full overflow-hidden rounded-xl border border-line bg-surface shadow-modal',
               className,
             )}
             onClick={(event) => event.stopPropagation()}
@@ -350,7 +350,7 @@ export function CommandPalette({
                             onClick={() => runCommand(match)}
                             onMouseEnter={() => !match.item.disabled && setActiveIndex(index)}
                             className={cx(
-                              'grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-[2px] px-2 py-2 text-left text-[13px] text-ink hover:bg-surface-2',
+                              'grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-sm px-2 py-2 text-left text-[13px] text-ink hover:bg-surface-2',
                               active && 'bg-accent-soft text-accent',
                               match.item.disabled && 'cursor-default text-faint',
                             )}

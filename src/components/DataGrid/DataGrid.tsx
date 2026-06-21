@@ -899,7 +899,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   return (
     <div
       ref={rootRef}
-      className={`ledger-density-anim rounded-[2px] border border-line bg-surface ${densityClass(state.density)}`}
+      className={`ledger-density-anim rounded-lg border border-line bg-surface shadow-card ${densityClass(state.density)}`}
       data-pinned-left={pinnedGroups.left.length}
       data-pinned-center={pinnedGroups.center.length}
       data-pinned-right={pinnedGroups.right.length}

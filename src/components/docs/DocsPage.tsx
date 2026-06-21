@@ -117,7 +117,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
                       <h3 className="m-0 text-[14px] font-semibold text-ink">{recipe.name}</h3>
                       <p className="m-0 text-[12px] text-muted">{recipe.description}</p>
                     </div>
-                    <span className="h-5 w-5 shrink-0 rounded-[2px] border border-line bg-accent" aria-hidden="true" />
+                    <span className="h-5 w-5 shrink-0 rounded-sm border border-line bg-accent" aria-hidden="true" />
                   </div>
                   <div className="grid gap-2 border border-line bg-surface p-2">
                     <div className="flex items-center justify-between gap-2">

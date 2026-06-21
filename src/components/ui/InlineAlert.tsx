@@ -33,7 +33,7 @@ export function InlineAlert({ tone = 'accent', title, children, action, onDismis
     <div
       role={role}
       className={cx(
-        'flex items-start gap-3 rounded-[2px] border border-line border-l-2 bg-surface px-3 py-2 text-[13px] text-ink',
+        'flex items-start gap-3 rounded-md border border-line border-l-2 bg-surface px-3 py-2 text-[13px] text-ink',
         edge[tone],
         className,
       )}

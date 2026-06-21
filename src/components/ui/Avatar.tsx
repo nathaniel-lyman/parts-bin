@@ -30,8 +30,8 @@ export function Avatar({ name, src, initials, size = 'md', status, className }: 
   const fallback = initials ?? name.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
 
   return (
-    <span className={cx('relative inline-grid shrink-0 place-items-center rounded-[2px] border border-line bg-surface-2 font-semibold text-ink', avatarSizes[size], className)}>
-      {src ? <img src={src} alt="" className="h-full w-full rounded-[2px] object-cover" /> : <span aria-hidden="true">{fallback}</span>}
+    <span className={cx('relative inline-grid shrink-0 place-items-center rounded-sm border border-line bg-surface-2 font-semibold text-ink', avatarSizes[size], className)}>
+      {src ? <img src={src} alt="" className="h-full w-full rounded-sm object-cover" /> : <span aria-hidden="true">{fallback}</span>}
       <span className="sr-only">{name}</span>
       {status && <PresenceBadge status={status} className="absolute -bottom-0.5 -right-0.5" />}
     </span>
@@ -68,7 +68,7 @@ export function AvatarGroup({ users, max = 4, size = 'md', className }: AvatarGr
         <Avatar key={user.name} {...user} size={size} className="-ml-1 first:ml-0" />
       ))}
       {overflow > 0 && (
-        <span className={cx('-ml-1 inline-grid shrink-0 place-items-center rounded-[2px] border border-line bg-surface text-muted', avatarSizes[size])}>
+        <span className={cx('-ml-1 inline-grid shrink-0 place-items-center rounded-sm border border-line bg-surface text-muted', avatarSizes[size])}>
           +{overflow}
         </span>
       )}
@@ -86,7 +86,7 @@ export interface AssigneeChipProps {
 
 export function AssigneeChip({ name, src, status, meta, onRemove }: AssigneeChipProps) {
   return (
-    <span className="inline-flex max-w-full items-center gap-2 rounded-[2px] border border-line bg-surface px-2 py-1 text-[13px] text-ink">
+    <span className="inline-flex max-w-full items-center gap-2 rounded-sm border border-line bg-surface px-2 py-1 text-[13px] text-ink">
       <Avatar name={name} src={src} status={status} size="sm" />
       <span className="min-w-0 truncate font-medium">{name}</span>
       {meta && <span className="text-[12px] text-muted">{meta}</span>}

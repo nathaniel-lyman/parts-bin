@@ -123,7 +123,7 @@ export function SettingsPage() {
                 <li key={section.id}>
                   <a
                     href={`#${section.id}`}
-                    className="block rounded-[2px] px-2 py-1.5 text-[13px] text-muted hover:bg-surface-2 hover:text-ink"
+                    className="block rounded-sm px-2 py-1.5 text-[13px] text-muted hover:bg-surface-2 hover:text-ink"
                   >
                     {section.label}
                   </a>

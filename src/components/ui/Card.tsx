@@ -10,7 +10,7 @@ export interface CardProps {
 
 export function Card({ title, description, actions, children, footer }: CardProps) {
   return (
-    <section className="min-w-0 rounded-[2px] border border-line bg-surface">
+    <section className="min-w-0 rounded-lg border border-line bg-surface shadow-card">
       {(title || description || actions) && (
         <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
           <div className="grid min-w-0 gap-1">

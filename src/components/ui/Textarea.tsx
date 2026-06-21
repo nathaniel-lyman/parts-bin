@@ -7,7 +7,7 @@ export function Textarea({ className, ...rest }: TextareaProps) {
   return (
     <textarea
       className={cx(
-        'min-h-24 w-full resize-y rounded-[2px] border border-line bg-surface px-2 py-2 text-[13px] text-ink placeholder:text-faint focus:border-accent disabled:bg-surface-2 disabled:text-faint',
+        'min-h-24 w-full resize-y rounded-sm border border-line bg-surface px-2 py-2 text-[13px] text-ink placeholder:text-faint focus:border-accent disabled:bg-surface-2 disabled:text-faint',
         className,
       )}
       {...rest}

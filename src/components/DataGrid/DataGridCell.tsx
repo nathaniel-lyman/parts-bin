@@ -88,7 +88,7 @@ function DataGridCellComponent<TData>({
     padding: isActions ? '0.25rem 0.5rem' : 'var(--cell-pad)',
     boxSizing: isActions ? 'border-box' : undefined,
     transform: isPreviewActive || previewOffset === 0 ? undefined : `translateX(${previewOffset}px)`,
-    transition: dragPreview ? 'transform 160ms ease' : undefined,
+    transition: dragPreview ? 'transform var(--motion-moderate-01) var(--ease-productive)' : undefined,
     opacity: isPreviewActive ? 0.28 : undefined,
     ...(pinnedSide === 'left' ? { position: 'sticky', left: pinnedOffset, zIndex: 10 } : {}),
     ...(pinnedSide === 'right' ? { position: 'sticky', right: pinnedOffset, zIndex: 10 } : {}),
@@ -236,7 +236,7 @@ function DataGridCellComponent<TData>({
           // tabIndex -1 on purpose: focusable copy icons in every cell would break the grid's
           // roving tabindex; the reveal rides on the td's own roving focus via group-focus-within.
           tabIndex={-1}
-          className="absolute right-1 top-1/2 -translate-y-1/2 rounded-[2px] border border-line bg-surface p-0.5 text-muted opacity-0 pointer-events-none transition-opacity hover:text-ink group-hover/cell:opacity-100 group-hover/cell:pointer-events-auto group-focus-within/cell:opacity-100 group-focus-within/cell:pointer-events-auto"
+          className="absolute right-1 top-1/2 -translate-y-1/2 rounded-sm border border-line bg-surface p-0.5 text-muted opacity-0 pointer-events-none transition-opacity hover:text-ink group-hover/cell:opacity-100 group-hover/cell:pointer-events-auto group-focus-within/cell:opacity-100 group-focus-within/cell:pointer-events-auto"
           onClick={(event) => {
             event.stopPropagation()
             onCopyCell!(cell.row.id, cell.column.id)

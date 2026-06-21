@@ -13,7 +13,7 @@ export interface ChartCardProps {
 
 export function ChartCard({ title, description, metric, actions, children, className }: ChartCardProps) {
   return (
-    <section className={cx('min-w-0 rounded-[2px] border border-line bg-surface', className)}>
+    <section className={cx('min-w-0 rounded-lg border border-line bg-surface shadow-card', className)}>
       <header className="grid min-w-0 gap-3 border-b border-line px-4 py-3 sm:flex sm:items-start sm:justify-between">
         <div className="grid min-w-0 gap-1">
           <h2 className="m-0 text-[13px] font-semibold leading-snug text-ink">{title}</h2>
@@ -50,7 +50,7 @@ export function ChartLegend({ items, className }: ChartLegendProps) {
       {items.map((item) => (
         <li key={item.id} className="inline-flex items-center gap-1.5 text-[12px] text-muted">
           <span
-            className={cx('h-2 w-2 rounded-[2px]', item.colorClassName ?? 'bg-accent')}
+            className={cx('h-2 w-2 rounded-sm', item.colorClassName ?? 'bg-accent')}
             style={item.color ? { backgroundColor: item.color } : undefined}
             aria-hidden="true"
           />
@@ -76,13 +76,13 @@ export interface ChartTooltipContentProps {
 
 export function ChartTooltipContent({ label, rows, footer }: ChartTooltipContentProps) {
   return (
-    <div className="grid min-w-40 gap-2 border border-line bg-surface p-2 text-[12px] text-ink shadow-dropdown">
+    <div className="grid min-w-40 gap-2 rounded-md border border-line bg-surface p-2 text-[12px] text-ink shadow-dropdown">
       {label && <div className="micro text-muted">{label}</div>}
       <div className="grid gap-1">
         {rows.map((row, index) => (
           <div key={index} className="flex items-center justify-between gap-4">
             <span className="inline-flex min-w-0 items-center gap-1.5 text-muted">
-              <span className={cx('h-2 w-2 rounded-[2px] bg-accent', row.colorClassName)} aria-hidden="true" />
+              <span className={cx('h-2 w-2 rounded-sm bg-accent', row.colorClassName)} aria-hidden="true" />
               <span className="truncate">{row.label}</span>
             </span>
             <span className="num font-semibold text-ink">{row.value}</span>

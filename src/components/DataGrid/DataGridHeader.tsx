@@ -16,7 +16,7 @@ import type { GridFocus } from './keyboard'
 import type { ColumnPinning, ColumnVirtualWindow, DataGridNumberFormat, GridAction, DataGridColumn } from './types'
 
 const noopDispatch = () => {}
-const dragPreviewTransition = 'transform 160ms ease'
+const dragPreviewTransition = 'transform var(--motion-moderate-01) var(--ease-productive)'
 /** Header free-text/number/date filters dispatch after the user pauses, not on every keystroke. */
 const FILTER_DEBOUNCE_MS = 200
 const normalizeFilterDraft = (raw: string | number) => (raw === '' || raw === undefined ? '' : String(raw))
@@ -77,7 +77,7 @@ function FloatingFilterInput({
 
   return (
     <input
-      className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink placeholder:text-faint"
+      className="h-7 w-full rounded-sm border border-line bg-surface px-2 text-[12px] text-ink placeholder:text-faint"
       aria-label={`Filter ${label}`}
       type={inputType}
       value={draft}
@@ -544,7 +544,7 @@ export function DataGridHeader<TData>({
                   return (
                     <th key={column.id} className="border-r border-line px-3 py-2" data-column-id={column.id} style={previewStyle}>
                       <div
-                        className="flex h-7 items-center justify-between gap-1 rounded-[2px] border border-line bg-surface-2 px-2 text-[12px] text-muted"
+                        className="flex h-7 items-center justify-between gap-1 rounded-sm border border-line bg-surface-2 px-2 text-[12px] text-muted"
                         title="Edit this filter from the column menu"
                         aria-label={`${label} filter: ${summary}`}
                       >
@@ -565,7 +565,7 @@ export function DataGridHeader<TData>({
                   return (
                     <th key={column.id} className="border-r border-line px-3 py-2" data-column-id={column.id} style={previewStyle}>
                       <select
-                        className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink"
+                        className="h-7 w-full rounded-sm border border-line bg-surface px-2 text-[12px] text-ink"
                         aria-label={`Filter ${label}`}
                         value={typeof currentValue === 'string' ? currentValue : ''}
                         onChange={(event) => setColumnFilter(column.id, 'is', event.target.value)}

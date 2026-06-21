@@ -490,7 +490,7 @@ export function DataGridColumnMenu({
             ref={menuRef}
             role="menu"
             aria-label={`${label} column menu`}
-            className="popover-enter shadow-dropdown fixed z-50 w-52 rounded-[2px] border border-line bg-surface py-1"
+            className="popover-enter shadow-dropdown fixed z-50 w-52 rounded-md border border-line bg-surface py-1"
             style={{ top: menuPosition.top, left: menuPosition.left }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -566,7 +566,7 @@ export function DataGridColumnMenu({
             ref={filterPanelRef}
             role="dialog"
             aria-label={`${label} filter`}
-            className="popover-enter shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
+            className="popover-enter shadow-modal fixed z-50 rounded-xl border border-line bg-surface p-4"
             style={{ top: filterPosition.top, left: filterPosition.left, width: filterPosition.width }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -600,7 +600,7 @@ export function DataGridColumnMenu({
                     }}
                   />
                   {showSecondCondition && displayedSecond ? (
-                    <div className="grid gap-2 rounded-[2px] border border-line bg-surface-2 p-2">
+                    <div className="grid gap-2 rounded-md border border-line bg-surface-2 p-2">
                       <div className="flex items-center justify-between gap-2">
                         <label className="flex items-center gap-2 text-[12px] text-muted">
                           <span>Match</span>
@@ -680,7 +680,7 @@ export function DataGridColumnMenu({
             ref={formatPanelRef}
             role="dialog"
             aria-label={`${label} number format`}
-            className="popover-enter shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
+            className="popover-enter shadow-modal fixed z-50 rounded-xl border border-line bg-surface p-4"
             style={{ top: formatPosition.top, left: formatPosition.left, width: formatPosition.width }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -780,7 +780,7 @@ export function DataGridColumnMenu({
                 />
                 Use thousands separators
               </label>
-              <div className="rounded-[2px] border border-line bg-surface-2 px-3 py-2">
+              <div className="rounded-md border border-line bg-surface-2 px-3 py-2">
                 <span className="micro mr-2 text-faint">Preview</span>
                 <span className="num text-ink">{formatDataGridNumber(12345.678, type, undefined, effectiveNumberFormat)}</span>
               </div>

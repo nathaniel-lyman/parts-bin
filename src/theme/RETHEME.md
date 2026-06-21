@@ -5,9 +5,9 @@ The entire look lives in `src/theme/`. To change it, you edit this folder — no
 
 ## Three moves
 
-1. **Colors / radius** — edit `tokens.css`. Every value (light in `:root`, dark in `.dark`)
-   controls one thing. Change `--accent` to re-color every button, link, focus ring, active
-   nav item, and the first chart series.
+1. **Colors / radius / elevation / motion** — edit `tokens.css`. Every value (light in
+   `:root`, dark in `.dark`) controls one thing. Change `--accent` to re-color every
+   button, link, focus ring, active nav item, and the first chart series.
 2. **Fonts** — edit `fonts.css` (the Google Fonts import) and the `--font-*` values in
    `theme.css`.
 3. **Done.** Components read these via Tailwind utilities (`bg-surface`, `text-accent`, …);
@@ -24,6 +24,9 @@ The entire look lives in `src/theme/`. To change it, you edit this folder — no
 | `--intel` / `--intel-soft` | recommendation intelligence and AI-priority cues |
 | `--pos` / `--warn` / `--neg` (+ `-soft`) | success / review / reject-blocker colors and tints |
 | `--review` / `--reject` (+ `-soft`) | semantic aliases for `--warn` / `--neg` |
+| `--r-sm` / `--r-md` / `--r-lg` / `--r-xl` / `--r-pill` | controls, popovers, cards, dialogs, and pills |
+| `--sh-1` / `--sh-2` / `--sh-3` | cards, dropdowns/popovers, and modals/drawers |
+| `--motion-*` / `--ease-*` | Carbon durations and Material-style easing curves |
 
 ## Worked example: emerald, softer corners
 
@@ -31,9 +34,11 @@ In `tokens.css` `:root`:
 ```css
 --accent: #059669;        /* primary action -> emerald */
 --accent-soft: #d1fae5;
---radius: 8px;            /* sharper 2px -> rounded 8px */
+--r-sm: 6px;              /* controls */
+--r-lg: 10px;             /* cards and tables */
 ```
-Also set `--radius: 8px` under `@theme inline` in `theme.css`. Reload — every control re-skins.
+Also mirror the radius scale under `@theme inline` in `theme.css` using the `--r-*`
+tokens. Reload — every token-backed control, surface, and overlay re-skins.
 
 ## Theme recipes
 

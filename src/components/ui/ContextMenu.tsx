@@ -85,7 +85,7 @@ export function ContextMenu({ items, children, className }: ContextMenuProps) {
             event.preventDefault()
             setPosition(null)
           }}
-          className="fixed z-50 w-56 border border-line bg-surface p-1 shadow-dropdown"
+          className="fixed z-50 w-56 rounded-md border border-line bg-surface p-1 shadow-dropdown"
         >
           {items.map((item, index) => {
             const descriptionId = item.description ? `${menuId}-${item.id}-description` : undefined

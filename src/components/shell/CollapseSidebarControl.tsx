@@ -14,7 +14,7 @@ export function CollapseSidebarControl({ collapsed, className, ...rest }: Collap
       aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       className={cx(
-        'inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink',
+        'inline-flex h-8 w-8 items-center justify-center rounded-sm border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink',
         className,
       )}
       {...rest}

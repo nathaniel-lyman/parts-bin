@@ -40,7 +40,7 @@ export function EventRow({
 }: EventRowProps) {
   return (
     <article className={cx('grid gap-2 border-b border-line px-3 py-3 last:border-b-0 sm:grid-cols-[auto_1fr_auto]', className)}>
-      <div className={cx('grid h-8 w-8 shrink-0 place-items-center rounded-[2px] text-[13px] font-semibold', toneClasses[tone])} aria-hidden="true">
+      <div className={cx('grid h-8 w-8 shrink-0 place-items-center rounded-sm text-[13px] font-semibold', toneClasses[tone])} aria-hidden="true">
         {icon ?? title?.toString().slice(0, 1)}
       </div>
       <div className="grid min-w-0 gap-1">
@@ -90,7 +90,7 @@ export function Timeline({ items, className }: TimelineProps) {
       {items.map((item) => (
         <li key={item.id} className="grid grid-cols-[2rem_1fr] gap-3 px-3 py-3">
           <div className="grid justify-items-center">
-            <span className={cx('grid h-7 w-7 place-items-center rounded-[2px] text-[12px] font-semibold', toneClasses[item.tone ?? 'neutral'])} aria-hidden="true">
+            <span className={cx('grid h-7 w-7 place-items-center rounded-sm text-[12px] font-semibold', toneClasses[item.tone ?? 'neutral'])} aria-hidden="true">
               {item.icon ?? item.title?.toString().slice(0, 1)}
             </span>
             <span className="mt-2 min-h-5 w-px flex-1 bg-line" aria-hidden="true" />

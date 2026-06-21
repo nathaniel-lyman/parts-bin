@@ -23,7 +23,7 @@ export function Button({ variant = 'secondary', size = 'default', loading = fals
   return (
     <button
       className={cx(
-        'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[2px] text-[13px] font-medium transition-[background,opacity] duration-150 ease-out disabled:opacity-50',
+        'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-sm text-[13px] font-medium transition-[background,opacity] duration-[var(--motion-moderate-01)] ease-[var(--ease-productive)] disabled:opacity-50',
         variants[variant],
         sizes[size],
         className,

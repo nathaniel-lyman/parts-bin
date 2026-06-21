@@ -53,7 +53,7 @@ export function Tooltip({ children, content, side = 'top' }: TooltipProps) {
         role="tooltip"
         aria-hidden={visible ? undefined : true}
         className={cx(
-          'pointer-events-none absolute left-1/2 z-40 w-max max-w-64 -translate-x-1/2 border border-line bg-surface px-2 py-1 text-[12px] text-ink shadow-dropdown transition-opacity',
+          'pointer-events-none absolute left-1/2 z-40 w-max max-w-64 -translate-x-1/2 rounded-md border border-line bg-surface px-2 py-1 text-[12px] text-ink shadow-dropdown transition-opacity',
           visible ? 'opacity-100' : 'opacity-0',
           side === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
         )}

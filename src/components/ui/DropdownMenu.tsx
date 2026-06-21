@@ -126,7 +126,7 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={onTriggerKeyDown}
-        className="inline-flex h-8 items-center justify-center rounded-[2px] border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
+        className="inline-flex h-8 items-center justify-center rounded-sm border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
       >
         {label}
       </button>
@@ -136,7 +136,7 @@ export function DropdownMenu({ label, items, align = 'start' }: DropdownMenuProp
           id={menuId}
           role="menu"
           style={menuStyle}
-          className="z-50 w-56 border border-line bg-surface p-1 shadow-dropdown"
+          className="z-50 w-56 rounded-md border border-line bg-surface p-1 shadow-dropdown"
         >
           {items.map((item, index) => {
             const descriptionId = item.description ? `${menuId}-${item.id}-description` : undefined

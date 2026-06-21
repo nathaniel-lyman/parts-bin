@@ -43,7 +43,7 @@ export function Stepper({ steps, currentStepId, onStepSelect, orientation = 'hor
         const inferredState: StepState = step.state ?? (step.id === currentStepId ? 'current' : currentIndex !== -1 && index < currentIndex ? 'complete' : 'upcoming')
         const content = (
           <>
-            <span className={cx('grid h-7 w-7 shrink-0 place-items-center rounded-[2px] border text-[12px] font-semibold', stepStateClasses[inferredState])}>
+            <span className={cx('grid h-7 w-7 shrink-0 place-items-center rounded-sm border text-[12px] font-semibold', stepStateClasses[inferredState])}>
               {inferredState === 'complete' ? '✓' : index + 1}
             </span>
             <span className="grid min-w-0 gap-0.5 text-left">

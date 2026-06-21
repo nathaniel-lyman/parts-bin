@@ -24,7 +24,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
     }
   }
   return (
-    <div className="overflow-hidden rounded-[2px] border border-line bg-surface-2">
+    <div className="overflow-hidden rounded-lg border border-line bg-surface-2">
       <div className="flex items-center justify-between border-b border-line px-2 py-0.5">
         <span className="micro text-muted">{language ?? 'code'}</span>
         <IconButton size="compact" aria-label="Copy code" onClick={copy}>⧉</IconButton>

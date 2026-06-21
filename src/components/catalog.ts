@@ -990,11 +990,11 @@ const columns: DataGridColumn<Product>[] = [
   }),
   defineComponent(Sidebar, {
     name: 'Sidebar', import: './components/shell', category: 'shell',
-    purpose: 'Primary left navigation with brand lockup, nav items, and footer.',
-    use_when: 'The app-level navigation rail inside AppShell.',
-    props: ['brand', 'items', 'footer'],
+    purpose: 'Primary left navigation with brand lockup, nav items, footer, and optional resize handle.',
+    use_when: 'The app-level navigation rail inside AppShell; opt into resizing for layouts that need adjustable side panels.',
+    props: ['brand', 'items', 'footer', 'resizable'],
     related: ['AppShell', 'TopNav', 'Breadcrumbs'],
-    snippet: `<Sidebar brand={<Logo />} items={[{ label: 'Projects', href: '/projects', active: true }]} />`,
+    snippet: `<Sidebar brand={<Logo />} items={[{ label: 'Projects', href: '/projects', active: true }]} resizable />`,
   }),
   defineComponent(TopNav, {
     name: 'TopNav', import: './components/shell', category: 'shell',

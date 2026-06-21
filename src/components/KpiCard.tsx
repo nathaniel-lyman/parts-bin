@@ -29,7 +29,7 @@ interface Props {
 export function KpiCard({ label, value, delta, spark, negSpark }: Props) {
   const deltaClass = delta == null ? '' : delta < 0 ? 'text-neg' : 'text-pos'
   return (
-    <div className="flex flex-col gap-2 rounded-[2px] border border-line bg-surface p-4">
+    <div className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-4 shadow-card">
       <div className="micro">{label}</div>
       <div className="flex items-end justify-between gap-2">
         <div>

@@ -49,10 +49,10 @@ function delayStyle(ms: number): CSSProperties {
 export function LoadingKpiSkeleton({ label = 'Loading KPI', className }: LoadingAnimationProps) {
   return (
     <LoadingStatus label={label} className={cx('grid w-full max-w-[220px] gap-3', className)}>
-      <div className="ledger-loading-shimmer h-2.5 w-[55%] rounded-[2px]" />
-      <div className="ledger-loading-shimmer h-8 w-[78%] rounded-[2px]" />
-      <div className="ledger-loading-shimmer mt-1 h-9 w-full rounded-[2px]" />
-      <div className="ledger-loading-shimmer h-2.5 w-[42%] rounded-[2px]" />
+      <div className="ledger-loading-shimmer h-2.5 w-[55%] rounded-sm" />
+      <div className="ledger-loading-shimmer h-8 w-[78%] rounded-sm" />
+      <div className="ledger-loading-shimmer mt-1 h-9 w-full rounded-sm" />
+      <div className="ledger-loading-shimmer h-2.5 w-[42%] rounded-sm" />
     </LoadingStatus>
   )
 }
@@ -111,7 +111,7 @@ export function LoadingBars({ label = 'Loading activity', className }: LoadingAn
 export function LoadingSparkline({ label = 'Loading sparkline', className }: LoadingAnimationProps) {
   return (
     <LoadingStatus label={label} className={cx('grid justify-items-center gap-4', className)}>
-      <div className="ledger-loading-shimmer h-4 w-24 rounded-[2px]" aria-hidden="true" />
+      <div className="ledger-loading-shimmer h-4 w-24 rounded-sm" aria-hidden="true" />
       <svg className="h-12 w-44 text-accent" viewBox="0 0 170 48" aria-hidden="true">
         <path className="ledger-loading-sparkline" d="M2,40 L24,34 46,38 68,24 90,30 112,14 134,20 168,6" />
         <circle className="ledger-loading-sparkline-dot" cx="168" cy="6" r="4" />

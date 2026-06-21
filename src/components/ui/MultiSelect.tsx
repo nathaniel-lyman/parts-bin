@@ -145,7 +145,7 @@ export function MultiSelect({
       <div
         onClick={() => inputRef.current?.focus()}
         className={cx(
-          'flex min-h-8 w-full flex-wrap items-center gap-1 rounded-[2px] border border-line bg-surface px-2 py-1 focus-within:border-accent',
+          'flex min-h-8 w-full flex-wrap items-center gap-1 rounded-sm border border-line bg-surface px-2 py-1 focus-within:border-accent',
           disabled && 'bg-surface-2',
         )}
       >
@@ -189,7 +189,7 @@ export function MultiSelect({
           role="listbox"
           aria-multiselectable="true"
           style={listStyle}
-          className="z-50 max-h-60 overflow-auto border border-line bg-surface p-1 text-[13px] shadow-dropdown"
+          className="z-50 max-h-60 overflow-auto rounded-md border border-line bg-surface p-1 text-[13px] shadow-dropdown"
         >
           {filtered.length === 0 ? (
             <li role="presentation" className="px-2 py-1.5 text-muted">{emptyMessage}</li>
@@ -207,7 +207,7 @@ export function MultiSelect({
                   onMouseDown={(event) => { event.preventDefault(); toggle(option) }}
                   onMouseEnter={() => !option.disabled && setActiveIndex(index)}
                   className={cx(
-                    'flex cursor-pointer items-center justify-between gap-2 rounded-[2px] px-2 py-1.5 text-ink',
+                    'flex cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-ink',
                     active && 'bg-accent-soft text-accent',
                     option.disabled && 'cursor-default text-faint',
                   )}

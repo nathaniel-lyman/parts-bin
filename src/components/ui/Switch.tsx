@@ -6,6 +6,8 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
   hint?: ReactNode
 }
 
+const switchRadiusClass = 'rounded-sm'
+
 export function Switch({ label, hint, className, ...rest }: SwitchProps) {
   return (
     <label className={cx('inline-flex items-center gap-2 text-[13px] text-ink', className)}>
@@ -16,8 +18,8 @@ export function Switch({ label, hint, className, ...rest }: SwitchProps) {
           className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
           {...rest}
         />
-        <span className="pointer-events-none absolute inset-0 rounded-[2px] border border-line bg-surface-2 transition-colors peer-checked:border-accent peer-checked:bg-accent peer-disabled:opacity-50" />
-        <span className="pointer-events-none absolute left-0.5 h-4 w-4 rounded-[2px] border border-line bg-surface transition-transform peer-checked:translate-x-4" />
+        <span className={cx('pointer-events-none absolute inset-0 border border-line bg-surface-2 transition-colors peer-checked:border-accent peer-checked:bg-accent peer-disabled:opacity-50', switchRadiusClass)} />
+        <span className={cx('pointer-events-none absolute left-0.5 h-4 w-4 border border-line bg-surface transition-transform peer-checked:translate-x-4', switchRadiusClass)} />
       </span>
       {(label || hint) && (
         <span className="grid gap-0.5">

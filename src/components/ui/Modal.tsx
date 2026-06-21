@@ -19,7 +19,7 @@ export function Modal({ title, onClose, children, footer }: Props) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-[480px] max-w-[92vw] rounded-[4px] bg-surface border border-line shadow-modal"
+        className="w-[480px] max-w-[92vw] rounded-xl bg-surface border border-line shadow-modal"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">

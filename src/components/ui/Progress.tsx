@@ -55,9 +55,9 @@ export function Progress({
         aria-valuemax={max}
         aria-label={label ? undefined : ariaLabel}
         aria-labelledby={label ? labelId : undefined}
-        className="h-1.5 w-full overflow-hidden rounded-[2px] bg-surface-2"
+        className="h-1.5 w-full overflow-hidden rounded-pill bg-surface-2"
       >
-        <div className={cx('h-full rounded-[2px]', fillTone[tone])} style={{ width: `${percent}%` }} />
+        <div className={cx('h-full rounded-pill', fillTone[tone])} style={{ width: `${percent}%` }} />
       </div>
     </div>
   )

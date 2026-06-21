@@ -35,14 +35,19 @@
   --color-reject: var(--reject);
   --color-reject-soft: var(--reject-soft);
 
-  --radius: 2px;
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-pill: var(--r-pill);
+  --radius: var(--r-sm);
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-display: 'Space Grotesk', sans-serif;
 }
 
-/* default radius on the common interactive/surface elements per THEME-SPEC §4 */
+/* default radius on common controls; explicit utility classes handle panels/popovers. */
 @layer base {
   button, input, select, textarea { border-radius: var(--radius); }
 }
