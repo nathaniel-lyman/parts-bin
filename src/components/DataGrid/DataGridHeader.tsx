@@ -3,14 +3,14 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, us
 import { horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { flexRender, type ColumnFiltersState, type Header, type Table } from '@tanstack/react-table'
-import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronsUpDown, X } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { isLockPositionColumn, lockedColumnIds } from './normalize'
 import type { PinnedOffsets } from './selectors'
 import { DataGridColumnMenu } from './DataGridColumnMenu'
 import { DataGridResizeHandle } from './DataGridResizeHandle'
 import { DataGridSelectAllCheckbox } from './DataGridSelectionCell'
-import type { FilterValue } from './filtering'
+import { VALUELESS_OPERATORS, type FilterValue } from './filtering'
 import type { ColumnDragPreviewState } from './dragPreview'
 import type { GridFocus } from './keyboard'
 import type { ColumnPinning, ColumnVirtualWindow, DataGridNumberFormat, GridAction, DataGridColumn } from './types'
@@ -97,6 +97,26 @@ function FloatingFilterInput({
       }}
     />
   )
+}
+
+const VALUELESS_FILTER_LABELS: Record<string, string> = {
+  blank: 'Is blank',
+  notBlank: 'Is not blank',
+  isEmpty: 'Is empty',
+}
+
+/** Compact read-only summary of a multi-value / valueless filter for the floating-filter chip. */
+function summarizeFilter(current: FilterValue): string {
+  const { operator, value } = current
+  if (VALUELESS_OPERATORS.has(operator)) return VALUELESS_FILTER_LABELS[operator] ?? operator
+  if (operator === 'between' && Array.isArray(value)) {
+    const cell = (part: unknown) => (part === '' || part === null || part === undefined ? '…' : String(part))
+    return `${cell(value[0])} – ${cell(value[1])}`
+  }
+  if (operator === 'isAnyOf' && Array.isArray(value)) {
+    return value.length === 1 ? String(value[0]) : `${value.length} selected`
+  }
+  return String(value ?? '')
 }
 
 function headerLabel<TData>(header: Header<TData, unknown>, column?: DataGridColumn<TData>) {
@@ -493,6 +513,34 @@ export function DataGridHeader<TData>({
                     />
                   )
                 }
+                // Reflect — and preserve — whatever the column menu set. A multi-value or valueless
+                // filter (between / isAnyOf / blank / notBlank) can't be edited inline without
+                // clobbering it, so show a read-only summary chip with a clear button. Single-value
+                // operators stay editable and keep their operator instead of resetting to the default.
+                const op = current?.operator
+                const isComplexFilter = op !== undefined && (op === 'between' || op === 'isAnyOf' || VALUELESS_OPERATORS.has(op) || Array.isArray(currentValue))
+                if (isComplexFilter && current) {
+                  const summary = summarizeFilter(current)
+                  return (
+                    <th key={column.id} className="border-r border-line px-3 py-2" data-column-id={column.id} style={previewStyle}>
+                      <div
+                        className="flex h-7 items-center justify-between gap-1 rounded-[2px] border border-line bg-surface-2 px-2 text-[12px] text-muted"
+                        title="Edit this filter from the column menu"
+                        aria-label={`${label} filter: ${summary}`}
+                      >
+                        <span className="truncate">{summary}</span>
+                        <button
+                          type="button"
+                          aria-label={`Clear ${label} filter`}
+                          className="shrink-0 text-muted hover:text-ink"
+                          onClick={() => (dispatch ?? noopDispatch)({ type: 'CLEAR_COLUMN_FILTER', columnId: column.id })}
+                        >
+                          <X aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={2.25} />
+                        </button>
+                      </div>
+                    </th>
+                  )
+                }
                 if (filterType === 'enum' || filterType === 'status') {
                   return (
                     <th key={column.id} className="border-r border-line px-3 py-2" data-column-id={column.id} style={previewStyle}>
@@ -517,7 +565,7 @@ export function DataGridHeader<TData>({
                       label={label}
                       inputType={filterType === 'number' || filterType === 'currency' || filterType === 'percent' ? 'number' : filterType === 'date' ? 'date' : 'text'}
                       value={typeof currentValue === 'string' || typeof currentValue === 'number' ? currentValue : ''}
-                      operator={filterType === 'text' ? 'contains' : 'equals'}
+                      operator={op ?? (filterType === 'text' ? 'contains' : 'equals')}
                       onCommit={setColumnFilter}
                     />
                   </th>
