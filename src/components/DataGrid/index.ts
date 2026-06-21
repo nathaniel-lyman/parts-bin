@@ -1,16 +1,11 @@
-// Curated public DataGrid surface: the component, composition pieces, public
-// types/state/query, and the data + serialization helpers consumers use.
-// Internal machinery (reducers, normalize, selectors, virtualization, keyboard,
-// filtering, persistence, columnMeta) stays deep-import only.
+// Curated public DataGrid surface: the component, the standalone-usable Toolbar/Footer chrome,
+// public types/state/query, and the data + serialization helpers consumers use.
+// Composition internals (Header, Body, Row, Cell, SelectionCell, ColumnDragOverlay) and machinery
+// (reducers, normalize, selectors, virtualization, keyboard, filtering, persistence, columnMeta,
+// the runtime hooks) stay deep-import only — reach for <DataGrid>, not these.
 export * from './DataGrid'
-export * from './DataGridHeader'
-export * from './DataGridBody'
-export * from './DataGridRow'
-export * from './DataGridCell'
 export * from './DataGridToolbar'
 export * from './DataGridFooter'
-export * from './DataGridColumnDragOverlay'
-export * from './DataGridSelectionCell'
 export * from './types'
 export * from './state'
 export * from './editing'

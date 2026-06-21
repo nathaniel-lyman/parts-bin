@@ -91,16 +91,11 @@ export function defineComponent<C extends ComponentType<any>>( // eslint-disable
  * or renaming composition sub-fragments.
  */
 export const INTERNAL = new Map<string, string>([
-  // DataGrid composition pieces — use <DataGrid>, not these directly:
-  ['DataGridHeader', 'Composed by DataGrid'],
-  ['DataGridBody', 'Composed by DataGrid'],
-  ['DataGridRow', 'Composed by DataGrid'],
-  ['DataGridCell', 'Composed by DataGrid'],
+  // DataGrid standalone-usable chrome, exported but not a cataloged front-door entry:
   ['DataGridToolbar', 'Composed by DataGrid'],
   ['DataGridFooter', 'Composed by DataGrid'],
-  ['DataGridColumnDragOverlay', 'Composed by DataGrid'],
-  ['DataGridRowCheckbox', 'Composed by DataGrid selection column'],
-  ['DataGridSelectAllCheckbox', 'Composed by DataGrid header'],
+  // Note: Header/Body/Row/Cell/SelectionCell/ColumnDragOverlay are deep-import only
+  // (not barrel-exported), so they are neither cataloged nor listed here.
   // ui sub-fragments — rendered by a documented parent:
   ['PageTitle', 'Rendered by PageHeader'],
   ['PageSubtitle', 'Rendered by PageHeader'],
