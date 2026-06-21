@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { DataGrid } from '../DataGrid'
@@ -24,7 +24,8 @@ describe('inline header filters', () => {
     await user.click(screen.getByRole('button', { name: /filters/i }))
     await user.type(screen.getByRole('textbox', { name: /filter title/i }), 'widget')
 
+    // Header filter typing is debounced (~200ms), so the filter applies after the user pauses.
+    await waitFor(() => expect(screen.queryByText('Gadget')).toBeNull())
     expect(screen.getByText('Widget')).toBeInTheDocument()
-    expect(screen.queryByText('Gadget')).toBeNull()
   })
 })

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { DataGridResizeHandle } from '../DataGridResizeHandle'
 
@@ -8,13 +8,14 @@ describe('DataGridResizeHandle', () => {
     expect(screen.getByRole('separator', { name: /resize mrr column/i })).toBeInTheDocument()
   })
 
-  it('emits onResize with raw start+delta width while dragging', () => {
+  it('emits onResize with raw start+delta width while dragging', async () => {
     const onResize = vi.fn()
     render(<DataGridResizeHandle columnId="mrr" header="MRR" currentWidth={120} onResize={onResize} onAutofit={() => {}} />)
     const handle = screen.getByRole('separator', { name: /resize mrr column/i })
     fireEvent.pointerDown(handle, { clientX: 200, button: 0 })
     fireEvent.pointerMove(window, { clientX: 230 })
-    expect(onResize).toHaveBeenLastCalledWith('mrr', 150)
+    // Pointermove resizing is rAF-throttled, so the dispatch lands on the next frame.
+    await waitFor(() => expect(onResize).toHaveBeenLastCalledWith('mrr', 150))
     fireEvent.pointerUp(window)
   })
 

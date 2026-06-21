@@ -34,8 +34,17 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
 
+    // Pointermove fires far faster than the screen repaints; coalesce into one resize per frame
+    // (always using the latest X) so a fast drag doesn't dispatch dozens of RESIZE_COLUMN actions.
+    let frame = 0
+    let latestX = startX.current
     const onMove = (event: PointerEvent) => {
-      onResize(columnId, startWidth.current + event.clientX - startX.current)
+      latestX = event.clientX
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        onResize(columnId, startWidth.current + latestX - startX.current)
+      })
     }
     const onUp = () => setDragging(false)
 
@@ -43,6 +52,7 @@ export function DataGridResizeHandle({ columnId, header, currentWidth, onResize,
     window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onUp)
     return () => {
+      if (frame) cancelAnimationFrame(frame)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)

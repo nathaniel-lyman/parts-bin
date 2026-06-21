@@ -3,7 +3,7 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, us
 import { horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { flexRender, type ColumnFiltersState, type Header, type Table } from '@tanstack/react-table'
-import { type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { isLockedColumn, isMovableColumnId } from './normalize'
 import type { PinnedOffsets } from './selectors'
 import { DataGridColumnMenu } from './DataGridColumnMenu'
@@ -16,6 +16,66 @@ import type { ColumnPinning, ColumnVirtualWindow, DataGridNumberFormat, GridActi
 
 const noopDispatch = () => {}
 const dragPreviewTransition = 'transform 160ms ease'
+/** Header free-text/number/date filters dispatch after the user pauses, not on every keystroke. */
+const FILTER_DEBOUNCE_MS = 200
+const normalizeFilterDraft = (raw: string | number) => (raw === '' || raw === undefined ? '' : String(raw))
+
+/**
+ * A floating-filter text/number/date input whose value updates instantly for responsiveness but
+ * whose dispatch is debounced — typing no longer re-filters + re-renders the grid on every
+ * keystroke. The local draft is the source of truth while typing; it re-syncs only when the
+ * committed value changes from the outside (a reset or an applied saved view), never echoing back
+ * the grid's own in-flight edits.
+ */
+function FloatingFilterInput({
+  columnId,
+  label,
+  inputType,
+  value,
+  operator,
+  onCommit,
+}: {
+  columnId: string
+  label: string
+  inputType: 'text' | 'number' | 'date'
+  value: string | number
+  operator: FilterValue['operator']
+  onCommit: (columnId: string, operator: FilterValue['operator'], value: unknown) => void
+}) {
+  const [draft, setDraft] = useState(() => normalizeFilterDraft(value))
+  const committedRef = useRef(normalizeFilterDraft(value))
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Re-sync the draft to an externally-changed committed value (reset / applied view), but skip when
+  // it matches what we just dispatched so the input never fights the user's cursor while typing.
+  useEffect(() => {
+    const next = normalizeFilterDraft(value)
+    if (next !== committedRef.current) {
+      committedRef.current = next
+      setDraft(next)
+    }
+  }, [value])
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+
+  return (
+    <input
+      className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink placeholder:text-faint"
+      aria-label={`Filter ${label}`}
+      type={inputType}
+      value={draft}
+      onChange={(event) => {
+        const raw = event.target.value
+        setDraft(raw)
+        if (timerRef.current) clearTimeout(timerRef.current)
+        timerRef.current = setTimeout(() => {
+          committedRef.current = raw
+          onCommit(columnId, operator, raw)
+        }, FILTER_DEBOUNCE_MS)
+      }}
+    />
+  )
+}
 
 function headerLabel<TData>(header: Header<TData, unknown>, column?: DataGridColumn<TData>) {
   if (typeof column?.header === 'string' && column.header) return column.header
@@ -390,12 +450,13 @@ export function DataGridHeader<TData>({
                 }
                 return (
                   <th key={column.id} className="border-r border-line px-3 py-2" data-column-id={column.id} style={previewStyle}>
-                    <input
-                      className="h-7 w-full rounded-[2px] border border-line bg-surface px-2 text-[12px] text-ink placeholder:text-faint"
-                      aria-label={`Filter ${label}`}
-                      type={filterType === 'number' || filterType === 'currency' || filterType === 'percent' ? 'number' : filterType === 'date' ? 'date' : 'text'}
+                    <FloatingFilterInput
+                      columnId={column.id}
+                      label={label}
+                      inputType={filterType === 'number' || filterType === 'currency' || filterType === 'percent' ? 'number' : filterType === 'date' ? 'date' : 'text'}
                       value={typeof currentValue === 'string' || typeof currentValue === 'number' ? currentValue : ''}
-                      onChange={(event) => setColumnFilter(column.id, filterType === 'text' ? 'contains' : 'equals', event.target.value)}
+                      operator={filterType === 'text' ? 'contains' : 'equals'}
+                      onCommit={setColumnFilter}
                     />
                   </th>
                 )
