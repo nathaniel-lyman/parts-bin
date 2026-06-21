@@ -6,6 +6,8 @@ export interface SerializeTSVOptions<TData> {
   columnVisibility?: Record<string, boolean>
   rowSelection?: Record<string, boolean>
   includeHeader?: boolean
+  /** Apply each column's `exportValue` formatter (clipboard copy). File exports leave this off. */
+  formatted?: boolean
 }
 
 function cleanCell(value: unknown): string {
@@ -17,6 +19,13 @@ function resolveValue<TData>(row: TData, column: LedgerGridColumn<TData>): unkno
   if (column.accessorFn) return column.accessorFn(row)
   if (column.accessorKey) return (row as Record<string, unknown>)[column.accessorKey as string]
   return ''
+}
+
+// Raw accessor value, or the column's formatted `exportValue` when `formatted` is set (clipboard
+// copy). Keeps file exports on the raw value so XLSX still writes real numbers, not "$24,600" text.
+function exportCellValue<TData>(row: TData, column: LedgerGridColumn<TData>, formatted?: boolean): unknown {
+  const raw = resolveValue(row, column)
+  return formatted && column.exportValue ? column.exportValue(raw, row) : raw
 }
 
 function orderedExportColumns<TData>(
@@ -39,22 +48,30 @@ function orderedExportColumns<TData>(
   return out
 }
 
+// A selection filter only applies when at least one row is actually selected. An empty selection
+// map means "nothing selected", which must export every row — not zero. Callers hand us
+// `state.rowSelection` directly, and that is `{}` (truthy) when the grid has no selection, so the
+// emptiness check has to live here rather than relying on callers to pass `undefined`.
+function selectExportRows<TData>(rows: TData[], opts: SerializeTSVOptions<TData>): TData[] {
+  const selection = opts.rowSelection
+  if (!selection || Object.keys(selection).length === 0) return rows
+  return rows.filter((row) => selection[opts.getRowId(row)])
+}
+
 export function serializeTSV<TData>(
   rows: TData[],
   columns: LedgerGridColumn<TData>[],
   opts: SerializeTSVOptions<TData>,
 ): string {
   const cols = orderedExportColumns(columns, opts.columnOrder, opts.columnVisibility)
-  const dataRows = opts.rowSelection
-    ? rows.filter((row) => opts.rowSelection?.[opts.getRowId(row)])
-    : rows
+  const dataRows = selectExportRows(rows, opts)
 
   const lines: string[] = []
   if (opts.includeHeader !== false) {
     lines.push(cols.map((column) => cleanCell(typeof column.header === 'string' ? column.header : column.id)).join('\t'))
   }
   for (const row of dataRows) {
-    lines.push(cols.map((column) => cleanCell(resolveValue(row, column))).join('\t'))
+    lines.push(cols.map((column) => cleanCell(exportCellValue(row, column, opts.formatted))).join('\t'))
   }
   return lines.join('\n')
 }
@@ -74,16 +91,14 @@ export function serializeCSV<TData>(
   opts: SerializeTSVOptions<TData>,
 ): string {
   const cols = orderedExportColumns(columns, opts.columnOrder, opts.columnVisibility)
-  const dataRows = opts.rowSelection
-    ? rows.filter((row) => opts.rowSelection?.[opts.getRowId(row)])
-    : rows
+  const dataRows = selectExportRows(rows, opts)
 
   const lines: string[] = []
   if (opts.includeHeader !== false) {
     lines.push(cols.map((column) => escapeCsvCell(typeof column.header === 'string' ? column.header : column.id)).join(','))
   }
   for (const row of dataRows) {
-    lines.push(cols.map((column) => escapeCsvCell(resolveValue(row, column))).join(','))
+    lines.push(cols.map((column) => escapeCsvCell(exportCellValue(row, column, opts.formatted))).join(','))
   }
   return lines.join('\n')
 }
@@ -130,16 +145,14 @@ function worksheetXml<TData>(
   opts: SerializeTSVOptions<TData>,
 ): string {
   const cols = orderedExportColumns(columns, opts.columnOrder, opts.columnVisibility)
-  const dataRows = opts.rowSelection
-    ? rows.filter((row) => opts.rowSelection?.[opts.getRowId(row)])
-    : rows
+  const dataRows = selectExportRows(rows, opts)
   const sheetRows: string[] = []
   if (opts.includeHeader !== false) {
     sheetRows.push(`<row r="1">${cols.map((column, index) => worksheetCell(typeof column.header === 'string' ? column.header : column.id, 0, index)).join('')}</row>`)
   }
   const offset = opts.includeHeader === false ? 0 : 1
   dataRows.forEach((row, rowIndex) => {
-    sheetRows.push(`<row r="${rowIndex + offset + 1}">${cols.map((column, colIndex) => worksheetCell(resolveValue(row, column), rowIndex + offset, colIndex)).join('')}</row>`)
+    sheetRows.push(`<row r="${rowIndex + offset + 1}">${cols.map((column, colIndex) => worksheetCell(exportCellValue(row, column, opts.formatted), rowIndex + offset, colIndex)).join('')}</row>`)
   })
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${sheetRows.join('')}</sheetData></worksheet>`
 }

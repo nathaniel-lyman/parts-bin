@@ -6,7 +6,7 @@ interface Row { id: string; name: string; mrr: number; owner: string }
 
 const columns: LedgerGridColumn<Row>[] = [
   { id: 'name', accessorKey: 'name', header: 'Account', type: 'text' },
-  { id: 'mrr', accessorKey: 'mrr', header: 'MRR', type: 'currency' },
+  { id: 'mrr', accessorKey: 'mrr', header: 'MRR', type: 'currency', exportValue: (value) => `$${value}` },
   { id: 'owner', accessorKey: 'owner', header: 'Owner', type: 'text' },
   { id: 'actions', header: '', type: 'actions', exportable: false },
 ]
@@ -36,5 +36,21 @@ describe('serializeTSV', () => {
       getRowId: (row) => row.id,
       includeHeader: false,
     })).toBe('A B C\t1\tO')
+  })
+
+  it('exports every row when the selection map is empty (no selection)', () => {
+    expect(serializeTSV(rows, columns, {
+      getRowId: (row) => row.id,
+      rowSelection: {},
+    })).toBe('Account\tMRR\tOwner\nAcme\t900\tDana\nBeta\t300\tLee\nCobalt\t600\tRavi')
+  })
+
+  it('applies the column exportValue formatter only when formatted is set', () => {
+    // Default: raw accessor values, exportValue ignored.
+    expect(serializeTSV(rows, columns, { getRowId: (row) => row.id, includeHeader: false }))
+      .toBe('Acme\t900\tDana\nBeta\t300\tLee\nCobalt\t600\tRavi')
+    // formatted: the currency column's exportValue is applied.
+    expect(serializeTSV(rows, columns, { getRowId: (row) => row.id, includeHeader: false, formatted: true }))
+      .toBe('Acme\t$900\tDana\nBeta\t$300\tLee\nCobalt\t$600\tRavi')
   })
 })

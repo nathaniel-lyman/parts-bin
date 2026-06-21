@@ -78,7 +78,7 @@ describe('Ctrl/Cmd+C on the focused cell', () => {
     fireEvent.click(checkbox)
     checkbox.focus()
     fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
-    expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tValue\tGrowth\tStatus\nBeta\tLee\tStartup\t300\t-2\tAt risk')
+    expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tValue\tGrowth\tStatus\nBeta\tLee\tStartup\t$300\t-2.0%\tAt risk')
   })
 
   it('selection copy is also grid-scoped: does nothing when focus is outside the grid', () => {

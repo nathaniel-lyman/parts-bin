@@ -35,6 +35,13 @@ describe('serializeCSV', () => {
       includeHeader: false,
     })).toBe('"Beta ""Labs""",Lee,20')
   })
+
+  it('exports every row when the selection map is empty (no selection)', () => {
+    expect(serializeCSV(rows, columns, {
+      getRowId: (row) => row.id,
+      rowSelection: {},
+    })).toBe('Name,Owner,MRR\n"Acme, Inc",Dana,10\n"Beta ""Labs""",Lee,20')
+  })
 })
 
 describe('downloadCSV', () => {
@@ -75,6 +82,16 @@ describe('serializeXLSX', () => {
 
     expect(text).toContain('Beta &quot;Labs&quot;')
     expect(text).not.toContain('Acme, Inc')
+  })
+
+  it('exports every row when the selection map is empty (no selection)', () => {
+    const text = new TextDecoder().decode(serializeXLSX(rows, columns, {
+      getRowId: (row) => row.id,
+      rowSelection: {},
+    }))
+
+    expect(text).toContain('Acme, Inc')
+    expect(text).toContain('Beta &quot;Labs&quot;')
   })
 })
 

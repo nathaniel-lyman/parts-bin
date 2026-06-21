@@ -38,11 +38,11 @@ describe('DataGrid context menu + copy', () => {
     expect(writeText).toHaveBeenCalledWith('Acme')
   })
 
-  it('Copy row writes visible exportable columns as one raw TSV line', async () => {
+  it('Copy row writes visible exportable columns as one formatted TSV line', async () => {
     renderGrid()
     fireEvent.contextMenu(screen.getByText('Acme'))
     await userEvent.click(await screen.findByRole('menuitem', { name: /copy row/i }))
-    expect(writeText).toHaveBeenCalledWith('Acme\tDana\tEnterprise\t900\t5\tActive')
+    expect(writeText).toHaveBeenCalledWith('Acme\tDana\tEnterprise\t$900\t5.0%\tActive')
   })
 
   it('Copy selection (N) shows the count of rows actually copied: selected AND visible', async () => {
@@ -59,7 +59,7 @@ describe('DataGrid context menu + copy', () => {
     renderGrid()
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select Beta' }))
     fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
-    expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tValue\tGrowth\tStatus\nBeta\tLee\tStartup\t300\t-2\tAt risk')
+    expect(writeText).toHaveBeenCalledWith('Account\tOwner\tSegment\tValue\tGrowth\tStatus\nBeta\tLee\tStartup\t$300\t-2.0%\tAt risk')
 
     writeText.mockClear()
     const search = screen.getByRole('searchbox', { name: /quick filter/i })

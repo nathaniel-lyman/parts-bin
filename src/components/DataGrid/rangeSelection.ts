@@ -35,14 +35,26 @@ export function isMultiCellRange(range: CellRange | null): boolean {
   return range.anchor.row !== range.focus.row || range.anchor.col !== range.focus.col
 }
 
+const cleanRangeCell = (value: unknown): string => String(value ?? '').replace(/[\t\n\r]+/g, ' ')
+
 export function serializeCellRange<TData>(
   range: CellRange,
   rows: TData[],
   columnIds: string[],
   resolveCellValue: (row: TData, columnId: string) => unknown,
+  options?: { header?: (columnId: string) => string },
 ): string {
   const bounds = cellRangeBounds(range)
   const lines: string[] = []
+  if (options?.header) {
+    const headers: string[] = []
+    for (let colIndex = bounds.colStart; colIndex <= bounds.colEnd; colIndex += 1) {
+      const columnId = columnIds[colIndex]
+      if (!columnId) continue
+      headers.push(cleanRangeCell(options.header(columnId)))
+    }
+    lines.push(headers.join('\t'))
+  }
   for (let rowIndex = bounds.rowStart; rowIndex <= bounds.rowEnd; rowIndex += 1) {
     const row = rows[rowIndex]
     if (!row) continue
@@ -50,7 +62,7 @@ export function serializeCellRange<TData>(
     for (let colIndex = bounds.colStart; colIndex <= bounds.colEnd; colIndex += 1) {
       const columnId = columnIds[colIndex]
       if (!columnId) continue
-      values.push(String(resolveCellValue(row, columnId) ?? '').replace(/[\t\n\r]+/g, ' '))
+      values.push(cleanRangeCell(resolveCellValue(row, columnId)))
     }
     lines.push(values.join('\t'))
   }

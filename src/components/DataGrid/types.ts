@@ -64,6 +64,12 @@ export interface LedgerGridColumn<TData, TValue = unknown> {
   pinnable?: boolean
   hideable?: boolean
   exportable?: boolean
+  /**
+   * Formats the cell value for clipboard copy (Ctrl/Cmd+C of a range, row, selection, or cell).
+   * Lets a copied currency/percent column land in Excel as "$24,600" / "-2.1%" instead of the raw
+   * accessor value. Defaults to the raw value when omitted. Not applied to CSV/XLSX file exports.
+   */
+  exportValue?: (value: TValue, row: TData) => string | number | null | undefined
   /** Opt-in: the column can be edited inline. Requires `accessorKey` so commits can patch the row. */
   editable?: boolean
   /** Returns an error message to block the commit, or null/undefined to accept. */

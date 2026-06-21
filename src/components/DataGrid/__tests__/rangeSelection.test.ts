@@ -25,6 +25,21 @@ describe('rangeSelection helpers', () => {
     )).toBe('Acme\tDana\nBeta\tLee')
   })
 
+  it('prepends a header row for the copied columns when a header resolver is given', () => {
+    const rows = [
+      { account: 'Acme', owner: 'Dana' },
+      { account: 'Beta', owner: 'Lee' },
+    ]
+
+    expect(serializeCellRange(
+      { anchor: { row: 0, col: 0 }, focus: { row: 1, col: 1 } },
+      rows,
+      ['account', 'owner'],
+      (row, columnId) => row[columnId as 'account' | 'owner'],
+      { header: (columnId) => columnId.toUpperCase() },
+    )).toBe('ACCOUNT\tOWNER\nAcme\tDana\nBeta\tLee')
+  })
+
   it('parses pasted spreadsheet text into a cell matrix', () => {
     expect(parseClipboardTable('A\tB\r\nC\tD\n')).toEqual([
       ['A', 'B'],

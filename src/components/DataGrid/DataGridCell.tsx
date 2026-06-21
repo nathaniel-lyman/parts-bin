@@ -95,7 +95,11 @@ export function DataGridCell<TData>({
   return (
     <td
       role="gridcell"
-      className={`group/cell relative hover:bg-accent-soft ${rangeSelected ? 'bg-accent-soft ring-1 ring-inset ring-accent' : ''} ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${pinnedSide ? 'bg-surface shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
+      // select-none keeps a click-drag from starting a native text selection: cell ranges are
+      // drag-selected, and a stray text selection would make Cmd/Ctrl+C copy raw page text instead
+      // of the structured TSV (the copy handler defers to any live native selection). Edit inputs
+      // are form controls and stay text-selectable regardless.
+      className={`group/cell relative select-none hover:bg-accent-soft ${rangeSelected ? 'bg-accent-soft ring-1 ring-inset ring-accent' : ''} ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${pinnedSide ? 'bg-surface shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       data-column-id={cell.column.id}
       data-row-index={rowIndex}
       data-col-index={colIndex}

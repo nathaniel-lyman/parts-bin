@@ -695,6 +695,27 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     [columns],
   )
 
+  // The clipboard-facing value: the column's `exportValue` formatter when present (so a copied
+  // currency/percent cell lands in Excel as "$24,600" / "-2.1%"), else the raw value. Kept separate
+  // from resolveCellValue, which paste compares against and must stay raw.
+  const resolveCellExportValue = useCallback(
+    (row: TData, columnId: string): unknown => {
+      const raw = resolveCellValue(row, columnId)
+      const column = columnsById.get(columnId)
+      return column?.exportValue ? column.exportValue(raw, row) : raw
+    },
+    [columnsById, resolveCellValue],
+  )
+
+  // Header label for the copied column range. Falls back to the id for non-string headers.
+  const columnHeaderLabel = useCallback(
+    (columnId: string): string => {
+      const column = columnsById.get(columnId)
+      return column && typeof column.header === 'string' ? column.header : columnId
+    },
+    [columnsById],
+  )
+
   const beginCellRange = useCallback((row: number, col: number) => {
     const next = { row, col }
     setFocus(next)
@@ -724,21 +745,23 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
 
   const copyRange = useCallback(() => {
     if (!cellRange || !isMultiCellRange(cellRange)) return false
-    const text = serializeCellRange(cellRange, visibleData, visibleColumnIds, resolveCellValue)
+    const text = serializeCellRange(cellRange, visibleData, visibleColumnIds, resolveCellExportValue, {
+      header: columnHeaderLabel,
+    })
     if (!text) return false
     const bounds = cellRangeBounds(cellRange)
     const cells = (bounds.rowEnd - bounds.rowStart + 1) * (bounds.colEnd - bounds.colStart + 1)
     copyWithFeedback(text, cells === 1 ? 'Copied cell' : `Copied ${cells} cells`)
     return true
-  }, [cellRange, copyWithFeedback, resolveCellValue, visibleColumnIds, visibleData])
+  }, [cellRange, columnHeaderLabel, copyWithFeedback, resolveCellExportValue, visibleColumnIds, visibleData])
 
   const copyCell = useCallback(
     (rowId: string, colId: string) => {
       const row = visibleData.find((item) => getRowId(item) === rowId) ?? rows.find((item) => getRowId(item) === rowId)
       if (!row) return
-      copyWithFeedback(serializeCell(resolveCellValue(row, colId)), 'Copied cell')
+      copyWithFeedback(serializeCell(resolveCellExportValue(row, colId)), 'Copied cell')
     },
-    [copyWithFeedback, getRowId, resolveCellValue, rows, visibleData],
+    [copyWithFeedback, getRowId, resolveCellExportValue, rows, visibleData],
   )
 
   const copyRow = useCallback(
@@ -750,6 +773,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         columnOrder: state.columnOrder,
         columnVisibility: state.columnVisibility,
         includeHeader: false,
+        formatted: true,
       }), 'Copied row')
     },
     [columns, copyWithFeedback, getRowId, rows, state.columnOrder, state.columnVisibility, visibleData],
@@ -766,6 +790,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       columnOrder: state.columnOrder,
       columnVisibility: state.columnVisibility,
       rowSelection: state.rowSelection,
+      formatted: true,
     }), copiedCount === 1 ? 'Copied 1 row' : `Copied ${copiedCount} rows`)
   }, [columns, copyWithFeedback, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection, visibleData])
 

@@ -74,7 +74,9 @@ export interface ParseResult {
 export function parseDraft(type: EditorType, draft: string): ParseResult {
   if (type !== 'number') return { value: draft }
   if (draft.trim() === '') return { value: null, error: 'Enter a number' }
-  const num = Number(draft)
+  // Tolerate formatted numerics ("$24,600", "-2.1%") so a formatted clipboard copy pastes back into
+  // number cells and editors accept what they display. Strips currency/grouping/percent symbols only.
+  const num = Number(draft.replace(/[$,%]/g, ''))
   if (!Number.isFinite(num)) return { value: null, error: 'Enter a number' }
   return { value: num }
 }

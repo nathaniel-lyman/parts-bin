@@ -91,6 +91,12 @@ describe('editing model', () => {
     expect(parseDraft('text', '')).toEqual({ value: '' })
   })
 
+  it('parseDraft tolerates formatted numerics so a formatted copy pastes back', () => {
+    expect(parseDraft('number', '$24,600')).toEqual({ value: 24600 })
+    expect(parseDraft('number', '-2.1%')).toEqual({ value: -2.1 })
+    expect(parseDraft('number', '$1,000')).toEqual({ value: 1000 })
+  })
+
   it('commitSession produces a patch keyed by accessorKey for changed values only', () => {
     let session = startEdit('cell', 'a1', 'mrr', columns, row)
     session = setDraft(session, 'mrr', '1500')

@@ -2,6 +2,9 @@ export const fmtNum = (n: number) => new Intl.NumberFormat('en-US').format(Math.
 export const fmtCurrency = (n: number) => `$${fmtNum(n)}`
 export const fmtPercent = (n: number) => `${Math.abs(n).toFixed(1)}%`
 export const fmtDelta = (n: number) => `${n < 0 ? '▼' : '▲'} ${fmtPercent(n)}`
+// Signed percent without the directional glyph — for clipboard copy, where a tool like Excel
+// parses "-2.1%" into a real percentage but chokes on "▼ 2.1%".
+export const fmtPercentSigned = (n: number) => `${n.toFixed(1)}%`
 export const formatCompactKValue = (value: number) => {
   const absolute = Math.abs(value)
   return absolute >= 10 || Number.isInteger(absolute) ? absolute.toFixed(0) : absolute.toFixed(1)

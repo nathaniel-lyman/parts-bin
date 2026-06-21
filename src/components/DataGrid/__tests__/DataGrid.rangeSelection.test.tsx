@@ -55,7 +55,20 @@ describe('DataGrid cell range selection', () => {
 
     expect(cell(container, 0, 0)).toHaveAttribute('aria-selected', 'true')
     expect(cell(container, 1, 1)).toHaveAttribute('aria-selected', 'true')
-    expect(writeText).toHaveBeenCalledWith('Acme\tDana\nBeta\tLee')
+    // The copied range carries a header row for the copied columns.
+    expect(writeText).toHaveBeenCalledWith('Account\tOwner\nAcme\tDana\nBeta\tLee')
+  })
+
+  it('copies a range with column headers and formatted currency/percent values', () => {
+    const { container } = renderGrid()
+
+    // Value (col 3) → Growth (col 4) over both rows.
+    fireEvent.mouseDown(cell(container, 0, 3), { button: 0 })
+    fireEvent.mouseEnter(cell(container, 1, 4))
+    fireEvent.mouseUp(window)
+    fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
+
+    expect(writeText).toHaveBeenCalledWith('Value\tGrowth\n$900\t5.0%\n$300\t-2.0%')
   })
 
   it('pastes spreadsheet text into editable cells from the active cell', () => {
@@ -68,5 +81,17 @@ describe('DataGrid cell range selection', () => {
     expect(onRowUpdate).toHaveBeenCalledTimes(2)
     expect(onRowUpdate).toHaveBeenNthCalledWith(1, 'a1', { owner: 'Nora', segment: 'Mid-market' }, rows[0])
     expect(onRowUpdate).toHaveBeenNthCalledWith(2, 'a2', { owner: 'Mika', segment: 'Enterprise' }, rows[1])
+  })
+
+  it('pastes a formatted currency value back into a number cell (copy round-trip)', () => {
+    const { container, onRowUpdate } = renderGrid()
+
+    // Focus the Acme/Value cell (col 3) and paste a formatted figure from the clipboard.
+    fireEvent.mouseDown(cell(container, 0, 3), { button: 0 })
+    fireEvent.mouseUp(window)
+    paste('$1,000')
+
+    expect(onRowUpdate).toHaveBeenCalledTimes(1)
+    expect(onRowUpdate).toHaveBeenCalledWith('a1', { mrr: 1000 }, rows[0])
   })
 })
