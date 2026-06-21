@@ -11,8 +11,8 @@
 1. `git checkout datagrid-aggrid-polish` and `git log --oneline` to see progress.
 2. Re-read the **Status snapshot** below for what's done / in flight / next.
 3. Verification protocol is at the bottom — run the focused gate after each step.
-4. **Baseline is RED by 2 tests** (pre-existing, not ours) — see Gotchas. Hold the line at
-   exactly those 2 failures; any other failure is a regression we introduced.
+4. **Baseline is GREEN as of Phase D** — the 2 long-pre-existing `aggregation.test.ts` failures are
+   fixed (`5dd9d80`). The whole repo suite passes; any failure now is a regression.
 
 ---
 
@@ -38,8 +38,8 @@
 | **A — Foundation refactor** | ✅ COMPLETE | hook extraction ✅, Ledger codemod ✅, barrel narrowing ✅; 'actions' id refactor → moved to B |
 | **B — Render-layer memoization** | ✅ COMPLETE | `GridRuntimeContext` + memo ✅, debounce/throttle ✅, O(1) pinned indexing ✅, `lockPosition` capability ✅; adversarial-review fixes folded |
 | **C — Interaction polish** | ✅ COMPLETE | selection tint, cell flash, lucide icons, overlay/skeleton states, resize/reorder/fill affordances, scrollbar/popover/density polish |
-| **D — Correctness + filter depth** | ⬜ next | includes fixing the 2 pre-existing aggregation tests |
-| **E — Accessibility / ARIA pass** | ⬜ not started | |
+| **D — Correctness + filter depth** | ◑ MOSTLY DONE | **baseline now GREEN** (2 pre-existing aggregation failures fixed); percent round-trip, date timestamps, expanded operators, export BOM/html, floating-filter sync, set filter — all done. **Deferred: two-condition AND/OR + shared comparator/nulls-last.** |
+| **E — Accessibility / ARIA pass** | ⬜ next | |
 
 ### Commits on the branch so far
 - `07f5b37` — extract god-component into six hooks (DataGrid.tsx 1310 → 898 lines)
@@ -52,6 +52,51 @@
   `c2a563b` lucide sort icons + badge + chevrons · `190d085` overlay states + skeleton rows ·
   `ed34d23` thin scrollbar + popover-enter + density transition · `ed6513c` resize guide-line +
   reorder drop-indicator · `3ae7032` range corner fill handle
+- Phase D: `5dd9d80` aggregation '—' + baseline green · `2f627b6` scale-aware percent paste ·
+  `86da293` date timestamp filters · `d5d6853` expanded operators · `bafc938` CSV BOM + html
+  clipboard · `2b1b81f` floating-filter sync · `9e78ef9` set filter (search/select-all/counts)
+
+### Phase D — MOSTLY DONE (2 items deferred)
+The **baseline is now GREEN** — the 2 long-standing `aggregation.test.ts` failures are fixed, so the
+whole repo suite passes (735 tests). All work is test-driven; full gate green (`npm run build`,
+`npx vitest run`, `npm run lint`, `lint:theme`).
+
+**Correctness (the bug slice):**
+- **Aggregation** (`5dd9d80`): a null/empty aggregate renders `'—'` (was blank); the stale percent
+  test now expects `'4.0%'` to match how percent cells render. Guards added: count-weighted average
+  over all rows (not avg-of-subset-averages), and an integration test proving the footer avg spans
+  every filtered row, not just the page (client-mode "page-scoped" concern — server-mode totals still
+  need server aggregation, out of scope).
+- **Percent paste round-trip** (`2f627b6`): `parseDraft` is scale-aware — a copied `"5.0%"` reverses
+  the column's scale back to the raw value (`raw = shown / (scale*100)`), fixing the 100× corruption
+  for fraction-stored percents. Bare `parseDraft` (no format) still just strips the symbol.
+- **Date filters** (`86da293`): `before/after/between` parse to timestamps (`toTimestamp`) instead of
+  lexical string compare, so US/ISO/mixed formats order chronologically; unparseable/blank excluded.
+
+**Filter depth:**
+- **Expanded operators** (`d5d6853`): text +notContains/notEquals/endsWith/blank/notBlank; numeric
+  +notEquals/gte/lte/blank/notBlank; date +blank/notBlank. `VALUELESS_OPERATORS` drives the menu's
+  value-less UI. New operators serialize through `toGridQuery` unchanged for server mode.
+- **Export niceties** (`bafc938`): `downloadCSV` prepends a UTF-8 BOM (Excel encoding); `copyToClipboard`
+  writes a `text/html` table alongside `text/plain` for tabular copies (falls back to writeText —
+  jsdom/old browsers — so existing tests hold). `tsvToHtmlTable` exported + tested.
+- **Floating-filter sync** (`2b1b81f`): the inline header filter now preserves the menu's operator
+  (greaterThan/gte/startsWith/…) instead of resetting to contains/equals, and renders a read-only
+  summary chip + clear button for multi-value/valueless filters (between/isAnyOf/blank) instead of an
+  empty input that dropped them.
+- **Set filter** (`9e78ef9`): `isAnyOf` is now a type-agnostic engine predicate; the table wires
+  TanStack faceted models (client mode); the enum/status checklist became a `SetFilterList` — search +
+  tri-state (Select all) respecting the search + per-value faceted counts. Values union predefined
+  options with present values.
+
+**Deferred (carry to a follow-up):**
+- **Two-condition AND/OR per column** — changes the public `FilterValue` shape + persistence + query
+  serialization; deliberately punted for a dedicated design pass (user call).
+- **Shared client/server comparator + optional `comparator` + nulls-last** — TanStack v8 `sortUndefined`
+  only catches literal `undefined` (not `null`/`''`) and direction-independent nulls-last needs a
+  custom path; not a quick flag, so deferred with the AND/OR work.
+- Free-text **set filter** as an alternate mode alongside the operator filter (the checklist currently
+  lands on enum/status, the natural home).
 
 ### Phase C — DONE
 All colors are theme tokens (no raw hex / no new named utilities); every visible change is behavior-
@@ -266,10 +311,11 @@ These are real parity gaps but explicitly punted; revisit after the fault-lines 
 
 ## Gotchas / non-obvious constraints discovered
 
-- **Baseline is RED:** `aggregation.test.ts` has **2 pre-existing failures** on a clean checkout
+- **Baseline WAS red, now GREEN:** `aggregation.test.ts` had 2 pre-existing failures
   ("aggregates only columns that declare an aggregate" → `'4%'` vs `'4.0%'`; "handles an empty row
-  set" → `''` vs `'—'`). Stale after the "number formatting controls" commit. **Phase D fixes them.**
-  Until then, the success criterion is "exactly 2 failures, no more."
+  set" → `''` vs `'—'`), stale after the "number formatting controls" commit. **Fixed in Phase D**
+  (`5dd9d80`): null aggregate → `'—'` (code), and the percent test now expects `'4.0%'` (matches the
+  cell rendering). The whole suite passes; any failure is now a real regression.
 - **React Compiler lint in extracted hooks:** moving imperative effect code OUT of `DataGrid.tsx`
   (which bails compilation) re-activates strict compiler rules. Handled so far:
   `usePinnedColumnOffsets` has a scoped `set-state-in-effect` disable (legit DOM-measurement sync);
