@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.describe('sticky header', () => {
   test('header stays at the top of the scroller during vertical scroll', async ({ page }) => {
-    await page.goto('/?rows=10000')
+    await page.goto('/examples/dashboard?rows=10000')
     const accountGrid = page.getByTestId('accounts-grid')
     const scroller = accountGrid.getByTestId('datagrid-scroll')
     const header = accountGrid.getByTestId('grid-header-row')

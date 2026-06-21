@@ -7,6 +7,7 @@ import type { GridEditingApi } from './editing'
 import type { GridFocus } from './keyboard'
 import type { PinnedOffsets } from './selectors'
 import type { ColumnVirtualWindow } from './types'
+import type { CellRange } from './rangeSelection'
 
 interface Props<TData> {
   table: Table<TData>
@@ -24,6 +25,9 @@ interface Props<TData> {
   columnWindow?: ColumnVirtualWindow
   visibleColumnIds?: string[]
   onFocusCell?: (row: number, col: number) => void
+  range?: CellRange | null
+  onRangeStart?: (row: number, col: number) => void
+  onRangeEnter?: (row: number, col: number) => void
   pinnedOffsets?: PinnedOffsets
   editing?: GridEditingApi
   renderAggregatedCell?: (columnId: string, leafRows: TData[]) => ReactNode
@@ -52,6 +56,9 @@ export function DataGridBody<TData>({
   columnWindow,
   visibleColumnIds,
   onFocusCell,
+  range,
+  onRangeStart,
+  onRangeEnter,
   pinnedOffsets,
   editing,
   renderAggregatedCell,
@@ -101,6 +108,9 @@ export function DataGridBody<TData>({
       columnWindow={columnWindow}
       visibleColumnIds={visibleColumnIds}
       onFocusCell={onFocusCell}
+      range={range}
+      onRangeStart={onRangeStart}
+      onRangeEnter={onRangeEnter}
       pinnedOffsets={pinnedOffsets}
       editing={editing}
       renderAggregatedCell={renderAggregatedCell}

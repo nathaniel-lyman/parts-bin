@@ -59,6 +59,7 @@ import {
   isColumnEditable,
   isDirtyCell,
   markDirty,
+  parseDraft,
   setDraft,
   startEdit,
   type DirtyCells,
@@ -68,6 +69,13 @@ import {
 } from './editing'
 import { DataGridAggregationFooter } from './DataGridAggregationFooter'
 import type { ColumnVirtualWindow, DataGridColumn, DataGridState, GridAction } from './types'
+import {
+  cellRangeBounds,
+  isMultiCellRange,
+  parseClipboardTable,
+  serializeCellRange,
+  type CellRange,
+} from './rangeSelection'
 
 export interface DataGridProps<TData> {
   rows: TData[]
@@ -200,6 +208,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const [headerFiltersOpen, setHeaderFiltersOpen] = useState(false)
   const [dragPreview, setDragPreview] = useState<ColumnDragPreviewState | null>(null)
   const [focus, setFocus] = useState<GridFocus>({ row: 0, col: 0 })
+  const [cellRange, setCellRange] = useState<CellRange | null>(null)
+  const [selectingRange, setSelectingRange] = useState(false)
   const restoreGridFocusRef = useRef(false)
   const view = useGridViewState(seed, columns)
   const {
@@ -627,11 +637,42 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     [columns],
   )
 
+  const beginCellRange = useCallback((row: number, col: number) => {
+    const next = { row, col }
+    setFocus(next)
+    setCellRange({ anchor: next, focus: next })
+    setSelectingRange(true)
+  }, [])
+
+  const extendCellRange = useCallback((row: number, col: number) => {
+    if (!selectingRange) return
+    const next = { row, col }
+    setCellRange((current) => current ? { ...current, focus: next } : { anchor: next, focus: next })
+    setFocus(next)
+  }, [selectingRange])
+
+  useEffect(() => {
+    if (!selectingRange) return
+    const stopSelecting = () => setSelectingRange(false)
+    window.addEventListener('mouseup', stopSelecting)
+    return () => window.removeEventListener('mouseup', stopSelecting)
+  }, [selectingRange])
+
   // Writes to the clipboard and toasts on success; the two-argument then scopes the
   // error-swallow to the clipboard write only (a throw from toast() would still surface).
   const copyWithFeedback = useCallback((text: string, message: string) => {
     void copyToClipboard(text).then(() => toast(message), () => {})
   }, [toast])
+
+  const copyRange = useCallback(() => {
+    if (!cellRange || !isMultiCellRange(cellRange)) return false
+    const text = serializeCellRange(cellRange, visibleData, visibleColumnIds, resolveCellValue)
+    if (!text) return false
+    const bounds = cellRangeBounds(cellRange)
+    const cells = (bounds.rowEnd - bounds.rowStart + 1) * (bounds.colEnd - bounds.colStart + 1)
+    copyWithFeedback(text, cells === 1 ? 'Copied cell' : `Copied ${cells} cells`)
+    return true
+  }, [cellRange, copyWithFeedback, resolveCellValue, visibleColumnIds, visibleData])
 
   const copyCell = useCallback(
     (rowId: string, colId: string) => {
@@ -678,6 +719,75 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       rowSelection: state.rowSelection,
     }))
   }, [columns, exportData, exportFilename, getRowId, state.columnOrder, state.columnVisibility, state.rowSelection])
+
+  const pasteTable = useCallback((text: string) => {
+    if (!editingEnabled || !onRowUpdate) return false
+    const incoming = parseClipboardTable(text)
+    if (incoming.length === 0 || incoming[0]?.length === 0) return false
+
+    const rangeBounds = cellRange ? cellRangeBounds(cellRange) : null
+    const startRow = rangeBounds?.rowStart ?? focus.row
+    const startCol = rangeBounds?.colStart ?? focus.col
+    if (startRow < 0 || startCol < 0) return false
+
+    const fillRange = Boolean(rangeBounds && isMultiCellRange(cellRange) && incoming.length === 1 && incoming[0]?.length === 1)
+    const rowSpan = fillRange && rangeBounds ? rangeBounds.rowEnd - rangeBounds.rowStart + 1 : incoming.length
+    const colSpan = fillRange && rangeBounds ? rangeBounds.colEnd - rangeBounds.colStart + 1 : Math.max(...incoming.map((row) => row.length))
+    let changedCells = 0
+    let attemptedEditableCells = 0
+
+    for (let rowOffset = 0; rowOffset < rowSpan; rowOffset += 1) {
+      const row = visibleData[startRow + rowOffset]
+      if (!row) continue
+      const rowId = getRowId(row)
+      const patch: Record<string, unknown> = {}
+      const changedColumnIds: string[] = []
+
+      for (let colOffset = 0; colOffset < colSpan; colOffset += 1) {
+        const columnId = visibleColumnIds[startCol + colOffset]
+        const column = columnId ? columnsById.get(columnId) : undefined
+        if (!column || !isColumnEditable(column)) continue
+        attemptedEditableCells += 1
+
+        const draft = fillRange ? incoming[0]?.[0] : incoming[rowOffset]?.[colOffset]
+        if (draft === undefined) continue
+        const parsed = parseDraft(editorTypeFor(column), draft)
+        if (parsed.error) continue
+        const validationMessage = column.validate?.(parsed.value as never, row)
+        if (validationMessage) continue
+        if (parsed.value === resolveColumnValue(column, row)) continue
+        patch[column.accessorKey as string] = parsed.value
+        changedColumnIds.push(column.id)
+      }
+
+      if (changedColumnIds.length > 0) {
+        onRowUpdate(rowId, patch as Partial<TData>, row)
+        setDirtyCells((current) => markDirty(current, rowId, changedColumnIds))
+        changedCells += changedColumnIds.length
+      }
+    }
+
+    if (changedCells > 0) {
+      toast(changedCells === 1 ? 'Pasted 1 cell' : `Pasted ${changedCells} cells`)
+      return true
+    }
+    if (attemptedEditableCells > 0) {
+      toast('Nothing pasted')
+      return true
+    }
+    return false
+  }, [
+    cellRange,
+    columnsById,
+    editingEnabled,
+    focus.col,
+    focus.row,
+    getRowId,
+    onRowUpdate,
+    toast,
+    visibleColumnIds,
+    visibleData,
+  ])
 
   useEffect(() => {
     if (!scrollElement) return
@@ -768,7 +878,16 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     if (intent === 'move') {
       event.preventDefault()
       restoreGridFocusRef.current = true
-      setFocus((current) => moveFocus(current, event.key, dims, { ctrl: event.ctrlKey || event.metaKey }))
+      const next = moveFocus(focus, event.key, dims, { ctrl: event.ctrlKey || event.metaKey })
+      if (event.shiftKey && focus.row >= 0 && next.row >= 0) {
+        setCellRange((current) => ({
+          anchor: current?.anchor ?? focus,
+          focus: next,
+        }))
+      } else {
+        setCellRange(null)
+      }
+      setFocus(next)
       return
     }
     if (focus.row < 0) {
@@ -832,12 +951,18 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         editableInput ||
         active instanceof HTMLTextAreaElement ||
         (active instanceof HTMLElement && active.isContentEditable)
-      const intent = resolveCopyIntent(event, { hasSelection: visibleSelectedCountRef.current > 0, inEditableTarget })
-      if (!intent) return
-      // Both copy intents are window-level, so scope them hard: focus must live inside this
+      const isCopyCombo = event.key.toLowerCase() === 'c' && (event.ctrlKey || event.metaKey)
+      const isPasteCombo = event.key.toLowerCase() === 'v' && (event.ctrlKey || event.metaKey)
+      if (!isCopyCombo && !isPasteCombo) return
+      // Both clipboard intents are window-level, so scope them hard: focus must live inside this
       // grid, and a native text selection always wins over us (let the browser copy it).
       if (!rootRef.current || !active || !rootRef.current.contains(active)) return
+      if (inEditableTarget) return
       if (window.getSelection()?.isCollapsed === false) return
+      if (isPasteCombo) return
+      if (copyRange()) return
+      const intent = resolveCopyIntent(event, { hasSelection: visibleSelectedCountRef.current > 0, inEditableTarget })
+      if (!intent) return
       if (intent === 'selection') {
         copySelection()
         return
@@ -848,7 +973,25 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [copyCell, copySelection])
+  }, [copyCell, copyRange, copySelection])
+
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const active = document.activeElement
+      if (!rootRef.current || !active || !rootRef.current.contains(active)) return
+      const inEditableTarget =
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      if (inEditableTarget) return
+      const text = event.clipboardData?.getData('text/plain') ?? ''
+      if (!text) return
+      if (!pasteTable(text)) return
+      event.preventDefault()
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [pasteTable])
 
   return (
     <div
@@ -939,6 +1082,9 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                 columnWindow={columnWindow}
                 visibleColumnIds={visibleColumnIds}
                 onFocusCell={(row, col) => setFocus({ row, col })}
+                range={cellRange}
+                onRangeStart={beginCellRange}
+                onRangeEnter={extendCellRange}
                 pinnedOffsets={pinnedColumnOffsets}
                 editing={editingApi}
                 renderAggregatedCell={groupingActive ? renderAggregatedCell : undefined}

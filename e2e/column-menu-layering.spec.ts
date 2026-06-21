@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test.describe('column menu layering', () => {
   test('renders above the accounts totals footer', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 })
-    await page.goto('/')
+    await page.goto('/examples/dashboard')
 
     const accountGrid = page.getByTestId('accounts-grid')
     await accountGrid.scrollIntoViewIfNeeded()

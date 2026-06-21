@@ -22,9 +22,12 @@ export function DataGridCell<TData>({
   rowIndex,
   colIndex,
   focused,
+  rangeSelected,
   pinnedSide,
   pinnedOffset = 0,
   onFocusCell,
+  onRangeStart,
+  onRangeEnter,
   editing,
   groupContent,
   aggregatedContent,
@@ -36,9 +39,12 @@ export function DataGridCell<TData>({
   rowIndex?: number
   colIndex?: number
   focused?: boolean
+  rangeSelected?: boolean
   pinnedSide?: 'left' | 'right'
   pinnedOffset?: number
   onFocusCell?: (row: number, col: number) => void
+  onRangeStart?: (row: number, col: number) => void
+  onRangeEnter?: (row: number, col: number) => void
   editing?: GridEditingApi
   /** Rendered instead of the normal cell content for a grouped cell (chevron + value + count). */
   groupContent?: ReactNode
@@ -69,14 +75,29 @@ export function DataGridCell<TData>({
   return (
     <td
       role="gridcell"
-      className={`group/cell relative hover:bg-accent-soft ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${pinnedSide ? 'bg-surface shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
+      className={`group/cell relative hover:bg-accent-soft ${rangeSelected ? 'bg-accent-soft ring-1 ring-inset ring-accent' : ''} ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${pinnedSide ? 'bg-surface shadow-pinned' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       data-column-id={cell.column.id}
       data-row-index={rowIndex}
       data-col-index={colIndex}
       data-cell-dirty={isDirty ? 'true' : undefined}
       style={style}
       tabIndex={focused ? 0 : -1}
+      aria-selected={rangeSelected ? true : undefined}
       onContextMenu={onContextMenu}
+      onMouseDown={
+        !isActions && !isGroupCell && rowIndex !== undefined && colIndex !== undefined
+          ? (event) => {
+              if (event.button !== 0) return
+              event.currentTarget.focus()
+              onRangeStart?.(rowIndex, colIndex)
+            }
+          : undefined
+      }
+      onMouseEnter={
+        !isActions && !isGroupCell && rowIndex !== undefined && colIndex !== undefined
+          ? () => onRangeEnter?.(rowIndex, colIndex)
+          : undefined
+      }
       onDoubleClick={
         editable && !isEditing
           ? (event) => {

@@ -7,6 +7,8 @@ import type { GridEditingApi } from './editing'
 import type { GridFocus } from './keyboard'
 import type { PinnedOffsets } from './selectors'
 import type { ColumnVirtualWindow } from './types'
+import type { CellRange } from './rangeSelection'
+import { isCellInRange } from './rangeSelection'
 
 interface Props<TData> {
   row: Row<TData>
@@ -23,6 +25,9 @@ interface Props<TData> {
   columnWindow?: ColumnVirtualWindow
   visibleColumnIds?: string[]
   onFocusCell?: (row: number, col: number) => void
+  range?: CellRange | null
+  onRangeStart?: (row: number, col: number) => void
+  onRangeEnter?: (row: number, col: number) => void
   pinnedOffsets?: PinnedOffsets
   editing?: GridEditingApi
   renderAggregatedCell?: (columnId: string, leafRows: TData[]) => ReactNode
@@ -43,6 +48,9 @@ export function DataGridRow<TData>({
   columnWindow,
   visibleColumnIds = row.getVisibleCells().map((cell) => cell.column.id),
   onFocusCell,
+  range,
+  onRangeStart,
+  onRangeEnter,
   pinnedOffsets,
   editing,
   renderAggregatedCell,
@@ -96,6 +104,7 @@ export function DataGridRow<TData>({
         rowIndex={rowIndex}
         colIndex={colIndex}
         focused={focus?.row === rowIndex && focus.col === colIndex}
+        rangeSelected={isCellInRange(range ?? null, rowIndex, colIndex)}
         pinnedSide={pinnedSide}
         pinnedOffset={
           pinnedSide === 'left'
@@ -105,6 +114,8 @@ export function DataGridRow<TData>({
               : 0
         }
         onFocusCell={onFocusCell}
+        onRangeStart={onRangeStart}
+        onRangeEnter={onRangeEnter}
         editing={isGroupRow ? undefined : editing}
         groupContent={isGroupedCell ? groupCellContent(cell) : undefined}
         aggregatedContent={isAggregatedCell ? aggregatedCellContent(cell) : undefined}

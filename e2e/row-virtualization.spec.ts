@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.describe('row virtualization', () => {
   test('keeps the mounted row count bounded for 10k rows', async ({ page }) => {
-    await page.goto('/?rows=10000')
+    await page.goto('/examples/dashboard?rows=10000')
     const accountGrid = page.getByTestId('accounts-grid')
     const scroller = accountGrid.getByTestId('datagrid-scroll')
     await expect(scroller).toBeVisible()
@@ -15,7 +15,7 @@ test.describe('row virtualization', () => {
   })
 
   test('scrolling to the bottom swaps the mounted row window', async ({ page }) => {
-    await page.goto('/?rows=10000')
+    await page.goto('/examples/dashboard?rows=10000')
     const accountGrid = page.getByTestId('accounts-grid')
     const scroller = accountGrid.getByTestId('datagrid-scroll')
     await expect(scroller).toBeVisible()

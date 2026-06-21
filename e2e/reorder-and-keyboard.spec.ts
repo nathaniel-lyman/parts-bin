@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test.describe('reorder + keyboard nav', () => {
   test('shows a whole-column drag preview before committing column order', async ({ page }) => {
     await page.addInitScript(() => localStorage.clear())
-    await page.goto('/')
+    await page.goto('/examples/dashboard')
 
     const accountGrid = page.getByTestId('accounts-grid')
     const accountHeader = accountGrid.getByTestId('col-header-account')
@@ -39,7 +39,7 @@ test.describe('reorder + keyboard nav', () => {
 
   test('keyboard nav scrolls a far-down virtualized cell into view', async ({ page }) => {
     await page.addInitScript(() => localStorage.clear())
-    await page.goto('/?rows=10000')
+    await page.goto('/examples/dashboard?rows=10000')
     const accountGrid = page.getByTestId('accounts-grid')
     const scroller = accountGrid.getByTestId('datagrid-scroll')
     await expect(scroller).toBeVisible()

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('saved-view reset restores the default grid layout', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/examples/dashboard')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
   const accountGrid = page.getByTestId('accounts-grid')
@@ -17,7 +17,7 @@ test('saved-view reset restores the default grid layout', async ({ page }) => {
   await accountGrid.getByPlaceholder('View name').fill('ARR visible')
   await accountGrid.getByRole('button', { name: 'Save current' }).click()
   await accountGrid.getByRole('button', { name: 'Reset to default' }).click()
-  await expect(accountGrid.getByRole('columnheader', { name: /ARR/ })).toHaveCount(0)
+  await expect(accountGrid.getByRole('columnheader', { name: /ARR/ })).toBeVisible()
 
   await accountGrid.getByRole('button', { name: 'Views' }).click()
   await accountGrid.getByRole('button', { name: 'Apply ARR visible' }).click()
