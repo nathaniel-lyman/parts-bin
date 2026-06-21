@@ -1,5 +1,18 @@
+import type { Row } from '@tanstack/react-table'
 import { describe, expect, it } from 'vitest'
-import { makeFilterFn } from '../filtering'
+import { ledgerFilterFn, makeFilterFn, type FilterColumnType, type FilterValue } from '../filtering'
+
+function fakeRow(value: unknown, type: FilterColumnType): Row<unknown> {
+  return {
+    getAllCells: () => [
+      { column: { id: 'x', columnDef: { meta: { type } } }, getValue: () => value },
+    ],
+  } as unknown as Row<unknown>
+}
+
+function matches(value: unknown, type: FilterColumnType, filter: FilterValue): boolean {
+  return ledgerFilterFn(fakeRow(value, type), 'x', filter)
+}
 
 describe('DataGrid filtering engine', () => {
   it('matches text case-insensitively', () => {
@@ -33,6 +46,32 @@ describe('DataGrid filtering engine', () => {
     expect(makeFilterFn('number', 'notEquals', '5')(null)).toBe(true)
     expect(makeFilterFn('number', 'blank', null)('')).toBe(true)
     expect(makeFilterFn('number', 'notBlank', null)(0)).toBe(true)
+  })
+
+  it('evaluates a single condition when there is no second condition', () => {
+    expect(matches(25, 'number', { operator: 'gte', value: 10 })).toBe(true)
+    expect(matches(5, 'number', { operator: 'gte', value: 10 })).toBe(false)
+  })
+
+  it('combines two conditions with AND', () => {
+    const between: FilterValue = { operator: 'gte', value: 10, conjunction: 'and', condition2: { operator: 'lte', value: 40 } }
+    expect(matches(25, 'number', between)).toBe(true)
+    expect(matches(45, 'number', between)).toBe(false)
+    expect(matches(5, 'number', between)).toBe(false)
+  })
+
+  it('combines two conditions with OR', () => {
+    const outside: FilterValue = { operator: 'lessThan', value: 10, conjunction: 'or', condition2: { operator: 'greaterThan', value: 40 } }
+    expect(matches(5, 'number', outside)).toBe(true)
+    expect(matches(45, 'number', outside)).toBe(true)
+    expect(matches(25, 'number', outside)).toBe(false)
+  })
+
+  it('combines two text conditions', () => {
+    const filter: FilterValue = { operator: 'startsWith', value: 'co', conjunction: 'and', condition2: { operator: 'notContains', value: 'z' } }
+    expect(matches('Cobalt', 'text', filter)).toBe(true)
+    expect(matches('Cozy', 'text', filter)).toBe(false) // contains 'z'
+    expect(matches('Acme', 'text', filter)).toBe(false) // doesn't start with 'co'
   })
 
   it('matches enum sets', () => {

@@ -25,9 +25,16 @@ export const VALUELESS_OPERATORS = new Set(['blank', 'notBlank', 'isEmpty'])
 
 export type FilterOperator = (typeof FILTER_OPERATORS)[FilterColumnType][number]
 
-export interface FilterValue {
+export interface FilterCondition {
   operator: FilterOperator
   value: unknown
+}
+
+export interface FilterValue extends FilterCondition {
+  /** Optional second condition joined to the first by `conjunction` (defaults to 'and'). The base
+   *  `{ operator, value }` is condition 1, so a single-condition filter stays shape-compatible. */
+  conjunction?: 'and' | 'or'
+  condition2?: FilterCondition
 }
 
 function toNumber(value: unknown): number | null {
@@ -214,5 +221,9 @@ export function ledgerFilterFn<TData>(
   const cell = row.getAllCells().find((candidate: Cell<TData, unknown>) => candidate.column.id === columnId)
   if (!cell) return true
   const colType = cell.column.columnDef.meta?.type ?? 'text'
-  return makeFilterFn(colType, filterValue.operator, filterValue.value)(cell.getValue())
+  const cellValue = cell.getValue()
+  const first = makeFilterFn(colType, filterValue.operator, filterValue.value)(cellValue)
+  if (!filterValue.condition2) return first
+  const second = makeFilterFn(colType, filterValue.condition2.operator, filterValue.condition2.value)(cellValue)
+  return filterValue.conjunction === 'or' ? first || second : first && second
 }

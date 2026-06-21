@@ -70,6 +70,85 @@ function coerceScale(value: string): number | undefined {
   return number
 }
 
+/**
+ * One filter condition: an operator dropdown + its value field (single input, a Min/Max range for
+ * `between`, or a disabled input for value-less operators). `ordinal` drives the aria-label prefix so
+ * the first condition keeps the original "<col> filter operator/value" names that tests rely on.
+ */
+function FilterConditionFields({
+  label,
+  ordinal,
+  operators,
+  operator,
+  value,
+  valueInputType,
+  onChange,
+}: {
+  label: string
+  ordinal: 'first' | 'second'
+  operators: readonly string[]
+  operator: string
+  value: unknown
+  valueInputType: 'text' | 'number' | 'date'
+  onChange: (operator: string, value: unknown) => void
+}) {
+  const a = ordinal === 'first' ? `${label} filter` : `${label} second filter`
+  const isBetween = operator === 'between'
+  const isValueless = VALUELESS_OPERATORS.has(operator)
+  const rangeValue = Array.isArray(value) ? value : ['', '']
+  return (
+    <div className="grid gap-2 sm:grid-cols-[minmax(140px,0.6fr)_minmax(0,1fr)] sm:items-end">
+      <label className="grid gap-1">
+        <span className="micro text-faint">Operator</span>
+        <Select
+          aria-label={`${a} operator`}
+          value={operator}
+          onChange={(event) => {
+            const next = event.target.value
+            if (VALUELESS_OPERATORS.has(next)) onChange(next, true)
+            else if (next === 'between') onChange(next, Array.isArray(value) ? value : ['', ''])
+            else onChange(next, isBetween || isValueless || Array.isArray(value) ? '' : value)
+          }}
+        >
+          {operators.map((op) => (
+            <option key={op} value={op}>{operatorLabels[op] ?? op}</option>
+          ))}
+        </Select>
+      </label>
+      <div className="grid gap-1">
+        <span className="micro text-faint">Value</span>
+        {isBetween ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type={valueInputType}
+              placeholder="Min"
+              aria-label={`${a} minimum`}
+              value={typeof rangeValue[0] === 'string' || typeof rangeValue[0] === 'number' ? rangeValue[0] : ''}
+              onChange={(event) => onChange('between', [event.target.value, rangeValue[1]])}
+            />
+            <Input
+              type={valueInputType}
+              placeholder="Max"
+              aria-label={`${a} maximum`}
+              value={typeof rangeValue[1] === 'string' || typeof rangeValue[1] === 'number' ? rangeValue[1] : ''}
+              onChange={(event) => onChange('between', [rangeValue[0], event.target.value])}
+            />
+          </div>
+        ) : (
+          <Input
+            type={valueInputType}
+            placeholder="Filter value..."
+            aria-label={`${a} value`}
+            value={typeof value === 'string' || typeof value === 'number' ? value : ''}
+            disabled={isValueless}
+            onChange={(event) => onChange(operator, event.target.value)}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
 interface Props {
   columnId: string
   header: string
@@ -195,6 +274,9 @@ export function DataGridColumnMenu({
   const [filterOpen, setFilterOpen] = useState(false)
   const [formatOpen, setFormatOpen] = useState(false)
   const [draftOperator, setDraftOperator] = useState<string>('')
+  // Local draft for the optional second condition so an in-progress operator/conjunction survives
+  // even before its value is filled (an empty second condition isn't persisted into the filter).
+  const [secondDraft, setSecondDraft] = useState<{ operator: string; value: unknown; conjunction: 'and' | 'or' } | null>(null)
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: VIEWPORT_GAP })
   const [filterPosition, setFilterPosition] = useState({ top: 0, left: VIEWPORT_GAP, width: FILTER_PANEL_WIDTH })
   const [formatPosition, setFormatPosition] = useState({ top: 0, left: VIEWPORT_GAP, width: FORMAT_PANEL_WIDTH })
@@ -207,6 +289,7 @@ export function DataGridColumnMenu({
     setOpen(false)
     setFilterOpen(false)
     setFormatOpen(false)
+    setSecondDraft(null)
   }
   const item = 'flex w-full items-center gap-2 px-3 py-1 text-left text-[13px] text-ink hover:bg-surface-2 disabled:text-faint'
   const label = header || columnId
@@ -220,8 +303,6 @@ export function DataGridColumnMenu({
     : filterType === 'date'
       ? 'date'
       : 'text'
-  const isBetween = operator === 'between'
-  const rangeValue = Array.isArray(value) ? value : ['', '']
   const canFormatNumber = isNumericColumnType(type)
   const effectiveNumberFormat = canFormatNumber
     ? resolveNumberFormat(type, columnNumberFormat, currentNumberFormat)
@@ -249,6 +330,35 @@ export function DataGridColumnMenu({
     else setFilter('isAnyOf', next)
   }
 
+  // Two-condition support (text/number/date). Condition 1 is the base `{ operator, value }`; an
+  // optional condition 2 is joined by `conjunction`. The displayed second condition is the local
+  // draft if present, else the committed one.
+  const displayedSecond = secondDraft
+    ?? (currentFilter?.condition2
+      ? { operator: currentFilter.condition2.operator as string, value: currentFilter.condition2.value, conjunction: currentFilter.conjunction ?? 'and' }
+      : null)
+  const showSecondCondition = displayedSecond !== null
+  const isConditionEmpty = (condition: { operator: string; value: unknown }) =>
+    !VALUELESS_OPERATORS.has(condition.operator)
+    && (condition.value === '' || condition.value === null || condition.value === undefined
+      || (Array.isArray(condition.value) && condition.value.every((item) => item === '' || item === null || item === undefined)))
+  const commitConditions = (
+    c1: { operator: string; value: unknown },
+    c2: { operator: string; value: unknown } | null,
+    conjunction: 'and' | 'or',
+  ) => {
+    if (isConditionEmpty(c1)) {
+      dispatch({ type: 'CLEAR_COLUMN_FILTER', columnId })
+      return
+    }
+    const next: FilterValue = { operator: c1.operator as FilterValue['operator'], value: c1.value }
+    if (c2 && !isConditionEmpty(c2)) {
+      next.conjunction = conjunction
+      next.condition2 = { operator: c2.operator as FilterValue['operator'], value: c2.value }
+    }
+    dispatch({ type: 'SET_COLUMN_FILTER', columnId, value: next })
+  }
+
   // Distinct values + counts for the set filter. Counts come from the column's faceted unique values
   // (real data, post other-column filters); the value list unions any predefined options with the
   // values actually present. Only computed while the filter panel is open.
@@ -274,6 +384,7 @@ export function DataGridColumnMenu({
         setOpen(false)
         setFilterOpen(false)
         setFormatOpen(false)
+        setSecondDraft(null)
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -453,69 +564,90 @@ export function DataGridColumnMenu({
             style={{ top: filterPosition.top, left: filterPosition.left, width: filterPosition.width }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(150px,0.7fr)_minmax(0,1.25fr)_auto] sm:items-end">
+            <div className="grid gap-3">
               <label className="grid gap-1">
                 <span className="micro text-faint">Column</span>
                 <Select aria-label="Filter column" value={columnId} disabled>
                   <option value={columnId}>{label}</option>
                 </Select>
               </label>
-              <label className="grid gap-1">
-                <span className="micro text-faint">Operator</span>
-                <Select
-                  aria-label={`${label} filter operator`}
-                  value={operator}
-                  onChange={(event) => {
-                    const next = event.target.value
-                    setDraftOperator(next)
-                    if (VALUELESS_OPERATORS.has(next)) setFilter(next, true)
-                    else if (next === 'between' && Array.isArray(value)) setFilter(next, value)
-                    else if (value !== '' && value !== null && value !== undefined && !Array.isArray(value)) setFilter(next, value)
-                  }}
-                >
-                  {operators.map((item) => (
-                    <option key={item} value={item}>{operatorLabels[item] ?? item}</option>
-                  ))}
-                </Select>
-              </label>
-              <div className="grid gap-1">
-                <span className="micro text-faint">Value</span>
-                {filterType === 'enum' || filterType === 'status' ? (
-                  <SetFilterList
+              {filterType === 'enum' || filterType === 'status' ? (
+                <SetFilterList
+                  label={label}
+                  values={setValues}
+                  counts={setCounts}
+                  selected={Array.isArray(value) ? value.map(String) : []}
+                  onChange={applySetFilter}
+                />
+              ) : (
+                <>
+                  <FilterConditionFields
                     label={label}
-                    values={setValues}
-                    counts={setCounts}
-                    selected={Array.isArray(value) ? value.map(String) : []}
-                    onChange={applySetFilter}
+                    ordinal="first"
+                    operators={operators}
+                    operator={operator}
+                    value={value}
+                    valueInputType={valueInputType}
+                    onChange={(op, val) => {
+                      setDraftOperator(op)
+                      commitConditions({ operator: op, value: val }, displayedSecond, displayedSecond?.conjunction ?? 'and')
+                    }}
                   />
-                ) : isBetween ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      type={valueInputType}
-                      placeholder="Min"
-                      aria-label={`${label} filter minimum`}
-                      value={typeof rangeValue[0] === 'string' || typeof rangeValue[0] === 'number' ? rangeValue[0] : ''}
-                      onChange={(event) => setFilter(operator, [event.target.value, rangeValue[1]])}
-                    />
-                    <Input
-                      type={valueInputType}
-                      placeholder="Max"
-                      aria-label={`${label} filter maximum`}
-                      value={typeof rangeValue[1] === 'string' || typeof rangeValue[1] === 'number' ? rangeValue[1] : ''}
-                      onChange={(event) => setFilter(operator, [rangeValue[0], event.target.value])}
-                    />
-                  </div>
-                ) : (
-                  <Input
-                    type={valueInputType}
-                    placeholder="Filter value..."
-                    aria-label={`${label} filter value`}
-                    value={typeof value === 'string' || typeof value === 'number' ? value : ''}
-                    disabled={VALUELESS_OPERATORS.has(operator)}
-                    onChange={(event) => setFilter(operator, event.target.value)}
-                  />
-                )}
-              </div>
+                  {showSecondCondition && displayedSecond ? (
+                    <div className="grid gap-2 rounded-[2px] border border-line bg-surface-2 p-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="flex items-center gap-2 text-[12px] text-muted">
+                          <span>Match</span>
+                          <Select
+                            aria-label={`${label} filter conjunction`}
+                            value={displayedSecond.conjunction}
+                            onChange={(event) => {
+                              const conj = event.target.value as 'and' | 'or'
+                              setSecondDraft({ ...displayedSecond, conjunction: conj })
+                              commitConditions({ operator, value }, displayedSecond, conj)
+                            }}
+                          >
+                            <option value="and">AND</option>
+                            <option value="or">OR</option>
+                          </Select>
+                        </label>
+                        <Button
+                          variant="ghost"
+                          size="compact"
+                          aria-label={`Remove second ${label} condition`}
+                          onClick={() => {
+                            setSecondDraft(null)
+                            commitConditions({ operator, value }, null, 'and')
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <FilterConditionFields
+                        label={label}
+                        ordinal="second"
+                        operators={operators}
+                        operator={displayedSecond.operator}
+                        value={displayedSecond.value}
+                        valueInputType={valueInputType}
+                        onChange={(op, val) => {
+                          setSecondDraft({ operator: op, value: val, conjunction: displayedSecond.conjunction })
+                          commitConditions({ operator, value }, { operator: op, value: val }, displayedSecond.conjunction)
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="compact"
+                      className="justify-self-start"
+                      onClick={() => setSecondDraft({ operator: operators[0] ?? 'contains', value: '', conjunction: 'and' })}
+                    >
+                      + Add condition
+                    </Button>
+                  )}
+                </>
+              )}
               <div className="flex gap-2 sm:justify-end">
                 <Button
                   variant="ghost"
@@ -523,6 +655,7 @@ export function DataGridColumnMenu({
                   onClick={() => {
                     dispatch({ type: 'CLEAR_COLUMN_FILTER', columnId })
                     setDraftOperator('')
+                    setSecondDraft(null)
                   }}
                 >
                   Clear

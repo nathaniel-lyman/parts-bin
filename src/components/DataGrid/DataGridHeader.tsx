@@ -105,9 +105,12 @@ const VALUELESS_FILTER_LABELS: Record<string, string> = {
   isEmpty: 'Is empty',
 }
 
-/** Compact read-only summary of a multi-value / valueless filter for the floating-filter chip. */
-function summarizeFilter(current: FilterValue): string {
-  const { operator, value } = current
+const OPERATOR_SYMBOLS: Record<string, string> = {
+  equals: '=', notEquals: '≠', greaterThan: '>', gte: '≥', lessThan: '<', lte: '≤',
+  contains: '∋', notContains: '∌', startsWith: 'starts', endsWith: 'ends', before: '<', after: '>',
+}
+
+function summarizeCondition(operator: string, value: unknown): string {
   if (VALUELESS_OPERATORS.has(operator)) return VALUELESS_FILTER_LABELS[operator] ?? operator
   if (operator === 'between' && Array.isArray(value)) {
     const cell = (part: unknown) => (part === '' || part === null || part === undefined ? '…' : String(part))
@@ -116,7 +119,16 @@ function summarizeFilter(current: FilterValue): string {
   if (operator === 'isAnyOf' && Array.isArray(value)) {
     return value.length === 1 ? String(value[0]) : `${value.length} selected`
   }
-  return String(value ?? '')
+  const symbol = OPERATOR_SYMBOLS[operator]
+  return symbol ? `${symbol} ${String(value ?? '')}`.trim() : String(value ?? '')
+}
+
+/** Compact read-only summary of a multi-value / valueless / two-condition filter for the chip. */
+function summarizeFilter(current: FilterValue): string {
+  const first = summarizeCondition(current.operator, current.value)
+  if (!current.condition2) return first
+  const second = summarizeCondition(current.condition2.operator, current.condition2.value)
+  return `${first} ${(current.conjunction ?? 'and').toUpperCase()} ${second}`
 }
 
 function headerLabel<TData>(header: Header<TData, unknown>, column?: DataGridColumn<TData>) {
@@ -519,7 +531,7 @@ export function DataGridHeader<TData>({
                 // clobbering it, so show a read-only summary chip with a clear button. Single-value
                 // operators stay editable and keep their operator instead of resetting to the default.
                 const op = current?.operator
-                const isComplexFilter = op !== undefined && (op === 'between' || op === 'isAnyOf' || VALUELESS_OPERATORS.has(op) || Array.isArray(currentValue))
+                const isComplexFilter = op !== undefined && (op === 'between' || op === 'isAnyOf' || VALUELESS_OPERATORS.has(op) || Array.isArray(currentValue) || current?.condition2 !== undefined)
                 if (isComplexFilter && current) {
                   const summary = summarizeFilter(current)
                   return (
