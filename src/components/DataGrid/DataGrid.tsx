@@ -808,7 +808,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   return (
     <div
       ref={rootRef}
-      className={`rounded-[2px] border border-line bg-surface ${densityClass(state.density)}`}
+      className={`ledger-density-anim rounded-[2px] border border-line bg-surface ${densityClass(state.density)}`}
       data-pinned-left={pinnedGroups.left.length}
       data-pinned-center={pinnedGroups.center.length}
       data-pinned-right={pinnedGroups.right.length}
@@ -858,7 +858,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         onDragCancel={onDragCancel}
       >
         <div className={`relative ${loading || error !== undefined || rowCount === 0 ? 'min-h-[220px]' : ''}`}>
-          <div ref={setScrollElement} className="max-h-[640px] overflow-auto" data-testid="datagrid-scroll">
+          <div ref={setScrollElement} className="ledger-scroll-thin max-h-[640px] overflow-auto" data-testid="datagrid-scroll">
             <table
               className="w-full border-collapse"
               role="grid"

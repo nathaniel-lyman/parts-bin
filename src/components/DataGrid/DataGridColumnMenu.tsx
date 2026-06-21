@@ -264,7 +264,7 @@ export function DataGridColumnMenu({
             ref={menuRef}
             role="menu"
             aria-label={`${label} column menu`}
-            className="shadow-dropdown fixed z-50 w-52 rounded-[2px] border border-line bg-surface py-1"
+            className="popover-enter shadow-dropdown fixed z-50 w-52 rounded-[2px] border border-line bg-surface py-1"
             style={{ top: menuPosition.top, left: menuPosition.left }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -340,7 +340,7 @@ export function DataGridColumnMenu({
             ref={filterPanelRef}
             role="dialog"
             aria-label={`${label} filter`}
-            className="shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
+            className="popover-enter shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
             style={{ top: filterPosition.top, left: filterPosition.left, width: filterPosition.width }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -436,7 +436,7 @@ export function DataGridColumnMenu({
             ref={formatPanelRef}
             role="dialog"
             aria-label={`${label} number format`}
-            className="shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
+            className="popover-enter shadow-modal fixed z-50 rounded-[4px] border border-line bg-surface p-4"
             style={{ top: formatPosition.top, left: formatPosition.left, width: formatPosition.width }}
             onClick={(event) => event.stopPropagation()}
           >

@@ -83,7 +83,7 @@ export function DataGridContextMenu({
         ref={menuRef}
         role="menu"
         aria-label="Row actions"
-        className="shadow-dropdown fixed z-50 min-w-[180px] rounded-[2px] border border-line bg-surface py-1"
+        className="popover-enter shadow-dropdown fixed z-50 min-w-[180px] rounded-[2px] border border-line bg-surface py-1"
         style={{ left: position.left, top: position.top }}
       >
         <Button role="menuitem" variant="ghost" size="compact" className="w-full justify-start" onClick={run(onCopyCell)}>
