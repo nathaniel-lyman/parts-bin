@@ -33,6 +33,20 @@ function toNumber(value: unknown): number | null {
   return null
 }
 
+/**
+ * Parse a date-ish value to a comparable timestamp. Date filters previously compared the raw strings
+ * lexically, which only happens to work when cell + filter share an ISO `YYYY-MM-DD` shape — it
+ * silently misorders US `MM/DD/YYYY`, mixed formats, or `Date` objects. Parsing both sides to a
+ * timestamp compares them chronologically; an unparseable/blank value yields null and is excluded.
+ */
+function toTimestamp(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.getTime()
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  const ts = Date.parse(String(value))
+  return Number.isNaN(ts) ? null : ts
+}
+
 function isBlank(value: unknown): boolean {
   return value === null || value === undefined || (typeof value === 'string' && value.trim() === '')
 }
@@ -94,17 +108,27 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
     }
     case 'date': {
       switch (operator) {
-        case 'before':
-          return (cellValue) => String(cellValue ?? '') !== '' && String(cellValue) < String(value)
-        case 'after':
-          return (cellValue) => String(cellValue ?? '') !== '' && String(cellValue) > String(value)
+        case 'before': {
+          const target = toTimestamp(value)
+          return (cellValue) => {
+            const current = toTimestamp(cellValue)
+            return current !== null && target !== null && current < target
+          }
+        }
+        case 'after': {
+          const target = toTimestamp(value)
+          return (cellValue) => {
+            const current = toTimestamp(cellValue)
+            return current !== null && target !== null && current > target
+          }
+        }
         case 'between': {
           const [lo, hi] = Array.isArray(value) ? value : [undefined, undefined]
+          const min = toTimestamp(lo)
+          const max = toTimestamp(hi)
           return (cellValue) => {
-            const current = String(cellValue ?? '')
-            const min = lo == null || lo === '' ? null : String(lo)
-            const max = hi == null || hi === '' ? null : String(hi)
-            return current !== '' && (min === null || current >= min) && (max === null || current <= max)
+            const current = toTimestamp(cellValue)
+            return current !== null && (min === null || current >= min) && (max === null || current <= max)
           }
         }
         default:
