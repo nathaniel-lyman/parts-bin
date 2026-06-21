@@ -8,17 +8,20 @@ export interface GridColumnFilterMeta {
   options?: string[]
 }
 
-const NUMERIC_OPS = ['equals', 'greaterThan', 'lessThan', 'between'] as const
+const NUMERIC_OPS = ['equals', 'notEquals', 'greaterThan', 'gte', 'lessThan', 'lte', 'between', 'blank', 'notBlank'] as const
 
 export const FILTER_OPERATORS = {
-  text: ['contains', 'equals', 'startsWith', 'isEmpty'],
+  text: ['contains', 'notContains', 'equals', 'notEquals', 'startsWith', 'endsWith', 'blank', 'notBlank'],
   number: NUMERIC_OPS,
   currency: NUMERIC_OPS,
   percent: NUMERIC_OPS,
-  date: ['before', 'after', 'between'],
+  date: ['before', 'after', 'between', 'blank', 'notBlank'],
   status: ['is', 'isAnyOf'],
   enum: ['is', 'isAnyOf'],
 } as const satisfies Record<FilterColumnType, readonly string[]>
+
+/** Operators that need no value — the menu/floating filter hide the value input for these. */
+export const VALUELESS_OPERATORS = new Set(['blank', 'notBlank', 'isEmpty'])
 
 export type FilterOperator = (typeof FILTER_OPERATORS)[FilterColumnType][number]
 
@@ -58,12 +61,21 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
       switch (operator) {
         case 'contains':
           return (cellValue) => String(cellValue ?? '').toLowerCase().includes(needle)
+        case 'notContains':
+          return (cellValue) => !String(cellValue ?? '').toLowerCase().includes(needle)
         case 'equals':
           return (cellValue) => String(cellValue ?? '').toLowerCase() === needle
+        case 'notEquals':
+          return (cellValue) => String(cellValue ?? '').toLowerCase() !== needle
         case 'startsWith':
           return (cellValue) => String(cellValue ?? '').toLowerCase().startsWith(needle)
+        case 'endsWith':
+          return (cellValue) => String(cellValue ?? '').toLowerCase().endsWith(needle)
+        case 'blank':
         case 'isEmpty':
           return (cellValue) => isBlank(cellValue)
+        case 'notBlank':
+          return (cellValue) => !isBlank(cellValue)
         default:
           return () => true
       }
@@ -79,11 +91,26 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
             return current !== null && target !== null && current === target
           }
         }
+        case 'notEquals': {
+          const target = toNumber(value)
+          // A blank/non-numeric cell is "not equal" to the target number, matching AG Grid.
+          return (cellValue) => {
+            const current = toNumber(cellValue)
+            return target === null ? true : current !== target
+          }
+        }
         case 'greaterThan': {
           const target = toNumber(value)
           return (cellValue) => {
             const current = toNumber(cellValue)
             return current !== null && target !== null && current > target
+          }
+        }
+        case 'gte': {
+          const target = toNumber(value)
+          return (cellValue) => {
+            const current = toNumber(cellValue)
+            return current !== null && target !== null && current >= target
           }
         }
         case 'lessThan': {
@@ -93,6 +120,17 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
             return current !== null && target !== null && current < target
           }
         }
+        case 'lte': {
+          const target = toNumber(value)
+          return (cellValue) => {
+            const current = toNumber(cellValue)
+            return current !== null && target !== null && current <= target
+          }
+        }
+        case 'blank':
+          return (cellValue) => isBlank(cellValue)
+        case 'notBlank':
+          return (cellValue) => !isBlank(cellValue)
         case 'between': {
           const [lo, hi] = Array.isArray(value) ? value : [undefined, undefined]
           const min = toNumber(lo)
@@ -131,6 +169,10 @@ export function makeFilterFn(type: FilterColumnType, operator: string, value: un
             return current !== null && (min === null || current >= min) && (max === null || current <= max)
           }
         }
+        case 'blank':
+          return (cellValue) => isBlank(cellValue)
+        case 'notBlank':
+          return (cellValue) => !isBlank(cellValue)
         default:
           return () => true
       }

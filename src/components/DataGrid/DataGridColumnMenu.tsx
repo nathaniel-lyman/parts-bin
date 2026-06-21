@@ -4,7 +4,7 @@ import { EllipsisVertical, ListFilter } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
-import { FILTER_OPERATORS, type FilterColumnType, type FilterValue } from './filtering'
+import { FILTER_OPERATORS, VALUELESS_OPERATORS, type FilterColumnType, type FilterValue } from './filtering'
 import {
   NUMBER_FORMAT_CURRENCIES,
   NUMBER_FORMAT_NOTATIONS,
@@ -24,12 +24,19 @@ const numericTypes = new Set<FilterColumnType>(['number', 'currency', 'percent']
 
 const operatorLabels: Record<string, string> = {
   contains: 'Contains',
+  notContains: 'Does not contain',
   equals: '=',
+  notEquals: '≠',
   greaterThan: '>',
+  gte: '≥',
   lessThan: '<',
+  lte: '≤',
   between: 'Between',
   startsWith: 'Starts with',
+  endsWith: 'Ends with',
   isEmpty: 'Is empty',
+  blank: 'Is blank',
+  notBlank: 'Is not blank',
   before: 'Before',
   after: 'After',
   is: 'Is',
@@ -144,7 +151,7 @@ export function DataGridColumnMenu({
 
   const setFilter = (nextOperator: string, nextValue: unknown) => {
     const emptyRange = Array.isArray(nextValue) && nextValue.every((item) => item === '' || item === null || item === undefined)
-    if (nextOperator !== 'isEmpty' && (nextValue === '' || nextValue === null || nextValue === undefined || emptyRange)) {
+    if (!VALUELESS_OPERATORS.has(nextOperator) && (nextValue === '' || nextValue === null || nextValue === undefined || emptyRange)) {
       dispatch({ type: 'CLEAR_COLUMN_FILTER', columnId })
       return
     }
@@ -357,10 +364,11 @@ export function DataGridColumnMenu({
                   aria-label={`${label} filter operator`}
                   value={operator}
                   onChange={(event) => {
-                    setDraftOperator(event.target.value)
-                    if (event.target.value === 'isEmpty') setFilter(event.target.value, true)
-                    else if (event.target.value === 'between' && Array.isArray(value)) setFilter(event.target.value, value)
-                    else if (value !== '' && value !== null && value !== undefined && !Array.isArray(value)) setFilter(event.target.value, value)
+                    const next = event.target.value
+                    setDraftOperator(next)
+                    if (VALUELESS_OPERATORS.has(next)) setFilter(next, true)
+                    else if (next === 'between' && Array.isArray(value)) setFilter(next, value)
+                    else if (value !== '' && value !== null && value !== undefined && !Array.isArray(value)) setFilter(next, value)
                   }}
                 >
                   {operators.map((item) => (
@@ -406,7 +414,7 @@ export function DataGridColumnMenu({
                     placeholder="Filter value..."
                     aria-label={`${label} filter value`}
                     value={typeof value === 'string' || typeof value === 'number' ? value : ''}
-                    disabled={operator === 'isEmpty'}
+                    disabled={VALUELESS_OPERATORS.has(operator)}
                     onChange={(event) => setFilter(operator, event.target.value)}
                   />
                 )}
