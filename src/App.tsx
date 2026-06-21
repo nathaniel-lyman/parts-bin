@@ -3,7 +3,7 @@ import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useServerData } from './hooks/useServerData'
 import { totalMrr, activeCount, atRiskCount, avgGrowth, segmentShares } from './selectors/metrics'
-import { fmtCurrency, fmtPercent, formatCompactKValue, formatCurrencyK } from './lib/format'
+import { fmtCurrency, fmtDelta, fmtPercent, formatCompactKValue, formatCurrencyK } from './lib/format'
 import { KpiCard, KpiSummaryRow } from './components/KpiCard'
 import {
   DataGrid,
@@ -32,10 +32,13 @@ import {
   formatDateRangeLabel,
   IconButton,
   PageHeader,
+  StatusBadge,
   Switch,
+  Table,
   useToast,
   type CommandPaletteGroup,
   type DateRange,
+  type TableColumn,
 } from './components/ui'
 import {
   AssistantPanel,
@@ -64,7 +67,7 @@ import { LoginPage, SettingsPage } from './components/templates'
 import { monthlySeries, movementSeries, revenueWaterfallSeries, sparks } from './data/accounts'
 import { createMockServerAdapter, generateAccounts } from './data/examples/accountMockServerAdapter'
 import type { Account } from './data/types'
-import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, accountGridColumns } from './components/accountGridColumns'
+import { ACCOUNT_GRID_INITIAL_STATE, accountGlobalFilter, accountGridColumns, statusTone } from './components/accountGridColumns'
 import { appHref, appPath, navigate } from './lib/routes'
 
 const timePeriodOptions = [
@@ -165,15 +168,27 @@ const waterfallInsight = (() => {
   }
 })()
 
+// Read-only column set for the assembly demo's static accounts Table. Mirrors
+// the DataGrid example's default visible columns, minus the interactive bits.
+const accountTableColumns: TableColumn<Account>[] = [
+  { key: 'name', header: 'Account', render: (row) => <span className="text-ink">{row.name}</span> },
+  { key: 'owner', header: 'Owner', render: (row) => <span className="text-muted">{row.owner}</span> },
+  { key: 'segment', header: 'Segment', render: (row) => <span className="text-muted">{row.segment}</span> },
+  { key: 'mrr', header: 'Value', numeric: true, render: (row) => fmtCurrency(row.mrr) },
+  {
+    key: 'growth',
+    header: 'Growth',
+    numeric: true,
+    render: (row) => <span className={row.growth < 0 ? 'text-neg' : 'text-pos'}>{fmtDelta(row.growth)}</span>,
+  },
+  { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} tone={statusTone(row.status)} /> },
+]
+
 interface DashboardPageProps {
   accountsApi: ReturnType<typeof useAccounts>
   globalSearch: string
   atRiskOnly: boolean
   timePeriodLabel: string
-  onAssistantGridContextChange?: (
-    context: AssistantGridContext,
-    actions: DataGridContextSnapshot<Account>['actions'],
-  ) => void
   onAssistantDashboardEvidenceChange?: (evidence: AssistantDashboardEvidence) => void
 }
 
@@ -182,25 +197,16 @@ function DashboardPage({
   globalSearch,
   atRiskOnly,
   timePeriodLabel,
-  onAssistantGridContextChange,
   onAssistantDashboardEvidenceChange,
 }: DashboardPageProps) {
-  const { accounts, create, update, remove } = accountsApi
-  const toast = useToast()
-  const params = new URLSearchParams(window.location.search)
-  const requestedRows = Number(params.get('rows') ?? 0)
-  const wideColumns = params.get('cols') === 'wide'
-  const generatedAccounts = useMemo(
-    () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
-    [requestedRows],
-  )
+  const { accounts } = accountsApi
   const visibleAccounts = useMemo(() => {
-    let next = generatedAccounts ?? accounts
+    let next = accounts
     const query = globalSearch.trim()
     if (query) next = next.filter((account) => accountGlobalFilter(account, query))
     if (atRiskOnly) next = next.filter((account) => account.status !== 'Active')
     return next
-  }, [accounts, atRiskOnly, generatedAccounts, globalSearch])
+  }, [accounts, atRiskOnly, globalSearch])
   const shareInsight = useMemo(() => {
     const shares = segmentShares(visibleAccounts)
     const total = shares.reduce((sum, share) => sum + share.value, 0)
@@ -223,16 +229,7 @@ function DashboardPage({
     label: share.segment,
     value: share.value,
   })), [visibleAccounts])
-  const gridInitialState = useMemo(
-    () => (generatedAccounts ? { ...ACCOUNT_GRID_INITIAL_STATE, sorting: [] } : ACCOUNT_GRID_INITIAL_STATE),
-    [generatedAccounts],
-  )
 
-  const [editing, setEditing] = useState<Account | null>(null)
-  const [creating, setCreating] = useState(false)
-  const [deleting, setDeleting] = useState<Account | null>(null)
-  const [serverMode, setServerMode] = useState(params.get('server') === '1')
-  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(ACCOUNT_GRID_INITIAL_STATE))
   const [movementBarWidth, setMovementBarWidth] = useState(DEFAULT_REVENUE_MOVEMENT_BAR_WIDTH)
   const [movementLabels, setMovementLabels] = useState(true)
   const [waterfallLabels, setWaterfallLabels] = useState(true)
@@ -245,35 +242,6 @@ function DashboardPage({
   }), [movementBarWidth, movementLabels, timePeriodLabel])
   const dashboardEvidenceReportKey = useMemo(() => JSON.stringify(dashboardEvidence), [dashboardEvidence])
   const lastDashboardEvidenceReportKeyRef = useRef('')
-  const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
-  const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
-  const gridColumns = useMemo(() => {
-    const columns = accountGridColumns({ onEdit: setEditing, onDelete: setDeleting })
-    return wideColumns ? wideAccountGridColumns(columns) : columns
-  }, [setDeleting, setEditing, wideColumns])
-  const handleAssistantGridContextChange = useCallback(
-    (snapshot: DataGridContextSnapshot<Account>) => {
-      onAssistantGridContextChange?.({
-        visibleAccounts: snapshot.visibleRows,
-        selectedAccounts: snapshot.selectedRows,
-        totalRowCount: snapshot.totalRowCount,
-        visibleRowCount: snapshot.visibleRowCount,
-        selectedRowCount: snapshot.selectedRowCount,
-        globalSearch,
-        quickFilter: snapshot.globalFilter,
-        atRiskOnly,
-        timePeriodLabel,
-        columnFilters: snapshot.columnFilters.map((filter) => ({
-          id: filter.id,
-          value: filterValueLabel(filter.value),
-        })),
-        sorting: snapshot.sorting.map((sort) => ({ id: sort.id, desc: sort.desc })),
-        savedViews: snapshot.savedViews,
-        currentSavedViewName: snapshot.currentSavedView?.name,
-      }, snapshot.actions)
-    },
-    [atRiskOnly, globalSearch, onAssistantGridContextChange, timePeriodLabel],
-  )
   useLayoutEffect(() => {
     if (dashboardEvidenceReportKey === lastDashboardEvidenceReportKeyRef.current) return
     lastDashboardEvidenceReportKeyRef.current = dashboardEvidenceReportKey
@@ -286,7 +254,7 @@ function DashboardPage({
         <PageHeader
           eyebrow="parts-bin component assembly"
           title="Component assembly demo"
-          description={`A working sample assembled from parts-bin components: KpiCard, ChartCard, DataGrid, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
+          description={`A working sample assembled from parts-bin components: KpiCard, ChartCard, Table, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
           actions={
             <span className="num text-[13px] text-muted">
               {activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} rows · {fmtCurrency(totalMrr(visibleAccounts))} sample value
@@ -375,6 +343,113 @@ function DashboardPage({
             />
           </ChartCard>
         </div>
+
+        <section aria-labelledby="accounts-table-title" className="mb-3 grid gap-1">
+          <h2 id="accounts-table-title" className="m-0 text-[15px] font-semibold text-ink">Sample accounts</h2>
+          <p className="m-0 text-[13px] text-muted">
+            A read-only <code className="num text-ink">Table</code> of the visible sample rows. For sorting, filtering, column tools, selection, inline edit, and export, open the{' '}
+            <a className="text-accent hover:underline" href={appHref('/examples/datagrid')}>DataGrid example</a>.
+          </p>
+        </section>
+        <div data-testid="accounts-table" className="border border-line bg-surface px-3 py-1">
+          <Table
+            caption="Sample accounts"
+            columns={accountTableColumns}
+            rows={visibleAccounts}
+            rowKey={(row) => row.id}
+            emptyMessage="No rows match the current filters"
+          />
+        </div>
+      </main>
+    </>
+  )
+}
+
+interface DataGridExamplePageProps {
+  accountsApi: ReturnType<typeof useAccounts>
+  globalSearch: string
+  atRiskOnly: boolean
+  timePeriodLabel: string
+  onAssistantGridContextChange?: (
+    context: AssistantGridContext,
+    actions: DataGridContextSnapshot<Account>['actions'],
+  ) => void
+}
+
+function DataGridExamplePage({
+  accountsApi,
+  globalSearch,
+  atRiskOnly,
+  timePeriodLabel,
+  onAssistantGridContextChange,
+}: DataGridExamplePageProps) {
+  const { accounts, create, update, remove } = accountsApi
+  const toast = useToast()
+  const params = new URLSearchParams(window.location.search)
+  const requestedRows = Number(params.get('rows') ?? 0)
+  const wideColumns = params.get('cols') === 'wide'
+  const generatedAccounts = useMemo(
+    () => (Number.isFinite(requestedRows) && requestedRows > 0 ? generateAccounts(requestedRows) : null),
+    [requestedRows],
+  )
+  const visibleAccounts = useMemo(() => {
+    let next = generatedAccounts ?? accounts
+    const query = globalSearch.trim()
+    if (query) next = next.filter((account) => accountGlobalFilter(account, query))
+    if (atRiskOnly) next = next.filter((account) => account.status !== 'Active')
+    return next
+  }, [accounts, atRiskOnly, generatedAccounts, globalSearch])
+  const gridInitialState = useMemo(
+    () => (generatedAccounts ? { ...ACCOUNT_GRID_INITIAL_STATE, sorting: [] } : ACCOUNT_GRID_INITIAL_STATE),
+    [generatedAccounts],
+  )
+
+  const [editing, setEditing] = useState<Account | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [deleting, setDeleting] = useState<Account | null>(null)
+  const [serverMode, setServerMode] = useState(params.get('server') === '1')
+  const [serverQuery, setServerQuery] = useState<GridQuery>(() => toGridQuery(ACCOUNT_GRID_INITIAL_STATE))
+  const serverAdapter = useMemo(() => createMockServerAdapter(visibleAccounts, { latencyMs: 80 }), [visibleAccounts])
+  const server = useServerData(serverAdapter, serverQuery, { enabled: serverMode, debounceMs: 120 })
+  const gridColumns = useMemo(() => {
+    const columns = accountGridColumns({ onEdit: setEditing, onDelete: setDeleting })
+    return wideColumns ? wideAccountGridColumns(columns) : columns
+  }, [setDeleting, setEditing, wideColumns])
+  const handleAssistantGridContextChange = useCallback(
+    (snapshot: DataGridContextSnapshot<Account>) => {
+      onAssistantGridContextChange?.({
+        visibleAccounts: snapshot.visibleRows,
+        selectedAccounts: snapshot.selectedRows,
+        totalRowCount: snapshot.totalRowCount,
+        visibleRowCount: snapshot.visibleRowCount,
+        selectedRowCount: snapshot.selectedRowCount,
+        globalSearch,
+        quickFilter: snapshot.globalFilter,
+        atRiskOnly,
+        timePeriodLabel,
+        columnFilters: snapshot.columnFilters.map((filter) => ({
+          id: filter.id,
+          value: filterValueLabel(filter.value),
+        })),
+        sorting: snapshot.sorting.map((sort) => ({ id: sort.id, desc: sort.desc })),
+        savedViews: snapshot.savedViews,
+        currentSavedViewName: snapshot.currentSavedView?.name,
+      }, snapshot.actions)
+    },
+    [atRiskOnly, globalSearch, onAssistantGridContextChange, timePeriodLabel],
+  )
+
+  return (
+    <>
+      <main className="w-full px-6 py-6">
+        <PageHeader
+          eyebrow="parts-bin component assembly"
+          title="DataGrid example"
+          description={`The full DataGrid harness: sorting, filtering, column tools, selection, inline edit, grouping, export, and an optional mock server mode. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
+          actions={
+            <span className="num text-[13px] text-muted">{visibleAccounts.length} rows</span>
+          }
+        />
 
         <div className="mb-2 flex items-center justify-between gap-3 border border-line bg-surface px-3 py-2">
           <Switch
@@ -466,8 +541,9 @@ export default function App() {
   const settingsActive = pathname === '/settings'
   const docsActive = pathname === '/' || pathname === '/docs'
   const assemblyActive = pathname === '/examples/dashboard' || pathname === '/demo'
+  const gridExampleActive = pathname === '/examples/datagrid'
   const kitActive = docsActive
-  const accountsActive = assemblyActive
+  const accountsActive = assemblyActive || gridExampleActive
   const routeKind: AssistantRouteKind = settingsActive
     ? 'settings'
     : docsActive
@@ -479,7 +555,9 @@ export default function App() {
     ? 'Settings'
     : docsActive
       ? 'Component catalog'
-      : 'Component assembly'
+      : gridExampleActive
+        ? 'DataGrid example'
+        : 'Component assembly'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const [atRiskOnly, setAtRiskOnly] = useState(false)
@@ -553,10 +631,12 @@ export default function App() {
   const assistantAdapter = useMemo(() => createDemoAdapter(() => accountsRef.current, {
     getContext: () => {
       const shell = assistantShellContextRef.current
+      const onGridExample = shell.route === '/examples/datagrid'
+      const onAssembly = shell.route === '/examples/dashboard' || shell.route === '/demo'
       return {
         ...shell,
-        grid: shell.routeKind === 'accounts' ? assistantGridContextRef.current : undefined,
-        dashboardEvidence: shell.routeKind === 'accounts' ? assistantDashboardEvidenceRef.current : undefined,
+        grid: onGridExample ? assistantGridContextRef.current : undefined,
+        dashboardEvidence: onAssembly ? assistantDashboardEvidenceRef.current : undefined,
       }
     },
     actions: assistantActions,
@@ -569,25 +649,25 @@ export default function App() {
     sendAssistantMessage(prompt)
   }, [sendAssistantMessage])
   const saveCurrentGridView = useCallback(() => {
-    if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
-      toast('Open the sample grid before saving a view', 'warn')
+    if (!gridExampleActive || !gridAssistantActionsRef.current) {
+      toast('Open the DataGrid example before saving a view', 'warn')
       return
     }
     const name = commandSavedViewName(assistantGridContextRef.current)
     gridAssistantActionsRef.current.saveCurrentView(name)
     toast(`Saved view ${name}`, 'pos')
-  }, [routeKind, toast])
+  }, [gridExampleActive, toast])
   const resetAccountGridView = useCallback(() => {
-    if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
-      toast('Open the sample grid before resetting the view', 'warn')
+    if (!gridExampleActive || !gridAssistantActionsRef.current) {
+      toast('Open the DataGrid example before resetting the view', 'warn')
       return
     }
     gridAssistantActionsRef.current.resetView()
     toast('Reset sample grid layout', 'accent')
-  }, [routeKind, toast])
+  }, [gridExampleActive, toast])
   const clearSelectedGridRows = useCallback(() => {
-    if (routeKind !== 'accounts' || !gridAssistantActionsRef.current) {
-      toast('Open the sample grid before clearing selection', 'warn')
+    if (!gridExampleActive || !gridAssistantActionsRef.current) {
+      toast('Open the DataGrid example before clearing selection', 'warn')
       return
     }
     const selected = assistantGridContextRef.current?.selectedRowCount ?? 0
@@ -597,7 +677,7 @@ export default function App() {
     }
     gridAssistantActionsRef.current.clearSelection()
     toast(selected === 1 ? 'Cleared 1 selected row' : `Cleared ${selected} selected rows`, 'accent')
-  }, [routeKind, toast])
+  }, [gridExampleActive, toast])
   const clearWorkspaceFilters = useCallback(() => {
     setGlobalSearch('')
     setAtRiskOnly(false)
@@ -628,9 +708,16 @@ export default function App() {
         {
           id: 'assembly',
           label: 'Open component assembly',
-          description: 'Example assembly of KPI, chart, DataGrid, and assistant components',
+          description: 'Example assembly of KPI, chart, table, and assistant components',
           shortcut: 'G D',
           onSelect: () => { navigate('/examples/dashboard') },
+        },
+        {
+          id: 'datagrid',
+          label: 'Open DataGrid example',
+          description: 'Full DataGrid harness with server mode, selection, and CRUD',
+          shortcut: 'G G',
+          onSelect: () => { navigate('/examples/datagrid') },
         },
         {
           id: 'settings',
@@ -723,32 +810,32 @@ export default function App() {
     },
     {
       id: 'sample-grid',
-      label: 'Sample grid',
+      label: 'DataGrid example',
       items: [
         {
           id: 'save-grid-view',
           label: 'Save current grid view',
-          description: routeKind === 'accounts' ? 'Persist filters, columns, sort, density, and page size' : 'Available on the sample grid',
+          description: gridExampleActive ? 'Persist filters, columns, sort, density, and page size' : 'Available on the DataGrid example',
           shortcut: 'V S',
-          disabled: routeKind !== 'accounts',
+          disabled: !gridExampleActive,
           keywords: ['saved view', 'view', 'grid'],
           onSelect: saveCurrentGridView,
         },
         {
           id: 'reset-grid-view',
           label: 'Reset grid layout',
-          description: routeKind === 'accounts' ? 'Restore the default sample grid layout' : 'Available on the sample grid',
+          description: gridExampleActive ? 'Restore the default sample grid layout' : 'Available on the DataGrid example',
           shortcut: 'V R',
-          disabled: routeKind !== 'accounts',
+          disabled: !gridExampleActive,
           keywords: ['view', 'columns', 'grid'],
           onSelect: resetAccountGridView,
         },
         {
           id: 'clear-grid-selection',
           label: 'Clear selected rows',
-          description: routeKind === 'accounts' ? 'Deselect all selected rows' : 'Available on the sample grid',
+          description: gridExampleActive ? 'Deselect all selected rows' : 'Available on the DataGrid example',
           shortcut: 'V C',
-          disabled: routeKind !== 'accounts',
+          disabled: !gridExampleActive,
           keywords: ['selection', 'selected', 'rows'],
           onSelect: clearSelectedGridRows,
         },
@@ -772,10 +859,10 @@ export default function App() {
     clearSelectedGridRows,
     clearWorkspaceFilters,
     globalSearch,
+    gridExampleActive,
     handleTimePeriodChange,
     mode,
     resetAccountGridView,
-    routeKind,
     routeLabel,
     saveCurrentGridView,
     sendAssistantCommand,
@@ -798,6 +885,7 @@ export default function App() {
       items={[
         { label: 'Components', href: appHref('/docs'), active: docsActive, meta: 'kit' },
         { label: 'Assembly demo', href: appHref('/examples/dashboard'), active: assemblyActive, meta: 'demo' },
+        { label: 'DataGrid example', href: appHref('/examples/datagrid'), active: gridExampleActive, meta: 'demo' },
       ]}
       adminItems={[
         { label: 'Settings', href: appHref('/settings'), active: settingsActive },
@@ -882,13 +970,20 @@ export default function App() {
         <SettingsPage />
       ) : docsActive ? (
         <DocsPage globalSearch={globalSearch} />
+      ) : gridExampleActive ? (
+        <DataGridExamplePage
+          accountsApi={accountsApi}
+          globalSearch={globalSearch}
+          atRiskOnly={atRiskOnly}
+          timePeriodLabel={dashboardPeriodLabel}
+          onAssistantGridContextChange={handleAssistantGridContextChange}
+        />
       ) : assemblyActive ? (
         <DashboardPage
           accountsApi={accountsApi}
           globalSearch={globalSearch}
           atRiskOnly={atRiskOnly}
           timePeriodLabel={dashboardPeriodLabel}
-          onAssistantGridContextChange={handleAssistantGridContextChange}
           onAssistantDashboardEvidenceChange={handleAssistantDashboardEvidenceChange}
         />
       ) : (

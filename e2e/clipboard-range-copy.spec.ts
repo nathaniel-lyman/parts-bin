@@ -9,7 +9,7 @@ import { expect, test } from '@playwright/test'
 test.describe('clipboard range selection', () => {
   async function setup(page: import('@playwright/test').Page) {
     await page.addInitScript(() => localStorage.clear())
-    await page.goto('/examples/dashboard')
+    await page.goto('/examples/datagrid')
     const grid = page.getByTestId('accounts-grid')
     await expect(grid.getByTestId('col-header-owner')).toBeVisible()
     // Capture what the grid writes to the clipboard (avoids flaky clipboard-permission reads).

@@ -4,7 +4,7 @@ test.describe('command shortcuts', () => {
   test('run workspace, grid, and assistant commands without opening the palette', async ({ page }) => {
     await page.addInitScript(() => localStorage.clear())
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/examples/dashboard')
+    await page.goto('/examples/datagrid')
 
     await page.keyboard.press('t')
     await expect(page.locator('html')).toHaveClass(/dark/)
@@ -32,7 +32,7 @@ test.describe('command shortcuts', () => {
   test('ignore text-entry focus but still work from checkbox focus', async ({ page }) => {
     await page.addInitScript(() => localStorage.clear())
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/examples/dashboard')
+    await page.goto('/examples/datagrid')
 
     await page.getByLabel('Global search').fill('r')
     await page.keyboard.press('r')

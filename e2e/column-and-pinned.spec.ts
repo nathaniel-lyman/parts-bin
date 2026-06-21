@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test.describe('column virtualization + pinned-column alignment', () => {
   test('off-screen middle columns are absent while the right-pinned actions column stays aligned', async ({ page }) => {
     await page.addInitScript(() => localStorage.clear())
-    await page.goto('/examples/dashboard?rows=10000&cols=wide')
+    await page.goto('/examples/datagrid?rows=10000&cols=wide')
     const accountGrid = page.getByTestId('accounts-grid')
     const scroller = accountGrid.getByTestId('datagrid-scroll')
     await expect(scroller).toBeVisible()

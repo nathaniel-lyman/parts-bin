@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('saved-view reset restores the default grid layout', async ({ page }) => {
-  await page.goto('/examples/dashboard')
+  await page.goto('/examples/datagrid')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
   const accountGrid = page.getByTestId('accounts-grid')

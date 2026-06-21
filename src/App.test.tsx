@@ -25,6 +25,10 @@ function openAssemblyRoute() {
   window.history.pushState({}, '', '/examples/dashboard')
 }
 
+function openDataGridRoute() {
+  window.history.pushState({}, '', '/examples/datagrid')
+}
+
 test('root route renders the component catalog first', () => {
   render(<ToastProvider><App /></ToastProvider>)
   expect(screen.getByRole('heading', { name: 'Components' })).toBeInTheDocument()
@@ -32,7 +36,7 @@ test('root route renders the component catalog first', () => {
   expect(screen.queryByText('Component assembly demo')).not.toBeInTheDocument()
 })
 
-test('example assembly renders KPIs and table (light)', () => {
+test('example assembly renders KPIs and read-only table (light)', () => {
   openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
   expect(screen.getByText('Component assembly demo')).toBeInTheDocument()
@@ -41,9 +45,11 @@ test('example assembly renders KPIs and table (light)', () => {
   expect(screen.getByRole('button', { name: /Dark|Light/ })).toBeInTheDocument()
   expect(screen.getByRole('figure', { name: /Sample bridge in thousands/i })).toBeInTheDocument()
   expect(screen.queryByText('Pipeline by stage')).not.toBeInTheDocument()
-  expect(screen.getByText('Cobalt Freight')).toBeInTheDocument()
-  expect(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' })).toBeInTheDocument()
-  expect(within(screen.getByTestId('accounts-grid')).getByRole('searchbox', { name: /quick filter/i })).toBeInTheDocument()
+  // The assembly demo shows a static, read-only Table — not the interactive DataGrid.
+  const table = screen.getByTestId('accounts-table')
+  expect(within(table).getByText('Cobalt Freight')).toBeInTheDocument()
+  expect(screen.queryByTestId('accounts-grid')).not.toBeInTheDocument()
+  expect(screen.queryByRole('checkbox', { name: 'Select Cobalt Freight' })).not.toBeInTheDocument()
   expect(document.documentElement.classList.contains('dark')).toBe(false)
 })
 
@@ -66,8 +72,8 @@ test('settings route renders inside the shell with dashboard-only controls hidde
   expect(screen.queryByLabelText('Time period')).not.toBeInTheDocument()
 })
 
-test('assembly DataGrid selection is visible without server mode', async () => {
-  openAssemblyRoute()
+test('datagrid example selection is visible without server mode', async () => {
+  openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
   expect(screen.getByText('1 selected')).toBeInTheDocument()
@@ -104,7 +110,7 @@ test('manual date ranges update the assembly period label dynamically', async ()
 })
 
 test('server mode toggle exercises the DataGrid mock server path', async () => {
-  openAssemblyRoute()
+  openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
   await userEvent.click(screen.getByRole('switch', { name: /server mode/i }))
   expect(screen.getByText(/loading server rows/i)).toBeInTheDocument()
@@ -175,7 +181,7 @@ test('assistant opens from the top nav and answers with live sample value', asyn
 
 test('assistant summarizes selected rows from the current grid context', async () => {
   const user = userEvent.setup()
-  openAssemblyRoute()
+  openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
@@ -188,28 +194,25 @@ test('assistant summarizes selected rows from the current grid context', async (
   expect(screen.getAllByText(/Cobalt Freight/).length).toBeGreaterThan(0)
 })
 
-test('assistant explains signed movement with chart and filtered grid evidence', async () => {
+test('assistant explains signed movement with chart evidence', async () => {
   const user = userEvent.setup()
   openAssemblyRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
-  await user.type(screen.getByRole('searchbox', { name: /global search/i }), 'cobalt')
-  await waitFor(() => expect(screen.getByText(/Search: cobalt/)).toBeInTheDocument())
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
   await user.type(screen.getByRole('textbox', { name: 'Message the assistant' }), 'Explain this signed movement{Enter}')
 
   await waitFor(() => expectTextContent('Signed movement is net positive'), { timeout: 10000 })
   await waitFor(() => expectTextContent('Separation: chart evidence uses monthly movement rows'), { timeout: 10000 })
   await waitFor(() => expectTextContent('Chart: Signed movement ($k), 10 monthly rows'), { timeout: 15000 })
-  await waitFor(() => expectTextContent('Filters: global search "cobalt"'), { timeout: 15000 })
   expectTextContent('Evidence used')
-  expectTextContent('Grid scope: 1 of 1 rows visible')
-  expectTextContent('Separation: chart evidence uses monthly movement rows')
+  // The read-only assembly demo has no DataGrid, so the assistant falls back to the full sample dataset.
+  expectTextContent('Grid scope: full sample dataset')
 }, 30000)
 
 test('assistant creates a saved view from the current grid context', async () => {
   const user = userEvent.setup()
-  openAssemblyRoute()
+  openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.click(screen.getByRole('button', { name: 'Open assistant' }))
@@ -238,7 +241,7 @@ test('command shortcuts run workspace actions without opening the palette', () =
 })
 
 test('command shortcuts save and reset the current account grid view', async () => {
-  openAssemblyRoute()
+  openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   fireEvent.keyDown(document, { key: 'v' })
@@ -257,7 +260,7 @@ test('command shortcuts save and reset the current account grid view', async () 
 
 test('command shortcuts clear selected grid rows', async () => {
   const user = userEvent.setup()
-  openAssemblyRoute()
+  openDataGridRoute()
   render(<ToastProvider><App /></ToastProvider>)
 
   await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt Freight' }))
