@@ -19,7 +19,8 @@ export function TopNav({ breadcrumbs, title, actions }: TopNavProps) {
         )}
         {title && <div className="display truncate text-[15px] font-semibold text-ink">{title}</div>}
       </div>
-      {actions && <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{actions}</div>}
+      {/* nowrap: secondary controls hide at breakpoints rather than wrapping the bar onto a second row. */}
+      {actions && <div className="ml-auto flex flex-nowrap items-center justify-end gap-2">{actions}</div>}
     </header>
   )
 }

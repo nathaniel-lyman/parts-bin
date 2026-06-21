@@ -351,7 +351,7 @@ function DashboardPage({
             <a className="text-accent hover:underline" href={appHref('/examples/datagrid')}>DataGrid example</a>.
           </p>
         </section>
-        <div data-testid="accounts-table" className="border border-line bg-surface px-3 py-1">
+        <div data-testid="accounts-table" className="overflow-x-auto border border-line bg-surface px-3 py-1">
           <Table
             caption="Sample accounts"
             columns={accountTableColumns}

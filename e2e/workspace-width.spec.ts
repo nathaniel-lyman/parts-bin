@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test'
 
+// Routes whose <main> is meant to fill the shell content column. The docs page
+// is intentionally reading-width capped (mx-auto max-w-[1180px]), so it is not
+// included here.
 const workspaceRoutes = [
-  '/',
   '/examples/dashboard',
-  '/compose',
+  '/examples/datagrid',
   '/settings',
 ]
 
