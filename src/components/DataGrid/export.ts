@@ -114,7 +114,9 @@ export function serializeCSV<TData>(
 }
 
 export function downloadCSV(filename: string, csv: string): void {
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  // Prepend a UTF-8 BOM so Excel detects the encoding and renders accented / non-ASCII text
+  // correctly instead of mojibake. The serialized string stays BOM-free for other consumers.
+  const blob = new Blob(['﻿', csv], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
@@ -300,8 +302,39 @@ export function downloadXLSX(filename: string, bytes: Uint8Array): void {
   URL.revokeObjectURL(url)
 }
 
+/**
+ * Render a TSV string as an HTML table so a paste into a rich target (email, Google Docs, Word)
+ * keeps the grid structure instead of becoming a tab-separated blob. Cells never contain tabs or
+ * newlines (cleanCell strips them), so splitting is lossless. Exported for testing.
+ */
+export function tsvToHtmlTable(tsv: string): string {
+  const body = tsv
+    .split('\n')
+    .map((line) => `<tr>${line.split('\t').map((cell) => `<td>${escapeXml(cell)}</td>`).join('')}</tr>`)
+    .join('')
+  return `<table>${body}</table>`
+}
+
 export async function copyToClipboard(text: string): Promise<void> {
-  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text)
+  if (typeof navigator === 'undefined' || !navigator.clipboard) return
+  // For tabular copies, write a text/html flavour alongside text/plain so spreadsheets AND rich
+  // editors both paste a real table. Single-cell copies stay plain text (an HTML table would make a
+  // rich editor insert a 1-cell table). Falls back to writeText when ClipboardItem is unavailable
+  // (older browsers, jsdom) — which keeps the existing plain-text behaviour and tests intact.
+  const isTabular = text.includes('\t') || text.includes('\n')
+  const hasClipboardItem = typeof ClipboardItem !== 'undefined'
+  if (isTabular && hasClipboardItem && navigator.clipboard.write) {
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/plain': new Blob([text], { type: 'text/plain' }),
+          'text/html': new Blob([tsvToHtmlTable(text)], { type: 'text/html' }),
+        }),
+      ])
+      return
+    } catch {
+      // Fall through to plain text on any clipboard-write rejection (permissions, unsupported type).
+    }
   }
+  if (navigator.clipboard.writeText) await navigator.clipboard.writeText(text)
 }
