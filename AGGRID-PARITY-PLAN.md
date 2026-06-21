@@ -36,14 +36,40 @@
 | Phase | State | Notes |
 |---|---|---|
 | **A — Foundation refactor** | ✅ COMPLETE | hook extraction ✅, Ledger codemod ✅, barrel narrowing ✅; 'actions' id refactor → moved to B |
-| **B — Render-layer memoization** | ⬜ next | owns `GridRuntimeContext` (from A) + the `'actions'` capability-flag refactor (from A) |
-| **C — Interaction polish** | ⬜ not started | |
+| **B — Render-layer memoization** | ✅ COMPLETE | `GridRuntimeContext` + memo ✅, debounce/throttle ✅, O(1) pinned indexing ✅, `lockPosition` capability ✅; adversarial-review fixes folded |
+| **C — Interaction polish** | ⬜ next | |
 | **D — Correctness + filter depth** | ⬜ not started | includes fixing the 2 pre-existing aggregation tests |
 | **E — Accessibility / ARIA pass** | ⬜ not started | |
 
 ### Commits on the branch so far
 - `07f5b37` — extract god-component into six hooks (DataGrid.tsx 1310 → 898 lines)
 - `16f8d58` — drop deprecated `Ledger*` type aliases for canonical `DataGrid*` (~25 files)
+- Phase B: `7984cbb` memoize render layer (context + React.memo Row/Cell) · `3883e16` debounce
+  filter + rAF-throttle scroll/resize · `3b87678` O(1) pinned indexing + `virtualizeRowThreshold`
+  prop · `e75c6ab` `'actions'` → `lockPosition` capability · `2cb3fc0` review fixes (flush
+  resize on release, flush/cancel filter on blur/re-sync)
+
+### Phase B — DONE
+- **Memoization (the fault-line fix):** `GridRuntimeContext` collapses the Body→Row→Cell
+  prop-drill into one memoized value; `DataGridRow`/`DataGridCell` are `React.memo`'d. `focus`/`range`
+  are passed as narrow **per-row primitives** (`focusedColIndex`/`rangeColStart`/`rangeColEnd`),
+  deliberately **NOT** in the context — putting them there would re-render every cell on each arrow
+  key and defeat the cell-level memo. Orchestrator derivations (`visibleData`, `visibleColumnIds`,
+  `columnWidthMap`, `pinnedGroups`, `exportData`, `footerAggregates`) are memoized off TanStack's
+  memoized row model; `dispatch` is a stable latest-ref (layout effect), handlers + `editingApi` are
+  identity-stable — so a selection toggle / single-row edit re-renders only the affected row.
+- **Debounce/throttle:** header free-text/number/date filters debounce ~200ms (`FloatingFilterInput`,
+  local draft, commit on blur, cancel on external re-sync); `useScrollMetrics` and resize pointermove
+  are rAF-coalesced (resize flushes the final position on release).
+- **O(1) pinned-row indexing** (id→index map, only when rows pinned) + `virtualizeRowThreshold` prop
+  (threaded into body windowing + focus-restore).
+- **`'actions'` magic id → `lockPosition: 'last'` capability:** `normalize`/`reducers` thread a
+  `lockedIds` set derived from columns; legacy `id === 'actions'` and `type: 'actions'` stay
+  back-compat; component checks use `meta.actions` / `lockedIds`. New normalize tests cover a
+  generic (non-actions) locked column.
+- **Verification:** behavior-preserving — full repo suite green except the 2 known pre-existing
+  aggregation failures; `npm run build` / `lint` / `lint:theme` clean. A 6-agent adversarial review
+  surfaced 2 real lost-update bugs (throttle/debounce), both fixed with regression tests.
 
 ### Phase A — done
 - **Hook extraction (DataGrid.tsx 1310 → 898 lines), behavior-preserving:**
