@@ -10,7 +10,8 @@ import {
   setDraft,
   startEdit,
 } from '../editing'
-import type { DataGridColumn } from '../types'
+import { formatDataGridNumber, resolveNumberFormat } from '../numberFormat'
+import type { DataGridColumn, DataGridNumberFormat } from '../types'
 
 interface Row {
   id: string
@@ -95,6 +96,27 @@ describe('editing model', () => {
     expect(parseDraft('number', '$24,600')).toEqual({ value: 24600 })
     expect(parseDraft('number', '-2.1%')).toEqual({ value: -2.1 })
     expect(parseDraft('number', '$1,000')).toEqual({ value: 1000 })
+  })
+
+  it('parseDraft round-trips a copied percent back to its raw value (scale-aware, no 100x drift)', () => {
+    // Each case: format a raw value to its display string (what copy exports), then parse it back
+    // through the column's resolved format (what paste does). The recovered value must equal the raw.
+    const cases: Array<{ scale: number; raw: number }> = [
+      { scale: 0.01, raw: 5 },     // whole-number percent storage (growth = 5 → "5.0%")
+      { scale: 0.01, raw: -2.1 },
+      { scale: 1, raw: 0.05 },     // fraction storage (0.05 → "5.0%"); the regression case
+      { scale: 1, raw: -0.021 },
+    ]
+    for (const { scale, raw } of cases) {
+      const columnFormat: DataGridNumberFormat = { style: 'percent', scale }
+      const display = formatDataGridNumber(raw, 'percent', columnFormat)
+      const parsed = parseDraft('number', display, resolveNumberFormat('percent', columnFormat))
+      expect(parsed.value as number).toBeCloseTo(raw, 6)
+    }
+  })
+
+  it('parseDraft without a format still strips the percent symbol (back-compat)', () => {
+    expect(parseDraft('number', '5.0%')).toEqual({ value: 5 })
   })
 
   it('commitSession produces a patch keyed by accessorKey for changed values only', () => {

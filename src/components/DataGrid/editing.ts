@@ -1,5 +1,5 @@
 import { resolveColumnValue } from './aggregation'
-import type { DataGridColumn } from './types'
+import type { DataGridColumn, DataGridNumberFormat } from './types'
 
 export type EditorType = 'text' | 'number' | 'select' | 'date'
 
@@ -71,13 +71,24 @@ export interface ParseResult {
   error?: string
 }
 
-export function parseDraft(type: EditorType, draft: string): ParseResult {
+export function parseDraft(type: EditorType, draft: string, format?: DataGridNumberFormat): ParseResult {
   if (type !== 'number') return { value: draft }
   if (draft.trim() === '') return { value: null, error: 'Enter a number' }
   // Tolerate formatted numerics ("$24,600", "-2.1%") so a formatted clipboard copy pastes back into
   // number cells and editors accept what they display. Strips currency/grouping/percent symbols only.
+  const hadPercent = draft.includes('%')
   const num = Number(draft.replace(/[$,%]/g, ''))
   if (!Number.isFinite(num)) return { value: null, error: 'Enter a number' }
+  // Percent paste round-trip. A copied percent cell exports its DISPLAY string ("5.0%"), which is
+  // `raw * scale * 100`; pasting it back must recover the raw stored value, so reverse the scale:
+  // `raw = shown / (scale * 100)`. This is only applied when the caller passes the column's percent
+  // format — without it (a bare parseDraft, or any non-percent column) the symbol is stripped and the
+  // number passes through unchanged, which is what editor input of a raw value needs. Fixes the 100×
+  // corruption when a column stores percents as fractions (scale 1) rather than whole numbers.
+  if (hadPercent && format?.style === 'percent') {
+    const scale = format.scale ?? 0.01
+    return { value: scale === 0 ? num : num / (scale * 100) }
+  }
   return { value: num }
 }
 

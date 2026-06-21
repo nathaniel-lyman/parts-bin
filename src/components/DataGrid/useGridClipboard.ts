@@ -5,7 +5,7 @@ import { copyToClipboard, downloadCSV, downloadXLSX, serializeCSV, serializeCell
 import { cellRangeBounds, isMultiCellRange, parseClipboardTable, serializeCellRange, type CellRange } from './rangeSelection'
 import { resolveCopyIntent, type GridFocus } from './keyboard'
 import { editorTypeFor, isColumnEditable, parseDraft } from './editing'
-import { formatDataGridNumber, isNumericColumnType } from './numberFormat'
+import { formatDataGridNumber, isNumericColumnType, resolveNumberFormat } from './numberFormat'
 import type { GridQuery } from './query'
 import type { DataGridColumn, DataGridNumberFormat } from './types'
 
@@ -252,7 +252,12 @@ export function useGridClipboard<TData>({
 
         const draft = fillRange ? incoming[0]?.[0] : incoming[rowOffset]?.[colOffset]
         if (draft === undefined) continue
-        const parsed = parseDraft(editorTypeFor(column), draft)
+        // Pass the resolved percent format so a pasted "5.0%" scales back to the raw stored value.
+        const parsed = parseDraft(
+          editorTypeFor(column),
+          draft,
+          resolveNumberFormat(column.type, column.numberFormat, numberFormats[column.id]),
+        )
         if (parsed.error) continue
         const validationMessage = column.validate?.(parsed.value as never, row)
         if (validationMessage) continue
@@ -285,6 +290,7 @@ export function useGridClipboard<TData>({
     focus.row,
     getRowId,
     markDirtyCells,
+    numberFormats,
     onRowUpdate,
     resolveCellValue,
     toast,
