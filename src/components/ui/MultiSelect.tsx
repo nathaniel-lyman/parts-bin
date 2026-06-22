@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
+import { Check } from 'lucide-react'
 import { Tag } from './Tag'
 import { useAnchoredPosition } from './useAnchoredPosition'
 import { cx, hasWidthUtility } from './utils'
@@ -213,7 +214,7 @@ export function MultiSelect({
                   )}
                 >
                   <span>{option.label}</span>
-                  {selected && <span aria-hidden="true">✓</span>}
+                  {selected && <Check aria-hidden="true" className="h-4 w-4" />}
                 </li>
               )
             })

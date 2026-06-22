@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
 import { cx } from './utils'
 
 export type BannerTone = 'accent' | 'pos' | 'warn' | 'neg'
@@ -35,9 +36,9 @@ export function Banner({ tone = 'accent', children, action, onDismiss, className
           type="button"
           aria-label="Dismiss banner"
           onClick={onDismiss}
-          className="shrink-0 opacity-70 hover:opacity-100"
+          className="inline-flex h-5 w-5 shrink-0 items-center justify-center opacity-70 hover:opacity-100"
         >
-          ✕
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>

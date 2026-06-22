@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from 'lucide-react'
 import type { Account, Status } from '../data/types'
 import { ACTIONS_COLUMN_ID } from './DataGrid/normalize'
 import { DEFAULT_STATE } from './DataGrid/state'
@@ -150,10 +151,10 @@ export function buildAccountGridColumns(
       cell: (ctx) => (
         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
           <button type="button" aria-label={`Edit ${ctx.row.name}`} className="text-muted hover:text-accent" onClick={(event) => { event.stopPropagation(); onEdit(ctx.row) }}>
-            ✎
+            <Pencil aria-hidden="true" className="h-4 w-4" />
           </button>
           <button type="button" aria-label={`Delete ${ctx.row.name}`} className="text-muted hover:text-neg" onClick={(event) => { event.stopPropagation(); onDelete(ctx.row) }}>
-            🗑
+            <Trash2 aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
       ),

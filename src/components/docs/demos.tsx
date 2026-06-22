@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
 import {
   DataGrid,
   DEFAULT_STATE,
@@ -320,7 +321,9 @@ export function SpinnerDemo() {
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="primary" loading={saving} onClick={simulateSave}>Save changes</Button>
         <Button loading={saving}>Secondary</Button>
-        <IconButton aria-label="Refresh" loading={saving}>↻</IconButton>
+        <IconButton aria-label="Refresh" loading={saving}>
+          <RefreshCw className="h-4 w-4" />
+        </IconButton>
       </div>
       <div className="flex items-center gap-3 text-[14px] text-muted">
         <Spinner size="sm" label="" />

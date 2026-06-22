@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { Check } from 'lucide-react'
 import { Button } from './Button'
 import { cx } from './utils'
 
@@ -44,7 +45,7 @@ export function Stepper({ steps, currentStepId, onStepSelect, orientation = 'hor
         const content = (
           <>
             <span className={cx('grid h-7 w-7 shrink-0 place-items-center rounded-sm border text-[12px] font-semibold', stepStateClasses[inferredState])}>
-              {inferredState === 'complete' ? '✓' : index + 1}
+              {inferredState === 'complete' ? <Check aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={2.5} /> : index + 1}
             </span>
             <span className="grid min-w-0 gap-0.5 text-left">
               <span className="text-[14px] font-semibold text-ink">{step.label}</span>

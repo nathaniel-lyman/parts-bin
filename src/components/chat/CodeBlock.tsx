@@ -1,3 +1,4 @@
+import { Copy } from 'lucide-react'
 import { IconButton } from '../ui/IconButton'
 import { useToast } from '../ui/ToastContext'
 
@@ -27,7 +28,9 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
     <div className="overflow-hidden rounded-lg border border-line bg-surface-2">
       <div className="flex items-center justify-between border-b border-line px-2 py-0.5">
         <span className="micro text-muted">{language ?? 'code'}</span>
-        <IconButton size="compact" aria-label="Copy code" onClick={copy}>⧉</IconButton>
+        <IconButton size="compact" aria-label="Copy code" onClick={copy}>
+          <Copy className="h-4 w-4" />
+        </IconButton>
       </div>
       <pre className="m-0 overflow-x-auto px-3 py-2 text-[12px] leading-relaxed text-ink">
         <code>{code}</code>

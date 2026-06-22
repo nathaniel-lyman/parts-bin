@@ -11,12 +11,12 @@ test('fmtNum groups thousands', () => {
 test('fmtPercent fixes one decimal with sign-less magnitude', () => {
   expect(fmtPercent(3.7)).toBe('3.7%')
 })
-test('fmtDelta pairs glyph with magnitude', () => {
-  expect(fmtDelta(4.6)).toBe('▲ 4.6%')
-  expect(fmtDelta(-2.1)).toBe('▼ 2.1%')
+test('fmtDelta returns sign-less magnitude for icon-rendered deltas', () => {
+  expect(fmtDelta(4.6)).toBe('4.6%')
+  expect(fmtDelta(-2.1)).toBe('2.1%')
 })
-test('fmtDelta treats zero as up (non-negative glyph)', () => {
-  expect(fmtDelta(0)).toBe('▲ 0.0%')
+test('fmtDelta treats zero as a sign-less magnitude', () => {
+  expect(fmtDelta(0)).toBe('0.0%')
 })
 test('fmtCurrency rounds to whole dollars', () => {
   expect(fmtCurrency(1234.6)).toBe('$1,235')

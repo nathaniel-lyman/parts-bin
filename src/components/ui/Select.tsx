@@ -1,4 +1,5 @@
 import type { SelectHTMLAttributes } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { cx, hasWidthUtility } from './utils'
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>
@@ -17,14 +18,11 @@ export function Select({ className, children, ...rest }: SelectProps) {
         {children}
       </select>
       {/* appearance-none above suppresses the OS arrow, which ignores the theme */}
-      <svg
-        className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted peer-disabled:text-faint"
-        viewBox="0 0 12 12"
-        fill="none"
+      <ChevronDown
         aria-hidden="true"
-      >
-        <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+        className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted peer-disabled:text-faint"
+        strokeWidth={1.8}
+      />
     </span>
   )
 }

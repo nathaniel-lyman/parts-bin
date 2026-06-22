@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
 import type { ToastAction, ToastTone } from './ToastContext'
 
 const edge: Record<ToastTone, string> = { accent: 'border-l-accent', pos: 'border-l-pos', neg: 'border-l-neg', warn: 'border-l-warn' }
@@ -25,9 +26,9 @@ export function Toast({ tone = 'accent', title, action, onDismiss, children }: T
             type="button"
             aria-label="Dismiss notification"
             onClick={onDismiss}
-            className="shrink-0 text-faint hover:text-ink"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-faint hover:text-ink"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>

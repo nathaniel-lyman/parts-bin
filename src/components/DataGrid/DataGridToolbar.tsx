@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
@@ -88,10 +89,10 @@ export function DataGridToolbar<TData>({
               <button
                 type="button"
                 aria-label={`Remove grouping by ${headerFor(id)}`}
-                className="hover:text-ink"
+                className="inline-flex h-3.5 w-3.5 items-center justify-center hover:text-ink"
                 onClick={() => dispatch({ type: 'TOGGLE_GROUP_BY', columnId: id })}
               >
-                ✕
+                <X aria-hidden="true" className="h-3 w-3" />
               </button>
             </span>
           ))}

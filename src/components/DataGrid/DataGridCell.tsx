@@ -1,5 +1,6 @@
 import './columnMeta'
 import { flexRender, type Cell } from '@tanstack/react-table'
+import { Copy } from 'lucide-react'
 import { memo, useState, type CSSProperties, type ReactNode } from 'react'
 import { isEditingCell } from './editing'
 import { DataGridCellEditor } from './DataGridCellEditor'
@@ -13,15 +14,6 @@ function flashDirection(prev: unknown, next: unknown): Exclude<FlashDir, null> {
   const b = Number(next)
   if (Number.isFinite(a) && Number.isFinite(b) && a !== b) return b > a ? 'up' : 'down'
   return 'neutral'
-}
-
-function CopyGlyph() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-      <rect x="5.5" y="5.5" width="8" height="8" rx="1" />
-      <path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
-    </svg>
-  )
 }
 
 export interface DataGridCellProps<TData> {
@@ -242,7 +234,7 @@ function DataGridCellComponent<TData>({
             onCopyCell!(cell.row.id, cell.column.id)
           }}
         >
-          <CopyGlyph />
+          <Copy aria-hidden="true" className="h-3 w-3" />
         </button>
       )}
     </td>

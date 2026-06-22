@@ -1,4 +1,5 @@
 import { useId, useRef, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 import { useDialogFocusTrap } from './useDialogFocusTrap'
 
 interface Props { title: string; onClose: () => void; children: ReactNode; footer?: ReactNode }
@@ -24,7 +25,9 @@ export function Modal({ title, onClose, children, footer }: Props) {
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 id={titleId} className="text-[16px] font-semibold text-ink display">{title}</h2>
-          <button type="button" aria-label="Close" className="text-muted hover:text-ink" onClick={onClose}>✕</button>
+          <button type="button" aria-label="Close" className="inline-flex h-6 w-6 items-center justify-center text-muted hover:text-ink" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </button>
         </div>
         <div className="px-4 py-4">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-4 py-3">{footer}</div>}

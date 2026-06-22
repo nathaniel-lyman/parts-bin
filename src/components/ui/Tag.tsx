@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { cx } from './utils'
 
 export type TagTone = 'neutral' | 'accent' | 'pos' | 'warn' | 'neg'
@@ -34,7 +35,7 @@ export function Tag({ label, tone = 'neutral', onRemove, className }: TagProps) 
           onClick={onRemove}
           className="-mr-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm hover:bg-surface/60"
         >
-          <span aria-hidden="true">✕</span>
+          <X aria-hidden="true" className="h-3 w-3" />
         </button>
       )}
     </span>

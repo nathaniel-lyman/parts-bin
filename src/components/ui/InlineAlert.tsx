@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
 import { cx } from './utils'
 import { IconButton } from './IconButton'
 
@@ -44,7 +45,9 @@ export function InlineAlert({ tone = 'accent', title, children, action, onDismis
       </div>
       {action && <div className="shrink-0">{action}</div>}
       {onDismiss && (
-        <IconButton size="compact" aria-label="Dismiss" onClick={onDismiss}>✕</IconButton>
+        <IconButton size="compact" aria-label="Dismiss" onClick={onDismiss}>
+          <X className="h-4 w-4" />
+        </IconButton>
       )}
     </div>
   )

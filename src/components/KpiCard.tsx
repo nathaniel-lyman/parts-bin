@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ArrowDown, ArrowUp } from 'lucide-react'
 import { fmtDelta } from '../lib/format'
 import { Sparkline } from './Sparkline'
 import { cx } from './ui/utils'
@@ -28,6 +29,7 @@ interface Props {
 
 export function KpiCard({ label, value, delta, spark, negSpark }: Props) {
   const deltaClass = delta == null ? '' : delta < 0 ? 'text-neg' : 'text-pos'
+  const DeltaIcon = delta != null && delta < 0 ? ArrowDown : ArrowUp
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-4 shadow-card">
       <div className="micro">{label}</div>
@@ -36,7 +38,10 @@ export function KpiCard({ label, value, delta, spark, negSpark }: Props) {
           <div className="num display text-2xl leading-none text-ink">{value}</div>
           {delta != null && (
             <div className="mt-1.5">
-              <span className={`num text-[12px] ${deltaClass}`}>{fmtDelta(delta)}</span>{' '}
+              <span className={`num inline-flex items-center gap-0.5 text-[12px] ${deltaClass}`}>
+                <DeltaIcon aria-hidden="true" className="h-3 w-3" />
+                {fmtDelta(delta)}
+              </span>{' '}
               <span className="text-[12px] text-faint">vs last mo</span>
             </div>
           )}

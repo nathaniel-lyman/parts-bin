@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ArrowDown, ArrowUp, Sparkles } from 'lucide-react'
 import { useAccounts, type NewAccount } from './hooks/useAccounts'
 import { useTheme } from './hooks/useTheme'
 import { useServerData } from './hooks/useServerData'
@@ -179,7 +180,15 @@ const accountTableColumns: TableColumn<Account>[] = [
     key: 'growth',
     header: 'Growth',
     numeric: true,
-    render: (row) => <span className={row.growth < 0 ? 'text-neg' : 'text-pos'}>{fmtDelta(row.growth)}</span>,
+    render: (row) => {
+      const GrowthIcon = row.growth < 0 ? ArrowDown : ArrowUp
+      return (
+        <span className={`inline-flex items-center justify-end gap-0.5 ${row.growth < 0 ? 'text-neg' : 'text-pos'}`}>
+          <GrowthIcon aria-hidden="true" className="h-3 w-3" />
+          {fmtDelta(row.growth)}
+        </span>
+      )
+    },
   },
   { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} tone={statusTone(row.status)} /> },
 ]
@@ -1071,7 +1080,9 @@ export default function App() {
               <NotificationButton count={3} onClick={() => toast('3 review alerts', 'warn')} />
             </>
           )}
-          <IconButton aria-label="Open assistant" onClick={() => setAssistantOpen(true)}>✦</IconButton>
+          <IconButton aria-label="Open assistant" onClick={() => setAssistantOpen(true)}>
+            <Sparkles className="h-4 w-4" />
+          </IconButton>
           <CommandPalette
             groups={commandGroups}
             enableGlobalShortcuts

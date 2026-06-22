@@ -1,4 +1,5 @@
 import { useId, useRef, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 import { cx } from './utils'
 import { IconButton } from './IconButton'
 import { useDialogFocusTrap } from './useDialogFocusTrap'
@@ -38,7 +39,9 @@ export function Drawer({ title, onClose, children, footer, side = 'right', bodyC
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 id={titleId} className="display text-[16px] font-semibold text-ink">{title}</h2>
-          <IconButton size="compact" aria-label="Close" onClick={onClose}>✕</IconButton>
+          <IconButton size="compact" aria-label="Close" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </IconButton>
         </div>
         <div className={bodyClassName ?? 'flex-1 overflow-auto px-4 py-4'}>{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-4 py-3">{footer}</div>}

@@ -2,6 +2,7 @@ import { expect, test, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
+import { Settings } from 'lucide-react'
 import {
   ActivityFeed,
   AppliedFiltersBar,
@@ -116,7 +117,9 @@ test('barrel exports the new primitives with their accessible surfaces', async (
     const [open, setOpen] = useState(false)
     return (
       <div>
-        <IconButton aria-label="Open settings" onClick={onIcon}>⚙</IconButton>
+        <IconButton aria-label="Open settings" onClick={onIcon}>
+          <Settings className="h-4 w-4" />
+        </IconButton>
         <SegmentedControl
           label="Range"
           options={[

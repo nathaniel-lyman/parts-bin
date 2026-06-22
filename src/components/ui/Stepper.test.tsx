@@ -13,7 +13,7 @@ test('infers complete/current/upcoming around currentStepId', () => {
   render(<Stepper steps={steps} currentStepId="mapping" />)
 
   const items = screen.getAllByRole('listitem')
-  expect(items[0]).toHaveTextContent('✓') // before current → complete
+  expect(items[0].querySelector('svg')).toBeInTheDocument() // before current renders a check icon
   expect(items[1]).toHaveTextContent('2') // current keeps its number
   expect(items[2]).toHaveTextContent('3') // after current → upcoming
 
@@ -29,7 +29,7 @@ test('an explicit step state overrides inference', () => {
       currentStepId="review"
     />,
   )
-  // error step keeps its number instead of the inferred ✓
+  // error step keeps its number instead of the inferred check icon
   expect(screen.getAllByRole('listitem')[1]).toHaveTextContent('2')
 })
 

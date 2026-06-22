@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Pencil } from 'lucide-react'
 import {
   Accordion, ActivityFeed, AppliedFiltersBar, AssigneeChip, AttachmentList, AuditLogItem,
   Avatar, AvatarGroup, Banner, Button, Card, Checkbox, Combobox, DatePicker,
@@ -30,7 +31,7 @@ export const previews: Partial<Record<string, ReactNode>> = {
       <Button variant="secondary">Cancel</Button>
     </div>
   ),
-  IconButton: <IconButton aria-label="Edit">✎</IconButton>,
+  IconButton: <IconButton aria-label="Edit"><Pencil className="h-4 w-4" /></IconButton>,
   Card: <Card title="Overview" description="Quarterly summary">Body content</Card>,
   StatusBadge: <StatusBadge status="Active" tone="pos" />,
   Tag: <Tag tone="accent" label="Beta" />,

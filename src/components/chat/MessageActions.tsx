@@ -1,3 +1,4 @@
+import { Copy, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { IconButton } from '../ui/IconButton'
 import { useToast } from '../ui/ToastContext'
 
@@ -20,15 +21,22 @@ export function MessageActions({ content, onRegenerate, onFeedback }: MessageAct
   }
   return (
     <div className="mt-1 flex items-center gap-1">
-      <IconButton size="compact" aria-label="Copy message" onClick={copy}>⧉</IconButton>
+      <IconButton size="compact" aria-label="Copy message" onClick={copy}>
+        <Copy className="h-4 w-4" />
+      </IconButton>
       {onRegenerate && (
-        <IconButton size="compact" aria-label="Regenerate response" onClick={onRegenerate}>↻</IconButton>
+        <IconButton size="compact" aria-label="Regenerate response" onClick={onRegenerate}>
+          <RotateCcw className="h-4 w-4" />
+        </IconButton>
       )}
       {onFeedback && (
         <>
-          {/* Color emoji here is a conscious exception to the kit's monochrome-glyph convention (✦ ⧉ ↻): thumbs are instantly recognizable feedback affordances. */}
-          <IconButton size="compact" aria-label="Good response" onClick={() => onFeedback('up')}>👍</IconButton>
-          <IconButton size="compact" aria-label="Bad response" onClick={() => onFeedback('down')}>👎</IconButton>
+          <IconButton size="compact" aria-label="Good response" onClick={() => onFeedback('up')}>
+            <ThumbsUp className="h-4 w-4" />
+          </IconButton>
+          <IconButton size="compact" aria-label="Bad response" onClick={() => onFeedback('down')}>
+            <ThumbsDown className="h-4 w-4" />
+          </IconButton>
         </>
       )}
     </div>

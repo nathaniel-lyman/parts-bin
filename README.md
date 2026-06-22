@@ -40,15 +40,136 @@ delete `.git`) so you begin with a clean history.
 The docs catalog shows component purpose, imports, props, near-twin guidance, and snippets. Use
 the assembly demo, sign-in, and settings screens only as examples after selecting components.
 
-## Your first 30 minutes
+## Implementation playbook
 
-The fastest path from clone to using the design system:
+Use this repo as the source of truth when redoing another React frontend. The goal is not to
+copy the sample dashboard; it is to adopt the theme layer, component API, layout patterns, and
+verification rules, then rebuild the target app's actual routes and data flows with those parts.
 
-1. **Browse `/docs`** and pick components from the catalog rather than deep files.
-2. **Copy the design-system layers** you need: `src/theme/`, `src/components/ui/`, `src/components/shell/`, `src/components/DataGrid/`, `src/components/charts/`, `src/components/maps/`, and `src/components/chat/`.
-3. **Re-skin through tokens** in `src/theme/tokens.css`; do not hardcode colors in components.
-4. **Use examples as references**: `/examples/dashboard` for a read-only component assembly, `/examples/datagrid` for the interactive grid harness, `/login` for a sign-in screen, and `/settings` for preferences.
-5. **Verify to match the risk**: use focused component tests while iterating; before publishing package or public API changes, run `npm run lint`, `npm run lint:theme`, `npm run build`, and `npm test`.
+### 1. Choose the adoption mode
+
+| Mode | Use when | What to do |
+|---|---|---|
+| **Template repo** | Starting a new app | Use GitHub's **"Use this template"** button, delete unneeded examples, then build from `/docs` and the barrels. |
+| **Copy into an existing app** | Reworking an app that already has routing, auth, data, or backend contracts | Copy the slices listed below, then replace old UI route by route. This is the default mode for "redo my frontend." |
+| **Experimental package boundary** | Testing library-style integration before publishing | Run `npm run build:lib` and import from `parts-bin` / `parts-bin/datagrid`; keep in mind the package is still private. |
+
+### 2. Audit the target app before editing
+
+In the target app, make a short inventory:
+
+- Routes/pages and their primary jobs.
+- Existing layout shell, navigation, command/search surfaces, and settings surfaces.
+- UI primitives already in use: buttons, inputs, selects, modals, drawers, tabs, cards, tables, alerts, toasts.
+- Data-heavy surfaces: grids, charts, maps, KPI rows, activity feeds, details panels.
+- Styling entrypoints: global CSS, Tailwind config, theme files, raw color usage.
+- Verification commands and the smallest browser flows that prove the important screens still work.
+
+Do not start by moving sample account/MRR code. Keep the target app's real domain model and replace
+the presentation layer around it.
+
+### 3. Copy the design-system slices
+
+Copy only what the target app needs, in this order:
+
+| Slice | Files | Required for |
+|---|---|---|
+| **Theme** | `src/theme/` | Every adoption path. Import `theme/theme.css` once at the target app root. |
+| **Core UI** | `src/components/ui/` | Buttons, fields, selects, modals, drawers, menus, tabs, alerts, cards, toasts, loading states. |
+| **Shell** | `src/components/shell/` | App chrome: sidebar, top nav, breadcrumbs, section headers, filter bars, settings panels. |
+| **Data display** | `src/components/KpiCard.tsx`, `src/components/Sparkline.tsx`, relevant `ui` data-display components | Metrics, details, tables, activity, pagination, applied filters. |
+| **DataGrid** | `src/components/DataGrid/` | Complex tables with sorting, filtering, saved views, pinning, selection, editing, export, server-query helpers. |
+| **Charts** | `src/components/charts/`, `src/theme/chart-theme.ts` | Donuts, movement bars, trend lines, chart cards, legends, tooltips. |
+| **Maps** | `src/components/maps/` | Choropleth, bubble, flow, and drilldown maps. |
+| **Chat** | `src/components/chat/` | Assistant panel, composer, markdown messages, message actions, prompt chips. |
+| **Theme lint** | `scripts/lint-theme.mjs` | Enforcing the no-raw-colors boundary in the target app. |
+
+Keep imports at the barrel level where possible:
+
+```ts
+import { Button, Card, Drawer, Field, KpiCard } from './components'
+import { DataGrid, type DataGridColumn } from './components/DataGrid'
+```
+
+If the target app uses a different folder convention, preserve the component boundaries even if the
+paths change. Avoid deep imports into component internals.
+
+### 4. Map old UI to parts-bin
+
+Use `/docs` and `src/components/catalog.ts` as the component picker. A typical migration map looks
+like this:
+
+| Existing UI need | parts-bin component |
+|---|---|
+| Primary/secondary/destructive action | `Button` |
+| Icon-only toolbar action | `IconButton` |
+| Text, textarea, select, combo, date, switch, slider | `Input`, `Textarea`, `Select`, `Combobox`, `DatePicker`, `Switch`, `Slider` |
+| Labeled form row and validation text | `Field` |
+| Modal workflow | `Modal` or `ConfirmDialog` |
+| Side panel workflow | `Drawer` |
+| Menus and command/search | `DropdownMenu`, `ContextMenu`, `CommandPalette` |
+| Page shell and navigation | `AppShell`, `Sidebar`, `TopNav`, `Breadcrumbs`, `SectionHeader` |
+| KPI or compact metric | `KpiCard`, `Metric`, `Sparkline` |
+| Simple table | `Table` |
+| Full-featured table/grid | `DataGrid` |
+| Empty, loading, error, or toast state | `EmptyState`, `Skeleton`, `Spinner`, `InlineAlert`, `Banner`, `ToastProvider` |
+| Status, label, applied filter | `StatusBadge`, `Tag`, `AppliedFiltersBar`, `FacetedFilter` |
+| Details and audit surfaces | `DetailHeader`, `KeyValueList`, `DescriptionList`, `ActivityFeed`, `Timeline` |
+| Chart surface | `ChartCard`, `ShareDonutChart`, `LineTrendChart`, `SignedMovementChart`, `WaterfallChart` |
+| Assistant UI | `AssistantPanel`, `ChatComposer`, `ChatMessageList`, `ChatMessageBubble` |
+
+### 5. Rebuild route by route
+
+For each target route:
+
+1. Keep the route's real data loaders, mutations, permissions, and analytics intact.
+2. Replace page chrome with `AppShell` / `Sidebar` / `TopNav` patterns where appropriate.
+3. Replace controls with parts-bin primitives from the catalog.
+4. Replace local layout glue with token-backed Tailwind utilities: `bg-bg`, `bg-surface`,
+   `border-line`, `text-ink`, `text-muted`, `text-accent`, `text-pos`, `text-warn`, `text-neg`,
+   plus `.display`, `.micro`, and `.num`.
+5. Convert dense tables to `DataGrid` only when the screen needs grid behavior. Use `Table` for
+   simple static tables.
+6. Convert charts by mapping the target app's real series into the generic chart contracts. Do not
+   import account/MRR demo data.
+7. Add route-level empty, loading, error, and disabled states instead of preserving fake defaults.
+
+Use examples only as composition references:
+
+- `/examples/dashboard` — KPI + charts + read-only table assembly.
+- `/examples/datagrid` — advanced grid behavior and server-query patterns.
+- `/login` — split brand-panel sign-in.
+- `/settings` — preferences, color mode, theme recipe, density.
+
+### 6. Re-skin through tokens only
+
+Edit `src/theme/tokens.css`, `src/theme/theme.css`, `src/theme/fonts.css`, and when needed
+`src/theme/chart-theme.ts`. Do not put raw colors in components or route files.
+
+The hard rule:
+
+- No `#hex`, `rgb()`, `hsl()`, or named Tailwind color utilities like `bg-blue-500` outside the
+  theme layer.
+- Use existing token utilities first.
+- Add or derive a token when the target brand needs a visual role the system does not have.
+- Update both light and dark mode.
+
+See `src/theme/RETHEME.md` and `skills/retheme/SKILL.md` for the full checklist.
+
+### 7. Verify the downstream rewrite
+
+Use the target app's own verification commands plus these adoption checks:
+
+- Build/typecheck the target app.
+- Run the target app's focused tests for every touched route.
+- Run or port `npm run lint:theme` so raw colors do not leak outside `src/theme/`.
+- Browser-check the rebuilt routes at desktop and mobile widths.
+- Exercise keyboard/focus behavior for modals, drawers, menus, command palette, forms, and grids.
+- Confirm loading, empty, error, and permission-denied states are truthful.
+- Confirm old sample data, old screenshots, and unused UI dependencies were removed only when no
+  longer referenced.
+
+Before claiming the rewrite is done, report exactly which target-app commands and browser checks ran.
 
 Nothing in the framework is tied to the bundled sample dataset — map the generic parts to your domain:
 
@@ -111,9 +232,10 @@ The sample surfaces are built from the design system and live in the docs/exampl
 
 ## Agent skills
 
-The repo ships executable workflows for AI coding agents (Claude Code, Cursor, Codex, …), so the
-happy path after cloning is: tell your agent *"re-skin this to my brand"*, then *"replace the demo
-data with my domain"* — and it follows a checked-in, verified procedure instead of guessing.
+The repo ships executable workflows for AI coding agents (Claude Code, Cursor, Codex, …). For a
+frontend rewrite, the playbook above is the main path: audit the target app, copy the needed
+design-system slices, rebuild route by route, re-skin through tokens, and verify in the target app.
+The checked-in skills cover the common sub-tasks an agent will hit along the way.
 
 | Skill | What your agent can do with it |
 |---|---|
@@ -140,35 +262,20 @@ picks them up automatically via `.claude/skills/`; other tools find them through
 | `npm run lint:theme` | fail if raw colors leak outside `src/theme/` |
 | `npm run test:e2e` | run Playwright checks for layout-sensitive flows |
 
-## Use parts-bin in an existing app
-Copy-paste checklist (clone what you need, in order):
-- [ ] **Theme** — copy `src/theme/` and import `theme/theme.css` at your root. Re-skin via `tokens.css` only.
-- [ ] **Primitives** — copy `src/components/ui/`; import from the `ui` barrel (`Button`, `Field`, `Drawer`,
-  `IconButton`, `InlineAlert`, `SegmentedControl`, modals, tabs, toasts, …).
-- [ ] **Shell** — copy `src/components/shell/` for the app shell, sidebar, top nav, and filter bars.
-- [ ] **Charts & DataGrid** *(optional)* — copy `src/components/charts/` and `src/components/DataGrid/`;
-  import from the `charts` and `DataGrid` barrels.
-- [ ] **Maps & Chat** *(optional)* — copy `src/components/maps/` for geographic views and
-  `src/components/chat/` for the assistant panel/composer/message primitives.
-- [ ] **Examples** — consult `/docs`, `/examples/dashboard`, `/examples/datagrid`, `/login`, and
-  `/settings` only as reference assemblies.
-- [ ] **Boundary** — copy `scripts/lint-theme.mjs` and wire `npm run lint:theme` so raw colors never leak
-  outside `src/theme/`.
-- [ ] **Reference** — see `src/theme/RETHEME.md` to re-skin and `THEME-SPEC.md` for the canonical design spec.
+## Public imports and package boundary
 
 Every design-system subsystem has a barrel (`ui`, `shell`, `charts`, `maps`, `DataGrid`, `chat`),
-and `src/components` re-exports the reusable public surface as one aggregate import root. Import
-from a barrel, not a deep file path:
+and `src/components` re-exports the reusable public surface as one aggregate import root. When
+copying parts-bin into a target app, import from a barrel, not a deep file path:
+
 ```ts
 import { Button, DataGrid, WaterfallChart, KpiCard } from './components'
 ```
 
-### Experimental package entrypoints
+The repo is still private and intentionally copy-first, but the package boundary is explicit enough
+to build library artifacts for integration testing:
 
-The repo is still private, but the package boundary is now explicit enough to build library
-artifacts for integration testing:
-
-```bash
+```sh
 npm run build:lib
 ```
 
@@ -190,8 +297,9 @@ without demo fixtures. Peer dependencies for the DataGrid entrypoint are React, 
 TanStack Table/Virtual, and dnd-kit. The root `parts-bin` entrypoint also uses the broader chart,
 map, and chat dependencies.
 
-parts-bin is intentionally a copy-paste kit first, not an npm package. Let the public API harden
-across real cloned apps before packaging it.
+Use package-style imports only when testing the library boundary. For ordinary frontend rewrites,
+prefer the copy workflow in the implementation playbook so the target app owns its theme, routes,
+and verification.
 
 ## Theme recipes
 parts-bin ships a single recipe — `parts-bin-default` — previewable in `/docs`. Recipes are
