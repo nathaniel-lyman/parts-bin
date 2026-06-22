@@ -21,7 +21,7 @@ export function DataGridBulkActions({
     && totalMatchingCount !== undefined
     && totalMatchingCount > count
   return (
-    <div className="flex items-center gap-2 text-[13px] text-ink">
+    <div className="flex items-center gap-2 text-[14px] text-ink">
       <span className="micro text-muted">
         {allMatchingRowsSelected && totalMatchingCount !== undefined
           ? `${totalMatchingCount} matching rows selected`

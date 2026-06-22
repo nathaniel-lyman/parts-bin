@@ -84,7 +84,7 @@ export function LoginPage() {
 
           <div className="mb-6 grid gap-1">
             <PageTitle>Sign in</PageTitle>
-            <p className="m-0 text-[13px] text-muted">Example pre-auth screen; wire it to your own auth flow.</p>
+            <p className="m-0 text-[14px] text-muted">Example pre-auth screen; wire it to your own auth flow.</p>
           </div>
 
           {error && (
@@ -118,7 +118,7 @@ export function LoginPage() {
 
             <div className="flex items-center justify-between">
               <Checkbox label="Remember me" defaultChecked />
-              <a href={appHref('/login')} className="text-[13px] font-medium text-accent hover:underline">
+              <a href={appHref('/login')} className="text-[14px] font-medium text-accent hover:underline">
                 Forgot password?
               </a>
             </div>
@@ -138,7 +138,7 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-[13px] text-muted">
+          <p className="mt-6 text-center text-[14px] text-muted">
             No account?{' '}
             <a href={appHref('/login')} className="font-medium text-accent hover:underline">Create one</a>
           </p>

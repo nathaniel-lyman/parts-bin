@@ -179,7 +179,7 @@ export function MultiSelect({
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          className="min-w-20 flex-1 bg-surface text-[13px] text-ink outline-none disabled:bg-surface-2 disabled:text-faint"
+          className="min-w-20 flex-1 bg-surface text-[14px] text-ink outline-none disabled:bg-surface-2 disabled:text-faint"
         />
       </div>
       {open && createPortal(
@@ -189,7 +189,7 @@ export function MultiSelect({
           role="listbox"
           aria-multiselectable="true"
           style={listStyle}
-          className="z-50 max-h-60 overflow-auto rounded-md border border-line bg-surface p-1 text-[13px] shadow-dropdown"
+          className="z-50 max-h-60 overflow-auto rounded-md border border-line bg-surface p-1 text-[14px] shadow-dropdown"
         >
           {filtered.length === 0 ? (
             <li role="presentation" className="px-2 py-1.5 text-muted">{emptyMessage}</li>

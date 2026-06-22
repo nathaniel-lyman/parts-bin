@@ -56,7 +56,7 @@ export function DataGridCellEditor({
     event.stopPropagation()
   }
 
-  const fieldClass = `h-7 w-full min-w-0 rounded-sm border bg-surface px-1.5 text-[13px] text-ink focus:outline-none ${
+  const fieldClass = `h-7 w-full min-w-0 rounded-sm border bg-surface px-1.5 text-[14px] text-ink focus:outline-none ${
     error ? 'border-neg ring-1 ring-neg' : 'border-accent ring-1 ring-accent'
   } ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`
 

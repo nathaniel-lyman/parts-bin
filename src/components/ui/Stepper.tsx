@@ -47,7 +47,7 @@ export function Stepper({ steps, currentStepId, onStepSelect, orientation = 'hor
               {inferredState === 'complete' ? '✓' : index + 1}
             </span>
             <span className="grid min-w-0 gap-0.5 text-left">
-              <span className="text-[13px] font-semibold text-ink">{step.label}</span>
+              <span className="text-[14px] font-semibold text-ink">{step.label}</span>
               {(step.description || step.optional) && (
                 <span className="text-[12px] text-muted">{step.description ?? 'Optional'}</span>
               )}
@@ -116,7 +116,7 @@ export function WizardLayout({
       <div className="grid min-w-0 content-start gap-4">
         <header className="grid gap-1 border-b border-line pb-3">
           <h2 className="m-0 text-[18px] font-semibold text-ink">{title}</h2>
-          {description && <p className="m-0 text-[13px] text-muted">{description}</p>}
+          {description && <p className="m-0 text-[14px] text-muted">{description}</p>}
         </header>
         <div className="min-w-0">{children}</div>
         <footer className="flex items-center justify-between gap-2 border-t border-line pt-3">

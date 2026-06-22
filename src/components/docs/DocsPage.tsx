@@ -76,7 +76,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
             <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface-2 p-3">
               <div className="grid gap-1">
                 <h2 className="m-0 text-[15px] font-semibold text-ink">Examples are secondary</h2>
-                <p className="m-0 text-[13px] text-muted">Use the assembly demo, sign-in, and settings screens as reference implementations after choosing components from the catalog.</p>
+                <p className="m-0 text-[14px] text-muted">Use the assembly demo, sign-in, and settings screens as reference implementations after choosing components from the catalog.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="primary" onClick={() => { navigate('/examples/dashboard') }}>Assembly demo</Button>
@@ -86,7 +86,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
             </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
               <Snippet code={usageSnippet} />
-              <div className="grid content-start gap-3 text-[13px] text-muted">
+              <div className="grid content-start gap-3 text-[14px] text-muted">
                 <p className="m-0">Public API: import from the barrels <code className="num text-ink">src/components/ui</code>, <code className="num text-ink">shell</code>, and <code className="num text-ink">charts</code> — or the aggregate <code className="num text-ink">src/components</code>. For packaged grid usage, use <code className="num text-ink">parts-bin/datagrid</code>.</p>
                 <p className="m-0">Theme boundary: style with token utilities like <code className="num text-ink">bg-surface</code>, <code className="num text-ink">text-ink</code>, and <code className="num text-ink">border-line</code>.</p>
                 <p className="m-0">Reach for the right component: each card below links a near-twin disambiguation so you never reinvent or misuse a primitive.</p>
@@ -94,7 +94,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
             </div>
             <ol className="m-0 grid list-none gap-2 p-0">
               {copyChecklist.map(([step, detail], index) => (
-                <li key={step} className="flex items-start gap-3 border border-line bg-surface-2 p-3 text-[13px]">
+                <li key={step} className="flex items-start gap-3 border border-line bg-surface-2 p-3 text-[14px]">
                   <span className="num shrink-0 text-muted">{index + 1}</span>
                   <span><span className="font-semibold text-ink">{step}.</span> <span className="text-muted">{detail}</span></span>
                 </li>
@@ -146,7 +146,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
             </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
               <Snippet code={themeRecipeUsageSnippet(recipeId)} />
-              <div className="grid content-start gap-3 text-[13px] text-muted">
+              <div className="grid content-start gap-3 text-[14px] text-muted">
                 <p className="m-0">The selected recipe is stored as <code className="num text-ink">parts-bin.theme.recipe</code>. Light and dark mode use <code className="num text-ink">parts-bin.theme</code>; old <code className="num text-ink">parts-kit.*</code> and <code className="num text-ink">ledger.*</code> keys are read for migration.</p>
                 <p className="m-0">To create another recipe, add a <code className="num text-ink">data-theme-recipe</code> block in <code className="num text-ink">src/theme/recipes.css</code> and add its metadata in <code className="num text-ink">src/theme/recipes.ts</code>.</p>
               </div>
@@ -155,7 +155,7 @@ export function DocsPage({ globalSearch = '' }: { globalSearch?: string }) {
         </Card>
 
         <Card title="Theme-safe styling do / avoid">
-          <div className="grid gap-3 text-[13px] text-muted sm:grid-cols-2">
+          <div className="grid gap-3 text-[14px] text-muted sm:grid-cols-2">
             <div className="border border-line bg-surface-2 p-3">
               <div className="micro mb-2">Do</div>
               <p className="m-0">Use tokens and helper classes: <code className="num text-ink">bg-surface</code>, <code className="num text-ink">text-muted</code>, <code className="num text-ink">border-line</code>, <code className="num text-ink">micro</code>, <code className="num text-ink">num</code>.</p>

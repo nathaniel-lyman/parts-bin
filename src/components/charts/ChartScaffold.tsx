@@ -16,7 +16,7 @@ export function ChartCard({ title, description, metric, actions, children, class
     <section className={cx('min-w-0 rounded-lg border border-line bg-surface shadow-card', className)}>
       <header className="grid min-w-0 gap-3 border-b border-line px-4 py-3 sm:flex sm:items-start sm:justify-between">
         <div className="grid min-w-0 gap-1">
-          <h2 className="m-0 text-[13px] font-semibold leading-snug text-ink">{title}</h2>
+          <h2 className="m-0 text-[14px] font-semibold leading-snug text-ink">{title}</h2>
           {description && <p className="m-0 text-[12px] leading-5 text-muted">{description}</p>}
         </div>
         {(metric || actions) && (

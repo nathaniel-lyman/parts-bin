@@ -18,7 +18,7 @@ export function DetailHeader({ title, subtitle, meta, status, actions, className
           <h1 className="m-0 text-[24px] font-semibold leading-tight text-ink">{title}</h1>
           {status}
         </div>
-        {subtitle && <p className="m-0 text-[13px] text-muted">{subtitle}</p>}
+        {subtitle && <p className="m-0 text-[14px] text-muted">{subtitle}</p>}
         {meta && <div className="flex flex-wrap items-center gap-2 text-[12px] text-faint">{meta}</div>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
@@ -43,7 +43,7 @@ export function KeyValueList({ items, className }: KeyValueListProps) {
       {items.map((item, index) => (
         <div key={index} className="grid gap-1 border-b border-line px-3 py-2 last:border-b-0 sm:grid-cols-[11rem_1fr]">
           <dt className="micro text-muted">{item.label}</dt>
-          <dd className="m-0 min-w-0 text-[13px] text-ink">
+          <dd className="m-0 min-w-0 text-[14px] text-ink">
             {item.value}
             {item.description && <div className="mt-1 text-[12px] text-muted">{item.description}</div>}
           </dd>
@@ -69,7 +69,7 @@ export function DescriptionList({ items, columns = 2, className }: DescriptionLi
       {items.map((item, index) => (
         <div key={index} className="grid gap-1 border border-line bg-surface px-3 py-2">
           <dt className="micro text-muted">{item.label}</dt>
-          <dd className="m-0 min-w-0 text-[13px] text-ink">{item.value}</dd>
+          <dd className="m-0 min-w-0 text-[14px] text-ink">{item.value}</dd>
           {item.description && <dd className="m-0 text-[12px] text-muted">{item.description}</dd>}
         </div>
       ))}

@@ -17,7 +17,7 @@ export function BrandLockup({ children, href = '/', collapsed = false, mark }: B
       )}
       href={href}
     >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-line bg-surface-2 text-[13px]">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-line bg-surface-2 text-[14px]">
         {mark ?? '#'}
       </span>
       <span className={cx('truncate', collapsed && 'sr-only')}>{children}</span>

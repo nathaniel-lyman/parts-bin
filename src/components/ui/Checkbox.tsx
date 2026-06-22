@@ -18,7 +18,7 @@ export function Checkbox({ label, hint, className, ...rest }: CheckboxProps) {
   if (!label) return control
 
   return (
-    <label className="flex items-start gap-2 text-[13px] text-ink">
+    <label className="flex items-start gap-2 text-[14px] text-ink">
       {control}
       <span className="grid gap-0.5">
         <span>{label}</span>

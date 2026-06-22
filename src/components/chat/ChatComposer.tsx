@@ -52,7 +52,7 @@ export function ChatComposer({ onSend, streaming, onStop, placeholder = 'Ask any
         aria-label="Message the assistant"
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={onKeyDown}
-        className="min-h-8 flex-1 resize-none rounded-sm border border-line bg-surface px-2.5 py-1.5 text-[13px] text-ink outline-none placeholder:text-faint focus:border-accent"
+        className="min-h-8 flex-1 resize-none rounded-sm border border-line bg-surface px-2.5 py-1.5 text-[14px] text-ink outline-none placeholder:text-faint focus:border-accent"
       />
       {streaming ? (
         <Button type="button" variant="secondary" onClick={onStop} aria-label="Stop generating">Stop</Button>

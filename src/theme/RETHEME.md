@@ -13,6 +13,10 @@ The entire look lives in `src/theme/`. To change it, you edit this folder — no
 3. **Done.** Components read these via Tailwind utilities (`bg-surface`, `text-accent`, …);
    charts read them via `var(--…)` and `chart-theme.ts`.
 
+Typography scale lives in `base.css` plus explicit component utilities: default UI/body text is
+`14px`, secondary/helper text is `12px`, and `.micro` labels are `12px` uppercase with `0.06em`
+tracking. Keep those values aligned with `THEME-SPEC.md` when changing the type system.
+
 ## Token reference
 
 | Token | Controls |

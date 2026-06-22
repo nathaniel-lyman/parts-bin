@@ -240,7 +240,7 @@ export function DataGridToolbar<TData>({
                 {hideable.map((column) => {
                   const label = typeof column.header === 'string' && column.header ? column.header : column.id
                   return (
-                    <label key={column.id} className="flex cursor-pointer items-center gap-2 px-3 py-1 text-[13px] text-ink hover:bg-surface-2">
+                    <label key={column.id} className="flex cursor-pointer items-center gap-2 px-3 py-1 text-[14px] text-ink hover:bg-surface-2">
                       <input
                         type="checkbox"
                         aria-label={label}

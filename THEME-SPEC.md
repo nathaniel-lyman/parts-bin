@@ -14,7 +14,7 @@ The personality comes from four moves: monospace numerals everywhere data lives,
 
 **Motion is utilitarian.** Use the Plex·Elevate motion tokens: productive motion for data updates, expressive motion for floating surfaces entering view, and emphasized motion for larger layout changes. No springs, no bounces. The one indulgence: numbers may tick/fade when they update.
 
-**Honest hierarchy.** Three text sizes do 90% of the work: 13px body, 12px secondary, 11px micro-labels. Headings use a display face sparingly — that contrast is the polish.
+**Honest hierarchy.** Three text sizes do 90% of the work: 14px body, 12px secondary, 12px micro-labels. Headings use a display face sparingly — that contrast is the polish.
 
 ---
 
@@ -22,7 +22,7 @@ The personality comes from four moves: monospace numerals everywhere data lives,
 
 | Role | Font | Usage |
 |---|---|---|
-| UI / body | **Inter** | Everything by default. 13px base in dashboards. |
+| UI / body | **Inter** | Everything by default. 14px base in dashboards. |
 | Data / numerals | **JetBrains Mono** | All numbers in tables, KPIs, deltas, IDs, timestamps. Always `font-variant-numeric: tabular-nums`. |
 | Display | **Space Grotesk** | Page titles and KPI values only. Adds personality without costing legibility. |
 
@@ -32,14 +32,14 @@ Scale (dashboard-tuned, tighter than marketing-site scales):
 display:  28px / 1.1  / Space Grotesk 600   — page title
 kpi:      24px / 1.0  / Space Grotesk 600   — stat values (mono also acceptable)
 h2:       16px / 1.3  / Inter 600           — card & section titles
-body:     13px / 1.5  / Inter 400/500       — default
+body:     14px / 1.5  / Inter 400/500       — default
 small:    12px / 1.4  / Inter 400           — secondary, table meta
-micro:    11px / 1.2  / Inter 600 UPPERCASE — labels, column headers, badges
+micro:    12px / 1.2  / Inter 600 UPPERCASE — labels, column headers, badges
           letter-spacing: 0.06em
 mono:     12.5px      / JetBrains Mono      — table numerals, code, IDs
 ```
 
-The micro-label is the theme's signature. Column headers, card eyebrows, badge text, and nav section labels are all `11px / 600 / uppercase / tracking-wider / text-muted`.
+The micro-label is the theme's signature. Column headers, card eyebrows, badge text, and nav section labels are all `12px / 600 / uppercase / tracking-wider / text-muted`.
 
 ---
 
@@ -161,13 +161,13 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
 }
 
 .num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 .micro {
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .06em; color: var(--muted);
 }
 ```

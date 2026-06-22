@@ -14,7 +14,7 @@ export function ChatMessageBubble({ message, actions }: ChatMessageBubbleProps) 
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] whitespace-pre-wrap rounded-sm bg-accent-soft px-3 py-2 text-[13px] text-ink">
+        <div className="max-w-[85%] whitespace-pre-wrap rounded-sm bg-accent-soft px-3 py-2 text-[14px] text-ink">
           {message.content}
         </div>
       </div>

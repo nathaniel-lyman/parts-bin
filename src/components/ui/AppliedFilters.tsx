@@ -67,7 +67,7 @@ export function AppliedFiltersBar({ filters, onClearAll, emptyLabel = 'No filter
           )}
         </>
       ) : (
-        <span className="text-[13px] text-muted">{emptyLabel}</span>
+        <span className="text-[14px] text-muted">{emptyLabel}</span>
       )}
     </div>
   )
@@ -146,7 +146,7 @@ export function FacetedFilter({
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-8 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
+        className="inline-flex h-8 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 text-[14px] font-medium text-ink hover:bg-surface-2"
       >
         <span>{label}</span>
         {selectedValues.length > 0 && <span className="num text-muted">{selectedValues.length}</span>}
@@ -161,7 +161,7 @@ export function FacetedFilter({
             event.preventDefault()
             closePanel()
           }}
-          className="absolute left-0 top-full z-40 mt-2 grid w-72 gap-3 rounded-md border border-line bg-surface p-3 text-[13px] text-ink shadow-dropdown"
+          className="absolute left-0 top-full z-40 mt-2 grid w-72 gap-3 rounded-md border border-line bg-surface p-3 text-[14px] text-ink shadow-dropdown"
         >
           <Input
             aria-label={`${String(label)} filter search`}
@@ -184,7 +184,7 @@ export function FacetedFilter({
                 onChange={() => toggleValue(option.value)}
               />
             )) : (
-              <p className="m-0 py-4 text-center text-[13px] text-muted">{emptyMessage}</p>
+              <p className="m-0 py-4 text-center text-[14px] text-muted">{emptyMessage}</p>
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-line pt-3">

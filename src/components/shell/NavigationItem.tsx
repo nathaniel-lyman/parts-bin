@@ -20,13 +20,13 @@ function NavigationItemBase({ label, href, active, meta, collapsed, variant = 'p
       aria-current={active ? 'page' : undefined}
       title={collapsed && typeof label === 'string' ? label : undefined}
       className={cx(
-        'flex h-8 items-center rounded-sm px-2 text-[13px] hover:bg-surface-2',
+        'flex h-8 items-center rounded-sm px-2 text-[14px] hover:bg-surface-2',
         collapsed ? 'justify-center' : 'justify-between',
         active ? 'bg-accent-soft text-accent' : adminClass,
       )}
     >
       {labelNode}
-      {!collapsed && meta && <span className="num text-[11px]">{meta}</span>}
+      {!collapsed && meta && <span className="num text-[12px]">{meta}</span>}
     </a>
   )
 }

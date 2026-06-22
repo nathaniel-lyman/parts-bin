@@ -73,7 +73,7 @@ export function Dropzone({
         <div className="num text-[22px] text-faint" aria-hidden="true">[]</div>
         <div className="grid gap-1">
           <p className="m-0 text-[14px] font-semibold text-ink">{label}</p>
-          <p className="m-0 text-[13px] text-muted">{description}</p>
+          <p className="m-0 text-[14px] text-muted">{description}</p>
         </div>
         <Button type="button" size="compact" onClick={() => inputRef.current?.click()} disabled={disabled}>
           Browse
@@ -112,7 +112,7 @@ export interface AttachmentListProps {
 
 export function AttachmentList({ attachments, emptyLabel = 'No attachments', className }: AttachmentListProps) {
   if (attachments.length === 0) {
-    return <p className={cx('m-0 border border-line bg-surface px-3 py-2 text-[13px] text-muted', className)}>{emptyLabel}</p>
+    return <p className={cx('m-0 border border-line bg-surface px-3 py-2 text-[14px] text-muted', className)}>{emptyLabel}</p>
   }
 
   return (
@@ -120,7 +120,7 @@ export function AttachmentList({ attachments, emptyLabel = 'No attachments', cla
       {attachments.map((attachment) => (
         <li key={attachment.id} className="flex min-w-0 items-center justify-between gap-3 border-b border-line px-3 py-2 last:border-b-0">
           <span className="grid min-w-0 gap-0.5">
-            <span className="truncate text-[13px] font-medium text-ink">{attachment.name}</span>
+            <span className="truncate text-[14px] font-medium text-ink">{attachment.name}</span>
             {(typeof attachment.size === 'number' || attachment.status) && (
               <span className="text-[12px] text-muted">
                 {typeof attachment.size === 'number' && formatFileSize(attachment.size)}
@@ -152,7 +152,7 @@ export function ImportProgress({ value, label = 'Import progress', detail, class
 
   return (
     <div className={cx('grid gap-2 border border-line bg-surface px-3 py-2', className)}>
-      <div className="flex items-center justify-between gap-3 text-[13px]">
+      <div className="flex items-center justify-between gap-3 text-[14px]">
         <span className="font-medium text-ink">{label}</span>
         <span className="num text-muted">{safeValue}%</span>
       </div>

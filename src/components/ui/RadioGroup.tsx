@@ -71,7 +71,7 @@ export function RadioGroup({
           return (
             <label
               key={option.value}
-              className={cx('flex items-start gap-2 text-[13px] text-ink', optionDisabled && 'opacity-60')}
+              className={cx('flex items-start gap-2 text-[14px] text-ink', optionDisabled && 'opacity-60')}
             >
               <input
                 type="radio"

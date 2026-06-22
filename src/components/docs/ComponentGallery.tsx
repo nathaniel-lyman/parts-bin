@@ -37,7 +37,7 @@ function GalleryCard({ entry, onSelect }: { entry: ComponentEntry; onSelect: (en
         {previews[entry.name] ?? <PlaceholderTile entry={entry} />}
       </div>
       <div className="grid gap-0.5 p-3">
-        <h3 className="m-0 text-[13px] font-semibold text-ink">{entry.name}</h3>
+        <h3 className="m-0 text-[14px] font-semibold text-ink">{entry.name}</h3>
         <p className="m-0 micro text-muted">{entry.purpose}</p>
       </div>
       <button

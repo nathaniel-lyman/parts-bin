@@ -27,7 +27,7 @@ export interface BannerProps {
  */
 export function Banner({ tone = 'accent', children, action, onDismiss, className }: BannerProps) {
   return (
-    <div role="status" className={cx('flex items-center gap-3 px-4 py-2 text-[13px]', tones[tone], className)}>
+    <div role="status" className={cx('flex items-center gap-3 px-4 py-2 text-[14px]', tones[tone], className)}>
       <p className="m-0 min-w-0 flex-1 font-medium">{children}</p>
       {action}
       {onDismiss && (

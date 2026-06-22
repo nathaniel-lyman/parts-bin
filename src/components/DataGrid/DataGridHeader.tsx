@@ -269,7 +269,7 @@ function SortableHeader<TData>({
           <span aria-hidden="true" />
         )}
         <span
-          className={`flex min-w-0 items-center gap-1 text-[13px] font-semibold text-ink ${align === 'right' ? 'justify-self-end justify-end text-right' : 'justify-self-start text-left'}`}
+          className={`flex min-w-0 items-center gap-1 text-[14px] font-semibold text-ink ${align === 'right' ? 'justify-self-end justify-end text-right' : 'justify-self-start text-left'}`}
           data-testid={`col-header-label-${header.column.id}`}
         >
           <span className="min-w-0 truncate" data-autofit-label>

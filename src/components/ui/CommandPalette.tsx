@@ -273,7 +273,7 @@ export function CommandPalette({
           aria-expanded={isOpen}
           aria-controls={isOpen ? dialogId : undefined}
           onClick={() => setPaletteOpen(true)}
-          className="inline-flex h-8 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 text-[13px] font-medium text-ink hover:bg-surface-2"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 text-[14px] font-medium text-ink hover:bg-surface-2"
         >
           <span>{trigger}</span>
           {shortcutLabel && (
@@ -281,7 +281,7 @@ export function CommandPalette({
             <span className="hidden sm:inline-flex">
               {typeof shortcutLabel === 'string'
                 ? <Kbd keys={shortcutLabel.split(' ')} />
-                : <span className="num text-[11px] text-muted">{shortcutLabel}</span>}
+                : <span className="num text-[12px] text-muted">{shortcutLabel}</span>}
             </span>
           )}
         </button>
@@ -324,7 +324,7 @@ export function CommandPalette({
             </div>
             <div id={listboxId} role="listbox" className="max-h-[420px] overflow-y-auto p-2">
               {matches.length === 0 ? (
-                <div className="px-3 py-8 text-center text-[13px] text-muted">{emptyMessage}</div>
+                <div className="px-3 py-8 text-center text-[14px] text-muted">{emptyMessage}</div>
               ) : (
                 groups.map((group) => {
                   const groupMatches = matches
@@ -350,7 +350,7 @@ export function CommandPalette({
                             onClick={() => runCommand(match)}
                             onMouseEnter={() => !match.item.disabled && setActiveIndex(index)}
                             className={cx(
-                              'grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-sm px-2 py-2 text-left text-[13px] text-ink hover:bg-surface-2',
+                              'grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-sm px-2 py-2 text-left text-[14px] text-ink hover:bg-surface-2',
                               active && 'bg-accent-soft text-accent',
                               match.item.disabled && 'cursor-default text-faint',
                             )}
@@ -362,7 +362,7 @@ export function CommandPalette({
                             {match.item.shortcut && (
                               typeof match.item.shortcut === 'string'
                                 ? <Kbd keys={shortcutDisplayTokens(match.item.shortcut)} className="self-center" />
-                                : <span className="num self-center text-[11px] text-muted">{match.item.shortcut}</span>
+                                : <span className="num self-center text-[12px] text-muted">{match.item.shortcut}</span>
                             )}
                           </div>
                         )

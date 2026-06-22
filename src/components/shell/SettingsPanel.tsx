@@ -11,7 +11,7 @@ export function SettingsPanel({ title, description, children }: SettingsPanelPro
     <aside className="grid gap-4 border border-line bg-surface p-4">
       <div className="grid gap-1 border-b border-line pb-3">
         <h2 className="display m-0 text-[16px] font-semibold text-ink">{title}</h2>
-        {description && <p className="m-0 text-[13px] text-muted">{description}</p>}
+        {description && <p className="m-0 text-[14px] text-muted">{description}</p>}
       </div>
       {children}
     </aside>

@@ -30,7 +30,7 @@ function extractCode(children: ReactNode): { code: string; language?: string } |
  */
 export function ChatMarkdown({ content }: ChatMarkdownProps) {
   return (
-    <div className="grid gap-2 text-[13px] leading-relaxed text-ink">
+    <div className="grid gap-2 text-[14px] leading-relaxed text-ink">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -48,7 +48,7 @@ export function ChatMarkdown({ content }: ChatMarkdownProps) {
           em: ({ children }) => <em>{children}</em>,
           h1: ({ children }) => <h3 className="display m-0 text-[15px] font-semibold text-ink">{children}</h3>,
           h2: ({ children }) => <h4 className="display m-0 text-[14px] font-semibold text-ink">{children}</h4>,
-          h3: ({ children }) => <h5 className="display m-0 text-[13px] font-semibold text-ink">{children}</h5>,
+          h3: ({ children }) => <h5 className="display m-0 text-[14px] font-semibold text-ink">{children}</h5>,
           hr: () => <hr className="m-0 border-line" />,
           blockquote: ({ children }) => (
             <blockquote className="m-0 border-l-2 border-line pl-3 text-muted">{children}</blockquote>

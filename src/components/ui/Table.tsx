@@ -29,7 +29,7 @@ export interface TableProps<Row> {
  */
 export function Table<Row>({ columns, rows, rowKey, caption, emptyMessage = 'No data', className }: TableProps<Row>) {
   return (
-    <table className={cx('w-full border-collapse text-[13px] text-ink', className)}>
+    <table className={cx('w-full border-collapse text-[14px] text-ink', className)}>
       {caption && <caption className="sr-only">{caption}</caption>}
       <thead>
         <tr className="border-b border-line">

@@ -80,7 +80,7 @@ export function Tabs({ items, value, defaultValue, onValueChange, className, lab
             onClick={() => select(item.id)}
             onKeyDown={(event) => onTabKeyDown(event, index)}
             className={cx(
-              'h-8 border-r border-line px-3 text-[13px] font-medium text-muted last:border-r-0 hover:bg-surface-2 hover:text-ink disabled:text-faint',
+              'h-8 border-r border-line px-3 text-[14px] font-medium text-muted last:border-r-0 hover:bg-surface-2 hover:text-ink disabled:text-faint',
               selected && 'bg-accent-soft text-accent',
             )}
           >
@@ -95,7 +95,7 @@ export function Tabs({ items, value, defaultValue, onValueChange, className, lab
           role="tabpanel"
           aria-labelledby={`${tabsId}-tab-${activeItem.id}`}
           tabIndex={0}
-          className="min-w-0 text-[13px] text-ink"
+          className="min-w-0 text-[14px] text-ink"
         >
           {activeItem.content}
         </div>

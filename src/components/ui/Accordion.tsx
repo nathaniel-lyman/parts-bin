@@ -50,14 +50,14 @@ export function Accordion({ items, multiple = false, defaultOpenIds = [], classN
                 aria-controls={open ? panelId : undefined}
                 disabled={item.disabled}
                 onClick={() => toggle(item.id)}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[13px] font-medium text-ink hover:bg-surface-2 disabled:text-faint disabled:hover:bg-surface"
+                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[14px] font-medium text-ink hover:bg-surface-2 disabled:text-faint disabled:hover:bg-surface"
               >
                 <span>{item.title}</span>
                 <span aria-hidden="true" className={cx('text-faint transition-transform', open && 'rotate-180')}>⌄</span>
               </button>
             </h3>
             {open && (
-              <div id={panelId} role="region" aria-labelledby={headerId} className="px-3 pb-3 text-[13px] text-muted">
+              <div id={panelId} role="region" aria-labelledby={headerId} className="px-3 pb-3 text-[14px] text-muted">
                 {item.content}
               </div>
             )}

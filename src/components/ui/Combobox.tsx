@@ -164,7 +164,7 @@ export function Combobox({
         onFocus={openMenu}
         onClick={openMenu}
         onKeyDown={onKeyDown}
-        className="h-8 w-full rounded-sm border border-line bg-surface px-2 text-[13px] text-ink focus:border-accent disabled:bg-surface-2 disabled:text-faint"
+        className="h-8 w-full rounded-sm border border-line bg-surface px-2 text-[14px] text-ink focus:border-accent disabled:bg-surface-2 disabled:text-faint"
       />
       {open && createPortal(
         <ul
@@ -172,7 +172,7 @@ export function Combobox({
           id={listboxId}
           role="listbox"
           style={listStyle}
-          className="z-50 max-h-60 overflow-auto rounded-md border border-line bg-surface p-1 text-[13px] shadow-dropdown"
+          className="z-50 max-h-60 overflow-auto rounded-md border border-line bg-surface p-1 text-[14px] shadow-dropdown"
         >
           {filtered.length === 0 ? (
             <li role="presentation" className="px-2 py-1.5 text-muted">{emptyMessage}</li>

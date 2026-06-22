@@ -89,7 +89,7 @@ export function SegmentedControl({
             onClick={() => select(option.value)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={cx(
-              'border-r border-line px-3 text-[13px] font-medium text-muted last:border-r-0 hover:bg-surface-2 hover:text-ink disabled:text-faint',
+              'border-r border-line px-3 text-[14px] font-medium text-muted last:border-r-0 hover:bg-surface-2 hover:text-ink disabled:text-faint',
               sizes[size],
               selected && 'bg-accent-soft text-accent',
             )}

@@ -256,7 +256,7 @@ function DashboardPage({
           title="Component assembly demo"
           description={`A working sample assembled from parts-bin components: KpiCard, ChartCard, Table, and AssistantPanel. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
           actions={
-            <span className="num text-[13px] text-muted">
+            <span className="num text-[14px] text-muted">
               {activeCount(visibleAccounts) + atRiskCount(visibleAccounts)} rows · {fmtCurrency(totalMrr(visibleAccounts))} sample value
             </span>
           }
@@ -271,7 +271,7 @@ function DashboardPage({
 
         <section aria-labelledby="chart-examples-title" className="mb-3 grid gap-1">
           <h2 id="chart-examples-title" className="m-0 text-[15px] font-semibold text-ink">Reusable chart examples</h2>
-          <p className="m-0 text-[13px] text-muted">
+          <p className="m-0 text-[14px] text-muted">
             These panels demonstrate the chart exports in <code className="num text-ink">src/components/charts</code> using generic sample records.
           </p>
         </section>
@@ -346,7 +346,7 @@ function DashboardPage({
 
         <section aria-labelledby="accounts-table-title" className="mb-3 grid gap-1">
           <h2 id="accounts-table-title" className="m-0 text-[15px] font-semibold text-ink">Sample accounts</h2>
-          <p className="m-0 text-[13px] text-muted">
+          <p className="m-0 text-[14px] text-muted">
             A read-only <code className="num text-ink">Table</code> of the visible sample rows. For sorting, filtering, column tools, selection, inline edit, and export, open the{' '}
             <a className="text-accent hover:underline" href={appHref('/examples/datagrid')}>DataGrid example</a>.
           </p>
@@ -446,7 +446,7 @@ function GroupingDataGridExample({
     >
       <div className="grid gap-1">
         <h2 id="datagrid-grouping-example-title" className="m-0 text-[15px] font-semibold text-ink">Grouping example</h2>
-        <p className="m-0 text-[13px] text-muted">
+        <p className="m-0 text-[14px] text-muted">
           Client-side grouping starts by segment so grouped rows, counts, and aggregate summaries are visible immediately.
         </p>
       </div>
@@ -526,10 +526,10 @@ function ServerModeDataGridExample({
       <div className="flex flex-wrap items-start justify-between gap-3 border border-line bg-surface px-3 py-3">
         <div className="grid gap-1">
           <h2 id="datagrid-server-example-title" className="m-0 text-[15px] font-semibold text-ink">Server-mode example</h2>
-          <p className="m-0 max-w-3xl text-[13px] text-muted">
+          <p className="m-0 max-w-3xl text-[14px] text-muted">
             Manual grid state flows through <code className="num text-ink">onQueryChange</code>; the adapter returns only the current page and total count.
           </p>
-          <p className="m-0 text-[13px] text-muted">{serverAction}</p>
+          <p className="m-0 text-[14px] text-muted">{serverAction}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="primary" onClick={() => setCreating(true)}>+ New row</Button>
@@ -632,7 +632,7 @@ function DataGridExamplePage({
           title="DataGrid example"
           description={`Two focused DataGrid examples: client-side grouping first, then a server-backed manual-query grid with row creation. ${timePeriodLabel}${atRiskOnly ? ' · Review focus' : ''}${globalSearch.trim() ? ` · Search: ${globalSearch.trim()}` : ''}`}
           actions={
-            <span className="num text-[13px] text-muted">{visibleGroupingRows.length} rows</span>
+            <span className="num text-[14px] text-muted">{visibleGroupingRows.length} rows</span>
           }
         />
 

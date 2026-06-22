@@ -142,7 +142,7 @@ export function UserAvatarMenu({ name, initials, items, meta }: UserAvatarMenuPr
       align="end"
       label={
         <span className="flex items-center gap-2">
-          <span className="num flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-[11px] text-accent">
+          <span className="num flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-[12px] text-accent">
             {initials}
           </span>
           <span className="hidden max-w-[96px] truncate sm:inline">{name}</span>

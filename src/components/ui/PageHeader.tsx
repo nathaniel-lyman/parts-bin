@@ -13,7 +13,7 @@ export interface PageSubtitleProps {
 }
 
 export function PageSubtitle({ children }: PageSubtitleProps) {
-  return <p className="m-0 max-w-2xl text-[13px] text-muted">{children}</p>
+  return <p className="m-0 max-w-2xl text-[14px] text-muted">{children}</p>
 }
 
 export interface PageHeaderProps {

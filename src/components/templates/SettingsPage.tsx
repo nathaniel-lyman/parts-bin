@@ -123,7 +123,7 @@ export function SettingsPage() {
                 <li key={section.id}>
                   <a
                     href={`#${section.id}`}
-                    className="block rounded-sm px-2 py-1.5 text-[13px] text-muted hover:bg-surface-2 hover:text-ink"
+                    className="block rounded-sm px-2 py-1.5 text-[14px] text-muted hover:bg-surface-2 hover:text-ink"
                   >
                     {section.label}
                   </a>
@@ -266,7 +266,7 @@ export function SettingsPage() {
             <section id="danger">
               <SettingsPanel title="Danger zone" description="Irreversible actions for this workspace.">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="m-0 text-[13px] text-muted">
+                  <p className="m-0 text-[14px] text-muted">
                     Delete this workspace and everything in it. This cannot be undone.
                   </p>
                   <Button variant="destructive" onClick={() => setConfirmingDelete(true)}>
@@ -283,7 +283,7 @@ export function SettingsPage() {
       {dirty && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-6 py-3">
           <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
-            <span className="text-[13px] text-muted">You have unsaved changes.</span>
+            <span className="text-[14px] text-muted">You have unsaved changes.</span>
             <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={discard}>Discard</Button>
               <Button variant="primary" onClick={save}>Save changes</Button>

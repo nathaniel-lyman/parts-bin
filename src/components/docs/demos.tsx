@@ -161,7 +161,7 @@ export function CommandPaletteDemo() {
   return (
     <div className="grid gap-2">
       <CommandPalette groups={docsCommandGroups} />
-      <p className="m-0 text-[13px] text-muted">
+      <p className="m-0 text-[14px] text-muted">
         Command result: <code className="num text-ink">{commandResult}</code>
       </p>
     </div>
@@ -215,7 +215,7 @@ export function ComboboxDemo() {
       <Field label="Record owner" hint="Type to filter, then pick from the list.">
         <Combobox options={ownerOptions} value={owner} onValueChange={setOwner} placeholder="Search owners…" />
       </Field>
-      <p className="m-0 text-[13px] text-muted">Owner: <code className="num text-ink">{owner || '—'}</code></p>
+      <p className="m-0 text-[14px] text-muted">Owner: <code className="num text-ink">{owner || '—'}</code></p>
     </div>
   )
 }
@@ -225,7 +225,7 @@ export function RadioGroupDemo() {
   return (
     <div className="grid gap-2">
       <RadioGroup label="Plan" options={planOptions} value={plan} onValueChange={setPlan} />
-      <p className="m-0 text-[13px] text-muted">Plan: <code className="num text-ink">{plan}</code></p>
+      <p className="m-0 text-[14px] text-muted">Plan: <code className="num text-ink">{plan}</code></p>
     </div>
   )
 }
@@ -268,7 +268,7 @@ export function SegmentedControlDemo() {
           { value: 'comfortable', label: 'Comfortable' },
         ]}
       />
-      <p className="m-0 text-[13px] text-muted">Selected density: <code className="num text-ink">{density}</code></p>
+      <p className="m-0 text-[14px] text-muted">Selected density: <code className="num text-ink">{density}</code></p>
     </div>
   )
 }
@@ -299,7 +299,7 @@ export function DrawerDemo() {
           onClose={() => setDrawerOpen(false)}
           footer={<Button variant="primary" onClick={() => setDrawerOpen(false)}>Done</Button>}
         >
-          <div className="grid gap-3 text-[13px] text-muted">
+          <div className="grid gap-3 text-[14px] text-muted">
             <p className="m-0">Drawers reuse the Modal focus trap: Escape closes, Tab cycles inside, and focus returns to the opener.</p>
             <Field label="View name"><Input placeholder="Review queue" /></Field>
           </div>
@@ -322,7 +322,7 @@ export function SpinnerDemo() {
         <Button loading={saving}>Secondary</Button>
         <IconButton aria-label="Refresh" loading={saving}>↻</IconButton>
       </div>
-      <div className="flex items-center gap-3 text-[13px] text-muted">
+      <div className="flex items-center gap-3 text-[14px] text-muted">
         <Spinner size="sm" label="" />
         <Spinner label="" />
         <Spinner size="lg" label="" />
@@ -366,7 +366,7 @@ export function BubbleMapDemo() {
         onPointSelect={setSelectedPoint}
         valueLabel="records"
       />
-      <p className="m-0 text-[13px] text-muted">Selected: <code className="num text-ink">{selectedPoint.label} · {selectedPoint.value}</code></p>
+      <p className="m-0 text-[14px] text-muted">Selected: <code className="num text-ink">{selectedPoint.label} · {selectedPoint.value}</code></p>
     </div>
   )
 }
@@ -382,7 +382,7 @@ export function FlowMapDemo() {
         onFlowSelect={setSelectedFlow}
         valueLabel="pipeline"
       />
-      <p className="m-0 text-[13px] text-muted">Selected: <code className="num text-ink">{selectedFlow.label} · {selectedFlow.value}</code></p>
+      <p className="m-0 text-[14px] text-muted">Selected: <code className="num text-ink">{selectedFlow.label} · {selectedFlow.value}</code></p>
     </div>
   )
 }
@@ -456,7 +456,7 @@ export function MultiSelectDemo() {
           placeholder="Add categories…"
         />
       </Field>
-      <p className="m-0 text-[13px] text-muted">Selected: <code className="num text-ink">{segments.join(', ') || '—'}</code></p>
+      <p className="m-0 text-[14px] text-muted">Selected: <code className="num text-ink">{segments.join(', ') || '—'}</code></p>
     </div>
   )
 }
@@ -485,11 +485,11 @@ export function ContextMenuDemo() {
           { id: 'delete', label: 'Delete', destructive: true, onSelect: () => setLastAction('Delete') },
         ]}
       >
-        <div className="grid place-items-center border border-dashed border-line bg-surface-2 px-4 py-6 text-[13px] text-muted">
+        <div className="grid place-items-center border border-dashed border-line bg-surface-2 px-4 py-6 text-[14px] text-muted">
           Right-click this region
         </div>
       </ContextMenu>
-      <p className="m-0 text-[13px] text-muted">Last action: <code className="num text-ink">{lastAction ?? '—'}</code></p>
+      <p className="m-0 text-[14px] text-muted">Last action: <code className="num text-ink">{lastAction ?? '—'}</code></p>
     </div>
   )
 }
@@ -499,14 +499,14 @@ export function SliderDemo() {
   return (
     <div className="grid max-w-72 gap-2">
       <Slider label="Review threshold" min={0} max={100} step={5} value={threshold} onValueChange={setThreshold} showValue formatValue={(v) => `${v}%`} />
-      <p className="m-0 text-[13px] text-muted">Rows above <code className="num text-ink">{threshold}%</code> are flagged.</p>
+      <p className="m-0 text-[14px] text-muted">Rows above <code className="num text-ink">{threshold}%</code> are flagged.</p>
     </div>
   )
 }
 
 export function KbdDemo() {
   return (
-    <div className="flex items-center gap-4 text-[13px] text-muted">
+    <div className="flex items-center gap-4 text-[14px] text-muted">
       <span className="inline-flex items-center gap-1.5">Open palette <Kbd keys={['Ctrl', 'K']} /></span>
       <span className="inline-flex items-center gap-1.5">Save view <Kbd keys={['⌘', 'S']} /></span>
       <span className="inline-flex items-center gap-1.5">Dismiss <Kbd>Esc</Kbd></span>
@@ -582,7 +582,7 @@ export function DataGridDemo() {
           getRowCanExpand={mode === 'detail' ? () => true : undefined}
           renderDetailPanel={mode === 'detail'
             ? ({ row }) => (
-                <div className="grid gap-1 text-[13px] text-muted">
+                <div className="grid gap-1 text-[14px] text-muted">
                   <p className="m-0 text-ink">{row.item}</p>
                   <p className="m-0">Owned by {row.owner}; current stage is {row.stage}.</p>
                 </div>
@@ -594,7 +594,7 @@ export function DataGridDemo() {
             : undefined}
         />
       </div>
-      <p className="m-0 text-[13px] text-muted">
+      <p className="m-0 text-[14px] text-muted">
         {isServerMode
           ? `Manual sorting, filtering, pagination, query-wide selection, and export flow through the generic data-source contract. ${serverAction}.`
           : 'Editable cells, range copy/paste, row pinning, grouping with custom summaries, tree rows, and detail panels stay client-side.'}

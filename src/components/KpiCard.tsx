@@ -37,7 +37,7 @@ export function KpiCard({ label, value, delta, spark, negSpark }: Props) {
           {delta != null && (
             <div className="mt-1.5">
               <span className={`num text-[12px] ${deltaClass}`}>{fmtDelta(delta)}</span>{' '}
-              <span className="text-[11px] text-faint">vs last mo</span>
+              <span className="text-[12px] text-faint">vs last mo</span>
             </div>
           )}
         </div>

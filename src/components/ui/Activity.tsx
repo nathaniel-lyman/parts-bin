@@ -40,15 +40,15 @@ export function EventRow({
 }: EventRowProps) {
   return (
     <article className={cx('grid gap-2 border-b border-line px-3 py-3 last:border-b-0 sm:grid-cols-[auto_1fr_auto]', className)}>
-      <div className={cx('grid h-8 w-8 shrink-0 place-items-center rounded-sm text-[13px] font-semibold', toneClasses[tone])} aria-hidden="true">
+      <div className={cx('grid h-8 w-8 shrink-0 place-items-center rounded-sm text-[14px] font-semibold', toneClasses[tone])} aria-hidden="true">
         {icon ?? title?.toString().slice(0, 1)}
       </div>
       <div className="grid min-w-0 gap-1">
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-          <h3 className="m-0 text-[13px] font-semibold text-ink">{title}</h3>
+          <h3 className="m-0 text-[14px] font-semibold text-ink">{title}</h3>
           {actor && <span className="text-[12px] text-muted">{actor}</span>}
         </div>
-        {description && <p className="m-0 text-[13px] text-muted">{description}</p>}
+        {description && <p className="m-0 text-[14px] text-muted">{description}</p>}
         {meta && <div className="text-[12px] text-faint">{meta}</div>}
       </div>
       {(timestamp || actions) && (
@@ -73,7 +73,7 @@ export function ActivityFeed({ items, title, emptyState = 'No activity yet', cla
     <section className={cx('min-w-0 border border-line bg-surface', className)}>
       {title && <div className="micro border-b border-line px-3 py-2">{title}</div>}
       {items.length > 0 ? items.map((item) => <EventRow key={item.id} {...item} />) : (
-        <p className="m-0 px-3 py-8 text-center text-[13px] text-muted">{emptyState}</p>
+        <p className="m-0 px-3 py-8 text-center text-[14px] text-muted">{emptyState}</p>
       )}
     </section>
   )

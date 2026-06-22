@@ -8,7 +8,7 @@ export function Select({ className, children, ...rest }: SelectProps) {
     <span className={cx('relative inline-flex', !hasWidthUtility(className) && 'w-full')}>
       <select
         className={cx(
-          'peer h-8 appearance-none bg-surface text-ink border border-line rounded-sm pl-2 pr-7 text-[13px] focus:border-accent disabled:bg-surface-2 disabled:text-faint',
+          'peer h-8 appearance-none bg-surface text-ink border border-line rounded-sm pl-2 pr-7 text-[14px] focus:border-accent disabled:bg-surface-2 disabled:text-faint',
           !hasWidthUtility(className) && 'w-full',
           className,
         )}

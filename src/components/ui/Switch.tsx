@@ -10,7 +10,7 @@ const switchRadiusClass = 'rounded-sm'
 
 export function Switch({ label, hint, className, ...rest }: SwitchProps) {
   return (
-    <label className={cx('inline-flex items-center gap-2 text-[13px] text-ink', className)}>
+    <label className={cx('inline-flex items-center gap-2 text-[14px] text-ink', className)}>
       <span className="relative inline-flex h-5 w-9 shrink-0 items-center">
         <input
           type="checkbox"

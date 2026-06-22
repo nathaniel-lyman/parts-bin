@@ -8,7 +8,7 @@ export function ConfirmDialog({ title, message, confirmLabel = 'Delete', onCance
       <Button onClick={onCancel}>Cancel</Button>
       <Button variant="destructive" onClick={onConfirm}>{confirmLabel}</Button>
     </>}>
-      <p className="text-[13px] text-muted">{message}</p>
+      <p className="text-[14px] text-muted">{message}</p>
     </Modal>
   )
 }

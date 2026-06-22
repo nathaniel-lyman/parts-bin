@@ -218,7 +218,7 @@ function SetFilterList({
         value={search}
         onChange={(event) => setSearch(event.target.value)}
       />
-      <label className="flex items-center gap-2 border-b border-line pb-1.5 text-[13px] font-medium text-ink">
+      <label className="flex items-center gap-2 border-b border-line pb-1.5 text-[14px] font-medium text-ink">
         <input
           ref={selectAllRef}
           type="checkbox"
@@ -234,7 +234,7 @@ function SetFilterList({
           <div className="px-1 py-2 text-[12px] text-faint">No matching values</div>
         ) : (
           filtered.map((value) => (
-            <label key={value} className="flex items-center gap-2 py-0.5 text-[13px] text-ink">
+            <label key={value} className="flex items-center gap-2 py-0.5 text-[14px] text-ink">
               <input
                 type="checkbox"
                 className="accent-accent"
@@ -243,7 +243,7 @@ function SetFilterList({
                 onChange={(event) => toggleValue(value, event.target.checked)}
               />
               <span className="min-w-0 flex-1 truncate">{value}</span>
-              <span className="num shrink-0 text-[11px] text-faint">{counts.get(value) ?? 0}</span>
+              <span className="num shrink-0 text-[12px] text-faint">{counts.get(value) ?? 0}</span>
             </label>
           ))
         )}
@@ -291,7 +291,7 @@ export function DataGridColumnMenu({
     setFormatOpen(false)
     setSecondDraft(null)
   }
-  const item = 'flex w-full items-center gap-2 px-3 py-1 text-left text-[13px] text-ink hover:bg-surface-2 disabled:text-faint'
+  const item = 'flex w-full items-center gap-2 px-3 py-1 text-left text-[14px] text-ink hover:bg-surface-2 disabled:text-faint'
   const label = header || columnId
   const filterType = filterMeta?.type ?? (type === 'actions' ? undefined : type)
   const operators = filterType ? FILTER_OPERATORS[filterType] : []
@@ -772,7 +772,7 @@ export function DataGridColumnMenu({
                   />
                 </label>
               </div>
-              <label className="flex items-center gap-2 text-[13px] text-ink">
+              <label className="flex items-center gap-2 text-[14px] text-ink">
                 <input
                   type="checkbox"
                   checked={effectiveNumberFormat.useGrouping ?? true}

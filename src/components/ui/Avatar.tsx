@@ -5,7 +5,7 @@ export type PresenceStatus = 'online' | 'away' | 'busy' | 'offline'
 export type AvatarSize = 'sm' | 'md' | 'lg'
 
 const avatarSizes: Record<AvatarSize, string> = {
-  sm: 'h-6 w-6 text-[11px]',
+  sm: 'h-6 w-6 text-[12px]',
   md: 'h-8 w-8 text-[12px]',
   lg: 'h-10 w-10 text-[14px]',
 }
@@ -86,7 +86,7 @@ export interface AssigneeChipProps {
 
 export function AssigneeChip({ name, src, status, meta, onRemove }: AssigneeChipProps) {
   return (
-    <span className="inline-flex max-w-full items-center gap-2 rounded-sm border border-line bg-surface px-2 py-1 text-[13px] text-ink">
+    <span className="inline-flex max-w-full items-center gap-2 rounded-sm border border-line bg-surface px-2 py-1 text-[14px] text-ink">
       <Avatar name={name} src={src} status={status} size="sm" />
       <span className="min-w-0 truncate font-medium">{name}</span>
       {meta && <span className="text-[12px] text-muted">{meta}</span>}

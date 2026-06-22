@@ -13,7 +13,7 @@ export function EmptyState({ title, description, action, glyph = '[]' }: EmptySt
       <div className="num text-[22px] text-faint">{glyph}</div>
       <div className="grid gap-1">
         <h3 className="m-0 text-[14px] font-semibold text-ink">{title}</h3>
-        {description && <p className="m-0 max-w-md text-[13px] text-muted">{description}</p>}
+        {description && <p className="m-0 max-w-md text-[14px] text-muted">{description}</p>}
       </div>
       {action}
     </div>

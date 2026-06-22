@@ -9,7 +9,7 @@ export interface KbdProps {
 }
 
 const chip =
-  'num inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-sm border border-line bg-surface-2 px-1 text-[11px] text-muted'
+  'num inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-sm border border-line bg-surface-2 px-1 text-[12px] text-muted'
 
 /**
  * Keyboard-key chip for shortcut hints (command palette rows, tooltips, menu

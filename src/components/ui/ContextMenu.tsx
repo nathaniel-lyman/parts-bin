@@ -103,7 +103,7 @@ export function ContextMenu({ items, children, className }: ContextMenuProps) {
                 }}
                 onKeyDown={(event) => onItemKeyDown(event, index, item)}
                 className={cx(
-                  'grid w-full gap-0.5 px-2 py-1.5 text-left text-[13px] text-ink hover:bg-surface-2 disabled:text-faint',
+                  'grid w-full gap-0.5 px-2 py-1.5 text-left text-[14px] text-ink hover:bg-surface-2 disabled:text-faint',
                   item.destructive && 'text-neg',
                 )}
               >

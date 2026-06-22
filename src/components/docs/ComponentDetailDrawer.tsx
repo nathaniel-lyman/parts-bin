@@ -14,7 +14,7 @@ export function ComponentDetailDrawer({ entry, onClose }: { entry: ComponentEntr
     <Drawer title={entry.name} onClose={onClose}>
       <div className="grid gap-3">
         <code className="num text-[12px] text-muted">{entry.import}</code>
-        <p className="m-0 text-[13px] text-ink">{entry.purpose}</p>
+        <p className="m-0 text-[14px] text-ink">{entry.purpose}</p>
         <p className="m-0 micro text-muted">Use when: {entry.use_when}</p>
         {entry.prefer_over && (
           <ul className="m-0 micro text-muted list-disc pl-4">
