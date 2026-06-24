@@ -910,6 +910,8 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       <DataGridToolbar
         columns={columns}
         columnVisibility={state.columnVisibility}
+        columnPinning={state.columnPinning}
+        columnFilters={state.columnFilters}
         globalFilter={state.globalFilter}
         enableQuickFilter={enableQuickFilter}
         quickFilterPlaceholder={quickFilterPlaceholder}

@@ -22,7 +22,8 @@ describe('DataGridToolbar saved views', () => {
       />,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: /views/i }))
+    await userEvent.click(screen.getByRole('button', { name: /grid tools/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /view/i }))
     await userEvent.click(screen.getByRole('button', { name: /apply risk view/i }))
 
     expect(onApplyView).toHaveBeenCalledWith('v1')
@@ -48,7 +49,8 @@ describe('DataGridToolbar saved views', () => {
     await userEvent.click(screen.getByRole('button', { name: /export csv/i }))
     expect(onExportCsv).toHaveBeenCalledTimes(1)
 
-    await userEvent.click(screen.getByRole('button', { name: /views/i }))
+    await userEvent.click(screen.getByRole('button', { name: /grid tools/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /view/i }))
     await userEvent.type(screen.getByPlaceholderText(/view name/i), 'Snapshot')
     await userEvent.click(screen.getByRole('button', { name: /save current/i }))
     expect(onSaveView).toHaveBeenCalledWith('Snapshot')

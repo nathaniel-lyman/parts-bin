@@ -1,15 +1,16 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { SlidersHorizontal, X } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
-import { Select } from '../ui/Select'
-import { isLockPositionColumn } from './normalize'
-import { DENSITIES, DENSITY_LABELS } from './types'
-import type { Density, GridAction, DataGridColumn } from './types'
+import { DataGridToolPanel } from './DataGridToolPanel'
+import type { ColumnFiltersState } from '@tanstack/react-table'
+import type { ColumnPinning, Density, GridAction, DataGridColumn } from './types'
 
 interface Props<TData> {
-  columns: Pick<DataGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable' | 'type' | 'lockPosition'>[]
+  columns: Pick<DataGridColumn<TData>, 'id' | 'header' | 'hideable' | 'groupable' | 'pinnable' | 'type' | 'lockPosition'>[]
   columnVisibility: Record<string, boolean>
+  columnPinning?: ColumnPinning
+  columnFilters?: ColumnFiltersState
   globalFilter: string
   quickFilterPlaceholder?: string
   enableQuickFilter?: boolean
@@ -35,6 +36,8 @@ interface Props<TData> {
 export function DataGridToolbar<TData>({
   columns,
   columnVisibility,
+  columnPinning = { left: [], right: [] },
+  columnFilters = [],
   globalFilter,
   quickFilterPlaceholder = 'Search rows...',
   enableQuickFilter = true,
@@ -56,10 +59,7 @@ export function DataGridToolbar<TData>({
   onDeleteView,
   onResetView,
 }: Props<TData>) {
-  const [open, setOpen] = useState(false)
-  const [viewsOpen, setViewsOpen] = useState(false)
-  const [draftName, setDraftName] = useState('')
-  const hideable = columns.filter((column) => column.hideable !== false && !isLockPositionColumn(column))
+  const [toolsOpen, setToolsOpen] = useState(false)
   const headerFor = (id: string) => {
     const column = columns.find((item) => item.id === id)
     return typeof column?.header === 'string' && column.header ? column.header : id
@@ -152,114 +152,34 @@ export function DataGridToolbar<TData>({
             Filters
           </Button>
         )}
-        {savedViews && (
-          <div className="relative">
-            <Button size="compact" onClick={() => setViewsOpen((value) => !value)} aria-expanded={viewsOpen}>Views</Button>
-            {viewsOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setViewsOpen(false)} />
-                <div className="shadow-dropdown absolute right-0 z-30 mt-1 w-56 rounded-md border border-line bg-surface p-2">
-                  <div className="micro mb-1 text-faint">Saved views</div>
-                  <div className="flex flex-col gap-1">
-                    {savedViews.length === 0 && <div className="px-1 py-1 text-[12px] text-muted">No saved views</div>}
-                    {savedViews.map((view) => (
-                      <div key={view.id} className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          className="micro flex-1 px-1 py-1 text-left text-ink hover:bg-surface-2"
-                          aria-label={`Apply ${view.name}`}
-                          onClick={() => {
-                            onApplyView?.(view.id)
-                            setViewsOpen(false)
-                          }}
-                        >
-                          {view.name}
-                        </button>
-                        <button
-                          type="button"
-                          className="micro px-1 py-1 text-muted hover:text-neg"
-                          aria-label={`Delete ${view.name}`}
-                          onClick={() => onDeleteView?.(view.id)}
-                        >
-                          x
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-2 flex flex-col gap-1 border-t border-line pt-2">
-                    <Input
-                      placeholder="View name"
-                      value={draftName}
-                      onChange={(event) => setDraftName(event.target.value)}
-                    />
-                    <Button
-                      size="compact"
-                      disabled={!draftName.trim()}
-                      onClick={() => {
-                        onSaveView?.(draftName.trim())
-                        setDraftName('')
-                      }}
-                    >
-                      Save current
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="compact"
-                      onClick={() => {
-                        onResetView?.()
-                        setViewsOpen(false)
-                      }}
-                    >
-                      Reset to default
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-        <label className="micro flex items-center gap-1 text-faint">
-          <span>Density</span>
-          <Select
-            aria-label="Density"
-            className="w-36"
-            value={density}
-            onChange={(event) => dispatch({ type: 'SET_DENSITY', density: event.target.value as Density })}
-          >
-            {DENSITIES.map((item) => (
-              <option key={item} value={item}>{DENSITY_LABELS[item]}</option>
-            ))}
-          </Select>
-        </label>
         <div className="relative">
-          <Button onClick={() => setOpen((value) => !value)} aria-expanded={open}>Columns</Button>
-          {open && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-              <div className="shadow-dropdown absolute right-0 z-30 mt-1 w-44 rounded-md border border-line bg-surface py-1">
-                <div className="micro px-3 py-1 text-faint">Toggle columns</div>
-                {hideable.map((column) => {
-                  const label = typeof column.header === 'string' && column.header ? column.header : column.id
-                  return (
-                    <label key={column.id} className="flex cursor-pointer items-center gap-2 px-3 py-1 text-[14px] text-ink hover:bg-surface-2">
-                      <input
-                        type="checkbox"
-                        aria-label={label}
-                        checked={columnVisibility[column.id] ?? true}
-                        onChange={() => dispatch({ type: 'TOGGLE_COLUMN_VISIBILITY', id: column.id })}
-                      />
-                      {label}
-                    </label>
-                  )
-                })}
-                <div className="mt-1 border-t border-line px-3 py-1 pt-1">
-                  <button className="text-[12px] text-accent hover:underline" onClick={() => { dispatch({ type: 'RESET_COLUMNS' }); setOpen(false) }}>
-                    Reset to default
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+          <Button onClick={() => setToolsOpen((value) => !value)} aria-expanded={toolsOpen} aria-label="Grid tools">
+            <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
+            Tools
+          </Button>
+          <DataGridToolPanel
+            open={toolsOpen}
+            onClose={() => setToolsOpen(false)}
+            columns={columns}
+            columnVisibility={columnVisibility}
+            columnPinning={columnPinning}
+            columnFilters={columnFilters}
+            globalFilter={globalFilter}
+            quickFilterPlaceholder={quickFilterPlaceholder}
+            enableQuickFilter={enableQuickFilter}
+            density={density}
+            grouping={grouping}
+            enableGrouping={enableGrouping}
+            enableHeaderFilters={enableHeaderFilters}
+            headerFiltersOpen={headerFiltersOpen}
+            savedViews={savedViews}
+            dispatch={dispatch}
+            onToggleHeaderFilters={onToggleHeaderFilters}
+            onApplyView={onApplyView}
+            onSaveView={onSaveView}
+            onDeleteView={onDeleteView}
+            onResetView={onResetView}
+          />
         </div>
       </div>
     </div>

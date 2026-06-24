@@ -27,12 +27,11 @@ describe('DataGrid saved views', () => {
     // SKU is visible by default; hide it to create a non-default layout.
     expect(skuVisible()).toBe(true)
 
-    await userEvent.click(screen.getByRole('button', { name: /columns/i }))
+    await userEvent.click(screen.getByRole('button', { name: /grid tools/i }))
     await userEvent.click(screen.getByRole('checkbox', { name: /^sku$/i }))
-    await userEvent.keyboard('{Escape}')
     expect(skuVisible()).toBe(false)
 
-    await userEvent.click(screen.getByRole('button', { name: /views/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /view/i }))
     await userEvent.type(screen.getByPlaceholderText(/view name/i), 'Snapshot')
     await userEvent.click(screen.getByRole('button', { name: /save current/i }))
 
@@ -41,12 +40,12 @@ describe('DataGrid saved views', () => {
     expect(stored[0].view.columnVisibility.sku).toBe(false)
 
     // Reset restores the grid's built-in defaults (all columns visible).
-    await userEvent.click(screen.getByRole('button', { name: /columns/i }))
-    await userEvent.click(screen.getByRole('button', { name: /reset to default/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /columns/i }))
+    await userEvent.click(screen.getByRole('button', { name: /reset columns/i }))
     expect(skuVisible()).toBe(true)
 
     // Reapplying the saved view restores the hidden column.
-    await userEvent.click(screen.getByRole('button', { name: /views/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /view/i }))
     await userEvent.click(screen.getByRole('button', { name: /apply snapshot/i }))
     expect(skuVisible()).toBe(false)
   })

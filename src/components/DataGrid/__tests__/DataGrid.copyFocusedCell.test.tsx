@@ -43,8 +43,8 @@ describe('Ctrl/Cmd+C on the focused cell', () => {
 
   it('does nothing when focus is on a toolbar control inside the grid', () => {
     renderGrid()
-    const columnsButton = screen.getByRole('button', { name: /columns/i })
-    columnsButton.focus()
+    const toolsButton = screen.getByRole('button', { name: /grid tools/i })
+    toolsButton.focus()
     fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
     expect(writeText).not.toHaveBeenCalled()
   })
