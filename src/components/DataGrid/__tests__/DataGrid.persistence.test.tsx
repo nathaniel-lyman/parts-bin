@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { seedAccounts } from '../../../data/accounts'
 import { accountGridColumns } from '../../accountGridColumns'
@@ -28,7 +29,8 @@ describe('DataGrid persistence integration', () => {
     expect(screen.getByRole('columnheader', { name: /ARR/ })).toBeInTheDocument()
   })
 
-  it('uses initialState when no persisted or legacy view exists', () => {
+  it('uses initialState when no persisted or legacy view exists', async () => {
+    const user = userEvent.setup()
     render(
       <DataGrid
         rows={seedAccounts}
@@ -39,7 +41,9 @@ describe('DataGrid persistence integration', () => {
       />,
     )
 
-    expect(screen.getByRole('combobox', { name: /Density/ })).toHaveValue('comfortable')
+    await user.click(screen.getByRole('button', { name: /grid tools/i }))
+    await user.click(screen.getByRole('tab', { name: /view/i }))
+    expect(screen.getByRole('combobox', { name: /tool panel density/i })).toHaveValue('comfortable')
   })
 
   it('writes the grid projection through useGridPersistence', () => {

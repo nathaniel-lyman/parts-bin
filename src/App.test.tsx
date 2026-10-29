@@ -1,9 +1,20 @@
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { ToastProvider } from './components/ui/ToastProvider'
 import { savedViewsKeyForGrid } from './hooks/useSavedViews'
+
+// Exercise the real answer routing and streaming without randomized pacing.
+vi.mock('./components/chat/demoAdapter', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./components/chat/demoAdapter')>()
+  return {
+    ...actual,
+    createDemoAdapter: (...args: Parameters<typeof actual.createDemoAdapter>) => (
+      actual.createDemoAdapter(args[0], { ...args[1], delayMs: 0 })
+    ),
+  }
+})
 
 const ACCOUNT_GRID_VIEWS_KEY = savedViewsKeyForGrid('ledger.accounts.grid')
 
